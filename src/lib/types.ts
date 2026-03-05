@@ -33,7 +33,7 @@ export interface Slide {
 }
 
 export interface ReleaseRequest {
-  brand_id: string
+  brand_id?: string
   template?: 'classic' | 'split' | 'hero'
   slides: Array<{
     title: string
