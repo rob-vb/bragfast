@@ -29,7 +29,7 @@ export function Split({ slide, brand, width, height }: TemplateProps) {
           title={slide.title}
           description={slide.description}
           textColor={brand.colors.text}
-          size={isLandscape ? 'large' : 'medium'}
+          size="large"
         />
       </div>
     )

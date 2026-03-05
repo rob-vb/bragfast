@@ -69,7 +69,7 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 12,
+            gap: 20,
             maxWidth: isLandscape ? '60%' : '100%',
             alignItems: isLandscape ? 'flex-start' : 'center',
             textAlign: isLandscape ? 'left' : 'center',
@@ -77,10 +77,10 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
         >
           <span
             style={{
-              fontSize: isLandscape ? 48 : 40,
+              fontSize: isLandscape ? 64 : 56,
               fontWeight: 700,
               color: textColor,
-              lineHeight: 1.2,
+              lineHeight: 1.15,
               fontFamily: 'Plus Jakarta Sans',
             }}
           >
@@ -89,7 +89,7 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
           {slide.description && (
             <span
               style={{
-                fontSize: isLandscape ? 24 : 20,
+                fontSize: isLandscape ? 28 : 24,
                 fontWeight: 400,
                 color: textColor,
                 opacity: 0.9,
