@@ -11,6 +11,16 @@ export interface Brand {
   colors: BrandColors
 }
 
+export interface BrandRecord {
+  id: string
+  name: string
+  logo_url: string
+  website?: string
+  colors: BrandColors
+  created_at: string
+  updated_at: string
+}
+
 export type DeviceType = 'browser' | 'mobile'
 
 export interface Slide {
