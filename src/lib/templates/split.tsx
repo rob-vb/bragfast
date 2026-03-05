@@ -22,45 +22,35 @@ export function Split({ slide, brand, width, height }: TemplateProps) {
           padding: pad,
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 20,
+          gap: 24,
         }}
       >
+        {/* Accent bar */}
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: 24,
-            maxWidth: isLandscape ? '70%' : '85%',
-            alignItems: 'center',
+            width: 48,
+            height: 4,
+            backgroundColor: brand.colors.primary,
+            borderRadius: 2,
           }}
-        >
-          {/* Accent bar to differentiate from Classic */}
-          <div
-            style={{
-              display: 'flex',
-              width: 48,
-              height: 4,
-              backgroundColor: brand.colors.primary,
-              borderRadius: 2,
-            }}
-          />
-          <TextBlock
-            title={slide.title}
-            description={slide.description}
-            textColor={brand.colors.text}
-            size="large"
-          />
-          <LogoBar brand={brand} />
-        </div>
+        />
+        <TextBlock
+          title={slide.title}
+          description={slide.description}
+          textColor={brand.colors.text}
+          size="large"
+          center
+        />
+        <LogoBar brand={brand} />
       </div>
     )
   }
 
   if (isLandscape) {
-    // Side-by-side: left text (~40%), right image (~55%)
+    // Side-by-side: left text, right image
     const leftWidth = Math.round(width * 0.38)
     const rightWidth = Math.round(width * 0.52)
-    const frameMaxHeight = height - pad * 2
 
     return (
       <div
@@ -96,15 +86,14 @@ export function Split({ slide, brand, width, height }: TemplateProps) {
           imageBase64={slide.imageBase64!}
           primaryColor={brand.colors.primary}
           width={rightWidth}
-          maxHeight={frameMaxHeight}
+          maxHeight={height - pad * 2}
         />
       </div>
     )
   }
 
-  // Square / Portrait: accent bar + centered text above frame
+  // Square / Portrait: accent bar + centered text, frame pinned to bottom
   const frameWidth = width - pad * 2
-  const frameMaxHeight = Math.round(height * 0.55)
 
   return (
     <div
@@ -115,32 +104,42 @@ export function Split({ slide, brand, width, height }: TemplateProps) {
         height,
         backgroundColor: brand.colors.background,
         padding: pad,
-        gap: 24,
+        justifyContent: 'space-between',
         alignItems: 'center',
       }}
     >
-      {/* Accent bar */}
       <div
         style={{
           display: 'flex',
-          width: 48,
-          height: 4,
-          backgroundColor: brand.colors.primary,
-          borderRadius: 2,
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 16,
         }}
-      />
-      <TextBlock
-        title={slide.title}
-        description={slide.description}
-        textColor={brand.colors.text}
-        size="small"
-      />
-      <LogoBar brand={brand} />
+      >
+        {/* Accent bar */}
+        <div
+          style={{
+            display: 'flex',
+            width: 48,
+            height: 4,
+            backgroundColor: brand.colors.primary,
+            borderRadius: 2,
+          }}
+        />
+        <TextBlock
+          title={slide.title}
+          description={slide.description}
+          textColor={brand.colors.text}
+          size="small"
+          center
+        />
+        <LogoBar brand={brand} />
+      </div>
       <BrowserFrame
         imageBase64={slide.imageBase64!}
         primaryColor={brand.colors.primary}
         width={frameWidth}
-        maxHeight={frameMaxHeight}
+        maxHeight={Math.round(height * 0.58)}
       />
     </div>
   )

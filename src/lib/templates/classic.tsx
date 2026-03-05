@@ -25,65 +25,20 @@ export function Classic({ slide, brand, width, height }: TemplateProps) {
           gap: 20,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 20,
-            maxWidth: isLandscape ? '70%' : '85%',
-            alignItems: 'center',
-          }}
-        >
-          <LogoBar brand={brand} />
-          <TextBlock
-            title={slide.title}
-            description={slide.description}
-            textColor={brand.colors.text}
-            size="large"
-          />
-        </div>
-      </div>
-    )
-  }
-
-  const frameWidth = width - pad * 2
-
-  if (isLandscape) {
-    // Landscape: logo + text top, browser frame bottom with constrained height
-    const frameMaxHeight = Math.round(height * 0.52)
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          width,
-          height,
-          backgroundColor: brand.colors.background,
-          padding: pad,
-          gap: 24,
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <LogoBar brand={brand} />
-          <TextBlock
-            title={slide.title}
-            description={slide.description}
-            textColor={brand.colors.text}
-            size="small"
-          />
-        </div>
-        <BrowserFrame
-          imageBase64={slide.imageBase64!}
-          primaryColor={brand.colors.primary}
-          width={frameWidth}
-          maxHeight={frameMaxHeight}
+        <LogoBar brand={brand} />
+        <TextBlock
+          title={slide.title}
+          description={slide.description}
+          textColor={brand.colors.text}
+          size="large"
+          center
         />
       </div>
     )
   }
 
-  // Square or Portrait: logo top, text, then browser frame with constrained height
-  const frameMaxHeight = Math.round(height * 0.58)
+  // With image: text at top, browser frame pinned to bottom
+  const frameWidth = width - pad * 2
 
   return (
     <div
@@ -94,21 +49,23 @@ export function Classic({ slide, brand, width, height }: TemplateProps) {
         height,
         backgroundColor: brand.colors.background,
         padding: pad,
-        gap: 24,
+        justifyContent: 'space-between',
       }}
     >
-      <LogoBar brand={brand} />
-      <TextBlock
-        title={slide.title}
-        description={slide.description}
-        textColor={brand.colors.text}
-        size="medium"
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <LogoBar brand={brand} />
+        <TextBlock
+          title={slide.title}
+          description={slide.description}
+          textColor={brand.colors.text}
+          size={isLandscape ? 'small' : 'medium'}
+        />
+      </div>
       <BrowserFrame
         imageBase64={slide.imageBase64!}
         primaryColor={brand.colors.primary}
         width={frameWidth}
-        maxHeight={frameMaxHeight}
+        maxHeight={Math.round(height * (isLandscape ? 0.55 : 0.62))}
       />
     </div>
   )

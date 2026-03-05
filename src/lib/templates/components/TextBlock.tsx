@@ -5,6 +5,7 @@ interface TextBlockProps {
   description?: string
   textColor: string
   size: 'large' | 'medium' | 'small'
+  center?: boolean
 }
 
 const sizeConfig = {
@@ -13,11 +14,14 @@ const sizeConfig = {
   small: { title: 36, description: 18, lineHeight: 1.3, gap: 12 },
 }
 
-export function TextBlock({ title, description, textColor, size }: TextBlockProps) {
+export function TextBlock({ title, description, textColor, size, center }: TextBlockProps) {
   const config = sizeConfig[size]
+  const centerStyles = center
+    ? { alignItems: 'center' as const, textAlign: 'center' as const }
+    : {}
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: config.gap }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: config.gap, ...centerStyles }}>
       <span
         style={{
           fontSize: config.title,
