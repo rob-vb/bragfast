@@ -1,7 +1,7 @@
 import React from 'react'
 import { TemplateProps } from '../types'
 
-export function Hero({ slide, brand, width, height }: TemplateProps) {
+export function Hero({ slide, brand, width, height, transparent }: TemplateProps) {
   const pad = 56
   const isLandscape = width > height
   const hasImage = !!slide.imageBase64
@@ -14,7 +14,7 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
         position: 'relative',
         width,
         height,
-        backgroundColor: brand.colors.primary,
+        ...(transparent ? {} : { backgroundColor: brand.colors.primary }),
       }}
     >
       {/* Full-bleed background image */}

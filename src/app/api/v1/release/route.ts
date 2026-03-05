@@ -1,4 +1,4 @@
-import { renderRelease } from '@/lib/pipeline/render'
+import { createRelease, renderReleaseAsync } from '@/lib/pipeline/render'
 import { ReleaseRequest } from '@/lib/types'
 
 export async function POST(request: Request) {
@@ -36,10 +36,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await renderRelease(body)
-    return Response.json(result, { status: 201 })
+    const result = await createRelease(body)
+    renderReleaseAsync(result.release_id, body).catch(console.error)
+    return Response.json(result, { status: 202 })
   } catch (err) {
-    console.error('Render failed:', err)
+    console.error('Failed to create release:', err)
     return Response.json({ error: 'Something burned. Try again.' }, { status: 500 })
   }
 }

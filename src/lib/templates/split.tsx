@@ -4,7 +4,7 @@ import { LogoBar } from './components/LogoBar'
 import { TextBlock } from './components/TextBlock'
 import { DeviceFrame } from './components/DeviceFrame'
 
-export function Split({ slide, brand, width, height }: TemplateProps) {
+export function Split({ slide, brand, width, height, transparent }: TemplateProps) {
   const pad = 56
   const isLandscape = width > height
   const hasImage = !!slide.imageBase64
@@ -18,7 +18,7 @@ export function Split({ slide, brand, width, height }: TemplateProps) {
           flexDirection: 'column',
           width,
           height,
-          backgroundColor: brand.colors.background,
+          ...(transparent ? {} : { backgroundColor: brand.colors.background }),
           padding: pad,
           justifyContent: 'center',
           alignItems: 'center',
@@ -48,7 +48,7 @@ export function Split({ slide, brand, width, height }: TemplateProps) {
           flexDirection: 'row',
           width,
           height,
-          backgroundColor: brand.colors.background,
+          ...(transparent ? {} : { backgroundColor: brand.colors.background }),
           padding: pad,
           alignItems: 'center',
         }}

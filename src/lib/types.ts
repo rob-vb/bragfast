@@ -30,6 +30,22 @@ export interface ReleaseRequest {
     device?: 'browser' | 'mobile'
   }>
   formats?: Array<'landscape' | 'square' | 'portrait'>
+  transparent?: boolean
+  metadata?: string
+  webhook_url?: string
+}
+
+export interface ReleaseResult {
+  release_id: string
+  status: 'pending' | 'completed' | 'failed'
+  images: Record<string, { slides: string[]; dimensions: string }> | null
+  credits_used: number
+  credits_remaining: number
+  created_at: string
+  completed_at?: string
+  transparent: boolean
+  metadata?: string
+  webhook_url?: string
 }
 
 export interface TemplateProps {
@@ -37,6 +53,7 @@ export interface TemplateProps {
   brand: Brand
   width: number
   height: number
+  transparent?: boolean
 }
 
 export type TemplateName = 'classic' | 'split' | 'hero'
