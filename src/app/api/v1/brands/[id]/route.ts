@@ -29,14 +29,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (typeof c.primary === 'string') input.colors.primary = c.primary
   }
 
-  const updated = await updateBrand(id, input)
-  if (!updated) return Response.json({ error: 'Brand not found' }, { status: 404 })
-  return Response.json(updated)
+  try {
+    const updated = await updateBrand(id, input)
+    if (!updated) return Response.json({ error: 'Brand not found' }, { status: 404 })
+    return Response.json(updated)
+  } catch (err) {
+    console.error('Failed to update brand:', err)
+    return Response.json({ error: 'Failed to update brand' }, { status: 500 })
+  }
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const deleted = await deleteBrand(id)
-  if (!deleted) return Response.json({ error: 'Brand not found' }, { status: 404 })
-  return new Response(null, { status: 204 })
+  try {
+    const deleted = await deleteBrand(id)
+    if (!deleted) return Response.json({ error: 'Brand not found' }, { status: 404 })
+    return new Response(null, { status: 204 })
+  } catch (err) {
+    console.error('Failed to delete brand:', err)
+    return Response.json({ error: 'Failed to delete brand' }, { status: 500 })
+  }
 }
