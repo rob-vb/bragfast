@@ -8,6 +8,7 @@ import { loadFonts } from '../fonts'
 import { fetchImageAsBase64 } from '../images'
 import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS } from '../types'
 import { getPlaceholderBrand } from '../brand'
+import { getBrand } from '../brands'
 
 const OUTPUT_DIR = path.join(process.cwd(), '.output')
 
@@ -47,7 +48,18 @@ export async function renderReleaseAsync(releaseId: string, request: ReleaseRequ
   const releaseDir = path.join(OUTPUT_DIR, releaseId)
 
   try {
-    const brand = getPlaceholderBrand()
+    let brand = getPlaceholderBrand()
+    if (request.brand_id) {
+      const brandRecord = await getBrand(request.brand_id)
+      if (brandRecord) {
+        brand = {
+          name: brandRecord.name,
+          logoBase64: await fetchImageAsBase64(brandRecord.logo_url),
+          website: brandRecord.website ?? '',
+          colors: brandRecord.colors,
+        }
+      }
+    }
     const templateName = request.template || 'classic'
     const template = templates[templateName]
     const formats = request.formats || ['landscape', 'square', 'portrait']
