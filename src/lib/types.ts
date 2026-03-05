@@ -4,6 +4,7 @@ export interface BrandColors {
   primary: string
 }
 
+// Runtime type used by templates; website is required (coerced from BrandRecord with ?? '')
 export interface Brand {
   name: string
   logoBase64: string
@@ -11,6 +12,7 @@ export interface Brand {
   colors: BrandColors
 }
 
+// Stored/API record shape; snake_case matches project convention
 export interface BrandRecord {
   id: string
   name: string
