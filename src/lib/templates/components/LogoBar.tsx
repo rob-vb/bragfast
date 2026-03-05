@@ -16,13 +16,13 @@ export function LogoBar({ brand }: LogoBarProps) {
     >
       <img
         src={brand.logoBase64}
-        width={32}
-        height={32}
-        style={{ display: 'flex', borderRadius: 6 }}
+        width={48}
+        height={48}
+        style={{ display: 'flex', borderRadius: 8 }}
       />
       <span
         style={{
-          fontSize: 18,
+          fontSize: 22,
           fontWeight: 700,
           color: brand.colors.text,
           fontFamily: 'Plus Jakarta Sans',

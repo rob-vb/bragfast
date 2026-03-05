@@ -19,6 +19,9 @@ export async function POST(request: Request) {
     if (!slide.title) {
       return Response.json({ error: 'Each slide must have a title' }, { status: 400 })
     }
+    if (slide.device && !['browser', 'mobile'].includes(slide.device)) {
+      return Response.json({ error: 'Invalid device. Use: browser, mobile' }, { status: 400 })
+    }
   }
   if (body.template && !['classic', 'split', 'hero'].includes(body.template)) {
     return Response.json({ error: 'Invalid template. Use: classic, split, hero' }, { status: 400 })

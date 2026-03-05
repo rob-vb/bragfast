@@ -11,10 +11,13 @@ export interface Brand {
   colors: BrandColors
 }
 
+export type DeviceType = 'browser' | 'mobile'
+
 export interface Slide {
   title: string
   description?: string
   imageBase64?: string
+  device: DeviceType
 }
 
 export interface ReleaseRequest {
@@ -24,6 +27,7 @@ export interface ReleaseRequest {
     title: string
     description?: string
     image_url?: string
+    device?: 'browser' | 'mobile'
   }>
   formats?: Array<'landscape' | 'square' | 'portrait'>
 }

@@ -112,13 +112,13 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
         >
           <img
             src={brand.logoBase64}
-            width={24}
-            height={24}
-            style={{ display: 'flex', borderRadius: 5 }}
+            width={40}
+            height={40}
+            style={{ display: 'flex', borderRadius: 8 }}
           />
           <span
             style={{
-              fontSize: 15,
+              fontSize: 20,
               fontWeight: 700,
               color: textColor,
               opacity: 0.7,

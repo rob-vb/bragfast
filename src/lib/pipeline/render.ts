@@ -28,6 +28,7 @@ export async function renderRelease(request: ReleaseRequest) {
       title: s.title,
       description: s.description,
       imageBase64: s.image_url ? await fetchImageAsBase64(s.image_url) : undefined,
+      device: s.device || 'browser',
     }))
   )
 

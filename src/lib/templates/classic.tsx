@@ -2,7 +2,7 @@ import React from 'react'
 import { TemplateProps } from '../types'
 import { LogoBar } from './components/LogoBar'
 import { TextBlock } from './components/TextBlock'
-import { BrowserFrame } from './components/BrowserFrame'
+import { DeviceFrame } from './components/DeviceFrame'
 
 export function Classic({ slide, brand, width, height }: TemplateProps) {
   const pad = 56
@@ -37,7 +37,7 @@ export function Classic({ slide, brand, width, height }: TemplateProps) {
     )
   }
 
-  // With image: text at top, browser frame pinned to bottom
+  // With image: text at top, browser frame flush to bottom
   const frameWidth = width - pad * 2
 
   return (
@@ -49,6 +49,7 @@ export function Classic({ slide, brand, width, height }: TemplateProps) {
         height,
         backgroundColor: brand.colors.background,
         padding: pad,
+        paddingBottom: 0,
         justifyContent: 'space-between',
       }}
     >
@@ -61,12 +62,18 @@ export function Classic({ slide, brand, width, height }: TemplateProps) {
           size={isLandscape ? 'small' : 'medium'}
         />
       </div>
-      <BrowserFrame
-        imageBase64={slide.imageBase64!}
-        primaryColor={brand.colors.primary}
-        width={frameWidth}
-        maxHeight={Math.round(height * (isLandscape ? 0.55 : 0.62))}
-      />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
+        <DeviceFrame
+          device={slide.device}
+          imageBase64={slide.imageBase64!}
+          primaryColor={brand.colors.primary}
+          width={frameWidth}
+          maxHeight={Math.round(height * (isLandscape ? 0.55 : 0.62))}
+          flush
+          canvasWidth={width}
+          canvasHeight={height}
+        />
+      </div>
     </div>
   )
 }

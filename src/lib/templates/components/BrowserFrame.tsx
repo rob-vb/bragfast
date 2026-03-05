@@ -5,9 +5,10 @@ interface BrowserFrameProps {
   primaryColor: string
   width: number
   maxHeight?: number
+  flush?: boolean
 }
 
-export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight }: BrowserFrameProps) {
+export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush }: BrowserFrameProps) {
   const dotSize = 10
   const titleBarHeight = 32
 
@@ -18,9 +19,10 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight }: Br
         flexDirection: 'column',
         width: `${width}px`,
         maxHeight: maxHeight ? `${maxHeight}px` : undefined,
-        borderRadius: 12,
+        borderRadius: flush ? '12px 12px 0 0' : '12px',
         overflow: 'hidden',
         border: '1px solid rgba(0,0,0,0.08)',
+        borderBottom: flush ? 'none' : '1px solid rgba(0,0,0,0.08)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
       }}
     >
