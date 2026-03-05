@@ -1,5 +1,18 @@
-import { describe, it, expect } from 'vitest'
-import { createBrand, getBrand, updateBrand, deleteBrand } from '../brands'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createBrand, getBrand, updateBrand, deleteBrand, setBrandsDir } from '../brands'
+import { tmpdir } from 'os'
+import { rm } from 'fs/promises'
+import path from 'path'
+
+const testDir = path.join(tmpdir(), `brands-test-${Date.now()}`)
+
+beforeAll(() => {
+  setBrandsDir(testDir)
+})
+
+afterAll(async () => {
+  await rm(testDir, { recursive: true, force: true })
+})
 
 const validInput = {
   name: 'Acme',

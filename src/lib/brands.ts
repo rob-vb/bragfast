@@ -3,7 +3,11 @@ import path from 'path'
 import crypto from 'crypto'
 import { BrandRecord, BrandColors } from './types'
 
-const BRANDS_DIR = path.join(process.cwd(), '.brands')
+export let BRANDS_DIR = path.join(process.cwd(), '.brands')
+
+export function setBrandsDir(dir: string) {
+  BRANDS_DIR = dir
+}
 
 export interface CreateBrandInput {
   name: string
@@ -36,8 +40,9 @@ export async function getBrand(id: string): Promise<BrandRecord | null> {
   try {
     const data = await readFile(path.join(BRANDS_DIR, id, 'brand.json'), 'utf-8')
     return JSON.parse(data) as BrandRecord
-  } catch {
-    return null
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw err
   }
 }
 
@@ -55,8 +60,11 @@ export async function updateBrand(id: string, input: UpdateBrandInput): Promise<
 }
 
 export async function deleteBrand(id: string): Promise<boolean> {
-  const existing = await getBrand(id)
-  if (!existing) return false
-  await rm(path.join(BRANDS_DIR, id), { recursive: true, force: true })
-  return true
+  try {
+    await rm(path.join(BRANDS_DIR, id), { recursive: true, force: false })
+    return true
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return false
+    throw err
+  }
 }
