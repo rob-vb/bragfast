@@ -2,11 +2,9 @@ import React from 'react'
 import { TemplateProps } from '../types'
 
 export function Hero({ slide, brand, width, height }: TemplateProps) {
-  const pad = 48
+  const pad = 56
   const isLandscape = width > height
   const hasImage = !!slide.imageBase64
-
-  // Inverted colors: text in background color on primary overlay
   const textColor = brand.colors.background
 
   return (
@@ -62,6 +60,7 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
           padding: pad,
           flexDirection: 'column',
           justifyContent: 'flex-end',
+          gap: 24,
         }}
       >
         {/* Text block */}
@@ -69,8 +68,8 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 20,
-            maxWidth: isLandscape ? '60%' : '100%',
+            gap: 16,
+            maxWidth: isLandscape ? '65%' : '100%',
             alignItems: isLandscape ? 'flex-start' : 'center',
             textAlign: isLandscape ? 'left' : 'center',
           }}
@@ -80,7 +79,7 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
               fontSize: isLandscape ? 64 : 56,
               fontWeight: 700,
               color: textColor,
-              lineHeight: 1.15,
+              lineHeight: 1.1,
               fontFamily: 'Plus Jakarta Sans',
             }}
           >
@@ -89,11 +88,11 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
           {slide.description && (
             <span
               style={{
-                fontSize: isLandscape ? 28 : 24,
+                fontSize: isLandscape ? 26 : 22,
                 fontWeight: 400,
                 color: textColor,
-                opacity: 0.9,
-                lineHeight: 1.5,
+                opacity: 0.85,
+                lineHeight: 1.4,
                 fontFamily: 'Plus Jakarta Sans',
               }}
             >
@@ -102,28 +101,27 @@ export function Hero({ slide, brand, width, height }: TemplateProps) {
           )}
         </div>
 
-        {/* Logo bottom-right */}
+        {/* Logo row — below text, separated */}
         <div
           style={{
             display: 'flex',
-            position: 'absolute',
-            bottom: pad,
-            right: pad,
             alignItems: 'center',
             gap: 8,
+            alignSelf: isLandscape ? 'flex-start' : 'center',
           }}
         >
           <img
             src={brand.logoBase64}
-            width={28}
-            height={28}
-            style={{ display: 'flex', borderRadius: 6 }}
+            width={24}
+            height={24}
+            style={{ display: 'flex', borderRadius: 5 }}
           />
           <span
             style={{
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: 700,
               color: textColor,
+              opacity: 0.7,
               fontFamily: 'Plus Jakarta Sans',
             }}
           >
