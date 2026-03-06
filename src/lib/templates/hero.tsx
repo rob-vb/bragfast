@@ -6,6 +6,8 @@ export function Hero({ slide, brand, width, height, transparent }: TemplateProps
   const isLandscape = width > height
   const hasImage = !!slide.imageBase64
   const textColor = brand.colors.background
+  const align = slide.align ?? 'center'
+  const alignItems = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center'
 
   return (
     <div
@@ -70,8 +72,8 @@ export function Hero({ slide, brand, width, height, transparent }: TemplateProps
             flexDirection: 'column',
             gap: 16,
             maxWidth: isLandscape ? '65%' : '100%',
-            alignItems: isLandscape ? 'flex-start' : 'center',
-            textAlign: isLandscape ? 'left' : 'center',
+            alignItems,
+            textAlign: align,
           }}
         >
           <span
@@ -107,7 +109,7 @@ export function Hero({ slide, brand, width, height, transparent }: TemplateProps
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            alignSelf: isLandscape ? 'flex-start' : 'center',
+            alignSelf: alignItems,
           }}
         >
           <img

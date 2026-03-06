@@ -9,9 +9,9 @@ interface MobileFrameProps {
 }
 
 export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush }: MobileFrameProps) {
-  const bezel = Math.round(width * 0.035)
+  const bezel = Math.round(width * 0.025)
   const cornerRadius = Math.round(width * 0.12)
-  const innerRadius = Math.round(cornerRadius * 0.6)
+  const innerRadius = Math.max(0, cornerRadius - bezel)
   const screenWidth = width - bezel * 2
 
   return (
@@ -26,7 +26,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
           ? `${cornerRadius}px ${cornerRadius}px 0 0`
           : `${cornerRadius}px`,
         backgroundColor: '#1A1A1A',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.08)',
+        boxShadow: '0 16px 56px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.15)',
         overflow: 'hidden',
       }}
     >

@@ -11,9 +11,7 @@ export async function POST(request: Request) {
   if (!body.name || typeof body.name !== 'string') {
     return Response.json({ error: 'name is required' }, { status: 400 })
   }
-  if (!body.logo_url || typeof body.logo_url !== 'string') {
-    return Response.json({ error: 'logo_url is required' }, { status: 400 })
-  }
+
   if (!body.colors || typeof body.colors !== 'object' || Array.isArray(body.colors)) {
     return Response.json({ error: 'colors is required' }, { status: 400 })
   }
@@ -32,7 +30,7 @@ export async function POST(request: Request) {
   try {
     const brand = await createBrand({
       name: body.name,
-      logo_url: body.logo_url,
+      logo_url: typeof body.logo_url === 'string' ? body.logo_url : undefined,
       website: typeof body.website === 'string' ? body.website : undefined,
       colors: {
         background: colors.background,

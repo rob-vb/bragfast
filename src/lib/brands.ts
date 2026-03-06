@@ -11,7 +11,7 @@ export function setBrandsDir(dir: string) {
 
 export interface CreateBrandInput {
   name: string
-  logo_url: string
+  logo_url?: string
   website?: string
   colors: BrandColors
 }

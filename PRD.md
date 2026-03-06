@@ -6,7 +6,7 @@
 
 ## What is brag.fast?
 
-An API-first service for indie hackers and developers. POST your release details to the API and get back branded images in multiple aspect ratios and a short animated video. Designed to plug directly into n8n, Zapier, CI/CD pipelines, or any automation flow.
+An API-first service for indie hackers and developers. POST your release details to the API and get back branded images in multiple aspect ratios. Designed to plug directly into n8n, Zapier, CI/CD pipelines, or any automation flow.
 
 One API call. A full plate of visual content.
 
@@ -14,7 +14,7 @@ One API call. A full plate of visual content.
 
 ## The Problem
 
-Indie hackers ship features constantly but announcing them is painful. Every release needs visual assets: correctly sized images for different platforms, maybe a short video clip. Creating these manually means opening Figma or Canva, resizing, exporting, repeating. Most devs skip it entirely and post plain text. Great features get zero visibility.
+Indie hackers ship features constantly but announcing them is painful. Every release needs visual assets: correctly sized images for different platforms. Creating these manually means opening Figma or Canva, resizing, exporting, repeating. Most devs skip it entirely and post plain text. Great features get zero visibility.
 
 ---
 
@@ -23,7 +23,6 @@ Indie hackers ship features constantly but announcing them is painful. Every rel
 A developer POSTs release details (title, description, screenshot, template choice) to the brag.fast API and receives back:
 
 - **Branded images in up to 3 aspect ratios** (landscape, square, portrait) for every slide
-- **A short animated video** stitching all slides together with motion
 
 All using their stored brand colors, font, and logo. Zero design work. The user writes their own post copy — brag.fast only handles the visuals.
 
@@ -54,7 +53,7 @@ Warm, slightly playful, developer-friendly. Breakfast diner energy: welcoming, q
 
 ### Logo Concept
 
-**Primary:** A fried egg where the yolk is a play button (triangle). Connects breakfast + video/media generation. Works at any size, distinct silhouette, recognizable as a favicon.
+**Primary:** A fried egg where the yolk is a play button (triangle). Connects breakfast + media generation. Works at any size, distinct silhouette, recognizable as a favicon.
 
 **Alternatives:**
 
@@ -109,14 +108,14 @@ POST /v1/brand
 | Field | Required? | What it does |
 |-------|-----------|-------------|
 | `name` | Yes | Product name shown on images |
-| `logo_url` | Yes | Logo image |
+| `logo_url` | Yes | Logo image. Fetched and cached as base64 at brand creation/update time — not fetched on every render. |
 | `website` | Yes | URL shown on images |
 | `colors.background` | Yes | Flat card background |
 | `colors.text` | Yes | Title, description text |
 | `colors.primary` | Yes | Accents, browser frame highlights, CTA elements |
 | `font` | No | Any Google Font name. Defaults to `Inter` |
 
-The font is fetched from Google Fonts CDN, converted to ArrayBuffer, and passed to Satori for rendering. Fonts are cached on the server after first fetch to avoid repeated lookups.
+The font is fetched from Google Fonts CDN, converted to ArrayBuffer, and passed to Satori for rendering. Fonts are cached on the server after first fetch.
 
 ### Generate Release Assets
 
@@ -141,10 +140,7 @@ POST /v1/release
       "description": "hoppa.app"
     }
   ],
-  "formats": ["landscape", "square"],
-  "video": true,
-  "video_format": "landscape",
-  "webhook_url": "https://..."
+  "formats": ["landscape", "square"]
 }
 ```
 
@@ -153,24 +149,20 @@ POST /v1/release
 | `brand_id` | Yes | Stored brand kit |
 | `template` | No | `classic`, `split`, or `hero`. Defaults to `classic` |
 | `slides` | Yes | Array of 1-5 slides |
-| `slides[].title` | Yes | Headline text on image/video |
+| `slides[].title` | Yes | Headline text on image |
 | `slides[].description` | No | Secondary text |
 | `slides[].image_url` | No | Screenshot/image to embed |
 | `formats` | No | Array of `landscape`, `square`, `portrait`. Defaults to all three |
-| `video` | No | `true` or `false`. Defaults to `false` |
-| `video_format` | No | `landscape`, `square`, or `portrait`. Defaults to `landscape` |
-| `webhook_url` | No | Video delivery callback |
 
-### Credit Cost Per Request
+### Credit Cost
 
 | Action | Cost |
 |--------|------|
 | 1 image (1 slide in 1 aspect ratio) | 1 credit |
-| 1 video render | 3 credits |
 
-Example: 2 slides, 2 formats, plus video = (2 × 2) + 3 = **7 credits**
+Example: 3 slides, 2 formats = 3 × 2 = **6 credits**
 
-The user controls their spend by choosing which formats to generate and whether to include video.
+The user controls their spend by choosing which formats to generate.
 
 ### Response
 
@@ -195,32 +187,13 @@ The user controls their spend by choosing which formats to generate and whether 
       "dimensions": "1080x1080"
     }
   },
-  "video": {
-    "status": "rendering",
-    "estimated_seconds": 20
-  },
-  "credits_used": 7,
-  "credits_remaining": 793,
+  "credits_used": 6,
+  "credits_remaining": 794,
   "created_at": "2026-03-05T14:30:00Z"
 }
 ```
 
-Video delivered async via webhook:
-
-```json
-{
-  "release_id": "rel_xyz789",
-  "event": "video.ready",
-  "video": {
-    "url": "https://cdn.brag.fast/.../clip.mp4",
-    "duration_seconds": 9,
-    "dimensions": "1200x675",
-    "format": "landscape"
-  }
-}
-```
-
-Images return in ~3-5 seconds. Video arrives via webhook 15-30 seconds later.
+Images return in ~3-5 seconds.
 
 ---
 
@@ -233,8 +206,6 @@ The API returns each slide rendered in the requested aspect ratios. No platform 
 | Landscape | 1200x675 | X, LinkedIn, blog headers, OG images |
 | Square | 1080x1080 | Instagram feed, Facebook, general purpose |
 | Portrait | 1080x1350 | Instagram stories, Reels covers, TikTok |
-
-Video is rendered in one format chosen by the user via `video_format`.
 
 ---
 
@@ -306,42 +277,15 @@ If a slide has no `image_url`, all templates render a text-only layout: title + 
 
 ---
 
-## Video Templates
-
-Three animation styles. All use the same layout logic as image templates but with motion between slides. Each slide gets ~3 seconds. Ends with a branded outro frame (logo + product name + website).
-
-### Video Template 1: "Slide"
-Each slide's content slides in from right, previous exits left. Clean, professional.
-
-### Video Template 2: "Stack"
-Each slide is a card that drops in and stacks on top of the previous. Slight rotation/tilt for depth. Playful energy.
-
-### Video Template 3: "Zoom"
-Content scales up from center to full size per slide. More dramatic, good for launches.
-
-User picks one video format for output:
-
-| Format | Dimensions |
-|--------|-----------|
-| `landscape` | 1200x675 |
-| `square` | 1080x1080 |
-| `portrait` | 1080x1350 |
-
----
-
 ## Tech Stack
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
 | Framework | Next.js 16 (App Router) | API routes + dashboard in one project, Turbopack stable |
-| Database | Convex | Real-time, brand kits, releases, usage tracking |
+| Database | Convex | Brand kits, releases, usage tracking |
 | Auth | Better Auth | API key management, user accounts |
 | Image Gen | Satori + Sharp | JSX → SVG → PNG, supports embedded images via base64, custom Google Fonts |
-| Video Gen | Remotion | React-based video, renders to MP4 server-side |
 | Storage | Cloudflare R2 | S3-compatible, cheap, global CDN |
-| Jobs/Queue | Convex scheduled functions | Video rendering queue |
-| API Hosting | Vercel | API routes + dashboard |
-| Video Rendering | Hetzner VPS | CPU-heavy Remotion rendering |
 | Payments | Stripe | Subscription billing |
 
 ### Architecture Flow
@@ -349,21 +293,16 @@ User picks one video format for output:
 ```
 POST /v1/release
     → Validate input + check API key
-    → Calculate credit cost (images + video)
+    → Calculate credit cost (slides × formats)
     → Check credits: trial balance or monthly plan allowance
-    → Store release record in Convex
-    → Load brand kit (colors, font, logo)
+    → Load brand kit (colors, font, logo — logo already cached as base64)
     → Fetch + cache Google Font (if not already cached)
-    → Fetch screenshot(s) + logo → convert to base64
+    → Fetch screenshot(s) → convert to base64
     → Generate images:
         → For each slide × requested formats = Satori (with font) → Sharp → PNG
         → Upload all to R2
-    → If video requested:
-        → Queue video render: all slides → Remotion on Hetzner → MP4
-        → Upload to R2 → fire webhook
     → Decrement credits
-    → Return image URLs immediately (~3-5s)
-    → Video arrives via webhook (~15-30s later)
+    → Return image URLs (~3-5s)
 ```
 
 ---
@@ -373,23 +312,22 @@ POST /v1/release
 ### Pages
 
 1. **Home / "Kitchen"** — Stats (credits used, credits remaining), recent releases, quick actions
-2. **Brand Kit / "Menu"** — Create/edit brand kits (logo, colors, font picker, website URL)
+2. **Brand Kit / "Menu"** — Create/edit brand kits (logo, colors, Google Font picker, website URL)
 3. **Releases / "Order History"** — All generated releases with asset download links
 4. **API Keys / "Keys to the Kitchen"** — Create, revoke, rotate API keys
 5. **Billing** — Stripe customer portal, current plan, credit usage, upgrade prompts
 
-Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spacious. Brand kit page includes a Google Font search/picker with live preview.
+Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spacious.
 
 ---
 
 ## Pricing
 
-### Credit Costs
+### Credit Cost
 
 | Action | Cost |
 |--------|------|
 | 1 image (1 slide in 1 aspect ratio) | 1 credit |
-| 1 video render | 3 credits |
 
 ### Plans
 
@@ -402,15 +340,15 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 
 ### Usage Examples
 
-**1 slide, all 3 formats, no video:** 3 credits
-**1 slide, all 3 formats, with video:** 6 credits
-**3 slides, all 3 formats, with video:** 12 credits
-**1 slide, 1 format, no video:** 1 credit
+**1 slide, all 3 formats:** 3 credits
+**3 slides, all 3 formats:** 9 credits
+**3 slides, 1 format:** 3 credits
+**5 slides, 2 formats:** 10 credits
 
 ### Trial Details
 
 - No credit card required, just create an account
-- 30 credits to use the full product (images + video, all templates)
+- 30 credits to use the full product (all templates, all formats)
 - Credits don't expire but don't refill
 - Once depleted: "Your plate is empty. Pick a plan to keep serving."
 
@@ -420,7 +358,7 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 - Credits reset each billing cycle
 - Growth and Scale have flexible credit selectors (dropdown to choose tier)
 - Overage: hard limit, API returns 429 with upgrade prompt
-- All plans include all templates, all formats, video, webhook support
+- All plans include all templates and all formats
 
 ---
 
@@ -429,18 +367,16 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 ### n8n / Zapier
 
 - **Zapier Action:** "Generate Release Assets" → POST /v1/release
-- **Zapier Trigger:** "Release Assets Ready" → webhook when video completes
 - **n8n:** HTTP Request node works natively with the API
 
 ### Example n8n Flow
 
 1. GitHub Webhook (new release tag) →
 2. HTTP Request to brag.fast /v1/release →
-3. Webhook Wait (video completion) →
-4. Post to X (landscape image) →
-5. Post to LinkedIn (landscape image) →
-6. Post to Instagram (square images as carousel) →
-7. Slack notification with all asset links
+3. Post to X (landscape image) →
+4. Post to LinkedIn (landscape image) →
+5. Post to Instagram (square images as carousel) →
+6. Slack notification with all asset links
 
 ### GitHub Action
 
@@ -459,10 +395,7 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
             "description": "${{ github.event.release.body }}"
           }
         ],
-        "formats": ["landscape", "square"],
-        "video": true,
-        "video_format": "landscape",
-        "webhook_url": "${{ secrets.WEBHOOK_URL }}"
+        "formats": ["landscape", "square"]
       }'
 ```
 
@@ -506,16 +439,7 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 - [ ] `POST /v1/release` returns CDN URLs instead of local files
 - [ ] `GET /v1/release/:id` endpoint
 
-### Phase 3: Video + Async (Week 4-5)
-
-- [ ] Remotion project setup on Hetzner VPS
-- [ ] 3 video animation templates (Slide, Stack, Zoom)
-- [ ] Multi-slide stitching with ~3s per slide + outro frame
-- [ ] Job queue: Convex schedules render → Hetzner processes → uploads to R2
-- [ ] Webhook delivery when video is ready
-- [ ] Retry logic for failed renders
-
-### Phase 4: Dashboard + Billing (Week 6-7)
+### Phase 3: Dashboard + Billing (Week 4-5)
 
 - [ ] Dashboard UI (brand kit form with Google Font picker, release history, API key management)
 - [ ] Stripe integration (3 paid plans with flexible credit tiers)
@@ -523,7 +447,7 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 - [ ] Credit usage tracking + upgrade prompts
 - [ ] Landing page on brag.fast
 
-### Phase 5: Launch (Week 7-8)
+### Phase 4: Launch (Week 5-6)
 
 - [ ] API documentation site
 - [ ] n8n template workflow (downloadable JSON)
@@ -532,10 +456,13 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 - [ ] Post on X, Indie Hackers, r/SideProject
 - [ ] Meta-launch: generate brag.fast's own launch assets using brag.fast
 
-### Phase 6: Post-Launch (Week 9+)
+---
 
+## Backlog (Post-MVP)
+
+- [ ] **Video generation** — Remotion-based animated videos from slides (Slide, Stack, Zoom animation styles), async rendering via Hetzner VPS, webhook delivery, 3 credits per video render
 - [ ] Zapier app submission
-- [ ] Additional templates
+- [ ] Additional image templates
 - [ ] Custom template builder (premium tier)
 - [ ] GitHub App (auto-trigger on releases, zero config)
 
@@ -545,12 +472,11 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 
 | Competitor | What they do | brag.fast difference |
 |-----------|-------------|---------------------|
-| Bannerbear | Generic image generation, you design templates | Zero design needed, pre-built templates, includes video |
-| Clipcat | Turns existing video into clips | Generates video from text + images, no input video needed |
+| Bannerbear | Generic image generation, you design templates | Zero design needed, pre-built templates |
 | Buffer/Hootsuite | Scheduling + posting | brag.fast is visual asset creation, not scheduling |
 | Canva | Design tool | Manual, not API-first, no automation |
 
-**One-line positioning:** "Bannerbear for indie hackers who don't want to design templates, with video included."
+**One-line positioning:** "Bannerbear for indie hackers who don't want to design templates."
 
 ---
 

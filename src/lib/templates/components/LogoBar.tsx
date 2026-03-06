@@ -3,33 +3,18 @@ import { Brand } from '../../types'
 
 interface LogoBarProps {
   brand: Brand
+  align?: 'left' | 'center' | 'right'
 }
 
-export function LogoBar({ brand }: LogoBarProps) {
+const alignSelf = { left: 'flex-start', center: 'center', right: 'flex-end' } as const
+
+export function LogoBar({ brand, align = 'left' }: LogoBarProps) {
+  if (!brand.logoBase64) return null
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-      }}
-    >
-      <img
-        src={brand.logoBase64}
-        width={48}
-        height={48}
-        style={{ display: 'flex', borderRadius: 8 }}
-      />
-      <span
-        style={{
-          fontSize: 22,
-          fontWeight: 700,
-          color: brand.colors.text,
-          fontFamily: 'Plus Jakarta Sans',
-        }}
-      >
-        {brand.name}
-      </span>
-    </div>
+    <img
+      src={brand.logoBase64}
+      style={{ display: 'flex', maxHeight: 48, borderRadius: 8, alignSelf: alignSelf[align] }}
+    />
   )
 }

@@ -5,20 +5,20 @@ interface TextBlockProps {
   description?: string
   textColor: string
   size: 'large' | 'medium' | 'small'
-  center?: boolean
+  align?: 'left' | 'center' | 'right'
 }
 
 const sizeConfig = {
   large: { title: 72, description: 32, lineHeight: 1.15, gap: 20 },
-  medium: { title: 56, description: 26, lineHeight: 1.2, gap: 16 },
-  small: { title: 36, description: 18, lineHeight: 1.3, gap: 12 },
+  medium: { title: 64, description: 30, lineHeight: 1.2, gap: 16 },
+  small: { title: 48, description: 22, lineHeight: 1.3, gap: 12 },
 }
 
-export function TextBlock({ title, description, textColor, size, center }: TextBlockProps) {
+const alignItems = { left: 'flex-start', center: 'center', right: 'flex-end' } as const
+
+export function TextBlock({ title, description, textColor, size, align = 'left' }: TextBlockProps) {
   const config = sizeConfig[size]
-  const centerStyles = center
-    ? { alignItems: 'center' as const, textAlign: 'center' as const }
-    : {}
+  const centerStyles = { alignItems: alignItems[align], textAlign: align as const }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: config.gap, ...centerStyles }}>
@@ -34,18 +34,23 @@ export function TextBlock({ title, description, textColor, size, center }: TextB
         {title}
       </span>
       {description && (
-        <span
-          style={{
-            fontSize: config.description,
-            fontWeight: 400,
-            color: textColor,
-            opacity: 0.75,
-            lineHeight: 1.5,
-            fontFamily: 'Plus Jakarta Sans',
-          }}
-        >
-          {description}
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: Math.round(config.description * 0.4) }}>
+          {description.split('\n').map((line, i) => (
+            <span
+              key={i}
+              style={{
+                fontSize: config.description,
+                fontWeight: 400,
+                color: textColor,
+                opacity: 0.75,
+                lineHeight: 1.5,
+                fontFamily: 'Plus Jakarta Sans',
+              }}
+            >
+              {line}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   )

@@ -21,17 +21,16 @@ export function Classic({ slide, brand, width, height, transparent }: TemplatePr
           ...(transparent ? {} : { backgroundColor: brand.colors.background }),
           padding: pad,
           justifyContent: 'center',
-          alignItems: 'center',
           gap: 20,
         }}
       >
-        <LogoBar brand={brand} />
+        <LogoBar brand={brand} align={slide.align ?? 'center'} />
         <TextBlock
           title={slide.title}
           description={slide.description}
           textColor={brand.colors.text}
           size="large"
-          center
+          align={slide.align ?? 'center'}
         />
       </div>
     )
@@ -54,21 +53,22 @@ export function Classic({ slide, brand, width, height, transparent }: TemplatePr
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <LogoBar brand={brand} />
+        <LogoBar brand={brand} align={slide.align ?? 'center'} />
         <TextBlock
           title={slide.title}
           description={slide.description}
           textColor={brand.colors.text}
           size={isLandscape ? 'small' : 'medium'}
+          align={slide.align ?? 'center'}
         />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', paddingTop: slide.device === 'mobile' && isLandscape ? 48 : 0 }}>
         <DeviceFrame
           device={slide.device}
           imageBase64={slide.imageBase64!}
           primaryColor={brand.colors.primary}
           width={frameWidth}
-          maxHeight={Math.round(height * (isLandscape ? 0.55 : 0.62))}
+          maxHeight={Math.round(height * (isLandscape ? 0.55 : 0.68))}
           flush
           canvasWidth={width}
           canvasHeight={height}

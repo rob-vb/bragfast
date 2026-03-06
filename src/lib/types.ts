@@ -16,7 +16,7 @@ export interface Brand {
 export interface BrandRecord {
   id: string
   name: string
-  logo_url: string
+  logo_url?: string
   website?: string
   colors: BrandColors
   created_at: string
@@ -24,12 +24,14 @@ export interface BrandRecord {
 }
 
 export type DeviceType = 'browser' | 'mobile'
+export type TextAlign = 'left' | 'center' | 'right'
 
 export interface Slide {
   title: string
   description?: string
   imageBase64?: string
   device: DeviceType
+  align?: TextAlign
 }
 
 export interface ReleaseRequest {
@@ -40,6 +42,7 @@ export interface ReleaseRequest {
     description?: string
     image_url?: string
     device?: 'browser' | 'mobile'
+    align?: 'left' | 'center' | 'right'
   }>
   formats?: Array<'landscape' | 'square' | 'portrait'>
   transparent?: boolean

@@ -21,7 +21,6 @@ export function Split({ slide, brand, width, height, transparent }: TemplateProp
           ...(transparent ? {} : { backgroundColor: brand.colors.background }),
           padding: pad,
           justifyContent: 'center',
-          alignItems: 'center',
           gap: 24,
         }}
       >
@@ -30,9 +29,9 @@ export function Split({ slide, brand, width, height, transparent }: TemplateProp
           description={slide.description}
           textColor={brand.colors.text}
           size="large"
-          center
+          align={slide.align ?? 'left'}
         />
-        <LogoBar brand={brand} />
+        <LogoBar brand={brand} align={slide.align ?? 'left'} />
       </div>
     )
   }
@@ -62,12 +61,13 @@ export function Split({ slide, brand, width, height, transparent }: TemplateProp
             gap: 20,
           }}
         >
-          <LogoBar brand={brand} />
+          <LogoBar brand={brand} align={slide.align ?? 'left'} />
           <TextBlock
             title={slide.title}
             description={slide.description}
             textColor={brand.colors.text}
             size="medium"
+            align={slide.align ?? 'left'}
           />
         </div>
         <div
@@ -123,9 +123,9 @@ export function Split({ slide, brand, width, height, transparent }: TemplateProp
           description={slide.description}
           textColor={brand.colors.text}
           size="medium"
-          center
+          align={slide.align ?? 'left'}
         />
-        <LogoBar brand={brand} />
+        <LogoBar brand={brand} align={slide.align ?? 'left'} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
         <DeviceFrame

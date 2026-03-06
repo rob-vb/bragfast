@@ -22,6 +22,9 @@ export async function POST(request: Request) {
     if (slide.device && !['browser', 'mobile'].includes(slide.device)) {
       return Response.json({ error: 'Invalid device. Use: browser, mobile' }, { status: 400 })
     }
+    if (slide.align && !['left', 'center', 'right'].includes(slide.align)) {
+      return Response.json({ error: 'Invalid align. Use: left, center, right' }, { status: 400 })
+    }
   }
   if (body.template && !['classic', 'split', 'hero'].includes(body.template)) {
     return Response.json({ error: 'Invalid template. Use: classic, split, hero' }, { status: 400 })

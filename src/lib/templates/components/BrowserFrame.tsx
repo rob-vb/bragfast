@@ -11,6 +11,7 @@ interface BrowserFrameProps {
 export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush }: BrowserFrameProps) {
   const dotSize = 10
   const titleBarHeight = 32
+  const imageHeight = maxHeight ? maxHeight - titleBarHeight : undefined
 
   return (
     <div
@@ -18,12 +19,11 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
         display: 'flex',
         flexDirection: 'column',
         width: `${width}px`,
-        maxHeight: maxHeight ? `${maxHeight}px` : undefined,
         borderRadius: flush ? '12px 12px 0 0' : '12px',
         overflow: 'hidden',
         border: '1px solid rgba(0,0,0,0.08)',
         borderBottom: flush ? 'none' : '1px solid rgba(0,0,0,0.08)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
+        boxShadow: '0 12px 48px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10)',
       }}
     >
       {/* Title bar */}
@@ -49,6 +49,7 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
         style={{
           display: 'flex',
           width: `${width}px`,
+          height: imageHeight ? `${imageHeight}px` : undefined,
           objectFit: 'cover',
           objectPosition: 'top',
         }}

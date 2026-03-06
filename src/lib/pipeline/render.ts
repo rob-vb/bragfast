@@ -54,7 +54,7 @@ export async function renderReleaseAsync(releaseId: string, request: ReleaseRequ
       if (brandRecord) {
         brand = {
           name: brandRecord.name,
-          logoBase64: await fetchImageAsBase64(brandRecord.logo_url),
+          logoBase64: brandRecord.logo_url ? await fetchImageAsBase64(brandRecord.logo_url) : '',
           website: brandRecord.website ?? '',
           colors: brandRecord.colors,
         }
@@ -72,6 +72,7 @@ export async function renderReleaseAsync(releaseId: string, request: ReleaseRequ
         description: s.description,
         imageBase64: s.image_url ? await fetchImageAsBase64(s.image_url) : undefined,
         device: s.device || ('browser' as const),
+        align: s.align,
       }))
     )
 
