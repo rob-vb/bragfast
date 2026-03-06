@@ -36,6 +36,15 @@ export interface Slide {
 
 export interface ReleaseRequest {
   brand_id?: string
+  // Required when brand_id is absent:
+  colors?: {
+    background: string
+    text: string
+    primary: string
+  }
+  name?: string
+  logo_url?: string
+  font?: string
   template?: 'classic' | 'split' | 'hero'
   slides: Array<{
     title: string
