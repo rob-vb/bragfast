@@ -1,4 +1,5 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "../../../../convex/_generated/api";
 
@@ -7,6 +8,9 @@ export async function POST(request: Request) {
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rateLimitResponse = await checkRateLimit(auth.userId);
+  if (rateLimitResponse) return rateLimitResponse;
 
   let body: Record<string, unknown>;
   try {

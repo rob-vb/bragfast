@@ -1,4 +1,5 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { ReleaseRequest } from "@/lib/types";
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rateLimitResponse = await checkRateLimit(auth.userId);
+  if (rateLimitResponse) return rateLimitResponse;
 
   let body: ReleaseRequest;
   try {
