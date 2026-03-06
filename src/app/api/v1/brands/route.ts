@@ -1,7 +1,31 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
-import { fetchMutation } from "convex/nextjs";
+import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../convex/_generated/api";
+
+export async function GET(request: Request) {
+  const auth = await validateApiKey(request);
+  if (!auth) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const brands = await fetchQuery(api.brands.listByUser, {
+    userId: auth.userId,
+  });
+
+  return Response.json(
+    brands.map((b) => ({
+      id: b.externalId,
+      name: b.name,
+      logo_url: b.logo_url,
+      website: b.website,
+      font: b.font,
+      colors: b.colors,
+      created_at: b.created_at,
+      updated_at: b.updated_at,
+    }))
+  );
+}
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
