@@ -10,6 +10,7 @@ export interface Brand {
   logoBase64: string
   website: string
   colors: BrandColors
+  font?: string
 }
 
 // Stored/API record shape; snake_case matches project convention
