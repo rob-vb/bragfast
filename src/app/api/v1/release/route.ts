@@ -2,7 +2,7 @@ import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { validateReleaseColors } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { ReleaseRequest } from "@/lib/types";
-import { fetchQuery } from "convex/nextjs";
+import { fetchMutation } from "convex/nextjs";
 import { api } from "../../../../convex/_generated/api";
 
 export async function POST(request: Request) {
@@ -53,32 +53,44 @@ export async function POST(request: Request) {
     return Response.json({ error: colorError }, { status: 400 });
   }
 
-  // Check credits
+  // Atomically reserve credits BEFORE render (prevents race conditions)
   const formats = body.formats || ["landscape", "square", "portrait"];
   const creditsNeeded = body.slides.length * formats.length;
 
-  const balance = await fetchQuery(api.userProfiles.getBalance, {
-    userId: auth.userId,
-  });
-  if (balance < creditsNeeded) {
-    return Response.json(
-      {
-        error: "Your plate is empty. Pick a plan to keep serving.",
-        credits_remaining: balance,
-        credits_needed: creditsNeeded,
-      },
-      { status: 429 }
-    );
+  let remaining: number;
+  try {
+    remaining = await fetchMutation(api.userProfiles.reserve, {
+      userId: auth.userId,
+      amount: creditsNeeded,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("Insufficient credits")) {
+      return Response.json(
+        {
+          error: "Your plate is empty. Pick a plan to keep serving.",
+          credits_needed: creditsNeeded,
+        },
+        { status: 429 }
+      );
+    }
+    throw err;
   }
 
   try {
     const result = await createRelease(body, auth.userId);
-    result.credits_remaining = balance;
+    result.credits_remaining = remaining;
+    // Credits already reserved — render refunds on failure
     renderReleaseAsync(result.release_id, body, auth.userId).catch(
       console.error
     );
     return Response.json(result, { status: 202 });
   } catch (err) {
+    // Refund on release creation failure
+    await fetchMutation(api.userProfiles.refund, {
+      userId: auth.userId,
+      amount: creditsNeeded,
+    }).catch(console.error);
     console.error("Failed to create release:", err);
     return Response.json(
       { error: "Something burned. Try again." },

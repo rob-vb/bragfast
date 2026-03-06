@@ -156,10 +156,7 @@ export async function renderReleaseAsync(
       images,
     });
 
-    await convex.mutation(api.userProfiles.deduct, {
-      userId,
-      amount: slides.length * formats.length,
-    });
+    // Credits already reserved by the route handler — no deduction needed here
 
     if (request.webhook_url) {
       const result = await getRelease(releaseId);
@@ -167,6 +164,16 @@ export async function renderReleaseAsync(
     }
   } catch (err) {
     console.error(`Render failed for ${releaseId}:`, err);
+
+    // Refund reserved credits on render failure
+    const formats = request.formats || ["landscape", "square", "portrait"];
+    const amount = request.slides.length * formats.length;
+    try {
+      await convex.mutation(api.userProfiles.refund, { userId, amount });
+    } catch (refundErr) {
+      console.error(`Failed to refund credits:`, refundErr);
+    }
+
     try {
       await convex.mutation(api.releases.markFailed, {
         externalId: releaseId,

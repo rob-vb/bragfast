@@ -38,7 +38,9 @@ export const getBalance = query({
   },
 });
 
-export const deduct = mutation({
+// Atomically check balance and deduct. Throws if insufficient.
+// Call BEFORE starting render to prevent race conditions.
+export const reserve = mutation({
   args: { userId: v.string(), amount: v.number() },
   handler: async (ctx, { userId, amount }) => {
     const profile = await ctx.db
@@ -49,6 +51,21 @@ export const deduct = mutation({
     if (profile.creditsRemaining < amount)
       throw new Error("Insufficient credits");
     const remaining = profile.creditsRemaining - amount;
+    await ctx.db.patch(profile._id, { creditsRemaining: remaining });
+    return remaining;
+  },
+});
+
+// Refund credits on render failure.
+export const refund = mutation({
+  args: { userId: v.string(), amount: v.number() },
+  handler: async (ctx, { userId, amount }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) throw new Error("User profile not found");
+    const remaining = profile.creditsRemaining + amount;
     await ctx.db.patch(profile._id, { creditsRemaining: remaining });
     return remaining;
   },
