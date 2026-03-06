@@ -54,7 +54,7 @@ export default function SignupPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-[#4A3326]">
+      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">
         Create your account
       </h1>
       <p className="mt-2 text-sm text-[#4A3326]/60">

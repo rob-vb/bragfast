@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <>
-        <h1 className="text-3xl font-bold text-[#4A3326]">Check your email</h1>
+        <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">Check your email</h1>
         <p className="mt-3 text-sm text-[#4A3326]/60 leading-relaxed">
           If an account exists for <strong className="text-[#4A3326]">{email}</strong>,
           we&apos;ve sent a password reset link.
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-[#4A3326]">
+      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">
         Reset your password
       </h1>
       <p className="mt-2 text-sm text-[#4A3326]/60">

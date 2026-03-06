@@ -38,7 +38,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-[#4A3326]">Welcome back</h1>
+      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">Welcome back</h1>
       <p className="mt-2 text-sm text-[#4A3326]/60">
         Sign in to your Bragfast account
       </p>
