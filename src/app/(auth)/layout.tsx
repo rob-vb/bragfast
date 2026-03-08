@@ -9,15 +9,13 @@ export default function AuthLayout({
     <div className="flex min-h-screen">
       {/* Branded panel — hidden on mobile */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-[#F8AF3C]">
-        <div className="flex h-48 w-48 items-center justify-center rounded-full bg-[#F9F6ED]">
-          <Image
-            src="/logo-icon.svg"
-            alt="Bragfast"
-            width={120}
-            height={124}
-            priority
-          />
-        </div>
+        <Image
+          src="/logo-icon.svg"
+          alt="Bragfast"
+          width={160}
+          height={166}
+          priority
+        />
       </div>
 
       {/* Form panel */}
