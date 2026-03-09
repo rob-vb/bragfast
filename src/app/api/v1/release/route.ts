@@ -78,6 +78,12 @@ export async function POST(request: Request) {
         { status: 429 }
       );
     }
+    if (msg.includes("User profile not found")) {
+      return Response.json(
+        { error: "No user profile found. Create an API key first to initialize your account." },
+        { status: 403 }
+      );
+    }
     throw err;
   }
 
