@@ -1,7 +1,7 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { getRelease } from "@/lib/pipeline/render";
 import { fetchQuery } from "convex/nextjs";
-import { api } from "../../../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { NextRequest } from "next/server";
 
 export async function GET(

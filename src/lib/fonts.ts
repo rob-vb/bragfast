@@ -1,11 +1,14 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 
-interface FontConfig {
+type Weight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
+type FontStyle = 'normal' | 'italic'
+
+export interface FontConfig {
   name: string
   data: ArrayBuffer
-  weight: number
-  style: string
+  weight: Weight
+  style: FontStyle
 }
 
 const fontCache = new Map<string, FontConfig[]>()

@@ -2,7 +2,7 @@ import satori from "satori";
 import sharp from "sharp";
 import crypto from "crypto";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { templates } from "../templates/registry";
 import { loadFontsForFamily } from "../fonts";
 import { fetchImageAsBase64 } from "../images";

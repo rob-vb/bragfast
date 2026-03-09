@@ -1,6 +1,6 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "../../../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 
 export async function GET(
   request: Request,
@@ -68,7 +68,8 @@ export async function PATCH(
       externalId: id,
       userId: auth.userId,
       ...updates,
-    } as Parameters<typeof api.brands.update>[0]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     if (!updated) {
       return Response.json({ error: "Brand not found" }, { status: 404 });

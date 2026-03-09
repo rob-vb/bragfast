@@ -4,7 +4,7 @@ import { validateReleaseColors } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { ReleaseRequest } from "@/lib/types";
 import { fetchMutation } from "convex/nextjs";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);

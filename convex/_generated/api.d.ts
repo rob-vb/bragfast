@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as brands from "../brands.js";
+import type * as rateLimit from "../rateLimit.js";
 import type * as releases from "../releases.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as verifyKey from "../verifyKey.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   brands: typeof brands;
+  rateLimit: typeof rateLimit;
   releases: typeof releases;
   userProfiles: typeof userProfiles;
   verifyKey: typeof verifyKey;

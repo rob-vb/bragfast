@@ -7,7 +7,7 @@ export const verifyApiKey = query({
   handler: async (ctx, { key }) => {
     const { auth } = await authComponent.getAuth(createAuth, ctx);
     const result = await auth.api.verifyApiKey({ body: { key } });
-    if (!result?.valid) return null;
+    if (!result?.valid || !result.key) return null;
     return { userId: result.key.userId as string };
   },
 });

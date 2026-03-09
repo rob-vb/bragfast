@@ -18,7 +18,7 @@ const alignItems = { left: 'flex-start', center: 'center', right: 'flex-end' } a
 
 export function TextBlock({ title, description, textColor, size, align = 'left' }: TextBlockProps) {
   const config = sizeConfig[size]
-  const centerStyles = { alignItems: alignItems[align], textAlign: align as const }
+  const centerStyles = { alignItems: alignItems[align], textAlign: align as 'left' | 'center' | 'right' }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: config.gap, ...centerStyles }}>

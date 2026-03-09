@@ -1,7 +1,7 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 
 export async function GET(request: Request) {
   const auth = await validateApiKey(request);
