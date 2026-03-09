@@ -12,8 +12,7 @@ export async function validateApiKey(
   const token = extractBearerToken(request.headers);
   if (!token) return null;
 
-  // Dynamic import to avoid pulling Convex generated code at module level
-  const { api } = await import("../../../convex/_generated/api");
+  const { api } = await import("@convex/_generated/api");
   const result = await fetchQuery(api.verifyKey.verifyApiKey, { key: token });
   return result;
 }

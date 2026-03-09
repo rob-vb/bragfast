@@ -32,6 +32,16 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_externalId", ["externalId"]),
 
+  apiKeys: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    keyHash: v.string(),
+    prefix: v.string(),
+    created_at: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_keyHash", ["keyHash"]),
+
   rateLimits: defineTable({
     userId: v.string(),
     windowStart: v.number(),

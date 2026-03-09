@@ -4,17 +4,11 @@ import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { betterAuth } from "better-auth";
-import { apiKey } from "better-auth/plugins";
 import authConfig from "./auth.config";
 
 const siteUrl = process.env.SITE_URL!;
 
-import authSchema from "./betterAuth/schema";
-
-export const authComponent = createClient<DataModel, typeof authSchema>(
-  components.betterAuth,
-  { local: { schema: authSchema } },
-);
+export const authComponent = createClient<DataModel>(components.betterAuth);
 
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
@@ -31,7 +25,7 @@ export const createAuth = (
       enabled: true,
       requireEmailVerification: false,
     },
-    plugins: [convex({ authConfig }), apiKey()],
+    plugins: [convex({ authConfig })],
   });
 };
 
