@@ -1,18 +1,7 @@
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
-import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
-
-const auth = convexBetterAuthNextJs({
-  convexUrl: process.env.NEXT_PUBLIC_CONVEX_URL!,
-  convexSiteUrl: process.env.CONVEX_SITE_URL!,
-});
-
-async function getSessionUser() {
-  const token = await auth.getToken();
-  if (!token) return null;
-  const user = await auth.fetchAuthQuery(api.auth.getCurrentUser);
-  return user;
-}
+import { getSessionUser } from "@/lib/auth/get-session-user";
+import type { Id } from "@convex/_generated/dataModel";
 
 export async function GET() {
   const user = await getSessionUser();
@@ -50,4 +39,31 @@ export async function POST(request: Request) {
   });
 
   return Response.json(result, { status: 201 });
+}
+
+export async function DELETE(request: Request) {
+  const user = await getSessionUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: { id?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (!body.id) {
+    return Response.json({ error: "id is required" }, { status: 400 });
+  }
+
+  const result = await fetchMutation(api.apiKeys.remove, {
+    id: body.id as Id<"apiKeys">,
+    userId: user._id,
+  });
+
+  return result
+    ? Response.json({ success: true })
+    : Response.json({ error: "Key not found" }, { status: 404 });
 }
