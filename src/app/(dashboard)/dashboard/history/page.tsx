@@ -2,10 +2,9 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
-import { PixelTable } from "@/components/dashboard/pixel-table";
-import { PixelBadge } from "@/components/dashboard/pixel-badge";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { HistoryFilter } from "@/components/dashboard/history-filter";
+import { HistoryTable } from "@/components/dashboard/history-table";
 
 export default async function HistoryPage({
   searchParams,
@@ -38,26 +37,7 @@ export default async function HistoryPage({
           </p>
         </PixelCard>
       ) : (
-        <PixelTable
-          headers={["ID", "Template", "Slides", "Status", "Credits", "Date"]}
-        >
-          {releases.map((r) => (
-            <tr key={r._id} className="hover:bg-[#F8AF3C]/5">
-              <td className="px-4 py-3 font-mono text-xs">{r.externalId}</td>
-              <td className="px-4 py-3 text-xs">{r.template}</td>
-              <td className="px-4 py-3 text-xs">
-                {r.images ? Object.keys(r.images as Record<string, unknown>).length : "-"}
-              </td>
-              <td className="px-4 py-3">
-                <PixelBadge status={r.status} />
-              </td>
-              <td className="px-4 py-3 text-xs">{r.credits_used}</td>
-              <td className="px-4 py-3 text-xs">
-                {new Date(r.created_at).toLocaleDateString()}
-              </td>
-            </tr>
-          ))}
-        </PixelTable>
+        <HistoryTable releases={releases} />
       )}
     </div>
   );
