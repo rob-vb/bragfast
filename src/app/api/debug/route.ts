@@ -1,7 +1,8 @@
 export async function GET() {
   return Response.json({
-    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL ? "set" : "missing",
-    CONVEX_SITE_URL: process.env.CONVEX_SITE_URL ? "set" : "missing",
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL ?? "missing",
+    CONVEX_SITE_URL: process.env.CONVEX_SITE_URL ?? "missing",
+    NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL ?? "missing",
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ? "set" : "missing",
   });
 }
