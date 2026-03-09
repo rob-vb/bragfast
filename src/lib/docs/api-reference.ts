@@ -32,6 +32,95 @@ export const API_REFERENCE: ApiSection[] = [
     ],
   },
 
+  // ─── Async ─────────────────────────────────────────────────────────
+  {
+    title: "Async",
+    anchor: "async",
+    description:
+      "Image generation is asynchronous. When you create a release, the API responds immediately with 202 Accepted and a release_id. The images are rendered in the background — usually within a few seconds.",
+    endpoints: [
+      {
+        method: "POST",
+        path: "/api/v1/release",
+        anchor: "async-flow",
+        title: "How it works",
+        description:
+          "There are two ways to get the finished images:\n\n1. Polling — call GET /api/v1/release/:id until the status changes from \"pending\" to \"completed\".\n\n2. Webhook — pass a webhook_url when creating the release. Bragfast will POST the completed release object (with image URLs) to that URL when rendering finishes.\n\nPolling is simpler for scripts and one-off use. Webhooks are better for production integrations where you don't want to loop.",
+        requestExample: {
+          curl: `# 1. Create a release
+curl -X POST https://bragfast.com/api/v1/release \\
+  -H "Authorization: Bearer bf_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "brand_id": "brd_abc123",
+    "slides": [{ "title": "Shipped v2.0" }],
+    "webhook_url": "https://your-app.com/webhooks/bragfast"
+  }'
+
+# 2. Or poll until completed
+curl https://bragfast.com/api/v1/release/rel_abc123 \\
+  -H "Authorization: Bearer bf_your_api_key"`,
+          javascript: `// 1. Create a release (returns immediately)
+const release = await fetch("https://bragfast.com/api/v1/release", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer bf_your_api_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    brand_id: "brd_abc123",
+    slides: [{ title: "Shipped v2.0" }],
+    webhook_url: "https://your-app.com/webhooks/bragfast",
+  }),
+}).then(r => r.json())
+
+// 2. Or poll until status is "completed"
+let result
+do {
+  await new Promise(r => setTimeout(r, 2000))
+  result = await fetch(
+    \`https://bragfast.com/api/v1/release/\${release.release_id}\`,
+    { headers: { "Authorization": "Bearer bf_your_api_key" } }
+  ).then(r => r.json())
+} while (result.status === "pending")`,
+          python: `import requests
+import time
+
+# 1. Create a release (returns immediately)
+release = requests.post(
+    "https://bragfast.com/api/v1/release",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+    json={
+        "brand_id": "brd_abc123",
+        "slides": [{"title": "Shipped v2.0"}],
+        "webhook_url": "https://your-app.com/webhooks/bragfast",
+    },
+).json()
+
+# 2. Or poll until status is "completed"
+while True:
+    time.sleep(2)
+    result = requests.get(
+        f"https://bragfast.com/api/v1/release/{release['release_id']}",
+        headers={"Authorization": "Bearer bf_your_api_key"},
+    ).json()
+    if result["status"] != "pending":
+        break`,
+        },
+        responseStatus: 202,
+        responseExample: `{
+  "release_id": "rel_abc123",
+  "status": "pending",
+  "images": null,
+  "credits_used": 3,
+  "credits_remaining": 27,
+  "created_at": "2026-03-09T12:00:00.000Z",
+  "webhook_url": "https://your-app.com/webhooks/bragfast"
+}`,
+      },
+    ],
+  },
+
   // ─── Errors ────────────────────────────────────────────────────────
   {
     title: "Errors",
