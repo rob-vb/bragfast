@@ -1,0 +1,62 @@
+import { API_REFERENCE } from "@/lib/docs/api-reference"
+import { DocsSidebar } from "@/components/docs/docs-sidebar"
+import { DocsSidebarMobile } from "@/components/docs/docs-sidebar-mobile"
+import { DocsSection } from "@/components/docs/docs-section"
+
+export default function DocsPage() {
+  return (
+    <div className="min-h-screen bg-white">
+      <DocsSidebarMobile sections={API_REFERENCE} />
+
+      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr]">
+        {/* Sidebar — hidden on mobile */}
+        <div className="hidden md:block border-r border-zinc-100">
+          <DocsSidebar sections={API_REFERENCE} />
+        </div>
+
+        {/* Main content */}
+        <main className="min-w-0 px-6 md:px-10 xl:px-16 pb-24">
+          {/* Hero / Base URL */}
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 pt-12 pb-10 border-b border-zinc-100">
+            <div>
+              <h1 className="text-3xl font-bold text-zinc-900 mb-4">
+                Bragfast API Reference
+              </h1>
+              <p className="text-sm text-zinc-600 leading-relaxed max-w-lg">
+                Bragfast auto-generates branded social media images for your
+                product releases. Design a brand kit, POST your release details,
+                and receive images in multiple aspect ratios.
+              </p>
+            </div>
+            <div>
+              <div className="rounded-lg bg-zinc-900 px-5 py-4">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                  Base URL
+                </span>
+                <p className="mt-1 text-sm font-mono text-emerald-400">
+                  https://bragfast.com/api/v1
+                </p>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-zinc-200 px-5 py-4">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
+                  Authentication
+                </span>
+                <p className="mt-1 text-sm font-mono text-zinc-700">
+                  Authorization: Bearer bf_...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* API Sections */}
+          <div className="divide-y divide-zinc-100">
+            {API_REFERENCE.map((section) => (
+              <DocsSection key={section.anchor} section={section} />
+            ))}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
