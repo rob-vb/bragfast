@@ -5,7 +5,7 @@ import { DocsSection } from "@/components/docs/docs-section"
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white font-[family-name:var(--font-geist-sans)]">
       <DocsSidebarMobile sections={API_REFERENCE} />
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr]">
@@ -15,11 +15,11 @@ export default function DocsPage() {
         </div>
 
         {/* Main content */}
-        <main className="min-w-0 px-6 md:px-10 xl:px-16 pb-24">
+        <main className="min-w-0 px-4 sm:px-6 md:px-10 xl:px-16 pb-24">
           {/* Hero / Base URL */}
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 pt-12 pb-10 border-b border-zinc-100">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 xl:gap-8 pt-8 md:pt-12 pb-10 border-b border-zinc-100">
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900 mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 mb-3 sm:mb-4">
                 Bragfast API Reference
               </h1>
               <p className="text-sm text-zinc-600 leading-relaxed max-w-lg">
@@ -28,21 +28,21 @@ export default function DocsPage() {
                 and receive images in multiple aspect ratios.
               </p>
             </div>
-            <div>
-              <div className="rounded-lg bg-zinc-900 px-5 py-4">
+            <div className="flex flex-col gap-3">
+              <div className="rounded-lg bg-zinc-900 px-4 sm:px-5 py-3 sm:py-4">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                   Base URL
                 </span>
-                <p className="mt-1 text-sm font-mono text-emerald-400">
+                <p className="mt-1 text-sm font-mono text-emerald-400 break-all">
                   https://bragfast.com/api/v1
                 </p>
               </div>
 
-              <div className="mt-4 rounded-lg border border-zinc-200 px-5 py-4">
+              <div className="rounded-lg border border-zinc-200 px-4 sm:px-5 py-3 sm:py-4">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
                   Authentication
                 </span>
-                <p className="mt-1 text-sm font-mono text-zinc-700">
+                <p className="mt-1 text-sm font-mono text-zinc-700 break-all">
                   Authorization: Bearer bf_...
                 </p>
               </div>

@@ -1,66 +1,87 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { ApiSection } from "@/lib/docs/types"
 import { DocsSidebar } from "./docs-sidebar"
 
 export function DocsSidebarMobile({ sections }: { sections: ApiSection[] }) {
   const [open, setOpen] = useState(false)
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [open])
+
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-50 md:hidden rounded-md bg-white border border-zinc-200 p-2 shadow-sm"
-        aria-label="Open navigation"
-      >
-        <svg
-          className="h-5 w-5 text-zinc-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
+      {/* Sticky mobile header */}
+      <div className="sticky top-0 z-40 md:hidden flex items-center gap-3 bg-white/90 backdrop-blur-sm border-b border-zinc-100 px-4 py-3">
+        <button
+          onClick={() => setOpen(true)}
+          className="rounded-md p-1.5 -ml-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          aria-label="Open navigation"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-          />
-        </svg>
-      </button>
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            />
+          </svg>
+        </button>
+        <span className="text-sm font-semibold text-zinc-900">Bragfast</span>
+        <span className="text-xs text-zinc-400">API v1</span>
+      </div>
 
-      {open && (
-        <>
-          <div
-            className="fixed inset-0 z-50 bg-black/20"
-            onClick={() => setOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-zinc-200 shadow-xl">
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 rounded-md p-1 text-zinc-400 hover:text-zinc-600"
-              aria-label="Close navigation"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <div onClick={() => setOpen(false)}>
-              <DocsSidebar sections={sections} />
-            </div>
-          </div>
-        </>
-      )}
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/25 transition-opacity duration-200 ${
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Drawer */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transition-transform duration-250 ease-out ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <button
+          onClick={() => setOpen(false)}
+          className="absolute top-5 right-3 rounded-md p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
+          aria-label="Close navigation"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+        <div onClick={() => setOpen(false)}>
+          <DocsSidebar sections={sections} />
+        </div>
+      </div>
     </>
   )
 }

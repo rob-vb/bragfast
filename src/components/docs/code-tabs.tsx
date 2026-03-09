@@ -26,10 +26,10 @@ export function CodeTabs({
             key={key}
             onClick={() => setActive(key)}
             className={cn(
-              "px-4 py-2 text-xs font-medium transition-colors",
+              "px-3 sm:px-4 py-2.5 text-xs font-medium transition-colors min-w-[64px]",
               active === key
                 ? "text-white bg-zinc-800/50"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-zinc-500 hover:text-zinc-300 active:text-zinc-200"
             )}
           >
             {TAB_LABELS[key]}

@@ -413,7 +413,7 @@ data = response.json()`,
             name: "website",
             type: "string",
             required: false,
-            description: "Your website URL, shown on images.",
+            description: "Your website URL. Stored for reference.",
           },
           {
             name: "font",
