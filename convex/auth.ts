@@ -9,7 +9,12 @@ import authConfig from "./auth.config";
 
 const siteUrl = process.env.SITE_URL!;
 
-export const authComponent = createClient<DataModel>(components.betterAuth);
+import authSchema from "./betterAuth/schema";
+
+export const authComponent = createClient<DataModel, typeof authSchema>(
+  components.betterAuth,
+  { local: { schema: authSchema } },
+);
 
 export const createAuth = (
   ctx: GenericCtx<DataModel>,
