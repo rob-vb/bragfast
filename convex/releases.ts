@@ -21,6 +21,16 @@ export const create = mutation({
   },
 });
 
+export const listByUser = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) =>
+    ctx.db
+      .query("releases")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .collect(),
+});
+
 export const getByExternalId = query({
   args: { externalId: v.string() },
   handler: async (ctx, { externalId }) =>

@@ -56,6 +56,44 @@ export const reserve = mutation({
   },
 });
 
+export const getStats = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+
+    const releases = await ctx.db
+      .query("releases")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const creditsUsedThisMonth = releases
+      .filter((r) => r.created_at >= monthStart)
+      .reduce((sum, r) => sum + r.credits_used, 0);
+
+    const totalImages = releases
+      .filter((r) => r.status === "completed" && r.images)
+      .reduce((sum, r) => {
+        const imgs = r.images as Record<string, Record<string, string>> | undefined;
+        if (!imgs) return sum;
+        return sum + Object.values(imgs).reduce((s, formats) => s + Object.keys(formats).length, 0);
+      }, 0);
+
+    return {
+      creditsRemaining: profile?.creditsRemaining ?? 0,
+      plan: profile?.plan ?? "trial",
+      creditsUsedThisMonth,
+      totalReleases: releases.length,
+      totalImages,
+    };
+  },
+});
+
 // Refund credits on render failure.
 export const refund = mutation({
   args: { userId: v.string(), amount: v.number() },
