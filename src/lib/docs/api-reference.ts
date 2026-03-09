@@ -126,20 +126,19 @@ while True:
     title: "Errors",
     anchor: "errors",
     description:
-      "Bragfast uses standard HTTP status codes. 2xx indicates success, 4xx indicates a client error, and 5xx indicates a server error.",
-    endpoints: [
-      {
-        method: "GET",
-        path: "",
-        anchor: "error-codes",
-        title: "Status codes",
-        description:
-          "200 OK — 201 Created — 202 Accepted (async processing) — 204 No Content — 400 Bad Request — 401 Unauthorized — 403 Forbidden — 404 Not Found — 429 Too Many Requests (rate limit or insufficient credits) — 500 Internal Server Error",
-        responseStatus: 400,
-        responseExample: `{
-  "error": "At least 1 slide is required"
-}`,
-      },
+      "Bragfast uses standard HTTP status codes. 2xx indicates success, 4xx indicates a client error, and 5xx indicates a server error. All error responses include a JSON body with an error field.",
+    endpoints: [],
+    statusCodes: [
+      { code: 200, label: "OK", description: "Request succeeded." },
+      { code: 201, label: "Created", description: "Resource created successfully." },
+      { code: 202, label: "Accepted", description: "Request accepted for async processing. Poll or use a webhook." },
+      { code: 204, label: "No Content", description: "Deleted successfully. No response body." },
+      { code: 400, label: "Bad Request", description: "Invalid or missing parameters." },
+      { code: 401, label: "Unauthorized", description: "Missing or invalid API key." },
+      { code: 403, label: "Forbidden", description: "No user profile. Create an API key first." },
+      { code: 404, label: "Not Found", description: "Resource doesn't exist or you don't own it." },
+      { code: 429, label: "Too Many Requests", description: "Rate limit exceeded or insufficient credits." },
+      { code: 500, label: "Internal Server Error", description: "Something went wrong on our end." },
     ],
   },
 

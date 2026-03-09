@@ -26,10 +26,17 @@ export interface ApiEndpoint {
   responseStatus: number
 }
 
+export interface StatusCode {
+  code: number
+  label: string
+  description: string
+}
+
 export interface ApiSection {
   title: string
   anchor: string
   description: string
   endpoints: ApiEndpoint[]
   sampleObject?: string
+  statusCodes?: StatusCode[]
 }
