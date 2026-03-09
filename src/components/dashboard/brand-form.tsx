@@ -25,6 +25,7 @@ export function BrandForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const [form, setForm] = useState<BrandData>(
     initial ?? {
       name: "",
@@ -65,9 +66,15 @@ export function BrandForm({
 
     setLoading(false);
 
+    const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
       setError(data.error || "Something went wrong");
+      return;
+    }
+
+    if (action === "create" && data.id) {
+      setCreatedId(data.id);
       return;
     }
 
@@ -77,6 +84,41 @@ export function BrandForm({
 
   const inputClass =
     "w-full border-2 border-[#4A3326] bg-white px-3 py-2 text-sm text-[#4A3326] placeholder:text-[#4A3326]/40 focus:outline-none focus:ring-2 focus:ring-[#F8AF3C]";
+
+  if (createdId) {
+    return (
+      <PixelCard className="border-[#F8AF3C] bg-[#F8AF3C]/10">
+        <p className="font-[family-name:var(--font-press-start)] text-xs text-[#4A3326] mb-2">
+          Brand created!
+        </p>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 bg-white border-2 border-[#4A3326] px-3 py-2 font-mono text-xs break-all">
+            {createdId}
+          </code>
+          <PixelButton
+            variant="ghost"
+            onClick={() => navigator.clipboard.writeText(createdId)}
+          >
+            Copy
+          </PixelButton>
+        </div>
+        <p className="mt-2 text-xs text-[#4A3326]/60">
+          Use this ID in your API calls to reference this brand.
+        </p>
+        <div className="mt-4 flex gap-3">
+          <PixelButton onClick={() => router.push("/dashboard/brands")}>
+            Back to Brands
+          </PixelButton>
+          <PixelButton
+            variant="ghost"
+            onClick={() => router.push(`/dashboard/brands/${createdId}`)}
+          >
+            Edit Brand
+          </PixelButton>
+        </div>
+      </PixelCard>
+    );
+  }
 
   return (
     <PixelCard>

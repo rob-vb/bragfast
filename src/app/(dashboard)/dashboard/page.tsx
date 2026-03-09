@@ -7,7 +7,7 @@ import { PixelTable } from "@/components/dashboard/pixel-table";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
 import Link from "next/link";
 
-export default async function KitchenPage() {
+export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
@@ -28,7 +28,7 @@ export default async function KitchenPage() {
   return (
     <div className="space-y-8">
       <h1 className="font-[family-name:var(--font-press-start)] text-lg text-[#4A3326]">
-        Kitchen
+        Dashboard
       </h1>
 
       {/* Stats row */}
