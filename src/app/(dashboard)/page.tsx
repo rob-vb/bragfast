@@ -1,7 +1,84 @@
-export default function KitchenPage() {
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@convex/_generated/api";
+import { getSessionUser } from "@/lib/auth/get-session-user";
+import { redirect } from "next/navigation";
+import { PixelCard } from "@/components/dashboard/pixel-card";
+import { PixelTable } from "@/components/dashboard/pixel-table";
+import { PixelBadge } from "@/components/dashboard/pixel-badge";
+import Link from "next/link";
+
+export default async function KitchenPage() {
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+
+  const [stats, releases] = await Promise.all([
+    fetchQuery(api.userProfiles.getStats, { userId: user._id }),
+    fetchQuery(api.releases.listByUser, { userId: user._id }),
+  ]);
+
+  const recent = releases.slice(0, 10);
+
+  const statCards = [
+    { label: "Credits Left", value: stats.creditsRemaining },
+    { label: "Used (Month)", value: stats.creditsUsedThisMonth },
+    { label: "Releases", value: stats.totalReleases },
+    { label: "Images", value: stats.totalImages },
+  ];
+
   return (
-    <h1 className="font-[family-name:var(--font-press-start)] text-xl text-[#4A3326]">
-      Kitchen
-    </h1>
+    <div className="space-y-8">
+      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-[#4A3326]">
+        Kitchen
+      </h1>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {statCards.map((s) => (
+          <PixelCard key={s.label}>
+            <p className="font-[family-name:var(--font-press-start)] text-2xl text-[#4A3326]">
+              {s.value}
+            </p>
+            <p className="mt-1 text-xs text-[#4A3326]/60">{s.label}</p>
+          </PixelCard>
+        ))}
+      </div>
+
+      {/* Recent orders */}
+      <div>
+        <h2 className="mb-4 font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
+          Recent Orders
+        </h2>
+        {recent.length === 0 ? (
+          <PixelCard>
+            <p className="text-center text-sm text-[#4A3326]/60 py-8">
+              No releases yet. Fire off your first one via the API!
+            </p>
+          </PixelCard>
+        ) : (
+          <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
+            {recent.map((r) => (
+              <tr key={r._id} className="hover:bg-[#F8AF3C]/5">
+                <td className="px-4 py-3 font-mono text-xs">
+                  <Link
+                    href={`/dashboard/history?id=${r.externalId}`}
+                    className="underline underline-offset-4 hover:text-[#F8AF3C]"
+                  >
+                    {r.externalId.slice(0, 14)}...
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-xs">{r.template}</td>
+                <td className="px-4 py-3">
+                  <PixelBadge status={r.status} />
+                </td>
+                <td className="px-4 py-3 text-xs">{r.credits_used}</td>
+                <td className="px-4 py-3 text-xs">
+                  {new Date(r.created_at).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </PixelTable>
+        )}
+      </div>
+    </div>
   );
 }
