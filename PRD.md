@@ -407,49 +407,49 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 
 No auth, no database, no storage, no billing. Just a local Next.js 16 app with API routes that accept JSON and return images. Prove the templates look good before building infrastructure.
 
-- [ ] Next.js 16 project setup with Turbopack
-- [ ] `POST /v1/release` endpoint (no auth, accepts JSON, returns local file URLs)
-- [ ] Satori + Sharp pipeline working (JSX → SVG → PNG)
-- [ ] Google Font loading working (fetch from CDN, convert to ArrayBuffer)
-- [ ] Placeholder brand kit hardcoded in config (logo, colors, font, name)
-- [ ] Placeholder screenshot image for testing
-- [ ] **3 image templates built and working:**
-  - [ ] Classic (text top, image bottom)
-  - [ ] Split (side by side on landscape, stacked on square/portrait)
-  - [ ] Hero (full bleed image, overlay, inverted text)
-- [ ] **Each template renders in 3 aspect ratios:**
-  - [ ] Landscape (1200x675)
-  - [ ] Square (1080x1080)
-  - [ ] Portrait (1080x1350)
-- [ ] Multi-slide support (1-5 slides per request)
-- [ ] Images saved locally to `/public/output/` and URLs returned in response
-- [ ] No-image fallback working (text-only slides)
-- [ ] `formats` field working (user picks which aspect ratios to generate)
+- [x] Next.js 16 project setup with Turbopack
+- [x] `POST /v1/release` endpoint (no auth, accepts JSON, returns local file URLs)
+- [x] Satori + Sharp pipeline working (JSX → SVG → PNG)
+- [x] Google Font loading working (fetch from CDN, convert to ArrayBuffer)
+- [x] Placeholder brand kit hardcoded in config (logo, colors, font, name)
+- [x] Placeholder screenshot image for testing
+- [x] **3 image templates built and working:**
+  - [x] Classic (text top, image bottom)
+  - [x] Split (side by side on landscape, stacked on square/portrait)
+  - [x] Hero (full bleed image, overlay, inverted text)
+- [x] **Each template renders in 3 aspect ratios:**
+  - [x] Landscape (1200x675)
+  - [x] Square (1080x1080)
+  - [x] Portrait (1080x1350)
+- [x] Multi-slide support (1-5 slides per request)
+- [x] Images saved locally to `/public/output/` and URLs returned in response
+- [x] No-image fallback working (text-only slides)
+- [x] `formats` field working (user picks which aspect ratios to generate)
 
 **End result:** curl the endpoint with slide data, get back images locally, visually validate all 9 template/format combinations look right.
 
 ### Phase 2: Infrastructure + Full Image API (Week 2-3)
 
-- [ ] Convex schema (brands, releases, assets, api_keys, credits)
-- [ ] Better Auth setup + API key generation
-- [ ] Brand kit CRUD endpoints (replace hardcoded config)
-- [ ] Google Font caching layer (fetch once, cache on server)
-- [ ] Image pipeline connected to Cloudflare R2 (upload + CDN URLs)
-- [ ] Credit calculation and enforcement
-- [ ] `POST /v1/release` returns CDN URLs instead of local files
-- [ ] `GET /v1/release/:id` endpoint
+- [x] Convex schema (brands, releases, assets, api_keys, credits)
+- [x] Better Auth setup + API key generation
+- [x] Brand kit CRUD endpoints (replace hardcoded config)
+- [x] Google Font caching layer (fetch once, cache on server)
+- [x] Image pipeline connected to Cloudflare R2 (upload + CDN URLs)
+- [x] Credit calculation and enforcement
+- [x] `POST /v1/release` returns CDN URLs instead of local files
+- [x] `GET /v1/release/:id` endpoint
 
 ### Phase 3: Dashboard + Billing (Week 4-5)
 
 - [ ] Dashboard UI (brand kit form with Google Font picker, release history, API key management)
 - [ ] Stripe integration (3 paid plans with flexible credit tiers)
-- [ ] Trial credit system (30 credits on signup, decrement on use)
+- [x] Trial credit system (30 credits on signup, decrement on use)
 - [ ] Credit usage tracking + upgrade prompts
 - [ ] Landing page on brag.fast
+- [ ] Developer docs site (reference: https://developers.bannerbear.com — clean sidebar nav, endpoint docs with request/response examples, code snippets)
 
 ### Phase 4: Launch (Week 5-6)
 
-- [ ] API documentation site
 - [ ] n8n template workflow (downloadable JSON)
 - [ ] GitHub Action example in docs
 - [ ] Product Hunt launch
