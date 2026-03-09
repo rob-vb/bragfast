@@ -9,7 +9,7 @@ export function HistoryFilter({ current }: { current: string }) {
   const router = useRouter();
 
   return (
-    <div className="flex gap-1">
+    <div className="flex flex-wrap gap-1">
       {filters.map((f) => (
         <PixelButton
           key={f}

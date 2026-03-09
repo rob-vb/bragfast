@@ -120,7 +120,7 @@ export function BrandForm({
         </div>
 
         {/* Color pickers */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {(["background", "text", "primary"] as const).map((key) => (
             <div key={key}>
               <label className="mb-1 block text-xs font-bold text-[#4A3326] capitalize">

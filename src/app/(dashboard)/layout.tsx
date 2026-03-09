@@ -16,10 +16,10 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-[#FFF8F0]">
       {/* Top bar */}
       <header className="sticky top-0 z-50 border-b-2 border-[#4A3326] bg-[#FFF8F0]">
-        <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
-          <Link href="/dashboard" className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 sm:gap-6 px-4 py-3">
+          <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
             <Image src="/logo-icon.svg" alt="Bragfast" width={32} height={33} />
-            <span className="font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
+            <span className="hidden sm:inline font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
               BRAGFAST
             </span>
           </Link>

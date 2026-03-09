@@ -14,7 +14,7 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1">
+    <nav className="flex gap-1 overflow-x-auto">
       {tabs.map((tab) => {
         const isActive =
           tab.href === "/dashboard"
@@ -26,7 +26,7 @@ export function DashboardNav() {
             key={tab.href}
             href={tab.href}
             className={`
-              font-[family-name:var(--font-press-start)] text-xs px-3 py-2
+              font-[family-name:var(--font-press-start)] text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 whitespace-nowrap
               border-2 border-[#4A3326]
               transition-all
               ${

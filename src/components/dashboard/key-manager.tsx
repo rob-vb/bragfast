@@ -81,7 +81,7 @@ export function KeyManager() {
       )}
 
       {/* Create form */}
-      <div className="flex items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         {showCreate ? (
           <>
             <input
