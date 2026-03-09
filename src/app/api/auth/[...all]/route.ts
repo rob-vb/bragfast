@@ -19,5 +19,13 @@ export async function POST(request: Request) {
     if (blocked) return blocked;
   }
 
-  return auth.handler.POST(request);
+  try {
+    return await auth.handler.POST(request);
+  } catch (err) {
+    console.error("Auth POST error:", err);
+    return Response.json(
+      { error: err instanceof Error ? err.message : "Internal auth error" },
+      { status: 500 }
+    );
+  }
 }
