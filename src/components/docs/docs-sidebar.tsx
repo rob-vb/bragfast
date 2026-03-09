@@ -12,7 +12,7 @@ function buildGroups(sections: ApiSection[]): SidebarGroup[] {
 
   for (const section of sections) {
     if (
-      ["introduction", "authentication", "async", "errors"].includes(section.anchor)
+      ["introduction", "authentication", "async", "status-codes"].includes(section.anchor)
     ) {
       intro.items.push({ title: section.title, anchor: section.anchor })
     } else {

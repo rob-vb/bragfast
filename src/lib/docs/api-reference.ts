@@ -121,10 +121,10 @@ while True:
     ],
   },
 
-  // ─── Errors ────────────────────────────────────────────────────────
+  // ─── Status Codes ──────────────────────────────────────────────────
   {
-    title: "Errors",
-    anchor: "errors",
+    title: "Status Codes",
+    anchor: "status-codes",
     description:
       "Bragfast uses standard HTTP status codes. 2xx indicates success, 4xx indicates a client error, and 5xx indicates a server error. All error responses include a JSON body with an error field.",
     endpoints: [],
