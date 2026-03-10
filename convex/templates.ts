@@ -60,8 +60,8 @@ export const update = mutation({
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .unique();
     if (!template) throw new Error("Template not found");
-    if (template.userId !== userId) throw new Error("Not authorized");
     if (template.isDefault) throw new Error("Cannot modify default templates");
+    if (template.userId !== userId) throw new Error("Not authorized");
 
     const patch: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -94,8 +94,8 @@ export const remove = mutation({
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .unique();
     if (!template) throw new Error("Template not found");
-    if (template.userId !== userId) throw new Error("Not authorized");
     if (template.isDefault) throw new Error("Cannot delete default templates");
+    if (template.userId !== userId) throw new Error("Not authorized");
     await ctx.db.delete(template._id);
     return true;
   },
@@ -128,6 +128,45 @@ export const listDefaults = query({
       .collect(),
 });
 
+export const clone = mutation({
+  args: {
+    sourceExternalId: v.string(),
+    userId: v.string(),
+    externalId: v.string(),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, { sourceExternalId, userId, externalId, name }) => {
+    const source = await ctx.db
+      .query("templates")
+      .withIndex("by_externalId", (q) => q.eq("externalId", sourceExternalId))
+      .unique();
+    if (!source) throw new Error("Source template not found");
+    if (!source.isDefault && source.userId !== userId) throw new Error("Not authorized");
+
+    const now = new Date().toISOString();
+    const cloneName = name ?? `${source.name} (Copy)`;
+
+    await ctx.db.insert("templates", {
+      userId,
+      externalId,
+      name: cloneName,
+      config: source.config,
+      isDefault: false,
+      created_at: now,
+      updated_at: now,
+    });
+
+    return {
+      id: externalId,
+      name: cloneName,
+      isDefault: false,
+      config: source.config,
+      created_at: now,
+      updated_at: now,
+    };
+  },
+});
+
 export const seedDefaults = mutation({
   args: {},
   handler: async (ctx) => {
@@ -152,10 +191,10 @@ export const seedDefaults = mutation({
           background: "brand",
           spacing: "normal" as const,
           blocks: [
-            { type: "logo" as const, alignment: "center" as const },
+            { type: "logo" as const, alignment: "left" as const },
             { type: "image" as const, alignment: "center" as const, device: "browser" as const, display: "inline" as const },
-            { type: "title" as const, alignment: "center" as const, fontSize: "large" as const },
-            { type: "description" as const, alignment: "center" as const, fontSize: "medium" as const },
+            { type: "title" as const, alignment: "left" as const, fontSize: "large" as const },
+            { type: "description" as const, alignment: "left" as const, fontSize: "medium" as const },
           ],
         },
         created_at: now,
@@ -170,10 +209,10 @@ export const seedDefaults = mutation({
           background: "brand",
           spacing: "normal" as const,
           blocks: [
-            { type: "logo" as const, alignment: "center" as const },
+            { type: "logo" as const, alignment: "left" as const },
             { type: "title" as const, alignment: "left" as const, fontSize: "large" as const, split: "left" as const },
             { type: "image" as const, alignment: "center" as const, device: "browser" as const, display: "inline" as const, split: "right" as const },
-            { type: "description" as const, alignment: "center" as const, fontSize: "medium" as const },
+            { type: "description" as const, alignment: "left" as const, fontSize: "medium" as const },
           ],
         },
         created_at: now,
@@ -189,8 +228,8 @@ export const seedDefaults = mutation({
           spacing: "normal" as const,
           blocks: [
             { type: "image" as const, alignment: "center" as const, device: "none" as const, display: "fullBleed" as const },
-            { type: "title" as const, alignment: "center" as const, fontSize: "large" as const },
-            { type: "description" as const, alignment: "center" as const, fontSize: "medium" as const },
+            { type: "title" as const, alignment: "left" as const, fontSize: "large" as const },
+            { type: "description" as const, alignment: "left" as const, fontSize: "medium" as const },
           ],
         },
         created_at: now,
