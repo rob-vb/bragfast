@@ -70,7 +70,7 @@ function renderObject(
           letterSpacing: obj.letterSpacing || 0,
           lineHeight: obj.lineHeight || 1.2,
           textAlign: obj.textAlign || "left",
-          color: colors.text,
+          color: obj.color || colors.text,
           width: "100%",
           wordWrap: "break-word",
         }}>
@@ -87,28 +87,12 @@ function renderObject(
           letterSpacing: obj.letterSpacing || 0,
           lineHeight: obj.lineHeight || 1.4,
           textAlign: obj.textAlign || "left",
-          color: colors.text,
+          color: obj.color || colors.text,
           opacity: 0.85,
           width: "100%",
           wordWrap: "break-word",
         }}>
           {slide.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}
-        </div>
-      );
-
-    case "productName":
-      return (
-        <div style={{
-          fontFamily: obj.fontFamily || "Plus Jakarta Sans",
-          fontSize: obj.fontSize || 14,
-          fontWeight: obj.fontWeight || 700,
-          letterSpacing: obj.letterSpacing || 0,
-          lineHeight: obj.lineHeight || 1.2,
-          textAlign: obj.textAlign || "left",
-          color: colors.text,
-          width: "100%",
-        }}>
-          {brand.name || "Product"}
         </div>
       );
 

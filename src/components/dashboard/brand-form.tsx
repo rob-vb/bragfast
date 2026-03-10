@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
+import { CopyButton } from "@/components/dashboard/copy-button";
 import { FONT_CATALOG } from "@/lib/font-catalog";
 
 type BrandData = {
@@ -123,6 +124,12 @@ export function BrandForm({
 
   return (
     <PixelCard>
+      {brandId && (
+        <div className="mb-4 flex items-center gap-2 text-[11px] font-mono text-[#4A3326]/50">
+          <span>ID: {brandId}</span>
+          <CopyButton text={brandId} />
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-1 block text-xs font-bold text-[#4A3326]">Name *</label>

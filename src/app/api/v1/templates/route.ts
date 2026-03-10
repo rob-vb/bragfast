@@ -68,26 +68,29 @@ export async function POST(request: Request) {
 
   const config = body.config as Record<string, unknown>;
 
-  if (!Array.isArray(config.blocks)) {
-    return Response.json({ error: "config.blocks must be an array" }, { status: 400 });
-  }
+  // v2 canvas configs are validated by the Convex mutation
+  if (config.version !== 2) {
+    if (!Array.isArray(config.blocks)) {
+      return Response.json({ error: "config.blocks must be an array" }, { status: 400 });
+    }
 
-  const blocks = config.blocks as Array<Record<string, unknown>>;
+    const blocks = config.blocks as Array<Record<string, unknown>>;
 
-  if (blocks.length < 1 || blocks.length > 8) {
-    return Response.json(
-      { error: "config.blocks must have between 1 and 8 items" },
-      { status: 400 }
-    );
-  }
+    if (blocks.length < 1 || blocks.length > 8) {
+      return Response.json(
+        { error: "config.blocks must have between 1 and 8 items" },
+        { status: 400 }
+      );
+    }
 
-  const blockTypes = blocks.map((b) => b.type);
-  const uniqueTypes = new Set(blockTypes);
-  if (uniqueTypes.size !== blockTypes.length) {
-    return Response.json(
-      { error: "config.blocks cannot have duplicate block types" },
-      { status: 400 }
-    );
+    const blockTypes = blocks.map((b) => b.type);
+    const uniqueTypes = new Set(blockTypes);
+    if (uniqueTypes.size !== blockTypes.length) {
+      return Response.json(
+        { error: "config.blocks cannot have duplicate block types" },
+        { status: 400 }
+      );
+    }
   }
 
   const externalId = `tmpl_${crypto.randomBytes(12).toString("hex")}`;

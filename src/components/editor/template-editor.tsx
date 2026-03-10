@@ -14,7 +14,7 @@ function useFontLoader(config: CanvasTemplateConfig) {
     const families = new Set<string>();
     for (const fmt of Object.values(config.formats)) {
       for (const obj of fmt.objects) {
-        if (obj.fontFamily && obj.fontFamily !== "Plus Jakarta Sans") {
+        if (obj.fontFamily) {
           families.add(obj.fontFamily);
         }
       }

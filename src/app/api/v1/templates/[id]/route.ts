@@ -3,7 +3,7 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
-const VALID_BLOCK_TYPES = ["title", "description", "image", "logo", "productName"] as const;
+const VALID_BLOCK_TYPES = ["title", "description", "image", "logo"] as const;
 
 function validateBlocks(blocks: unknown[]): string | null {
   if (blocks.length < 1 || blocks.length > 8) {
@@ -74,12 +74,15 @@ export async function PATCH(
 
   if (body.config !== undefined) {
     const config = body.config as Record<string, unknown>;
-    if (!Array.isArray(config.blocks)) {
-      return Response.json({ error: "config.blocks must be an array" }, { status: 400 });
-    }
-    const blocksError = validateBlocks(config.blocks);
-    if (blocksError) {
-      return Response.json({ error: blocksError }, { status: 400 });
+    // v2 canvas configs are validated by the Convex mutation
+    if (config.version !== 2) {
+      if (!Array.isArray(config.blocks)) {
+        return Response.json({ error: "config.blocks must be an array" }, { status: 400 });
+      }
+      const blocksError = validateBlocks(config.blocks);
+      if (blocksError) {
+        return Response.json({ error: blocksError }, { status: 400 });
+      }
     }
   }
 

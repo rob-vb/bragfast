@@ -11,6 +11,7 @@
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
 import type * as brands from "../brands.js";
+import type * as http from "../http.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as releases from "../releases.js";
 import type * as templates from "../templates.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
   auth: typeof auth;
   brands: typeof brands;
+  http: typeof http;
   rateLimit: typeof rateLimit;
   releases: typeof releases;
   templates: typeof templates;

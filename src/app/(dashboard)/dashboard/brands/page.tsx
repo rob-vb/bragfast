@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import Link from "next/link";
+import { CopyButton } from "@/components/dashboard/copy-button";
 
 export default async function BrandsPage() {
   const user = await getSessionUser();
@@ -49,6 +50,10 @@ export default async function BrandsPage() {
                 {brand.font && (
                   <p className="mt-2 text-xs text-[#4A3326]/60">{brand.font}</p>
                 )}
+                <p className="mt-2 flex items-center gap-1 text-[10px] font-mono text-[#4A3326]/40">
+                  {brand.externalId}
+                  <CopyButton text={brand.externalId} />
+                </p>
               </PixelCard>
             </Link>
           ))}

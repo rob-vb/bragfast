@@ -1,4 +1,4 @@
-export type BlockType = "title" | "description" | "image" | "logo" | "productName";
+export type BlockType = "title" | "description" | "image" | "logo";
 export type Alignment = "left" | "center" | "right";
 export type FontSize = "small" | "medium" | "large";
 export type DeviceOption = "browser" | "mobile" | "none";

@@ -245,8 +245,6 @@ function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number)
       return { ...base, ...textDefaults, x: 48, y: canvasH * 0.6, width: canvasW - 96, height: 120, fontSize: 48, fontWeight: 700 };
     case "description":
       return { ...base, ...textDefaults, x: 48, y: canvasH * 0.75, width: canvasW - 96, height: 80, fontSize: 22 };
-    case "productName":
-      return { ...base, ...textDefaults, x: 48, y: 32, width: 200, height: 48, fontSize: 14, fontWeight: 700 };
     case "image":
       return { ...base, x: 48, y: 96, width: canvasW - 96, height: canvasH * 0.5, device: "browser" as const, objectFit: "cover" as const };
     case "logo":

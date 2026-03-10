@@ -15,7 +15,6 @@ const ALL_TYPES: { type: ObjectType; label: string }[] = [
   { type: "description", label: "Description" },
   { type: "image", label: "Image" },
   { type: "logo", label: "Logo" },
-  { type: "productName", label: "Product Name" },
 ];
 
 export function AddObjectButton() {

@@ -154,28 +154,6 @@ function renderBlock(block: Block, ctx: BlockContext, key: number): React.ReactE
       )
     }
 
-    case 'productName': {
-      const rawSize: FontSizeLabel = block.fontSize ?? 'medium'
-      const size = isLandscape ? landscapeSize(rawSize) : rawSize
-      const fontSizes = { large: 32, medium: 24, small: 18 }
-      return (
-        <span
-          key={key}
-          style={{
-            display: 'flex',
-            fontSize: fontSizes[size],
-            fontWeight: 700,
-            color: ctx.textColor,
-            opacity: 0.7,
-            fontFamily: 'Plus Jakarta Sans',
-            alignSelf: alignItemsMap[align],
-          }}
-        >
-          {brand.name}
-        </span>
-      )
-    }
-
     default:
       return null
   }

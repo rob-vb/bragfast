@@ -1,4 +1,4 @@
-export type ObjectType = "title" | "description" | "image" | "logo" | "productName";
+export type ObjectType = "title" | "description" | "image" | "logo";
 export type TextAlign = "left" | "center" | "right";
 export type VerticalAlign = "top" | "center" | "bottom";
 export type DeviceOption = "browser" | "mobile" | "none";
@@ -17,6 +17,7 @@ export interface TemplateObject {
   zIndex: number;
 
   // Text-only
+  color?: string;
   fontFamily?: string;
   fontSize?: number;
   fontWeight?: number;

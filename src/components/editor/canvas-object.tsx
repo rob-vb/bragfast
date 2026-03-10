@@ -168,7 +168,7 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
   }, [obj.x, obj.y, obj.width, obj.height]);
 
   const handleDoubleClick = useCallback(() => {
-    if (obj.type === "title" || obj.type === "description" || obj.type === "productName") {
+    if (obj.type === "title" || obj.type === "description") {
       setIsEditing(true);
     }
   }, [obj.type]);
@@ -215,13 +215,13 @@ function renderObjectPreview(
   onBlur: () => void,
 ) {
   const textStyle: React.CSSProperties = {
-    fontFamily: obj.fontFamily || "Plus Jakarta Sans, sans-serif",
+    fontFamily: `${obj.fontFamily || "Plus Jakarta Sans"}, sans-serif`,
     fontSize: obj.fontSize || 24,
     fontWeight: obj.fontWeight || 400,
     letterSpacing: obj.letterSpacing || 0,
     lineHeight: obj.lineHeight || 1.3,
     textAlign: obj.textAlign || "left",
-    color: colors.text,
+    color: obj.color || colors.text,
     width: "100%",
     height: "100%",
     overflow: "hidden",
@@ -234,10 +234,9 @@ function renderObjectPreview(
   const placeholders: Record<string, string> = {
     title: "TITLE GOES HERE",
     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    productName: "Product",
   };
 
-  if (obj.type === "title" || obj.type === "description" || obj.type === "productName") {
+  if (obj.type === "title" || obj.type === "description") {
     const text = obj.previewText || placeholders[obj.type] || "";
     if (isEditing) {
       return (
@@ -315,15 +314,20 @@ function renderObjectPreview(
   }
 
   if (obj.type === "logo") {
+    const checkerboard = "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px";
     return (
       <div style={{
         width: "100%", height: "100%",
-        background: "#f4f4f5",
+        background: checkerboard,
         borderRadius: 4,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#a1a1aa", fontSize: 11,
+        border: "1px dashed #a1a1aa",
       }}>
-        Logo
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <path d="M21 15l-5-5L5 21" />
+        </svg>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import type { CanvasTemplateConfig } from "./canvas-types";
 
-function textObj(id: string, type: "title" | "description" | "productName", overrides: Record<string, unknown> = {}) {
+function textObj(id: string, type: "title" | "description", overrides: Record<string, unknown> = {}) {
   return {
     id,
     type,
@@ -26,7 +26,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { ...textObj("logo", "productName"), x: 40, y: 24, width: 200, height: 48, fontSize: 14, zIndex: 4 },
             { id: "image", type: "image", name: "image", x: 40, y: 88, width: 1120, height: 380, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
             { ...textObj("title", "title"), x: 40, y: 488, width: 1120, height: 80, fontSize: 36, zIndex: 2 },
             { ...textObj("description", "description"), x: 40, y: 576, width: 1120, height: 60, fontSize: 18, zIndex: 3 },
@@ -34,7 +33,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         square: {
           objects: [
-            { ...textObj("logo", "productName"), x: 48, y: 32, width: 200, height: 48, fontSize: 14, zIndex: 4 },
             { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
             { ...textObj("title", "title"), x: 48, y: 720, width: 984, height: 120, fontSize: 48, zIndex: 2 },
             { ...textObj("description", "description"), x: 48, y: 856, width: 984, height: 80, fontSize: 22, zIndex: 3 },
@@ -42,7 +40,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { ...textObj("logo", "productName"), x: 48, y: 32, width: 200, height: 48, fontSize: 14, zIndex: 4 },
             { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 750, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
             { ...textObj("title", "title"), x: 48, y: 876, width: 984, height: 150, fontSize: 56, zIndex: 2 },
             { ...textObj("description", "description"), x: 48, y: 1044, width: 984, height: 100, fontSize: 24, zIndex: 3 },
@@ -59,7 +56,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { ...textObj("logo", "productName"), x: 40, y: 24, width: 200, height: 48, fontSize: 14, zIndex: 4 },
             { ...textObj("title", "title"), x: 40, y: 200, width: 540, height: 200, fontSize: 36, zIndex: 2 },
             { id: "image", type: "image", name: "image", x: 620, y: 88, width: 540, height: 480, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
             { ...textObj("description", "description"), x: 40, y: 580, width: 540, height: 60, fontSize: 18, zIndex: 3 },
@@ -67,7 +63,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         square: {
           objects: [
-            { ...textObj("logo", "productName"), x: 48, y: 32, width: 200, height: 48, fontSize: 14, zIndex: 4 },
             { ...textObj("title", "title"), x: 48, y: 200, width: 480, height: 300, fontSize: 42, zIndex: 2 },
             { id: "image", type: "image", name: "image", x: 556, y: 96, width: 476, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
             { ...textObj("description", "description"), x: 48, y: 880, width: 984, height: 80, fontSize: 22, zIndex: 3 },
@@ -75,7 +70,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { ...textObj("logo", "productName"), x: 48, y: 32, width: 200, height: 48, fontSize: 14, zIndex: 4 },
             { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
             { ...textObj("title", "title"), x: 48, y: 726, width: 984, height: 200, fontSize: 56, zIndex: 2 },
             { ...textObj("description", "description"), x: 48, y: 944, width: 984, height: 100, fontSize: 24, zIndex: 3 },
