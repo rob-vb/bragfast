@@ -1,4 +1,6 @@
 import type { TemplateConfig } from "./config-types";
+import type { CanvasTemplateConfig } from "./canvas-types";
+import { getCanvasDefaultConfig } from "./canvas-defaults";
 
 export const DEFAULT_TEMPLATES: Record<string, { name: string; config: TemplateConfig }> = {
   classic: {
@@ -41,7 +43,9 @@ export const DEFAULT_TEMPLATES: Record<string, { name: string; config: TemplateC
   },
 };
 
-/** Resolve a legacy template name to its config */
-export function getDefaultConfig(name: string): TemplateConfig | null {
+/** Resolve a template name to its config (checks v2 canvas configs first, then legacy) */
+export function getDefaultConfig(name: string): TemplateConfig | CanvasTemplateConfig | null {
+  const canvasConfig = getCanvasDefaultConfig(name);
+  if (canvasConfig) return canvasConfig;
   return DEFAULT_TEMPLATES[name]?.config ?? null;
 }

@@ -5,9 +5,11 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { ConfigRenderer } from "@/lib/templates/config-renderer";
-import { loadFontsForFamily } from "@/lib/fonts";
+import { CanvasRenderer } from "@/lib/templates/canvas-renderer";
+import { loadFontsForFamily, loadFontsForObjects } from "@/lib/fonts";
 import { FORMAT_DIMENSIONS } from "@/lib/types";
 import type { TemplateConfig } from "@/lib/templates/config-types";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 export async function POST(
   request: Request,
@@ -56,17 +58,30 @@ export async function POST(
   const { width, height } = FORMAT_DIMENSIONS["landscape"];
 
   try {
-    const fonts = await loadFontsForFamily(undefined);
-    const templateConfig = template.config as TemplateConfig;
+    const templateConfig = template.config as TemplateConfig | CanvasTemplateConfig;
+    const isCanvas = typeof templateConfig === "object" && templateConfig !== null
+      && "version" in templateConfig && (templateConfig as any).version === 2;
 
-    const jsx = ConfigRenderer({
-      config: templateConfig,
-      slide: placeholderSlide,
-      brand: placeholderBrand,
-      width,
-      height,
-      transparent: false,
-    });
+    const fonts = isCanvas
+      ? await loadFontsForObjects((templateConfig as CanvasTemplateConfig).formats.landscape.objects)
+      : await loadFontsForFamily(undefined);
+
+    const jsx = isCanvas
+      ? CanvasRenderer({
+          config: templateConfig as CanvasTemplateConfig,
+          format: "landscape",
+          slide: placeholderSlide,
+          brand: placeholderBrand,
+          transparent: false,
+        })
+      : ConfigRenderer({
+          config: templateConfig as TemplateConfig,
+          slide: placeholderSlide,
+          brand: placeholderBrand,
+          width,
+          height,
+          transparent: false,
+        });
 
     const svg = await satori(jsx, { width, height, fonts });
     const png = await sharp(Buffer.from(svg)).ensureAlpha().png().toBuffer();

@@ -4,14 +4,20 @@ import crypto from "crypto";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { ConfigRenderer } from "../templates/config-renderer";
+import { CanvasRenderer } from "../templates/canvas-renderer";
 import { getDefaultConfig } from "../templates/default-configs";
 import type { TemplateConfig } from "../templates/config-types";
-import { loadFontsForFamily } from "../fonts";
+import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
+import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { fetchImageAsBase64 } from "../images";
 import { uploadPng } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, Brand, FORMAT_DIMENSIONS } from "../types";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+function isCanvasConfig(config: unknown): config is CanvasTemplateConfig {
+  return typeof config === "object" && config !== null && "version" in config && (config as any).version === 2;
+}
 
 export async function createRelease(
   request: ReleaseRequest,
@@ -104,8 +110,8 @@ export async function renderReleaseAsync(
     const brand = await resolveBrand(request);
     const templateName = request.template || "classic";
 
-    // Resolve template config
-    let templateConfig: TemplateConfig;
+    // Resolve template config (v1 TemplateConfig or v2 CanvasTemplateConfig)
+    let templateConfig: TemplateConfig | CanvasTemplateConfig;
     const defaultConfig = getDefaultConfig(templateName);
     if (defaultConfig) {
       templateConfig = defaultConfig;
@@ -115,14 +121,14 @@ export async function renderReleaseAsync(
       if (!tmpl.isDefault && tmpl.userId !== userId) {
         throw new Error(`Template not found: ${templateName}`);
       }
-      templateConfig = tmpl.config as TemplateConfig;
+      templateConfig = tmpl.config as TemplateConfig | CanvasTemplateConfig;
     } else {
       throw new Error(`Invalid template: ${templateName}`);
     }
 
     const formats = request.formats || ["landscape", "square", "portrait"];
-    const fonts = await loadFontsForFamily(brand.font);
     const transparent = request.transparent ?? false;
+    const isCanvas = isCanvasConfig(templateConfig);
 
     const slides = await Promise.all(
       request.slides.map(async (s) => ({
@@ -142,15 +148,28 @@ export async function renderReleaseAsync(
       const { width, height } = FORMAT_DIMENSIONS[format];
       const slideUrls: string[] = [];
 
+      // Font loading per-format: canvas configs may use different fonts per format
+      const fonts = isCanvas
+        ? await loadFontsForObjects((templateConfig as CanvasTemplateConfig).formats[format as FormatKey].objects)
+        : await loadFontsForFamily(brand.font);
+
       for (let i = 0; i < slides.length; i++) {
-        const jsx = ConfigRenderer({
-          config: templateConfig,
-          slide: slides[i],
-          brand,
-          width,
-          height,
-          transparent,
-        });
+        const jsx = isCanvas
+          ? CanvasRenderer({
+              config: templateConfig as CanvasTemplateConfig,
+              format: format as FormatKey,
+              slide: slides[i],
+              brand,
+              transparent,
+            })
+          : ConfigRenderer({
+              config: templateConfig as TemplateConfig,
+              slide: slides[i],
+              brand,
+              width,
+              height,
+              transparent,
+            });
         const svg = await satori(jsx, { width, height, fonts });
         const png = await sharp(Buffer.from(svg))
           .ensureAlpha()
