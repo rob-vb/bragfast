@@ -8,6 +8,9 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.05;
 
+/** Keep at least this fraction of the canvas visible in the viewport */
+const VISIBLE_MIN = 0.2;
+
 export function EditorCanvas() {
   const { state, dispatch, activeObjects } = useEditor();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,6 +22,19 @@ export function EditorCanvas() {
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
+  /** Clamp pan so the canvas can't be scrolled fully out of view */
+  const clampPan = useCallback((p: { x: number; y: number }, z: number) => {
+    if (!containerRef.current) return p;
+    const { clientWidth, clientHeight } = containerRef.current;
+    const scaledW = dims.width * z;
+    const scaledH = dims.height * z;
+    const minVisible = VISIBLE_MIN;
+    return {
+      x: Math.max(-scaledW * (1 - minVisible), Math.min(clientWidth * (1 - minVisible), p.x)),
+      y: Math.max(-scaledH * (1 - minVisible), Math.min(clientHeight * (1 - minVisible), p.y)),
+    };
+  }, [dims.width, dims.height]);
+
   // Fit canvas to viewport on mount and format change
   useEffect(() => {
     if (!containerRef.current) return;
@@ -28,7 +44,6 @@ export function EditorCanvas() {
     const scaleY = (clientHeight - padding) / dims.height;
     const fitZoom = Math.min(scaleX, scaleY, 1);
     setZoom(fitZoom);
-    // Center the canvas
     setPan({
       x: (clientWidth - dims.width * fitZoom) / 2,
       y: (clientHeight - dims.height * fitZoom) / 2,
@@ -50,20 +65,24 @@ export function EditorCanvas() {
         const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, oldZoom + delta));
         const ratio = newZoom / oldZoom;
 
-        setPan((p) => ({
+        setPan((p) => clampPan({
           x: cursorX - (cursorX - p.x) * ratio,
           y: cursorY - (cursorY - p.y) * ratio,
-        }));
+        }, newZoom));
         return newZoom;
       });
     } else {
       // Pan
-      setPan((p) => ({
-        x: p.x - e.deltaX,
-        y: p.y - e.deltaY,
-      }));
+      setZoom((z) => {
+        const currentZ = z ?? 0.5;
+        setPan((p) => clampPan({
+          x: p.x - e.deltaX,
+          y: p.y - e.deltaY,
+        }, currentZ));
+        return z;
+      });
     }
-  }, []);
+  }, [clampPan]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -72,10 +91,9 @@ export function EditorCanvas() {
     return () => el.removeEventListener("wheel", handleWheel);
   }, [handleWheel]);
 
-  // Middle-click or Space+drag to pan
+  // Middle-click drag to pan
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button === 1) {
-      // Middle click
       e.preventDefault();
       isPanning.current = true;
       panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
@@ -85,12 +103,13 @@ export function EditorCanvas() {
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (isPanning.current) {
-      setPan({
+      const newPan = {
         x: panStart.current.panX + (e.clientX - panStart.current.x),
         y: panStart.current.panY + (e.clientY - panStart.current.y),
-      });
+      };
+      setPan(clampPan(newPan, zoom ?? 0.5));
     }
-  }, []);
+  }, [clampPan, zoom]);
 
   const handlePointerUp = useCallback(() => {
     isPanning.current = false;
@@ -107,13 +126,13 @@ export function EditorCanvas() {
       const oldZoom = prev ?? 0.5;
       const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, oldZoom + delta));
       const ratio = newZoom / oldZoom;
-      setPan((p) => ({
+      setPan((p) => clampPan({
         x: cx - (cx - p.x) * ratio,
         y: cy - (cy - p.y) * ratio,
-      }));
+      }, newZoom));
       return newZoom;
     });
-  }, []);
+  }, [clampPan]);
 
   const fitToView = useCallback(() => {
     if (!containerRef.current) return;
@@ -128,6 +147,18 @@ export function EditorCanvas() {
       y: (clientHeight - dims.height * fitZoom) / 2,
     });
   }, [dims.width, dims.height]);
+
+  // Cmd+0 to fit to view
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "0") {
+        e.preventDefault();
+        fitToView();
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [fitToView]);
 
   return (
     <div
@@ -182,7 +213,7 @@ export function EditorCanvas() {
         <button
           onClick={(e) => { e.stopPropagation(); fitToView(); }}
           className="px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 transition-colors min-w-[44px] text-center"
-          title="Fit to view"
+          title="Fit to view (Cmd+0)"
         >
           {Math.round(currentZoom * 100)}%
         </button>
