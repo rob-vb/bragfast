@@ -3,6 +3,9 @@ import { useRef, useState, useCallback } from "react";
 import { useEditor } from "./editor-context";
 import { SelectionHandles, type HandlePosition } from "./selection-handles";
 import type { TemplateObject } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
+
+const SNAP_THRESHOLD = 8; // px in canvas space
 
 interface CanvasObjectProps {
   obj: TemplateObject;
@@ -10,10 +13,88 @@ interface CanvasObjectProps {
   isSelected: boolean;
 }
 
+function snapEdges(
+  x: number, y: number, w: number, h: number,
+  canvasW: number, canvasH: number,
+  others: TemplateObject[], selfId: string,
+) {
+  // Collect snap lines: canvas edges + other objects' edges
+  const xLines = [0, canvasW];
+  const yLines = [0, canvasH];
+  for (const o of others) {
+    if (o.id === selfId) continue;
+    xLines.push(o.x, o.x + o.width);
+    yLines.push(o.y, o.y + o.height);
+  }
+
+  let sx = x, sy = y, sw = w, sh = h;
+
+  // Snap left edge
+  for (const line of xLines) {
+    if (Math.abs(sx - line) < SNAP_THRESHOLD) { sx = line; break; }
+  }
+  // Snap right edge
+  for (const line of xLines) {
+    if (Math.abs((sx + sw) - line) < SNAP_THRESHOLD) { sx = line - sw; break; }
+  }
+  // Snap top edge
+  for (const line of yLines) {
+    if (Math.abs(sy - line) < SNAP_THRESHOLD) { sy = line; break; }
+  }
+  // Snap bottom edge
+  for (const line of yLines) {
+    if (Math.abs((sy + sh) - line) < SNAP_THRESHOLD) { sy = line - sh; break; }
+  }
+
+  return { x: sx, y: sy, w: sw, h: sh };
+}
+
+function snapResize(
+  x: number, y: number, w: number, h: number,
+  handle: string,
+  canvasW: number, canvasH: number,
+  others: TemplateObject[], selfId: string,
+) {
+  const xLines = [0, canvasW];
+  const yLines = [0, canvasH];
+  for (const o of others) {
+    if (o.id === selfId) continue;
+    xLines.push(o.x, o.x + o.width);
+    yLines.push(o.y, o.y + o.height);
+  }
+
+  // Snap the edge being dragged
+  if (handle.includes("e")) {
+    const right = x + w;
+    for (const line of xLines) {
+      if (Math.abs(right - line) < SNAP_THRESHOLD) { w = line - x; break; }
+    }
+  }
+  if (handle.includes("w")) {
+    for (const line of xLines) {
+      if (Math.abs(x - line) < SNAP_THRESHOLD) { w += (x - line); x = line; break; }
+    }
+  }
+  if (handle.includes("s")) {
+    const bottom = y + h;
+    for (const line of yLines) {
+      if (Math.abs(bottom - line) < SNAP_THRESHOLD) { h = line - y; break; }
+    }
+  }
+  if (handle.includes("n")) {
+    for (const line of yLines) {
+      if (Math.abs(y - line) < SNAP_THRESHOLD) { h += (y - line); y = line; break; }
+    }
+  }
+
+  return { x, y, w: Math.max(20, w), h: Math.max(20, h) };
+}
+
 export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
-  const { dispatch, state } = useEditor();
+  const { dispatch, state, activeObjects } = useEditor();
   const [isEditing, setIsEditing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dims = FORMAT_DIMENSIONS[state.activeFormat];
   const dragStart = useRef<{ x: number; y: number; objX: number; objY: number } | null>(null);
   const resizeStart = useRef<{
     handle: HandlePosition;
@@ -37,11 +118,14 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
     if (dragStart.current && !resizeStart.current) {
       const dx = (e.clientX - dragStart.current.x) / scale;
       const dy = (e.clientY - dragStart.current.y) / scale;
+      const rawX = dragStart.current.objX + dx;
+      const rawY = dragStart.current.objY + dy;
+      const snapped = snapEdges(rawX, rawY, obj.width, obj.height, dims.width, dims.height, activeObjects, obj.id);
       dispatch({
         type: "MOVE_OBJECT",
         objectId: obj.id,
-        x: Math.round(dragStart.current.objX + dx),
-        y: Math.round(dragStart.current.objY + dy),
+        x: Math.round(snapped.x),
+        y: Math.round(snapped.y),
       });
     }
     if (resizeStart.current) {
@@ -55,14 +139,15 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
       if (rs.handle.includes("s")) { h = Math.max(20, rs.objH + dy); }
       if (rs.handle.includes("n")) { h = Math.max(20, rs.objH - dy); y = rs.objY + (rs.objH - h); }
 
+      const snapped = snapResize(x, y, w, h, rs.handle, dims.width, dims.height, activeObjects, obj.id);
       dispatch({
         type: "RESIZE_OBJECT",
         objectId: obj.id,
-        x: Math.round(x), y: Math.round(y),
-        width: Math.round(w), height: Math.round(h),
+        x: Math.round(snapped.x), y: Math.round(snapped.y),
+        width: Math.round(snapped.w), height: Math.round(snapped.h),
       });
     }
-  }, [dispatch, obj.id, scale]);
+  }, [dispatch, obj.id, obj.width, obj.height, scale, dims.width, dims.height, activeObjects]);
 
   const handlePointerUp = useCallback(() => {
     if (dragStart.current || resizeStart.current) {
