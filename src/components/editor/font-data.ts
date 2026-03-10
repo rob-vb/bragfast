@@ -1,4 +1,4 @@
-import { FONT_CATALOG } from "@/lib/fonts";
+import { FONT_CATALOG } from "@/lib/font-catalog";
 
 export const FONT_CATEGORIES = {
   "Serif": FONT_CATALOG["Serif"],

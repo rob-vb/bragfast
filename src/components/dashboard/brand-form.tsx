@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
+import { FONT_CATALOG } from "@/lib/font-catalog";
 
 type BrandData = {
   name: string;
@@ -153,12 +154,22 @@ export function BrandForm({
         </div>
         <div>
           <label className="mb-1 block text-xs font-bold text-[#4A3326]">Font</label>
-          <input
+          <select
             className={inputClass}
             value={form.font ?? ""}
             onChange={(e) => update("font", e.target.value)}
-            placeholder="Inter"
-          />
+          >
+            <option value="">Default</option>
+            {Object.entries(FONT_CATALOG).map(([category, fonts]) => (
+              <optgroup key={category} label={category}>
+                {fonts.map((font) => (
+                  <option key={font} value={font}>
+                    {font}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </div>
 
         {/* Color pickers */}
