@@ -3,7 +3,9 @@ import sharp from "sharp";
 import crypto from "crypto";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { templates } from "../templates/registry";
+import { ConfigRenderer } from "../templates/config-renderer";
+import { getDefaultConfig } from "../templates/default-configs";
+import type { TemplateConfig } from "../templates/config-types";
 import { loadFontsForFamily } from "../fonts";
 import { fetchImageAsBase64 } from "../images";
 import { uploadPng } from "../storage/r2";
@@ -101,7 +103,20 @@ export async function renderReleaseAsync(
   try {
     const brand = await resolveBrand(request);
     const templateName = request.template || "classic";
-    const template = templates[templateName];
+
+    // Resolve template config
+    let templateConfig: TemplateConfig;
+    const defaultConfig = getDefaultConfig(templateName);
+    if (defaultConfig) {
+      templateConfig = defaultConfig;
+    } else if (templateName.startsWith("tmpl_")) {
+      const tmpl = await convex.query(api.templates.getByExternalId, { externalId: templateName });
+      if (!tmpl) throw new Error(`Template not found: ${templateName}`);
+      templateConfig = tmpl.config as TemplateConfig;
+    } else {
+      throw new Error(`Invalid template: ${templateName}`);
+    }
+
     const formats = request.formats || ["landscape", "square", "portrait"];
     const fonts = await loadFontsForFamily(brand.font);
     const transparent = request.transparent ?? false;
@@ -125,7 +140,8 @@ export async function renderReleaseAsync(
       const slideUrls: string[] = [];
 
       for (let i = 0; i < slides.length; i++) {
-        const jsx = template({
+        const jsx = ConfigRenderer({
+          config: templateConfig,
           slide: slides[i],
           brand,
           width,

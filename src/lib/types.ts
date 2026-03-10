@@ -46,7 +46,7 @@ export interface ReleaseRequest {
   name?: string
   logo_url?: string
   font?: string
-  template?: 'classic' | 'split' | 'hero'
+  template?: TemplateName
   slides: Array<{
     title: string
     description?: string
@@ -81,7 +81,7 @@ export interface TemplateProps {
   transparent?: boolean
 }
 
-export type TemplateName = 'classic' | 'split' | 'hero'
+export type TemplateName = 'classic' | 'split' | 'hero' | (string & {})
 
 export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
