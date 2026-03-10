@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 
@@ -17,14 +16,7 @@ export default function Home() {
       {/* Hero */}
       <section className="px-4 pt-16 pb-20 md:pt-24 md:pb-28 md:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6 flex items-center justify-center gap-4">
-            <Image
-              src="/logo-icon.svg"
-              alt="Bragfast logo"
-              width={48}
-              height={48}
-              className="w-10 h-10 md:w-12 md:h-12 inline-block"
-            />
+          <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6">
             Show what you&apos;ve been cookin&apos;
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-[#4A3326]/80 max-w-xl mx-auto mb-8 leading-relaxed">

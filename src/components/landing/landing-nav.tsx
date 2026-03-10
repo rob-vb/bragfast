@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export function LandingNav() {
   const [open, setOpen] = useState(false);
@@ -24,8 +25,15 @@ export function LandingNav() {
           {/* Logo */}
           <Link
             href="/"
-            className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-[#4A3326]"
+            className="flex items-center gap-2 font-[family-name:var(--font-press-start)] text-sm md:text-base text-[#4A3326]"
           >
+            <Image
+              src="/logo-icon.svg"
+              alt="Bragfast logo"
+              width={32}
+              height={32}
+              className="w-6 h-6 md:w-8 md:h-8"
+            />
             <span className="text-[#F8AF3C]">brag</span>.fast
           </Link>
 
