@@ -217,15 +217,6 @@ export const clone = mutation({
 export const seedDefaults = mutation({
   args: {},
   handler: async (ctx) => {
-    const existing = await ctx.db
-      .query("templates")
-      .filter((q) => q.eq(q.field("isDefault"), true))
-      .first();
-
-    if (existing) {
-      return { seeded: false, message: "Defaults already exist" };
-    }
-
     const now = new Date().toISOString();
 
     const defaults = [
@@ -282,12 +273,132 @@ export const seedDefaults = mutation({
         created_at: now,
         updated_at: now,
       },
+      // v2 canvas defaults
+      {
+        userId: "system",
+        externalId: "tmpl_classic_v2",
+        name: "Classic",
+        isDefault: true,
+        config: {
+          version: 2,
+          colors: { background: "#1a1a2e", text: "#ffffff", primary: "#e94560" },
+          formats: {
+            landscape: {
+              objects: [
+                { id: "logo", type: "productName", name: "logo", opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 24, width: 200, height: 48, fontSize: 14 },
+                { id: "image", type: "image", name: "image", x: 40, y: 88, width: 1120, height: 380, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 488, width: 1120, height: 80, fontSize: 36 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 576, width: 1120, height: 60, fontSize: 18 },
+              ],
+            },
+            square: {
+              objects: [
+                { id: "logo", type: "productName", name: "logo", opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 32, width: 200, height: 48, fontSize: 14 },
+                { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 720, width: 984, height: 120, fontSize: 48 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 856, width: 984, height: 80, fontSize: 22 },
+              ],
+            },
+            portrait: {
+              objects: [
+                { id: "logo", type: "productName", name: "logo", opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 32, width: 200, height: 48, fontSize: 14 },
+                { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 750, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 876, width: 984, height: 150, fontSize: 56 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 1044, width: 984, height: 100, fontSize: 24 },
+              ],
+            },
+          },
+        },
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        userId: "system",
+        externalId: "tmpl_split_v2",
+        name: "Split",
+        isDefault: true,
+        config: {
+          version: 2,
+          colors: { background: "#1a1a2e", text: "#ffffff", primary: "#e94560" },
+          formats: {
+            landscape: {
+              objects: [
+                { id: "logo", type: "productName", name: "logo", opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 24, width: 200, height: 48, fontSize: 14 },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 200, width: 540, height: 200, fontSize: 36 },
+                { id: "image", type: "image", name: "image", x: 620, y: 88, width: 540, height: 480, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 580, width: 540, height: 60, fontSize: 18 },
+              ],
+            },
+            square: {
+              objects: [
+                { id: "logo", type: "productName", name: "logo", opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 32, width: 200, height: 48, fontSize: 14 },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 200, width: 480, height: 300, fontSize: 42 },
+                { id: "image", type: "image", name: "image", x: 556, y: 96, width: 476, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 880, width: 984, height: 80, fontSize: 22 },
+              ],
+            },
+            portrait: {
+              objects: [
+                { id: "logo", type: "productName", name: "logo", opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 32, width: 200, height: 48, fontSize: 14 },
+                { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 726, width: 984, height: 200, fontSize: 56 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 944, width: 984, height: 100, fontSize: 24 },
+              ],
+            },
+          },
+        },
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        userId: "system",
+        externalId: "tmpl_hero_v2",
+        name: "Hero",
+        isDefault: true,
+        config: {
+          version: 2,
+          colors: { background: "#1a1a2e", text: "#ffffff", primary: "#e94560" },
+          formats: {
+            landscape: {
+              objects: [
+                { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1200, height: 675, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 100, y: 400, width: 1000, height: 120, fontSize: 48 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 200, y: 530, width: 800, height: 80, fontSize: 20 },
+              ],
+            },
+            square: {
+              objects: [
+                { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1080, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 80, y: 720, width: 920, height: 160, fontSize: 56 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 140, y: 900, width: 800, height: 100, fontSize: 24 },
+              ],
+            },
+            portrait: {
+              objects: [
+                { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1350, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
+                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 80, y: 950, width: 920, height: 160, fontSize: 60 },
+                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 140, y: 1130, width: 800, height: 100, fontSize: 26 },
+              ],
+            },
+          },
+        },
+        created_at: now,
+        updated_at: now,
+      },
     ];
 
+    let seededCount = 0;
     for (const template of defaults) {
-      await ctx.db.insert("templates", template);
+      const existing = await ctx.db
+        .query("templates")
+        .withIndex("by_externalId", (q) => q.eq("externalId", template.externalId))
+        .unique();
+      if (!existing) {
+        await ctx.db.insert("templates", template);
+        seededCount++;
+      }
     }
 
-    return { seeded: true, message: "Seeded 3 default templates" };
+    return { seeded: seededCount > 0, message: `Seeded ${seededCount} default templates` };
   },
 });
