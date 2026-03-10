@@ -1,0 +1,193 @@
+"use client";
+import { useRef, useState, useCallback } from "react";
+import { useEditor } from "./editor-context";
+import { SelectionHandles, type HandlePosition } from "./selection-handles";
+import type { TemplateObject } from "@/lib/templates/canvas-types";
+
+interface CanvasObjectProps {
+  obj: TemplateObject;
+  scale: number;
+  isSelected: boolean;
+}
+
+export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
+  const { dispatch, state } = useEditor();
+  const [isEditing, setIsEditing] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; objX: number; objY: number } | null>(null);
+  const resizeStart = useRef<{
+    handle: HandlePosition;
+    startX: number; startY: number;
+    objX: number; objY: number;
+    objW: number; objH: number;
+  } | null>(null);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (resizeStart.current) return;
+    e.stopPropagation();
+    dispatch({ type: "SELECT_OBJECT", objectId: obj.id });
+    dragStart.current = {
+      x: e.clientX, y: e.clientY,
+      objX: obj.x, objY: obj.y,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [dispatch, obj.id, obj.x, obj.y]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (dragStart.current && !resizeStart.current) {
+      const dx = (e.clientX - dragStart.current.x) / scale;
+      const dy = (e.clientY - dragStart.current.y) / scale;
+      dispatch({
+        type: "MOVE_OBJECT",
+        objectId: obj.id,
+        x: Math.round(dragStart.current.objX + dx),
+        y: Math.round(dragStart.current.objY + dy),
+      });
+    }
+    if (resizeStart.current) {
+      const rs = resizeStart.current;
+      const dx = (e.clientX - rs.startX) / scale;
+      const dy = (e.clientY - rs.startY) / scale;
+      let { objX: x, objY: y, objW: w, objH: h } = rs;
+
+      if (rs.handle.includes("e")) { w = Math.max(20, rs.objW + dx); }
+      if (rs.handle.includes("w")) { w = Math.max(20, rs.objW - dx); x = rs.objX + (rs.objW - w); }
+      if (rs.handle.includes("s")) { h = Math.max(20, rs.objH + dy); }
+      if (rs.handle.includes("n")) { h = Math.max(20, rs.objH - dy); y = rs.objY + (rs.objH - h); }
+
+      dispatch({
+        type: "RESIZE_OBJECT",
+        objectId: obj.id,
+        x: Math.round(x), y: Math.round(y),
+        width: Math.round(w), height: Math.round(h),
+      });
+    }
+  }, [dispatch, obj.id, scale]);
+
+  const handlePointerUp = useCallback(() => {
+    dragStart.current = null;
+    resizeStart.current = null;
+  }, []);
+
+  const handleResizeStart = useCallback((handle: HandlePosition, e: React.PointerEvent) => {
+    resizeStart.current = {
+      handle,
+      startX: e.clientX, startY: e.clientY,
+      objX: obj.x, objY: obj.y,
+      objW: obj.width, objH: obj.height,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [obj.x, obj.y, obj.width, obj.height]);
+
+  const handleDoubleClick = useCallback(() => {
+    if (obj.type === "title" || obj.type === "description" || obj.type === "productName") {
+      setIsEditing(true);
+    }
+  }, [obj.type]);
+
+  const colors = state.config.colors;
+
+  return (
+    <div
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onDoubleClick={handleDoubleClick}
+      style={{
+        position: "absolute",
+        left: obj.x,
+        top: obj.y,
+        width: obj.width,
+        height: obj.height,
+        opacity: obj.opacity,
+        cursor: isSelected ? "move" : "pointer",
+        outline: isSelected ? "2px solid #3b82f6" : "none",
+        outlineOffset: -1,
+        zIndex: obj.zIndex,
+      }}
+    >
+      {/* Object content */}
+      {renderObjectPreview(obj, colors, isEditing, (text) => {
+        dispatch({ type: "UPDATE_PROPERTY", objectId: obj.id, property: "previewText", value: text, allFormats: true });
+      }, () => setIsEditing(false))}
+
+      {/* Selection handles */}
+      {isSelected && <SelectionHandles onResizeStart={handleResizeStart} />}
+    </div>
+  );
+}
+
+function renderObjectPreview(
+  obj: TemplateObject,
+  colors: { background: string; text: string; primary: string },
+  isEditing: boolean,
+  onTextChange: (text: string) => void,
+  onBlur: () => void,
+) {
+  const textStyle: React.CSSProperties = {
+    fontFamily: obj.fontFamily || "Plus Jakarta Sans, sans-serif",
+    fontSize: obj.fontSize || 24,
+    fontWeight: obj.fontWeight || 400,
+    letterSpacing: obj.letterSpacing || 0,
+    lineHeight: obj.lineHeight || 1.3,
+    textAlign: obj.textAlign || "left",
+    color: colors.text,
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: obj.verticalAlign === "center" ? "center"
+                  : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start",
+  };
+
+  const placeholders: Record<string, string> = {
+    title: "TITLE GOES HERE",
+    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    productName: "Product",
+  };
+
+  if (obj.type === "title" || obj.type === "description" || obj.type === "productName") {
+    const text = obj.previewText || placeholders[obj.type] || "";
+    if (isEditing) {
+      return (
+        <textarea
+          autoFocus
+          defaultValue={text}
+          onBlur={(e) => { onTextChange(e.target.value); onBlur(); }}
+          style={{ ...textStyle, border: "none", outline: "none", resize: "none", background: "transparent", padding: 0 }}
+        />
+      );
+    }
+    return <div style={textStyle}>{text}</div>;
+  }
+
+  if (obj.type === "image") {
+    return (
+      <div style={{
+        width: "100%", height: "100%",
+        background: "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px",
+        borderRadius: 4,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#a1a1aa", fontSize: 12,
+      }}>
+        {obj.device !== "none" ? (obj.device || "browser") : "Image"}
+      </div>
+    );
+  }
+
+  if (obj.type === "logo") {
+    return (
+      <div style={{
+        width: "100%", height: "100%",
+        background: "#f4f4f5",
+        borderRadius: 4,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#a1a1aa", fontSize: 11,
+      }}>
+        Logo
+      </div>
+    );
+  }
+
+  return null;
+}
