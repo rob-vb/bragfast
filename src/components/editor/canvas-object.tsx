@@ -253,16 +253,64 @@ function renderObjectPreview(
   }
 
   if (obj.type === "image") {
+    const device = obj.device || "browser";
+    const checkerboard = "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px";
+
+    if (device === "browser") {
+      const titleBarH = 28;
+      return (
+        <div style={{
+          width: "100%", height: "100%",
+          borderRadius: 8,
+          overflow: "hidden",
+          background: "#e4e4e7",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+          display: "flex", flexDirection: "column",
+        }}>
+          {/* Title bar */}
+          <div style={{
+            height: titleBarH, minHeight: titleBarH,
+            background: "#f4f4f5",
+            display: "flex", alignItems: "center", paddingLeft: 10, gap: 5,
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} />
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
+          </div>
+          {/* Content area */}
+          <div style={{ flex: 1, background: checkerboard }} />
+        </div>
+      );
+    }
+
+    if (device === "mobile") {
+      const bezel = 6;
+      const radius = 24;
+      return (
+        <div style={{
+          width: "100%", height: "100%",
+          borderRadius: radius,
+          background: "#1c1c1e",
+          padding: bezel,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        }}>
+          <div style={{
+            width: "100%", height: "100%",
+            borderRadius: radius - bezel,
+            overflow: "hidden",
+            background: checkerboard,
+          }} />
+        </div>
+      );
+    }
+
+    // device === "none"
     return (
       <div style={{
         width: "100%", height: "100%",
-        background: "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px",
+        background: checkerboard,
         borderRadius: 4,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#a1a1aa", fontSize: 12,
-      }}>
-        {obj.device !== "none" ? (obj.device || "browser") : "Image"}
-      </div>
+      }} />
     );
   }
 
