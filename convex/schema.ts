@@ -32,6 +32,35 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_externalId", ["externalId"]),
 
+  templates: defineTable({
+    userId: v.string(),
+    externalId: v.string(),
+    name: v.string(),
+    isDefault: v.boolean(),
+    config: v.object({
+      background: v.string(),
+      spacing: v.union(v.literal("compact"), v.literal("normal"), v.literal("spacious")),
+      blocks: v.array(v.object({
+        type: v.union(
+          v.literal("title"),
+          v.literal("description"),
+          v.literal("image"),
+          v.literal("logo"),
+          v.literal("productName")
+        ),
+        alignment: v.union(v.literal("left"), v.literal("center"), v.literal("right")),
+        fontSize: v.optional(v.union(v.literal("small"), v.literal("medium"), v.literal("large"))),
+        device: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
+        display: v.optional(v.union(v.literal("inline"), v.literal("fullBleed"))),
+        split: v.optional(v.union(v.literal("left"), v.literal("right"))),
+      })),
+    }),
+    previewUrl: v.optional(v.string()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_userId", ["userId"])
+    .index("by_externalId", ["externalId"]),
+
   apiKeys: defineTable({
     userId: v.string(),
     name: v.string(),
