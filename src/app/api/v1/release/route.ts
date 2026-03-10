@@ -39,8 +39,16 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid align. Use: left, center, right" }, { status: 400 });
     }
   }
-  if (body.template && !["classic", "split", "hero"].includes(body.template)) {
-    return Response.json({ error: "Invalid template. Use: classic, split, hero" }, { status: 400 });
+  if (body.template) {
+    const validDefaults = ["classic", "split", "hero"];
+    const isDefault = validDefaults.includes(body.template);
+    const isCustom = typeof body.template === "string" && body.template.startsWith("tmpl_");
+    if (!isDefault && !isCustom) {
+      return Response.json(
+        { error: "Invalid template. Must be classic, split, hero, or a template ID (tmpl_...)" },
+        { status: 400 }
+      );
+    }
   }
   if (body.formats) {
     const valid = ["landscape", "square", "portrait"];
