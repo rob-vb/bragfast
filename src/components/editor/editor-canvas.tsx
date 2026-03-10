@@ -98,6 +98,37 @@ export function EditorCanvas() {
 
   const currentZoom = zoom ?? 0.5;
 
+  const zoomBy = useCallback((delta: number) => {
+    if (!containerRef.current) return;
+    const { clientWidth, clientHeight } = containerRef.current;
+    const cx = clientWidth / 2;
+    const cy = clientHeight / 2;
+    setZoom((prev) => {
+      const oldZoom = prev ?? 0.5;
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, oldZoom + delta));
+      const ratio = newZoom / oldZoom;
+      setPan((p) => ({
+        x: cx - (cx - p.x) * ratio,
+        y: cy - (cy - p.y) * ratio,
+      }));
+      return newZoom;
+    });
+  }, []);
+
+  const fitToView = useCallback(() => {
+    if (!containerRef.current) return;
+    const { clientWidth, clientHeight } = containerRef.current;
+    const padding = 80;
+    const scaleX = (clientWidth - padding) / dims.width;
+    const scaleY = (clientHeight - padding) / dims.height;
+    const fitZoom = Math.min(scaleX, scaleY, 1);
+    setZoom(fitZoom);
+    setPan({
+      x: (clientWidth - dims.width * fitZoom) / 2,
+      y: (clientHeight - dims.height * fitZoom) / 2,
+    });
+  }, [dims.width, dims.height]);
+
   return (
     <div
       ref={containerRef}
@@ -139,9 +170,29 @@ export function EditorCanvas() {
         ))}
       </div>
 
-      {/* Zoom indicator */}
-      <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur px-2 py-1 rounded text-xs text-zinc-500 select-none">
-        {Math.round(currentZoom * 100)}%
+      {/* Zoom controls */}
+      <div className="absolute bottom-3 right-3 flex items-center gap-0.5 bg-white/90 backdrop-blur rounded-md border border-zinc-200 shadow-sm select-none">
+        <button
+          onClick={(e) => { e.stopPropagation(); zoomBy(-0.1); }}
+          className="px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100 rounded-l-md transition-colors"
+          title="Zoom out"
+        >
+          −
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); fitToView(); }}
+          className="px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 transition-colors min-w-[44px] text-center"
+          title="Fit to view"
+        >
+          {Math.round(currentZoom * 100)}%
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); zoomBy(0.1); }}
+          className="px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100 rounded-r-md transition-colors"
+          title="Zoom in"
+        >
+          +
+        </button>
       </div>
     </div>
   );
