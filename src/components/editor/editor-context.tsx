@@ -28,6 +28,7 @@ type EditorAction =
   | { type: "SET_COLORS"; colors: { background: string; text: string; primary: string } }
   | { type: "SET_BRAND"; brandId: string | undefined; previewColors?: { background: string; text: string; primary: string } }
   | { type: "SET_NAME"; name: string }
+  | { type: "COMMIT_MOVE" }
   | { type: "UNDO" }
   | { type: "REDO" }
   | { type: "MARK_SAVED" };
@@ -40,7 +41,7 @@ interface UndoableState {
 }
 
 const MAX_UNDO = 50;
-const NON_UNDOABLE_ACTIONS = new Set(["SELECT_OBJECT", "SWITCH_FORMAT", "UNDO", "REDO", "MARK_SAVED"]);
+const NON_UNDOABLE_ACTIONS = new Set(["SELECT_OBJECT", "SWITCH_FORMAT", "UNDO", "REDO", "MARK_SAVED", "MOVE_OBJECT", "RESIZE_OBJECT"]);
 
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
@@ -155,6 +156,10 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
     case "SET_NAME":
       return { ...state, name: action.name, isDirty: true };
 
+    case "COMMIT_MOVE":
+      // No-op on state — exists only to create an undo snapshot after drag/resize
+      return { ...state };
+
     case "MARK_SAVED":
       return { ...state, isDirty: false };
 
@@ -213,20 +218,6 @@ function updateObjectInActiveFormat(
           obj.id === objectId ? { ...obj, ...updates } : obj
         ),
       },
-    },
-  };
-}
-
-function updateFormatObjects(
-  state: EditorState,
-  updater: (objects: TemplateObject[]) => TemplateObject[],
-): CanvasTemplateConfig {
-  const fmt = state.activeFormat;
-  return {
-    ...state.config,
-    formats: {
-      ...state.config.formats,
-      [fmt]: { objects: updater(state.config.formats[fmt].objects) },
     },
   };
 }
@@ -307,6 +298,14 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
 
   const dispatch = useCallback((action: EditorAction) => rawDispatch(action), []);
 
+  // Warn on unsaved changes
+  useEffect(() => {
+    if (!undoState.current.isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [undoState.current.isDirty]);
+
   // Keyboard shortcuts — use ref to avoid re-registering on every state change
   const stateRef = useRef(undoState.current);
   stateRef.current = undoState.current;
@@ -339,6 +338,7 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
         const dx = e.key === "ArrowLeft" ? -1 : e.key === "ArrowRight" ? 1 : 0;
         const dy = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
         dispatch({ type: "MOVE_OBJECT", objectId: obj.id, x: obj.x + dx, y: obj.y + dy });
+        dispatch({ type: "COMMIT_MOVE" });
       }
     }
     window.addEventListener("keydown", handleKeyDown);

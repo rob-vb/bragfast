@@ -13,6 +13,7 @@ interface CanvasObjectProps {
 export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
   const { dispatch, state } = useEditor();
   const [isEditing, setIsEditing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ x: number; y: number; objX: number; objY: number } | null>(null);
   const resizeStart = useRef<{
     handle: HandlePosition;
@@ -29,7 +30,7 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
       x: e.clientX, y: e.clientY,
       objX: obj.x, objY: obj.y,
     };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    containerRef.current?.setPointerCapture(e.pointerId);
   }, [dispatch, obj.id, obj.x, obj.y]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -64,9 +65,12 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
   }, [dispatch, obj.id, scale]);
 
   const handlePointerUp = useCallback(() => {
+    if (dragStart.current || resizeStart.current) {
+      dispatch({ type: "COMMIT_MOVE" });
+    }
     dragStart.current = null;
     resizeStart.current = null;
-  }, []);
+  }, [dispatch]);
 
   const handleResizeStart = useCallback((handle: HandlePosition, e: React.PointerEvent) => {
     resizeStart.current = {
@@ -75,7 +79,7 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
       objX: obj.x, objY: obj.y,
       objW: obj.width, objH: obj.height,
     };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    containerRef.current?.setPointerCapture(e.pointerId);
   }, [obj.x, obj.y, obj.width, obj.height]);
 
   const handleDoubleClick = useCallback(() => {
@@ -88,6 +92,7 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
 
   return (
     <div
+      ref={containerRef}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

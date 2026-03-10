@@ -43,7 +43,7 @@ export const DEFAULT_TEMPLATES: Record<string, { name: string; config: TemplateC
   },
 };
 
-/** Resolve a template name to its config (checks v2 canvas configs first, then legacy) */
+/** Resolve a template name to its config (v1 legacy names resolve to v1, v2 names like "classic_v2" resolve to v2) */
 export function getDefaultConfig(name: string): TemplateConfig | CanvasTemplateConfig | null {
   const canvasConfig = getCanvasDefaultConfig(name);
   if (canvasConfig) return canvasConfig;

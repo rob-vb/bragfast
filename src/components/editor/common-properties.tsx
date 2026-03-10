@@ -72,7 +72,7 @@ export function CommonProperties() {
         <Slider
           value={[selectedObject.opacity]}
           min={0} max={1} step={0.01}
-          onValueChange={([v]) => update("opacity", v)}
+          onValueChange={([v]) => update("opacity", v, true)}
         />
       </div>
     </div>

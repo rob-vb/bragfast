@@ -168,19 +168,20 @@ export async function loadFontsForObjects(objects: TemplateObject[]): Promise<Fo
   if (needed.size === 0) return loadLocalFonts();
 
   const allFonts: FontConfig[] = [];
-  const fetched = new Set<string>();
+  const fetches: Promise<void>[] = [];
 
   for (const [family, weights] of needed) {
     for (const weight of weights) {
-      const key = `${family}:${weight}`;
-      if (fetched.has(key)) continue;
-      const buf = await fetchGoogleFontBuffer(family, weight);
-      if (buf) {
-        allFonts.push({ name: family, data: buf, weight: weight as Weight, style: "normal" });
-        fetched.add(key);
-      }
+      fetches.push(
+        fetchGoogleFontBuffer(family, weight).then((buf) => {
+          if (buf) {
+            allFonts.push({ name: family, data: buf, weight: weight as Weight, style: "normal" });
+          }
+        })
+      );
     }
   }
+  await Promise.all(fetches);
 
   // Always include local font as fallback
   allFonts.push(...loadLocalFonts());

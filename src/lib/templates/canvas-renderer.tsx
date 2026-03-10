@@ -47,7 +47,7 @@ export function CanvasRenderer({ config, format, slide, brand, transparent }: Ca
           justifyContent: obj.verticalAlign === "center" ? "center"
                         : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start",
         }}>
-          {renderObject(obj, slide, brand, colors, width, height)}
+          {renderObject(obj, slide, brand, colors)}
         </div>
       ))}
     </div>
@@ -59,8 +59,6 @@ function renderObject(
   slide: Slide,
   brand: Brand,
   colors: { background: string; text: string; primary: string },
-  canvasWidth: number,
-  canvasHeight: number,
 ) {
   switch (obj.type) {
     case "title":

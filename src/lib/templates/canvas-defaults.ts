@@ -18,7 +18,7 @@ function textObj(id: string, type: "title" | "description" | "productName", over
 }
 
 export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTemplateConfig }> = {
-  classic: {
+  classic_v2: {
     name: "Classic",
     config: {
       version: 2,
@@ -51,7 +51,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       },
     },
   },
-  split: {
+  split_v2: {
     name: "Split",
     config: {
       version: 2,
@@ -84,7 +84,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       },
     },
   },
-  hero: {
+  hero_v2: {
     name: "Hero",
     config: {
       version: 2,
