@@ -127,3 +127,81 @@ export const listDefaults = query({
       .filter((q) => q.eq(q.field("isDefault"), true))
       .collect(),
 });
+
+export const seedDefaults = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db
+      .query("templates")
+      .filter((q) => q.eq(q.field("isDefault"), true))
+      .first();
+
+    if (existing) {
+      return { seeded: false, message: "Defaults already exist" };
+    }
+
+    const now = new Date().toISOString();
+
+    const defaults = [
+      {
+        userId: "system",
+        externalId: "tmpl_classic",
+        name: "Classic",
+        isDefault: true,
+        config: {
+          background: "brand",
+          spacing: "normal" as const,
+          blocks: [
+            { type: "logo" as const, alignment: "center" as const },
+            { type: "image" as const, alignment: "center" as const, device: "browser" as const, display: "inline" as const },
+            { type: "title" as const, alignment: "center" as const, fontSize: "large" as const },
+            { type: "description" as const, alignment: "center" as const, fontSize: "medium" as const },
+          ],
+        },
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        userId: "system",
+        externalId: "tmpl_split",
+        name: "Split",
+        isDefault: true,
+        config: {
+          background: "brand",
+          spacing: "normal" as const,
+          blocks: [
+            { type: "logo" as const, alignment: "center" as const },
+            { type: "title" as const, alignment: "left" as const, fontSize: "large" as const, split: "left" as const },
+            { type: "image" as const, alignment: "center" as const, device: "browser" as const, display: "inline" as const, split: "right" as const },
+            { type: "description" as const, alignment: "center" as const, fontSize: "medium" as const },
+          ],
+        },
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        userId: "system",
+        externalId: "tmpl_hero",
+        name: "Hero",
+        isDefault: true,
+        config: {
+          background: "brand",
+          spacing: "normal" as const,
+          blocks: [
+            { type: "image" as const, alignment: "center" as const, device: "none" as const, display: "fullBleed" as const },
+            { type: "title" as const, alignment: "center" as const, fontSize: "large" as const },
+            { type: "description" as const, alignment: "center" as const, fontSize: "medium" as const },
+          ],
+        },
+        created_at: now,
+        updated_at: now,
+      },
+    ];
+
+    for (const template of defaults) {
+      await ctx.db.insert("templates", template);
+    }
+
+    return { seeded: true, message: "Seeded 3 default templates" };
+  },
+});
