@@ -4,10 +4,14 @@ import React from "react";
 import type { TemplateConfig, Block, Spacing } from "@/lib/templates/config-types";
 import { FORMAT_DIMENSIONS } from "@/lib/types";
 
+type IndexedBlock = Block & { _index: number };
+
 interface TemplatePreviewProps {
   config: TemplateConfig;
   format: "landscape" | "square" | "portrait";
   brandColors?: { background: string; text: string; primary: string };
+  selectedBlockIndex?: number | null;
+  onSelectBlock?: (index: number | null) => void;
 }
 
 const DEFAULT_COLORS = {
@@ -27,10 +31,10 @@ const spacingMap: Record<Spacing, string> = {
 // ---------------------------------------------------------------------------
 
 type Row =
-  | { kind: "single"; block: Block }
-  | { kind: "pair"; left: Block; right: Block };
+  | { kind: "single"; block: IndexedBlock }
+  | { kind: "pair"; left: IndexedBlock; right: IndexedBlock };
 
-function groupRows(blocks: Block[]): Row[] {
+function groupRows(blocks: IndexedBlock[]): Row[] {
   const rows: Row[] = [];
   let i = 0;
   while (i < blocks.length) {
@@ -120,6 +124,35 @@ function BlockPlaceholder({ block, textColor }: BlockProps): React.ReactElement 
 }
 
 // ---------------------------------------------------------------------------
+// Selectable block wrapper
+// ---------------------------------------------------------------------------
+
+function SelectableBlock({
+  block,
+  textColor,
+  gap,
+  isSelected,
+  onClick,
+}: {
+  block: IndexedBlock;
+  textColor: string;
+  gap: string;
+  isSelected: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      className={`cursor-pointer rounded transition-shadow ${
+        isSelected ? "ring-2 ring-blue-500" : "hover:ring-1 hover:ring-white/20"
+      }`}
+    >
+      <BlockPlaceholder block={block} textColor={textColor} gap={gap} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -127,6 +160,8 @@ export function TemplatePreview({
   config,
   format,
   brandColors,
+  selectedBlockIndex,
+  onSelectBlock,
 }: TemplatePreviewProps): React.ReactElement {
   const colors = brandColors ?? DEFAULT_COLORS;
   const { width, height } = FORMAT_DIMENSIONS[format];
@@ -137,8 +172,11 @@ export function TemplatePreview({
   const bgColor =
     config.background === "brand" ? colors.background : config.background;
 
+  // Index blocks before grouping
+  const indexedBlocks: IndexedBlock[] = config.blocks.map((b, i) => ({ ...b, _index: i }));
+
   // Identify fullBleed block
-  const fullBleedBlock = config.blocks.find(
+  const fullBleedBlock = indexedBlocks.find(
     (b) => b.type === "image" && b.display === "fullBleed"
   );
   const hasFullBleed = !!fullBleedBlock;
@@ -148,20 +186,24 @@ export function TemplatePreview({
 
   // Flow blocks (exclude fullBleed image from normal row rendering)
   const flowBlocks = hasFullBleed
-    ? config.blocks.filter((b) => !(b.type === "image" && b.display === "fullBleed"))
-    : config.blocks;
+    ? indexedBlocks.filter((b) => !(b.type === "image" && b.display === "fullBleed"))
+    : indexedBlocks;
 
   const rows = groupRows(flowBlocks);
 
   // Render a single row
   function renderRow(row: Row, key: number): React.ReactElement | null {
-    const blockProps = { textColor, gap };
-
     if (row.kind === "single") {
-      const el = (
-        <BlockPlaceholder key={key} block={row.block} {...blockProps} />
+      return (
+        <SelectableBlock
+          key={key}
+          block={row.block}
+          textColor={textColor}
+          gap={gap}
+          isSelected={selectedBlockIndex === row.block._index}
+          onClick={() => onSelectBlock?.(row.block._index)}
+        />
       );
-      return el;
     }
 
     // Split pair
@@ -172,8 +214,20 @@ export function TemplatePreview({
           className="flex flex-col w-full"
           style={{ gap }}
         >
-          <BlockPlaceholder block={row.left} {...blockProps} />
-          <BlockPlaceholder block={row.right} {...blockProps} />
+          <SelectableBlock
+            block={row.left}
+            textColor={textColor}
+            gap={gap}
+            isSelected={selectedBlockIndex === row.left._index}
+            onClick={() => onSelectBlock?.(row.left._index)}
+          />
+          <SelectableBlock
+            block={row.right}
+            textColor={textColor}
+            gap={gap}
+            isSelected={selectedBlockIndex === row.right._index}
+            onClick={() => onSelectBlock?.(row.right._index)}
+          />
         </div>
       );
     }
@@ -185,10 +239,22 @@ export function TemplatePreview({
         style={{ gap }}
       >
         <div className="flex flex-1 justify-center">
-          <BlockPlaceholder block={row.left} {...blockProps} />
+          <SelectableBlock
+            block={row.left}
+            textColor={textColor}
+            gap={gap}
+            isSelected={selectedBlockIndex === row.left._index}
+            onClick={() => onSelectBlock?.(row.left._index)}
+          />
         </div>
         <div className="flex flex-1 justify-center">
-          <BlockPlaceholder block={row.right} {...blockProps} />
+          <SelectableBlock
+            block={row.right}
+            textColor={textColor}
+            gap={gap}
+            isSelected={selectedBlockIndex === row.right._index}
+            onClick={() => onSelectBlock?.(row.right._index)}
+          />
         </div>
       </div>
     );
@@ -207,8 +273,13 @@ export function TemplatePreview({
   };
 
   if (hasFullBleed) {
+    const fullBleedSelected = selectedBlockIndex === fullBleedBlock!._index;
     return (
-      <div style={containerStyle} className="w-full overflow-hidden rounded-lg">
+      <div
+        style={containerStyle}
+        className="w-full overflow-hidden rounded-lg"
+        onClick={() => onSelectBlock?.(null)}
+      >
         {/* Gray image stand-in */}
         <div
           className="absolute inset-0"
@@ -218,6 +289,13 @@ export function TemplatePreview({
         <div
           className="absolute inset-0"
           style={{ backgroundColor: colors.primary, opacity: 0.75 }}
+        />
+        {/* FullBleed image selection overlay */}
+        <div
+          onClick={(e) => { e.stopPropagation(); onSelectBlock?.(fullBleedBlock!._index); }}
+          className={`absolute inset-0 cursor-pointer transition-shadow ${
+            fullBleedSelected ? "ring-2 ring-inset ring-blue-500" : "hover:ring-1 hover:ring-inset hover:ring-white/20"
+          }`}
         />
         {/* Content pushed to bottom */}
         <div
@@ -234,6 +312,7 @@ export function TemplatePreview({
     <div
       style={containerStyle}
       className="w-full overflow-hidden rounded-lg flex flex-col justify-center p-[5%]"
+      onClick={() => onSelectBlock?.(null)}
     >
       <div className="flex flex-col w-full" style={{ gap }}>
         {renderedRows}
