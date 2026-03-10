@@ -4,10 +4,16 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ChevronUp, ChevronDown, X, Type, AlignLeft, Image, Hexagon, Tag } from "lucide-react";
 import type { TemplateConfig, Block, BlockType, Spacing } from "@/lib/templates/config-types";
+import { DEFAULT_TEMPLATES } from "@/lib/templates/default-configs";
 import { TemplatePreview } from "./template-preview";
 import { BlockProperties } from "./block-properties";
 import { PixelButton } from "./pixel-button";
 import { EditorBrowserFrame } from "./editor-browser-frame";
+
+const LAYOUT_OPTIONS = Object.entries(DEFAULT_TEMPLATES).map(([key, val]) => ({
+  key,
+  label: val.name,
+}));
 
 interface TemplateEditorProps {
   templateId: string;
@@ -162,23 +168,23 @@ export function TemplateEditor({
   // --- Render ---
 
   return (
-    <div className="flex flex-col h-full bg-[#FFF8F0] text-[#4A3326]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b-2 border-[#4A3326] px-4 py-3">
-        <Link
-          href="/dashboard/templates"
-          className="text-sm text-[#4A3326]/60 hover:text-[#4A3326] transition-colors"
-        >
-          &larr; Back to Templates
-        </Link>
-        <span className="text-xs font-['Press_Start_2P'] truncate max-w-[40%]">{name}</span>
-        <PixelButton onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save"}
-        </PixelButton>
-      </div>
+    <EditorBrowserFrame title={name}>
+      <div className="flex flex-col h-full bg-[#FFF8F0] text-[#4A3326]">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-2 border-[#4A3326] px-4 py-3">
+          <Link
+            href="/dashboard/templates"
+            className="text-sm text-[#4A3326]/60 hover:text-[#4A3326] transition-colors"
+          >
+            &larr; Back to Templates
+          </Link>
+          <PixelButton onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save"}
+          </PixelButton>
+        </div>
 
-      {/* Body */}
-      <div className="flex flex-1 overflow-hidden">
+        {/* Body */}
+        <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <div className="w-64 border-r-2 border-[#4A3326] overflow-y-auto flex-shrink-0">
           <div className="flex flex-col gap-5 p-4">
@@ -337,15 +343,32 @@ export function TemplateEditor({
         <div className="flex-1 flex flex-col items-center overflow-y-auto p-6 gap-4">
           {/* Preview Canvas */}
           <div className="w-full max-w-2xl">
-            <EditorBrowserFrame title={name}>
-              <TemplatePreview
-                config={config}
-                format={format}
-                brandColors={brandColors ?? DEFAULT_BRAND_COLORS}
-                selectedBlockIndex={selectedBlockIndex}
-                onSelectBlock={setSelectedBlockIndex}
-              />
-            </EditorBrowserFrame>
+            <TemplatePreview
+              config={config}
+              format={format}
+              brandColors={brandColors ?? DEFAULT_BRAND_COLORS}
+              selectedBlockIndex={selectedBlockIndex}
+              onSelectBlock={setSelectedBlockIndex}
+            />
+          </div>
+
+          {/* Layout Switcher */}
+          <div className="flex gap-2">
+            {LAYOUT_OPTIONS.map((l) => (
+              <button
+                key={l.key}
+                onClick={() => {
+                  const preset = DEFAULT_TEMPLATES[l.key];
+                  if (preset) {
+                    setConfig(preset.config);
+                    setSelectedBlockIndex(null);
+                  }
+                }}
+                className="px-3 py-1.5 rounded text-xs font-medium transition-colors bg-[#4A3326]/10 text-[#4A3326]/60 hover:bg-[#4A3326]/20"
+              >
+                {l.label}
+              </button>
+            ))}
           </div>
 
           {/* Format Switcher */}
@@ -413,6 +436,7 @@ export function TemplateEditor({
               </button>
             </div>
             <BlockProperties
+              key={selectedBlockIndex}
               block={selectedBlock}
               onChange={(updated) => updateBlock(selectedBlockIndex, updated)}
             />
@@ -420,5 +444,6 @@ export function TemplateEditor({
         )}
       </div>
     </div>
+    </EditorBrowserFrame>
   );
 }

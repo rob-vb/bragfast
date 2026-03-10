@@ -9,7 +9,7 @@ interface EditorBrowserFrameProps {
 
 export function EditorBrowserFrame({ title, children }: EditorBrowserFrameProps) {
   return (
-    <div className="flex flex-col border-2 border-[#4A3326] rounded-lg overflow-hidden shadow-[4px_4px_0_#4A3326]">
+    <div className="flex flex-col h-full border-2 border-[#4A3326] rounded-lg overflow-hidden shadow-[4px_4px_0_#4A3326]">
       {/* Title bar */}
       <div className="flex items-center gap-2 px-3 py-2 bg-[#4A3326]">
         <div className="flex gap-1.5">
@@ -25,7 +25,7 @@ export function EditorBrowserFrame({ title, children }: EditorBrowserFrameProps)
         <div className="w-[52px]" /> {/* Spacer to balance dots */}
       </div>
       {/* Content area */}
-      <div className="bg-[#FFF8F0]">
+      <div className="bg-[#FFF8F0] flex-1 overflow-hidden">
         {children}
       </div>
     </div>
