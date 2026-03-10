@@ -11,6 +11,7 @@ interface TemplateItem {
   name: string;
   isDefault: boolean;
   previewUrl?: string;
+  isV2?: boolean;
 }
 
 interface TemplateListClientProps {
@@ -38,6 +39,7 @@ export function TemplateListClient({
         name: data.name,
         isDefault: false,
         previewUrl: data.preview_url ?? undefined,
+        isV2: data.config?.version === 2,
       };
       setUserTemplates((prev) => [...prev, newTemplate]);
     } catch (err) {
@@ -65,9 +67,22 @@ export function TemplateListClient({
         body: JSON.stringify({
           name: "Untitled Template",
           config: {
-            background: "white",
-            spacing: "normal",
-            blocks: [{ type: "title", alignment: "left" }],
+            version: 2,
+            colors: { background: "#ffffff", text: "#000000", primary: "#3b82f6" },
+            formats: {
+              landscape: { objects: [
+                { id: "title", type: "title", name: "title", x: 48, y: 400, width: 1104, height: 120, opacity: 1, zIndex: 1,
+                  fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top" },
+              ]},
+              square: { objects: [
+                { id: "title", type: "title", name: "title", x: 48, y: 720, width: 984, height: 120, opacity: 1, zIndex: 1,
+                  fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top" },
+              ]},
+              portrait: { objects: [
+                { id: "title", type: "title", name: "title", x: 48, y: 900, width: 984, height: 150, opacity: 1, zIndex: 1,
+                  fontFamily: "Plus Jakarta Sans", fontSize: 56, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top" },
+              ]},
+            },
           },
         }),
       });
@@ -131,6 +146,7 @@ export function TemplateListClient({
                 name={t.name}
                 isDefault={t.isDefault}
                 previewUrl={t.previewUrl}
+                isV2={t.isV2}
                 onClone={handleClone}
                 onDelete={handleDelete}
               />

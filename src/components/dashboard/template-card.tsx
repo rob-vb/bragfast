@@ -10,6 +10,7 @@ export interface TemplateCardProps {
   name: string;
   isDefault: boolean;
   previewUrl?: string;
+  isV2?: boolean;
   onClone: (id: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -19,6 +20,7 @@ export function TemplateCard({
   name,
   isDefault,
   previewUrl,
+  isV2 = true,
   onClone,
   onDelete,
 }: TemplateCardProps) {
@@ -65,12 +67,18 @@ export function TemplateCard({
           </PixelButton>
         ) : (
           <>
-            <PixelButton
-              variant="primary"
-              onClick={() => router.push(`/dashboard/templates/${id}/edit`)}
-            >
-              Edit
-            </PixelButton>
+            {isV2 ? (
+              <PixelButton
+                variant="primary"
+                onClick={() => router.push(`/dashboard/templates/${id}/edit`)}
+              >
+                Edit
+              </PixelButton>
+            ) : (
+              <span className="inline-block border-2 border-[#4A3326]/30 px-2 py-0.5 font-[family-name:var(--font-press-start)] text-[10px] text-[#4A3326]/40">
+                Legacy
+              </span>
+            )}
             {onDelete && (
               <PixelButton
                 variant="danger"

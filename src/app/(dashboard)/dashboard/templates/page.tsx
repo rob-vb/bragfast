@@ -18,12 +18,19 @@ export default async function TemplatesPage() {
     name: string;
     isDefault: boolean;
     previewUrl?: string;
+    config: unknown;
   }) => ({
     id: t.externalId,
     name: t.name,
     isDefault: t.isDefault,
     previewUrl: t.previewUrl,
+    isV2: typeof t.config === "object" && t.config !== null && (t.config as Record<string, unknown>).version === 2,
   });
+
+  // Only show v2 canvas defaults (have version: 2 in config)
+  const v2Defaults = defaultTemplates.filter(
+    (t) => typeof t.config === "object" && t.config !== null && (t.config as Record<string, unknown>).version === 2
+  );
 
   return (
     <div className="space-y-6">
@@ -34,7 +41,7 @@ export default async function TemplatesPage() {
       </div>
 
       <TemplateListClient
-        defaults={defaultTemplates.map(mapTemplate)}
+        defaults={v2Defaults.map(mapTemplate)}
         userTemplates={userTemplates.map(mapTemplate)}
       />
     </div>
