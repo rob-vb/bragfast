@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 
@@ -16,11 +17,18 @@ export default function Home() {
       {/* Hero */}
       <section className="px-4 pt-16 pb-20 md:pt-24 md:pb-28 md:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6">
+          <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6 flex items-center justify-center gap-4">
+            <Image
+              src="/logo-icon.svg"
+              alt="Bragfast logo"
+              width={48}
+              height={48}
+              className="w-10 h-10 md:w-12 md:h-12 inline-block"
+            />
             Show what you&apos;ve been cookin&apos;
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-[#4A3326]/80 max-w-xl mx-auto mb-8 leading-relaxed">
-            Bragfast auto-generates branded social media images from your
+            brag.fast auto-generates branded social media images from your
             releases. Connect a workflow or call the API. Served in seconds, not
             hours.
           </p>
@@ -76,7 +84,7 @@ export default function Home() {
             Just set the table.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-[#4A3326]/80 leading-relaxed text-center max-w-2xl mx-auto mb-10">
-            Set up a workflow once. Every time you ship, Bragfast cooks up
+            Set up a workflow once. Every time you ship, brag.fast cooks up
             branded images in the sizes you need — landscape for Twitter, square
             for Instagram, portrait for Stories. No API keys. No terminal. Just
             drag, drop, and serve.
@@ -94,7 +102,7 @@ export default function Home() {
             </span>
             <div className="border-2 border-[#4A3326] bg-[#F8AF3C] px-4 py-3 shadow-[3px_3px_0_#4A3326]">
               <p className="font-[family-name:var(--font-press-start)] text-[9px] text-center">
-                Bragfast
+                brag.fast
               </p>
             </div>
             <span className="font-[family-name:var(--font-press-start)] text-[#4A3326]/40 text-xs rotate-90 md:rotate-0">
@@ -129,7 +137,7 @@ export default function Home() {
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-[#FFF8F0]/80 leading-relaxed text-center max-w-2xl mx-auto mb-10">
             One POST request. Three image formats. Branded and ready to share.
-            Plug Bragfast into your CI/CD pipeline, your release script, or your
+            Plug brag.fast into your CI/CD pipeline, your release script, or your
             custom dashboard. Async by design — fire the request, get a webhook
             when your images are served hot.
           </p>
@@ -348,7 +356,7 @@ export default function Home() {
             href="/"
             className="font-[family-name:var(--font-press-start)] text-[10px] text-[#4A3326]/60"
           >
-            brag.fast
+            <span className="text-[#F8AF3C]">brag</span>.fast
           </Link>
           <p className="font-[family-name:var(--font-press-start)] text-[8px] text-[#4A3326]/40 italic">
             The most important meal of your launch.

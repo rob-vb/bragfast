@@ -26,7 +26,7 @@ export function LandingNav() {
             href="/"
             className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-[#4A3326]"
           >
-            brag.fast
+            <span className="text-[#F8AF3C]">brag</span>.fast
           </Link>
 
           {/* Desktop nav */}
