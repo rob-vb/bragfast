@@ -97,7 +97,7 @@ export async function PATCH(
       return Response.json({ error: "Template not found" }, { status: 404 });
     }
     return Response.json({
-      id: updated.externalId,
+      id: updated.id,
       name: updated.name,
       is_default: updated.isDefault,
       config: updated.config,

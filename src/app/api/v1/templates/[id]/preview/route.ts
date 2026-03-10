@@ -71,7 +71,7 @@ export async function POST(
     const svg = await satori(jsx, { width, height, fonts });
     const png = await sharp(Buffer.from(svg)).ensureAlpha().png().toBuffer();
 
-    return new Response(png, {
+    return new Response(new Uint8Array(png), {
       status: 200,
       headers: {
         "Content-Type": "image/png",
