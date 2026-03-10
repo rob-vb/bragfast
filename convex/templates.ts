@@ -20,12 +20,59 @@ const configValidator = v.object({
   })),
 });
 
+const templateObjectValidator = v.object({
+  id: v.string(),
+  type: v.union(
+    v.literal("title"),
+    v.literal("description"),
+    v.literal("image"),
+    v.literal("logo"),
+    v.literal("productName")
+  ),
+  name: v.string(),
+  x: v.number(),
+  y: v.number(),
+  width: v.number(),
+  height: v.number(),
+  opacity: v.number(),
+  zIndex: v.number(),
+  fontFamily: v.optional(v.string()),
+  fontSize: v.optional(v.number()),
+  fontWeight: v.optional(v.number()),
+  letterSpacing: v.optional(v.number()),
+  lineHeight: v.optional(v.number()),
+  textAlign: v.optional(v.union(v.literal("left"), v.literal("center"), v.literal("right"))),
+  verticalAlign: v.optional(v.union(v.literal("top"), v.literal("center"), v.literal("bottom"))),
+  device: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
+  objectFit: v.optional(v.union(v.literal("cover"), v.literal("contain"))),
+  previewText: v.optional(v.string()),
+});
+
+const formatLayoutValidator = v.object({
+  objects: v.array(templateObjectValidator),
+});
+
+const canvasConfigValidator = v.object({
+  version: v.literal(2),
+  colors: v.object({
+    background: v.string(),
+    text: v.string(),
+    primary: v.string(),
+  }),
+  brandId: v.optional(v.string()),
+  formats: v.object({
+    landscape: formatLayoutValidator,
+    square: formatLayoutValidator,
+    portrait: formatLayoutValidator,
+  }),
+});
+
 export const create = mutation({
   args: {
     userId: v.string(),
     externalId: v.string(),
     name: v.string(),
-    config: configValidator,
+    config: v.union(configValidator, canvasConfigValidator),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
@@ -51,7 +98,7 @@ export const update = mutation({
     externalId: v.string(),
     userId: v.string(),
     name: v.optional(v.string()),
-    config: v.optional(configValidator),
+    config: v.optional(v.union(configValidator, canvasConfigValidator)),
     previewUrl: v.optional(v.string()),
   },
   handler: async (ctx, { externalId, userId, ...updates }) => {

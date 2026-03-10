@@ -37,24 +37,7 @@ export default defineSchema({
     externalId: v.string(),
     name: v.string(),
     isDefault: v.boolean(),
-    config: v.object({
-      background: v.string(),
-      spacing: v.union(v.literal("compact"), v.literal("normal"), v.literal("spacious")),
-      blocks: v.array(v.object({
-        type: v.union(
-          v.literal("title"),
-          v.literal("description"),
-          v.literal("image"),
-          v.literal("logo"),
-          v.literal("productName")
-        ),
-        alignment: v.union(v.literal("left"), v.literal("center"), v.literal("right")),
-        fontSize: v.optional(v.union(v.literal("small"), v.literal("medium"), v.literal("large"))),
-        device: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
-        display: v.optional(v.union(v.literal("inline"), v.literal("fullBleed"))),
-        split: v.optional(v.union(v.literal("left"), v.literal("right"))),
-      })),
-    }),
+    config: v.any(),
     previewUrl: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
