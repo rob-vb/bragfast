@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ChevronUp, ChevronDown, X } from "lucide-react";
+import { ChevronUp, ChevronDown, X, Type, AlignLeft, Image, Hexagon, Tag } from "lucide-react";
 import type { TemplateConfig, Block, BlockType, Spacing } from "@/lib/templates/config-types";
 import { TemplatePreview } from "./template-preview";
 import { BlockProperties } from "./block-properties";
 import { PixelButton } from "./pixel-button";
+import { EditorBrowserFrame } from "./editor-browser-frame";
 
 interface TemplateEditorProps {
   templateId: string;
@@ -28,6 +29,14 @@ const ALL_BLOCK_TYPES: { value: BlockType; label: string }[] = [
 ];
 
 const MAX_BLOCKS = 8;
+
+const BLOCK_TYPE_ICONS: Record<string, React.ReactNode> = {
+  title: <Type size={12} />,
+  description: <AlignLeft size={12} />,
+  image: <Image size={12} />,
+  logo: <Hexagon size={12} />,
+  productName: <Tag size={12} />,
+};
 
 const BLOCK_TYPE_LABELS: Record<string, string> = {
   title: "Title",
@@ -153,16 +162,16 @@ export function TemplateEditor({
   // --- Render ---
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white">
+    <div className="flex flex-col h-full bg-[#FFF8F0] text-[#4A3326]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-700 px-4 py-3">
+      <div className="flex items-center justify-between border-b-2 border-[#4A3326] px-4 py-3">
         <Link
           href="/dashboard/templates"
-          className="text-sm text-gray-400 hover:text-white transition-colors"
+          className="text-sm text-[#4A3326]/60 hover:text-[#4A3326] transition-colors"
         >
           &larr; Back to Templates
         </Link>
-        <span className="text-sm font-semibold truncate max-w-[40%]">{name}</span>
+        <span className="text-xs font-['Press_Start_2P'] truncate max-w-[40%]">{name}</span>
         <PixelButton onClick={handleSave} disabled={saving}>
           {saving ? "Saving..." : "Save"}
         </PixelButton>
@@ -171,24 +180,24 @@ export function TemplateEditor({
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
-        <div className="w-64 border-r border-gray-700 overflow-y-auto flex-shrink-0">
+        <div className="w-64 border-r-2 border-[#4A3326] overflow-y-auto flex-shrink-0">
           <div className="flex flex-col gap-5 p-4">
             {/* Name */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+              <label className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">
                 Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-gray-800 text-white text-sm rounded px-2 py-1.5 border border-gray-700 focus:border-gray-500 focus:outline-none"
+                className="bg-white text-[#4A3326] text-sm rounded px-2 py-1.5 border-2 border-[#4A3326] focus:border-[#F8AF3C] focus:outline-none"
               />
             </div>
 
             {/* Background */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+              <label className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">
                 Background
               </label>
               <div className="flex gap-1">
@@ -198,8 +207,8 @@ export function TemplateEditor({
                   }
                   className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                     config.background === "brand"
-                      ? "bg-white text-black"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      ? "bg-[#4A3326] text-white"
+                      : "bg-[#4A3326]/10 text-[#4A3326]/60 hover:bg-[#4A3326]/20"
                   }`}
                 >
                   Brand
@@ -210,14 +219,14 @@ export function TemplateEditor({
                   onChange={(e) =>
                     setConfig((prev) => ({ ...prev, background: e.target.value }))
                   }
-                  className="w-8 h-8 rounded bg-gray-800 border border-gray-700 cursor-pointer"
+                  className="w-8 h-8 rounded bg-white border-2 border-[#4A3326] cursor-pointer"
                 />
               </div>
             </div>
 
             {/* Spacing */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+              <label className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">
                 Spacing
               </label>
               <div className="flex gap-1">
@@ -229,8 +238,8 @@ export function TemplateEditor({
                     }
                     className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                       config.spacing === s
-                        ? "bg-white text-black"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        ? "bg-[#4A3326] text-white"
+                        : "bg-[#4A3326]/10 text-[#4A3326]/60 hover:bg-[#4A3326]/20"
                     }`}
                   >
                     {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -241,7 +250,7 @@ export function TemplateEditor({
 
             {/* Blocks */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+              <label className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">
                 Blocks
               </label>
               <div className="flex flex-col gap-1">
@@ -251,8 +260,8 @@ export function TemplateEditor({
                     onClick={() => setSelectedBlockIndex(i)}
                     className={`flex items-center gap-1 px-2 py-1.5 rounded text-xs cursor-pointer transition-colors ${
                       selectedBlockIndex === i
-                        ? "bg-gray-600 text-white"
-                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        ? "bg-white border-2 border-[#4A3326] text-[#4A3326]"
+                        : "bg-[#4A3326]/5 border border-[#4A3326]/20 text-[#4A3326]/60 hover:bg-[#4A3326]/10"
                     }`}
                   >
                     <button
@@ -261,7 +270,7 @@ export function TemplateEditor({
                         moveBlock(i, -1);
                       }}
                       disabled={i === 0}
-                      className="p-0.5 hover:text-white disabled:opacity-30"
+                      className="p-0.5 hover:text-[#4A3326] disabled:opacity-30"
                     >
                       <ChevronUp size={12} />
                     </button>
@@ -271,11 +280,12 @@ export function TemplateEditor({
                         moveBlock(i, 1);
                       }}
                       disabled={i === config.blocks.length - 1}
-                      className="p-0.5 hover:text-white disabled:opacity-30"
+                      className="p-0.5 hover:text-[#4A3326] disabled:opacity-30"
                     >
                       <ChevronDown size={12} />
                     </button>
-                    <span className="flex-1 truncate">
+                    <span className="flex items-center gap-1 flex-1 truncate">
+                      {BLOCK_TYPE_ICONS[block.type]}
                       {BLOCK_TYPE_LABELS[block.type] ?? block.type}
                     </span>
                     <button
@@ -295,7 +305,7 @@ export function TemplateEditor({
             {/* Add Block */}
             {availableTypes.length > 0 && config.blocks.length < MAX_BLOCKS && (
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">
                   Add Block
                 </label>
                 <select
@@ -306,7 +316,7 @@ export function TemplateEditor({
                     }
                   }}
                   defaultValue=""
-                  className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 border border-gray-700 focus:border-gray-500 focus:outline-none"
+                  className="bg-white text-[#4A3326] text-xs rounded px-2 py-1.5 border-2 border-[#4A3326] focus:border-[#F8AF3C] focus:outline-none"
                 >
                   <option value="" disabled>
                     Select type...
@@ -320,15 +330,6 @@ export function TemplateEditor({
               </div>
             )}
 
-            {/* Block Properties */}
-            {selectedBlock && selectedBlockIndex !== null && (
-              <div className="border-t border-gray-700 pt-3">
-                <BlockProperties
-                  block={selectedBlock}
-                  onChange={(updated) => updateBlock(selectedBlockIndex, updated)}
-                />
-              </div>
-            )}
           </div>
         </div>
 
@@ -336,11 +337,15 @@ export function TemplateEditor({
         <div className="flex-1 flex flex-col items-center overflow-y-auto p-6 gap-4">
           {/* Preview Canvas */}
           <div className="w-full max-w-2xl">
-            <TemplatePreview
-              config={config}
-              format={format}
-              brandColors={brandColors ?? DEFAULT_BRAND_COLORS}
-            />
+            <EditorBrowserFrame title={name}>
+              <TemplatePreview
+                config={config}
+                format={format}
+                brandColors={brandColors ?? DEFAULT_BRAND_COLORS}
+                selectedBlockIndex={selectedBlockIndex}
+                onSelectBlock={setSelectedBlockIndex}
+              />
+            </EditorBrowserFrame>
           </div>
 
           {/* Format Switcher */}
@@ -351,8 +356,8 @@ export function TemplateEditor({
                 onClick={() => setFormat(f)}
                 className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                   format === f
-                    ? "bg-white text-black"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    ? "bg-[#4A3326] text-white"
+                    : "bg-[#4A3326]/10 text-[#4A3326]/60 hover:bg-[#4A3326]/20"
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -363,13 +368,13 @@ export function TemplateEditor({
           {/* Brand Selector */}
           {brands.length > 0 ? (
             <div className="flex items-center gap-2">
-              <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
+              <label className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">
                 Brand
               </label>
               <select
                 value={previewBrandIndex}
                 onChange={(e) => setPreviewBrandIndex(Number(e.target.value))}
-                className="bg-gray-800 text-white text-xs rounded px-2 py-1.5 border border-gray-700 focus:border-gray-500 focus:outline-none"
+                className="bg-white text-[#4A3326] text-xs rounded px-2 py-1.5 border-2 border-[#4A3326] focus:border-[#F8AF3C] focus:outline-none"
               >
                 {brands.map((b, i) => (
                   <option key={b.id} value={i}>
@@ -379,7 +384,7 @@ export function TemplateEditor({
               </select>
             </div>
           ) : (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[#4A3326]/50">
               No brands available. Using placeholder colors.
             </p>
           )}
@@ -389,6 +394,30 @@ export function TemplateEditor({
             {previewing ? "Generating..." : "Preview Real Output"}
           </PixelButton>
         </div>
+
+        {/* Right Sidebar — Block Properties */}
+        {selectedBlock && selectedBlockIndex !== null && (
+          <div className="w-72 border-l-2 border-[#4A3326] overflow-y-auto flex-shrink-0 bg-white">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+              <div className="flex items-center gap-2">
+                {BLOCK_TYPE_ICONS[selectedBlock.type]}
+                <span className="text-xs font-['Press_Start_2P'] text-[#4A3326]">
+                  {BLOCK_TYPE_LABELS[selectedBlock.type] ?? selectedBlock.type}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedBlockIndex(null)}
+                className="p-1 hover:text-[#4A3326] text-[#4A3326]/40 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <BlockProperties
+              block={selectedBlock}
+              onChange={(updated) => updateBlock(selectedBlockIndex, updated)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -21,8 +21,8 @@ function PillButton({
       onClick={onClick}
       className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
         active
-          ? "bg-white text-black"
-          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          ? "bg-[#4A3326] text-white"
+          : "bg-[#4A3326]/10 text-[#4A3326]/60 hover:bg-[#4A3326]/20"
       }`}
     >
       {label}
@@ -33,19 +33,11 @@ function PillButton({
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">{label}</span>
+      <span className="text-[10px] font-medium text-[#4A3326]/50 uppercase tracking-wide">{label}</span>
       <div className="flex gap-1">{children}</div>
     </div>
   );
 }
-
-const BLOCK_TYPE_LABELS: Record<string, string> = {
-  title: "Title",
-  description: "Description",
-  image: "Image",
-  logo: "Logo",
-  productName: "Product Name",
-};
 
 export function BlockProperties({ block, onChange }: BlockPropertiesProps) {
   const showFontSize = block.type === "title" || block.type === "description" || block.type === "productName";
@@ -54,10 +46,6 @@ export function BlockProperties({ block, onChange }: BlockPropertiesProps) {
 
   return (
     <div className="flex flex-col gap-4 p-3">
-      <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
-        {BLOCK_TYPE_LABELS[block.type] ?? block.type}
-      </span>
-
       <PropertyRow label="Alignment">
         {(["left", "center", "right"] as Alignment[]).map((a) => (
           <PillButton
