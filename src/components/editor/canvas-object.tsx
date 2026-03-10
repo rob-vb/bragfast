@@ -188,17 +188,18 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
         top: obj.y,
         width: obj.width,
         height: obj.height,
-        opacity: obj.opacity,
         cursor: isSelected ? "move" : "pointer",
         outline: isSelected ? "2px solid #3b82f6" : "none",
         outlineOffset: -1,
         zIndex: obj.zIndex,
       }}
     >
-      {/* Object content */}
-      {renderObjectPreview(obj, colors, isEditing, (text) => {
-        dispatch({ type: "UPDATE_PROPERTY", objectId: obj.id, property: "previewText", value: text, allFormats: true });
-      }, () => setIsEditing(false))}
+      {/* Object content — opacity applied here so handles stay visible */}
+      <div style={{ width: "100%", height: "100%", opacity: obj.opacity }}>
+        {renderObjectPreview(obj, colors, isEditing, (text) => {
+          dispatch({ type: "UPDATE_PROPERTY", objectId: obj.id, property: "previewText", value: text, allFormats: true });
+        }, () => setIsEditing(false))}
+      </div>
 
       {/* Selection handles */}
       {isSelected && <SelectionHandles onResizeStart={handleResizeStart} />}

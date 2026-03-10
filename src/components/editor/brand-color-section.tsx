@@ -18,7 +18,7 @@ export function BrandColorSection() {
   useEffect(() => {
     fetch("/api/v1/brands")
       .then((r) => r.json())
-      .then((data) => setBrands(data.brands || []))
+      .then((data) => setBrands(Array.isArray(data) ? data : data.brands || []))
       .catch(() => {});
   }, []);
 
