@@ -72,7 +72,7 @@ export const create = mutation({
     userId: v.string(),
     externalId: v.string(),
     name: v.string(),
-    config: v.union(configValidator, canvasConfigValidator),
+    config: v.any(),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
@@ -98,7 +98,7 @@ export const update = mutation({
     externalId: v.string(),
     userId: v.string(),
     name: v.optional(v.string()),
-    config: v.optional(v.union(configValidator, canvasConfigValidator)),
+    config: v.optional(v.any()),
     previewUrl: v.optional(v.string()),
   },
   handler: async (ctx, { externalId, userId, ...updates }) => {
