@@ -9,15 +9,15 @@ import { FONT_CATEGORIES } from "./font-data";
 export function TextProperties() {
   const { selectedObject, dispatch, state } = useEditor();
   const colorInputRef = useRef<HTMLInputElement>(null);
-  if (!selectedObject) return null;
-  if (selectedObject.type !== "title" && selectedObject.type !== "description") return null;
-
+  const isText = selectedObject?.type === "title" || selectedObject?.type === "description";
   const colors = state.config.colors;
-  const currentColor = selectedObject.color || colors.text;
+  const currentColor = isText ? (selectedObject!.color || colors.text) : colors.text;
   const [hexInput, setHexInput] = useState(currentColor);
 
   // Sync local hex input when the actual color changes (swatch click, picker, different object)
   useEffect(() => { setHexInput(currentColor); }, [currentColor]);
+
+  if (!selectedObject || !isText) return null;
 
   function updateShared(property: string, value: unknown) {
     dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: true });

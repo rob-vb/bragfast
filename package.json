@@ -24,6 +24,7 @@
     "satori": "^0.24.1",
     "sharp": "^0.34.5",
     "shiki": "^4.0.2",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

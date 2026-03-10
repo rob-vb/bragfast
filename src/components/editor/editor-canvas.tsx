@@ -20,6 +20,7 @@ export function EditorCanvas() {
   const [zoom, setZoom] = useState<number | null>(null); // null = not initialized
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isPanning = useRef(false);
+  const spaceHeld = useRef(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   /** Clamp pan so the canvas can't be scrolled fully out of view */
@@ -91,9 +92,9 @@ export function EditorCanvas() {
     return () => el.removeEventListener("wheel", handleWheel);
   }, [handleWheel]);
 
-  // Middle-click drag to pan
+  // Middle-click or Space+left-click drag to pan
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (e.button === 1) {
+    if (e.button === 1 || (e.button === 0 && spaceHeld.current)) {
       e.preventDefault();
       isPanning.current = true;
       panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
@@ -148,23 +149,40 @@ export function EditorCanvas() {
     });
   }, [dims.width, dims.height]);
 
-  // Cmd+0 to fit to view
+  // Cmd+0 to fit to view, Space to pan
+  const [spaceActive, setSpaceActive] = useState(false);
+
   useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
+    function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "0") {
         e.preventDefault();
         fitToView();
       }
+      if (e.code === "Space" && !e.repeat && !(e.target as HTMLElement).matches("input, textarea, select")) {
+        e.preventDefault();
+        spaceHeld.current = true;
+        setSpaceActive(true);
+      }
     }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    function handleKeyUp(e: KeyboardEvent) {
+      if (e.code === "Space") {
+        spaceHeld.current = false;
+        setSpaceActive(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
   }, [fitToView]);
 
   return (
     <div
       ref={containerRef}
       className="flex-1 bg-zinc-100 overflow-hidden relative"
-      style={{ cursor: isPanning.current ? "grabbing" : "default" }}
+      style={{ cursor: isPanning.current ? "grabbing" : spaceActive ? "grab" : "default" }}
       onClick={() => dispatch({ type: "SELECT_OBJECT", objectId: null })}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}

@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef } from "react";
 import { EditorProvider, useEditor } from "./editor-context";
+import { toast, Toaster } from "sonner";
+import { EditorToolbar } from "./editor-toolbar";
 import { EditorLeftSidebar } from "./editor-left-sidebar";
 import { EditorCanvas } from "./editor-canvas";
 import { EditorRightSidebar } from "./editor-right-sidebar";
@@ -35,26 +37,47 @@ function EditorInner() {
   useFontLoader(state.config);
 
   const handleSave = useCallback(async () => {
-    const res = await fetch(`/api/v1/templates/${state.templateId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: state.name,
-        config: state.config,
-      }),
-    });
-    if (!res.ok) {
-      console.error("Save failed:", await res.text());
-      return;
+    try {
+      const res = await fetch(`/api/v1/templates/${state.templateId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: state.name,
+          config: state.config,
+        }),
+      });
+      if (!res.ok) {
+        toast.error("Failed to save template");
+        return;
+      }
+      dispatch({ type: "MARK_SAVED" });
+      toast.success("Template saved");
+    } catch {
+      toast.error("Failed to save template");
     }
-    dispatch({ type: "MARK_SAVED" });
   }, [state.templateId, state.name, state.config, dispatch]);
 
+  // Cmd+S to save
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        if (state.isDirty) handleSave();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSave, state.isDirty]);
+
   return (
-    <div className="h-screen flex bg-white">
-      <EditorLeftSidebar onSave={handleSave} />
-      <EditorCanvas />
-      <EditorRightSidebar />
+    <div className="h-screen flex flex-col bg-white">
+      <EditorToolbar onSave={handleSave} />
+      <div className="flex flex-1 min-h-0">
+        <EditorLeftSidebar />
+        <EditorCanvas />
+        <EditorRightSidebar />
+      </div>
+      <Toaster position="bottom-center" richColors />
     </div>
   );
 }
