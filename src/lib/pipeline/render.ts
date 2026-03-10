@@ -112,6 +112,9 @@ export async function renderReleaseAsync(
     } else if (templateName.startsWith("tmpl_")) {
       const tmpl = await convex.query(api.templates.getByExternalId, { externalId: templateName });
       if (!tmpl) throw new Error(`Template not found: ${templateName}`);
+      if (!tmpl.isDefault && tmpl.userId !== userId) {
+        throw new Error(`Template not found: ${templateName}`);
+      }
       templateConfig = tmpl.config as TemplateConfig;
     } else {
       throw new Error(`Invalid template: ${templateName}`);

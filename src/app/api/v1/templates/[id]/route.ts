@@ -43,9 +43,9 @@ export async function GET(
   return Response.json({
     id: template.externalId,
     name: template.name,
-    isDefault: template.isDefault,
+    is_default: template.isDefault,
     config: template.config,
-    previewUrl: template.previewUrl,
+    preview_url: template.previewUrl ?? null,
     created_at: template.created_at,
     updated_at: template.updated_at,
   });
@@ -96,7 +96,15 @@ export async function PATCH(
     if (!updated) {
       return Response.json({ error: "Template not found" }, { status: 404 });
     }
-    return Response.json(updated);
+    return Response.json({
+      id: updated.externalId,
+      name: updated.name,
+      is_default: updated.isDefault,
+      config: updated.config,
+      preview_url: updated.previewUrl ?? null,
+      created_at: updated.created_at,
+      updated_at: updated.updated_at,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("not found")) {

@@ -1,6 +1,7 @@
 import satori from "satori";
 import sharp from "sharp";
 import { authenticate } from "@/lib/auth/authenticate";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { ConfigRenderer } from "@/lib/templates/config-renderer";
@@ -16,6 +17,9 @@ export async function POST(
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const rateLimitResponse = await checkRateLimit(auth.userId);
+  if (rateLimitResponse) return rateLimitResponse;
 
   const { id } = await params;
 
