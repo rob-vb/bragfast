@@ -11,7 +11,7 @@ export async function CodeBlock({ code, lang }: CodeBlockProps) {
   return (
     <div className="relative group">
       <div
-        className="rounded-lg text-sm overflow-x-auto [&_pre]:p-4 [&_pre]:m-0 [&_code]:text-[13px] [&_code]:leading-relaxed"
+        className="border-2 border-brand text-sm overflow-x-auto [&_pre]:p-4 [&_pre]:m-0 [&_code]:text-[13px] [&_code]:leading-relaxed"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

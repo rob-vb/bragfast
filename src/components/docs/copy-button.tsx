@@ -12,7 +12,7 @@ export function CopyButton({ text }: { text: string }) {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       }}
-      className="absolute top-2 right-2 z-10 rounded-md px-2 py-1 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50 transition-all sm:opacity-0 sm:group-hover:opacity-100"
+      className="absolute top-2 right-2 z-10 px-2 py-1 text-xs text-brand/40 hover:text-brand hover:bg-gold/10 transition-all sm:opacity-0 sm:group-hover:opacity-100"
     >
       {copied ? "Copied!" : "Copy"}
     </button>
