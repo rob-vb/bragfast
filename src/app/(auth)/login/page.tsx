@@ -4,9 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,71 +42,77 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-brand">Welcome back</h1>
-      <p className="mt-2 text-sm text-brand/60">
-        Sign in to your Bragfast account
-      </p>
-
-      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-brand">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
-          />
+      {/* NES Card */}
+      <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)]">
+        {/* Header bar */}
+        <div className="bg-brand text-gold px-4 py-3 font-mono text-xs uppercase tracking-widest">
+          ▸ Sign in
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-brand">
-              Password
-            </Label>
-            <Link
-              href="/forgot-password"
-              className="text-sm text-brand/60 hover:text-brand underline-offset-4 hover:underline"
+        {/* Form body */}
+        <div className="p-5 sm:p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-sm font-bold text-brand">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-bold text-brand">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-brand/50 hover:text-brand underline-offset-4 hover:underline"
+                >
+                  Forgot?
+                </Link>
+              </div>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-600">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gold text-brand border-2 border-brand px-4 py-2.5 font-mono text-xs uppercase tracking-widest font-bold shadow-[3px_3px_0_var(--color-brand)] transition-all hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             >
-              Forgot password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
-          />
+              {loading ? "Signing in..." : "▸ Continue"}
+            </button>
+          </form>
         </div>
-
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
-
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gold text-brand font-semibold hover:bg-gold/90 focus-visible:ring-gold"
-        >
-          {loading ? "Signing in..." : "Sign in"}
-        </Button>
-      </form>
+      </div>
 
       <p className="mt-6 text-center text-sm text-brand/60">
-        Don&apos;t have an account?{" "}
+        New here?{" "}
         <Link
           href="/signup"
-          className="text-brand font-medium hover:underline underline-offset-4"
+          className="text-brand font-bold hover:underline underline-offset-4"
         >
-          Create an account
+          Create account
         </Link>
       </p>
     </>
