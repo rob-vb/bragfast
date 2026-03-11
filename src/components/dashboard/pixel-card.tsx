@@ -8,7 +8,7 @@ export function PixelCard({
 }) {
   return (
     <div
-      className={`border-2 border-[#4A3326] bg-white p-4 shadow-[4px_4px_0_#4A3326] ${className}`}
+      className={`border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)] ${className}`}
     >
       {children}
     </div>

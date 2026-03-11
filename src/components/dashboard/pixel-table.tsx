@@ -6,10 +6,10 @@ export function PixelTable({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto border-2 border-[#4A3326] bg-white shadow-[4px_4px_0_#4A3326]">
-      <table className="w-full text-left text-sm text-[#4A3326]">
+    <div className="overflow-x-auto border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)]">
+      <table className="w-full text-left text-sm text-brand">
         <thead>
-          <tr className="border-b-2 border-[#4A3326] bg-[#F8AF3C]/20">
+          <tr className="border-b-2 border-brand bg-gold/20">
             {headers.map((h) => (
               <th
                 key={h}
@@ -20,7 +20,7 @@ export function PixelTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#4A3326]/10">{children}</tbody>
+        <tbody className="divide-y divide-brand/10">{children}</tbody>
       </table>
     </div>
   );

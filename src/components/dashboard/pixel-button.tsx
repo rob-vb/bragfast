@@ -9,15 +9,15 @@ export function PixelButton({
   variant?: "primary" | "danger" | "ghost";
 }) {
   const base =
-    "font-[family-name:var(--font-press-start)] text-xs px-4 py-2 border-2 border-[#4A3326] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed";
+    "font-[family-name:var(--font-press-start)] text-xs px-4 py-2 border-2 border-brand transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
     primary:
-      "bg-[#F8AF3C] text-[#4A3326] shadow-[4px_4px_0_#4A3326] hover:shadow-[2px_2px_0_#4A3326]",
+      "bg-gold text-brand shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)]",
     danger:
-      "bg-red-500 text-white shadow-[4px_4px_0_#4A3326] hover:shadow-[2px_2px_0_#4A3326]",
+      "bg-red-500 text-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)]",
     ghost:
-      "bg-transparent text-[#4A3326] shadow-[4px_4px_0_#4A3326] hover:bg-[#F8AF3C]/20 hover:shadow-[2px_2px_0_#4A3326]",
+      "bg-transparent text-brand shadow-[4px_4px_0_var(--color-brand)] hover:bg-gold/20 hover:shadow-[2px_2px_0_var(--color-brand)]",
   };
 
   return (
