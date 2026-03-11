@@ -12,7 +12,7 @@ function buildGroups(sections: ApiSection[]): SidebarGroup[] {
 
   for (const section of sections) {
     if (
-      ["introduction", "authentication", "async", "status-codes"].includes(section.anchor)
+      ["introduction", "authentication", "async", "rate-limits", "credits", "status-codes"].includes(section.anchor)
     ) {
       intro.items.push({ title: section.title, anchor: section.anchor })
     } else {
@@ -44,16 +44,16 @@ export function DocsSidebar({
     >
       <a
         href="/docs"
-        className="block text-lg font-bold text-zinc-900 mb-1 px-3"
+        className="block text-sm font-bold text-brand mb-1 px-3 font-[family-name:var(--font-press-start)]"
       >
-        Bragfast
+        brag.fast
       </a>
-      <span className="block text-xs text-zinc-400 mb-6 px-3">API v1</span>
+      <span className="block text-xs text-brand/50 mb-6 px-3">API v1</span>
 
       {groups.map((group, i) => (
         <div key={i} className="mb-6">
           {group.label && (
-            <h3 className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
+            <h3 className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-brand/50">
               {group.label}
             </h3>
           )}
@@ -65,10 +65,10 @@ export function DocsSidebar({
                   <a
                     href={`#${item.anchor}`}
                     className={cn(
-                      "block rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-zinc-100 hover:text-zinc-900",
+                      "block px-3 py-1.5 text-sm transition-colors hover:bg-gold/10 hover:text-brand",
                       isChild
-                        ? "pl-6 text-zinc-400 text-[13px]"
-                        : "text-zinc-600 font-medium"
+                        ? "pl-6 text-brand/50 text-[13px]"
+                        : "text-brand/70 font-medium"
                     )}
                   >
                     {item.title.trim()}

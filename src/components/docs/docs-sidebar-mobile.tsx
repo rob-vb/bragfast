@@ -21,10 +21,10 @@ export function DocsSidebarMobile({ sections }: { sections: ApiSection[] }) {
   return (
     <>
       {/* Sticky mobile header */}
-      <div className="sticky top-0 z-40 md:hidden flex items-center gap-3 bg-white/90 backdrop-blur-sm border-b border-zinc-100 px-4 py-3">
+      <div className="sticky top-0 z-40 md:hidden flex items-center gap-3 bg-surface/90 backdrop-blur-sm border-b border-brand/10 px-4 py-3">
         <button
           onClick={() => setOpen(true)}
-          className="rounded-md p-1.5 -ml-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          className="p-1.5 -ml-1.5 text-brand/50 hover:text-brand hover:bg-gold/10 active:bg-gold/20 transition-colors"
           aria-label="Open navigation"
         >
           <svg
@@ -41,8 +41,8 @@ export function DocsSidebarMobile({ sections }: { sections: ApiSection[] }) {
             />
           </svg>
         </button>
-        <span className="text-sm font-semibold text-zinc-900">Bragfast</span>
-        <span className="text-xs text-zinc-400">API v1</span>
+        <span className="text-sm font-semibold text-brand">brag.fast</span>
+        <span className="text-xs text-brand/50">API v1</span>
       </div>
 
       {/* Overlay */}
@@ -55,13 +55,13 @@ export function DocsSidebarMobile({ sections }: { sections: ApiSection[] }) {
 
       {/* Drawer */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transition-transform duration-250 ease-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-surface shadow-[8px_0_0_var(--color-brand)] transition-transform duration-250 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <button
           onClick={() => setOpen(false)}
-          className="absolute top-5 right-3 rounded-md p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
+          className="absolute top-5 right-3 p-1.5 text-brand/50 hover:text-brand hover:bg-gold/10 transition-colors"
           aria-label="Close navigation"
         >
           <svg
