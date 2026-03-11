@@ -12,7 +12,7 @@ export function MethodBadge({ method }: { method: HttpMethod }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 text-xs font-bold tracking-wide font-mono border border-brand/20",
+        "inline-flex items-center px-2 py-0.5 text-xs font-bold tracking-wide font-mono border border-brand/30",
         methodColors[method]
       )}
     >

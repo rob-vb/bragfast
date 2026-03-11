@@ -16,7 +16,7 @@ export function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 rounded border border-brand/20 px-1.5 py-0.5 text-[10px] text-brand/80 hover:text-brand/80 hover:border-brand/40 transition-colors"
+      className="inline-flex items-center gap-1 rounded border border-brand/10 px-1.5 py-0.5 text-[10px] text-brand/80 hover:text-brand/80 hover:border-brand/30 transition-colors"
       title="Copy"
     >
       {copied ? (

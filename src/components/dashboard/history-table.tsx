@@ -59,7 +59,7 @@ function ExpandableRow({ release }: { release: Release }) {
         <tr>
           <td colSpan={5} className="px-4 py-0">
             <div className="mb-4 mt-1 border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
-              <div className="flex items-center justify-between border-b border-brand/20 px-3 py-2">
+              <div className="flex items-center justify-between border-b border-brand/10 px-3 py-2">
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold">
                   Response
                 </span>

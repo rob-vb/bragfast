@@ -18,7 +18,7 @@ function CreditBar({ used, total }: { used: number; total: number }) {
       {Array.from({ length: blocks }).map((_, i) => (
         <div
           key={i}
-          className={`h-4 w-3 border border-brand/20 ${
+          className={`h-4 w-3 border border-brand/10 ${
             i < filled ? "bg-gold" : "bg-brand/10"
           }`}
         />
