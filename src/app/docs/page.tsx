@@ -30,7 +30,7 @@ export default function DocsPage() {
             </div>
             <div className="flex flex-col gap-3">
               <div className="bg-brand px-4 sm:px-5 py-3 sm:py-4">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-brand/50">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-gold/60">
                   Base URL
                 </span>
                 <p className="mt-1 text-sm font-mono text-gold break-all">
@@ -38,7 +38,7 @@ export default function DocsPage() {
                 </p>
               </div>
 
-              <div className="border border-brand/30 px-4 sm:px-5 py-3 sm:py-4">
+              <div className="border-2 border-brand px-4 sm:px-5 py-3 sm:py-4">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-brand/50">
                   Authentication
                 </span>
