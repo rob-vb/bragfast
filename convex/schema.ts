@@ -9,7 +9,7 @@ export default defineSchema({
     plan: v.union(
       v.literal("trial"),
       v.literal("starter"),
-      v.literal("growth"),
+      v.literal("pro"),
       v.literal("scale")
     ),
   }).index("by_userId", ["userId"]),
@@ -47,6 +47,7 @@ export default defineSchema({
   apiKeys: defineTable({
     userId: v.string(),
     name: v.string(),
+    key: v.optional(v.string()),
     keyHash: v.string(),
     prefix: v.string(),
     created_at: v.string(),
@@ -71,7 +72,7 @@ export default defineSchema({
     ),
     images: v.optional(v.any()),
     credits_used: v.number(),
-    transparent: v.boolean(),
+    transparent: v.optional(v.boolean()),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
     created_at: v.string(),

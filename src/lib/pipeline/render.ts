@@ -1,17 +1,22 @@
 import satori from "satori";
 import sharp from "sharp";
 import crypto from "crypto";
+import path from "path";
+import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { ConfigRenderer } from "../templates/config-renderer";
-import { CanvasRenderer } from "../templates/canvas-renderer";
+import { CanvasRenderer, type ObjectDataMap } from "../templates/canvas-renderer";
+import { migrateConfig } from "../templates/canvas-types";
 import { getDefaultConfig } from "../templates/default-configs";
 import type { TemplateConfig } from "../templates/config-types";
 import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { fetchImageAsBase64 } from "../images";
-import { uploadPng } from "../storage/r2";
+import { uploadImage } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, Brand, FORMAT_DIMENSIONS } from "../types";
+
+const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -32,7 +37,6 @@ export async function createRelease(
     externalId: releaseId,
     template: request.template || "classic",
     credits_used: creditsUsed,
-    transparent: request.transparent ?? false,
     metadata: request.metadata,
     webhook_url: request.webhook_url,
   });
@@ -44,7 +48,6 @@ export async function createRelease(
     credits_used: creditsUsed,
     credits_remaining: -1, // filled by caller
     created_at: new Date().toISOString(),
-    transparent: request.transparent ?? false,
     metadata: request.metadata,
     webhook_url: request.webhook_url,
   };
@@ -65,7 +68,6 @@ export async function getRelease(
     credits_remaining: -1, // filled by caller
     created_at: r.created_at,
     completed_at: r.completed_at,
-    transparent: r.transparent,
     metadata: r.metadata,
     webhook_url: r.webhook_url,
   };
@@ -127,20 +129,77 @@ export async function renderReleaseAsync(
     }
 
     const formats = request.formats || ["landscape", "square", "portrait"];
-    const transparent = request.transparent ?? false;
     const isCanvas = isCanvasConfig(templateConfig);
+    if (isCanvas) {
+      templateConfig = migrateConfig(templateConfig as CanvasTemplateConfig);
+    }
 
-    const slides = await Promise.all(
-      request.slides.map(async (s) => ({
-        title: s.title,
-        description: s.description,
-        imageBase64: s.image_url
-          ? await fetchImageAsBase64(s.image_url)
-          : undefined,
-        device: s.device || ("browser" as const),
-        align: s.align,
-      }))
+    // Build per-slide object data maps
+    const slideDataMaps: ObjectDataMap[] = await Promise.all(
+      request.slides.map(async (s) => {
+        if (s.objects) {
+          // New format: objects keyed by ID
+          const dataMap: ObjectDataMap = {};
+          for (const [id, val] of Object.entries(s.objects)) {
+            const entry: ObjectDataMap[string] = {};
+            if (val.text) entry.text = val.text;
+            if (val.url) entry.imageBase64 = await fetchImageAsBase64(val.url);
+            dataMap[id] = entry;
+          }
+          return dataMap;
+        }
+        // Legacy format: title/description/image_url
+        const dataMap: ObjectDataMap = {};
+        if (s.title) dataMap["title"] = { text: s.title };
+        if (s.description) dataMap["description"] = { text: s.description };
+        if (s.image_url) {
+          dataMap["image"] = { imageBase64: await fetchImageAsBase64(s.image_url) };
+        }
+        return dataMap;
+      })
     );
+
+    // Inject static images (src field) — fetch each unique URL once
+    if (isCanvas) {
+      const canvasConfig = templateConfig as CanvasTemplateConfig;
+      const staticSrcs = new Set<string>();
+      for (const fKey of Object.keys(canvasConfig.formats) as FormatKey[]) {
+        for (const obj of canvasConfig.formats[fKey].objects) {
+          if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
+        }
+      }
+      if (staticSrcs.size > 0) {
+        const srcEntries = await Promise.all(
+          [...staticSrcs].map(async (src) => [src, await fetchImageAsBase64(src)] as const)
+        );
+        const srcMap = Object.fromEntries(srcEntries);
+        // For each format's objects, inject into every slide's data map (API override wins)
+        for (const fKey of Object.keys(canvasConfig.formats) as FormatKey[]) {
+          for (const obj of canvasConfig.formats[fKey].objects) {
+            if (obj.type === "image" && obj.src) {
+              for (const dataMap of slideDataMaps) {
+                if (!dataMap[obj.id]?.imageBase64) {
+                  dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Build legacy slide format for v1 ConfigRenderer
+    const legacySlides = !isCanvas
+      ? await Promise.all(
+          request.slides.map(async (s) => ({
+            title: s.title || "",
+            description: s.description,
+            imageBase64: s.image_url ? await fetchImageAsBase64(s.image_url) : undefined,
+            device: s.device || ("browser" as const),
+            align: s.align,
+          }))
+        )
+      : [];
 
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
@@ -149,38 +208,47 @@ export async function renderReleaseAsync(
       const slideUrls: string[] = [];
 
       // Font loading per-format: canvas configs may use different fonts per format
-      const fonts = isCanvas
+      // Also load brand font if it overrides the template's fonts
+      let fonts = isCanvas
         ? await loadFontsForObjects((templateConfig as CanvasTemplateConfig).formats[format as FormatKey].objects)
         : await loadFontsForFamily(brand.font);
+      if (isCanvas && brand.font) {
+        const brandFonts = await loadFontsForFamily(brand.font);
+        fonts = [...fonts, ...brandFonts];
+      }
 
-      for (let i = 0; i < slides.length; i++) {
+      for (let i = 0; i < slideDataMaps.length; i++) {
         const jsx = isCanvas
           ? CanvasRenderer({
               config: templateConfig as CanvasTemplateConfig,
               format: format as FormatKey,
-              slide: slides[i],
+              objectData: slideDataMaps[i],
               brand,
-              transparent,
             })
           : ConfigRenderer({
               config: templateConfig as TemplateConfig,
-              slide: slides[i],
+              slide: legacySlides[i],
               brand,
               width,
               height,
-              transparent,
             });
         const svg = await satori(jsx, { width, height, fonts });
-        const png = await sharp(Buffer.from(svg))
-          .ensureAlpha()
-          .png()
+        const jpg = await sharp(Buffer.from(svg))
+          .flatten({ background: '#ffffff' })
+          .jpeg({ quality: 85 })
           .toBuffer();
-        const filename = `${format}-${i + 1}.png`;
-        const cdnUrl = await uploadPng(
-          png,
-          `releases/${releaseId}/${filename}`
-        );
-        slideUrls.push(cdnUrl);
+        const filename = `${format}-${i + 1}.jpg`;
+        let url: string;
+        if (OUTPUT_LOCAL) {
+          const dir = path.join(process.cwd(), ".output", releaseId);
+          await mkdir(dir, { recursive: true });
+          const filePath = path.join(dir, filename);
+          await writeFile(filePath, jpg);
+          url = `file://${filePath}`;
+        } else {
+          url = await uploadImage(jpg, `releases/${releaseId}/${filename}`);
+        }
+        slideUrls.push(url);
       }
 
       images[format] = {

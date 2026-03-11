@@ -43,9 +43,17 @@ export const DEFAULT_TEMPLATES: Record<string, { name: string; config: TemplateC
   },
 };
 
-/** Resolve a template name to its config (v1 legacy names resolve to v1, v2 names like "classic_v2" resolve to v2) */
+/** Map short default names to their v2 canvas key */
+const V2_ALIASES: Record<string, string> = {
+  classic: "classic_v2",
+  split: "split_v2",
+  hero: "hero_v2",
+};
+
+/** Resolve a template name to its config (prefer v2 canvas configs for default names) */
 export function getDefaultConfig(name: string): TemplateConfig | CanvasTemplateConfig | null {
-  const canvasConfig = getCanvasDefaultConfig(name);
+  const v2Key = V2_ALIASES[name] ?? name;
+  const canvasConfig = getCanvasDefaultConfig(v2Key);
   if (canvasConfig) return canvasConfig;
   return DEFAULT_TEMPLATES[name]?.config ?? null;
 }

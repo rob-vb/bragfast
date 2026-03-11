@@ -9,7 +9,7 @@ import { FONT_CATEGORIES } from "./font-data";
 export function TextProperties() {
   const { selectedObject, dispatch, state } = useEditor();
   const colorInputRef = useRef<HTMLInputElement>(null);
-  const isText = selectedObject?.type === "title" || selectedObject?.type === "description";
+  const isText = selectedObject?.type === "text";
   const colors = state.config.colors;
   const currentColor = isText ? (selectedObject!.color || colors.text) : colors.text;
   const [hexInput, setHexInput] = useState(currentColor);
@@ -207,6 +207,34 @@ export function TextProperties() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Text fit */}
+      <div className="space-y-1">
+        <Label className="text-xs text-zinc-500">Text Fit</Label>
+        <div className="flex gap-1">
+          {([
+            { value: true, label: "On" },
+            { value: false, label: "Off" },
+          ] as const).map((opt) => (
+            <button
+              key={String(opt.value)}
+              onClick={() => updateShared("textFit", opt.value)}
+              className={`flex-1 py-1 text-xs rounded border ${
+                (selectedObject.textFit ?? false) === opt.value
+                  ? "bg-zinc-900 text-white border-zinc-900"
+                  : "border-zinc-200 hover:bg-zinc-50"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-zinc-400">
+          {selectedObject.textFit
+            ? "Text resizes up or down to fit the height"
+            : "Text only shrinks if it exceeds the height"}
+        </p>
       </div>
     </div>
   );

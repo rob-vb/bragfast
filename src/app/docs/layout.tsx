@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "API Reference — Bragfast",
+  title: "API Reference — brag.fast",
   description:
-    "Complete API reference for Bragfast — generate branded social media images via API.",
+    "The full brag.fast API reference. Generate branded social media images with one POST request — releases, brands, templates, fonts, and uploads.",
 }
 
 export default function DocsLayout({

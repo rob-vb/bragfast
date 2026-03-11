@@ -16,9 +16,7 @@ export interface ConfigRendererProps extends TemplateProps {
 function resolveBackground(
   config: TemplateConfig,
   brand: Brand,
-  transparent?: boolean,
 ): string | undefined {
-  if (transparent) return undefined
   if (config.background === 'brand') return brand.colors.background
   return config.background
 }
@@ -164,7 +162,7 @@ function renderBlock(block: Block, ctx: BlockContext, key: number): React.ReactE
 // ---------------------------------------------------------------------------
 
 export function ConfigRenderer(props: ConfigRendererProps): React.ReactElement {
-  const { config, slide, brand, width, height, transparent } = props
+  const { config, slide, brand, width, height } = props
   const pad = 56
   const isLandscape = width > height
   const isPortrait = height > width
@@ -206,7 +204,7 @@ export function ConfigRenderer(props: ConfigRendererProps): React.ReactElement {
           position: 'relative',
           width,
           height,
-          ...(transparent ? {} : { backgroundColor: brand.colors.primary }),
+          backgroundColor: brand.colors.primary,
         }}
       >
         {/* Background image */}
@@ -269,7 +267,7 @@ export function ConfigRenderer(props: ConfigRendererProps): React.ReactElement {
         flexDirection: 'column',
         width,
         height,
-        ...(transparent ? {} : { backgroundColor: resolveBackground(config, brand, transparent) }),
+        backgroundColor: resolveBackground(config, brand),
         padding: pad,
         justifyContent: 'center',
         gap,

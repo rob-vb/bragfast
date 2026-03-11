@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useReducer, useCallback, useEffect, useRef, type ReactNode } from "react";
 import type { CanvasTemplateConfig, TemplateObject, FormatKey, ObjectType } from "@/lib/templates/canvas-types";
-import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS, uniqueSlug, slugify, migrateConfig } from "@/lib/templates/canvas-types";
 
 // --- State ---
 interface EditorState {
@@ -62,6 +62,22 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
     }
 
     case "UPDATE_PROPERTY": {
+      if (action.property === "name" && action.allFormats) {
+        // Name change → regenerate ID across all formats
+        const newName = action.value as string;
+        const existingIds = state.config.formats[state.activeFormat].objects.map((o) => o.id);
+        const newId = uniqueSlug(newName, existingIds, action.objectId);
+        const newConfig = { ...state.config, formats: { ...state.config.formats } };
+        for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
+          newConfig.formats[fmt] = {
+            objects: newConfig.formats[fmt].objects.map((obj) =>
+              obj.id === action.objectId ? { ...obj, name: newName, id: newId } : obj
+            ),
+          };
+        }
+        const newSelectedId = state.selectedObjectId === action.objectId ? newId : state.selectedObjectId;
+        return { ...state, config: newConfig, selectedObjectId: newSelectedId, isDirty: true };
+      }
       if (action.allFormats) {
         // Style properties apply to all formats
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
@@ -82,7 +98,8 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case "ADD_OBJECT": {
       const dims = FORMAT_DIMENSIONS[state.activeFormat];
-      const newObj: TemplateObject = createDefaultObject(action.objectType, dims.width, dims.height);
+      const existingIds = state.config.formats[state.activeFormat].objects.map((o) => o.id);
+      const newObj: TemplateObject = createDefaultObject(action.objectType, dims.width, dims.height, existingIds);
       const maxZ = Math.max(0, ...state.config.formats[state.activeFormat].objects.map((o) => o.zIndex));
       newObj.zIndex = maxZ + 1;
 
@@ -221,11 +238,15 @@ function updateObjectInActiveFormat(
   };
 }
 
-function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number): TemplateObject {
+function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number, existingIds: string[]): TemplateObject {
+  const defaultNames: Record<ObjectType, string> = { text: "text", image: "image", logo: "logo" };
+  const name = defaultNames[type];
+  const id = uniqueSlug(name, existingIds);
+
   const base = {
-    id: type,
+    id,
     type,
-    name: type,
+    name,
     opacity: 1,
     zIndex: 0,
   };
@@ -241,12 +262,10 @@ function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number)
   };
 
   switch (type) {
-    case "title":
-      return { ...base, ...textDefaults, x: 48, y: canvasH * 0.6, width: canvasW - 96, height: 120, fontSize: 48, fontWeight: 700 };
-    case "description":
-      return { ...base, ...textDefaults, x: 48, y: canvasH * 0.75, width: canvasW - 96, height: 80, fontSize: 22 };
+    case "text":
+      return { ...base, ...textDefaults, x: 48, y: canvasH * 0.6, width: canvasW - 96, height: 80, fontSize: 24 };
     case "image":
-      return { ...base, x: 48, y: 96, width: canvasW - 96, height: canvasH * 0.5, device: "browser" as const, objectFit: "cover" as const };
+      return { ...base, x: 48, y: 96, width: canvasW - 96, height: canvasH * 0.5, device: "none" as const, objectFit: "cover" as const };
     case "logo":
       return { ...base, x: 48, y: 32, width: 120, height: 48, objectFit: "contain" as const };
   }
@@ -278,10 +297,11 @@ interface EditorProviderProps {
 }
 
 export function EditorProvider({ templateId, initialName, initialConfig, children }: EditorProviderProps) {
+  const migratedConfig = migrateConfig(initialConfig);
   const initialState: EditorState = {
     templateId,
     name: initialName,
-    config: initialConfig,
+    config: migratedConfig,
     activeFormat: "landscape",
     selectedObjectId: null,
     isDirty: false,

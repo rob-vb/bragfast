@@ -3,17 +3,13 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
-const VALID_BLOCK_TYPES = ["title", "description", "image", "logo"] as const;
+const VALID_BLOCK_TYPES = ["title", "description", "text", "image", "logo"] as const;
 
 function validateBlocks(blocks: unknown[]): string | null {
   if (blocks.length < 1 || blocks.length > 8) {
     return "config.blocks must have 1-8 blocks";
   }
   const types = blocks.map((b) => (b as Record<string, unknown>).type);
-  const uniqueTypes = new Set(types);
-  if (uniqueTypes.size !== types.length) {
-    return "config.blocks must not have duplicate block types";
-  }
   for (const type of types) {
     if (!VALID_BLOCK_TYPES.includes(type as (typeof VALID_BLOCK_TYPES)[number])) {
       return `Invalid block type: ${type}`;
@@ -40,11 +36,21 @@ export async function GET(
     return Response.json({ error: "Template not found" }, { status: 404 });
   }
 
+  // Extract object IDs from the first format to show available modifications
+  const config = template.config as Record<string, unknown>;
+  const formats = config.formats as Record<string, { objects?: { id: string; type: string }[] }> | undefined;
+  const firstFormat = formats ? Object.values(formats)[0] : undefined;
+  const objects = firstFormat?.objects ?? [];
+
   return Response.json({
     id: template.externalId,
     name: template.name,
     is_default: template.isDefault,
-    config: template.config,
+    objects: objects.map((o) => {
+      const type = o.type === "title" || o.type === "description" ? "text" : o.type;
+      const dataShape = type === "text" ? "text" : type === "image" ? "url" : "auto";
+      return { id: o.id, type, data: dataShape };
+    }),
     preview_url: template.previewUrl ?? null,
     created_at: template.created_at,
     updated_at: template.updated_at,

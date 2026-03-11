@@ -1,27 +1,27 @@
 // src/lib/templates/canvas-renderer.tsx
 import type { CanvasTemplateConfig, TemplateObject, FormatKey } from "./canvas-types";
 import type { Brand } from "../types";
-import { FORMAT_DIMENSIONS } from "./canvas-types";
+import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
 
-interface Slide {
-  title: string;
-  description?: string;
-  imageBase64?: string;
-  device?: "browser" | "mobile";
-  align?: "left" | "center" | "right";
+// Object data keyed by object ID
+export interface ObjectDataMap {
+  [objectId: string]: {
+    text?: string;
+    url?: string;
+    imageBase64?: string; // resolved from url
+  };
 }
 
 interface CanvasRendererProps {
   config: CanvasTemplateConfig;
   format: FormatKey;
-  slide: Slide;
+  objectData: ObjectDataMap;
   brand: Brand;
-  transparent?: boolean;
 }
 
-export function CanvasRenderer({ config, format, slide, brand, transparent }: CanvasRendererProps) {
+export function CanvasRenderer({ config, format, objectData, brand }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format];
   const colors = config.brandId ? brand.colors : config.colors;
@@ -30,9 +30,10 @@ export function CanvasRenderer({ config, format, slide, brand, transparent }: Ca
   return (
     <div style={{
       width, height,
-      background: transparent ? "transparent" : colors.background,
+      background: colors.background,
       position: "relative",
       overflow: "hidden",
+      display: "flex",
     }}>
       {sortedObjects.map((obj) => (
         <div key={obj.id} style={{
@@ -47,54 +48,100 @@ export function CanvasRenderer({ config, format, slide, brand, transparent }: Ca
           justifyContent: obj.verticalAlign === "center" ? "center"
                         : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start",
         }}>
-          {renderObject(obj, slide, brand, colors)}
+          {renderObject(obj, objectData, brand, colors)}
         </div>
       ))}
     </div>
   );
 }
 
+/** Estimate the font size that fits text within a container.
+ *  textFit=true: scale up or down to fill the height (binary search for largest fitting size)
+ *  textFit=false: only shrink from baseFontSize if text overflows
+ */
+function autoFitFontSize(
+  text: string,
+  baseFontSize: number,
+  containerWidth: number,
+  containerHeight: number,
+  fontWeight: number,
+  lineHeight: number,
+  letterSpacing: number,
+  textFit: boolean,
+): number {
+  const MIN_SIZE = 8;
+  const MAX_SIZE = 400;
+  const charWidthRatio = fontWeight >= 700 ? 0.58 : 0.52;
+
+  const fitsAt = (size: number): boolean => {
+    const avgCharWidth = size * charWidthRatio + letterSpacing;
+    const charsPerLine = Math.floor(containerWidth / avgCharWidth);
+    if (charsPerLine < 1) return false;
+    const words = text.split(/\s+/);
+    let lines = 1;
+    let lineLen = 0;
+    for (const word of words) {
+      if (lineLen === 0) { lineLen = word.length; }
+      else if (lineLen + 1 + word.length > charsPerLine) { lines++; lineLen = word.length; }
+      else { lineLen += 1 + word.length; }
+    }
+    return lines * size * lineHeight <= containerHeight;
+  };
+
+  if (textFit) {
+    // Binary search for the largest size that fits
+    let lo = MIN_SIZE;
+    let hi = MAX_SIZE;
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      if (fitsAt(mid)) { lo = mid; } else { hi = mid - 1; }
+    }
+    return lo;
+  }
+
+  // Only shrink from baseFontSize
+  for (let size = baseFontSize; size >= MIN_SIZE; size--) {
+    if (fitsAt(size)) return size;
+  }
+  return MIN_SIZE;
+}
+
 function renderObject(
   obj: TemplateObject,
-  slide: Slide,
+  objectData: ObjectDataMap,
   brand: Brand,
   colors: { background: string; text: string; primary: string },
 ) {
+  const fontFamily = brand.font || obj.fontFamily || "Plus Jakarta Sans";
+  const data = objectData[obj.id];
+
   switch (obj.type) {
-    case "title":
+    case "text": {
+      const text = data?.text || obj.previewText || "Text";
+      const fontSize = autoFitFontSize(
+        text, obj.fontSize || 24, obj.width, obj.height,
+        obj.fontWeight || 400, obj.lineHeight || 1.2, obj.letterSpacing || 0,
+        obj.textFit ?? false,
+      );
       return (
         <div style={{
-          fontFamily: obj.fontFamily || "Plus Jakarta Sans",
-          fontSize: obj.fontSize || 48,
-          fontWeight: obj.fontWeight || 700,
+          fontFamily,
+          fontSize,
+          fontWeight: obj.fontWeight || 400,
           letterSpacing: obj.letterSpacing || 0,
           lineHeight: obj.lineHeight || 1.2,
           textAlign: obj.textAlign || "left",
           color: obj.color || colors.text,
           width: "100%",
           wordWrap: "break-word",
+          display: "flex",
+          justifyContent: obj.textAlign === "center" ? "center"
+                        : obj.textAlign === "right" ? "flex-end" : "flex-start",
         }}>
-          {slide.title || "Title here"}
+          {text}
         </div>
       );
-
-    case "description":
-      return (
-        <div style={{
-          fontFamily: obj.fontFamily || "Plus Jakarta Sans",
-          fontSize: obj.fontSize || 22,
-          fontWeight: obj.fontWeight || 400,
-          letterSpacing: obj.letterSpacing || 0,
-          lineHeight: obj.lineHeight || 1.4,
-          textAlign: obj.textAlign || "left",
-          color: obj.color || colors.text,
-          opacity: 0.85,
-          width: "100%",
-          wordWrap: "break-word",
-        }}>
-          {slide.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}
-        </div>
-      );
+    }
 
     case "logo":
       if (!brand.logoBase64) return null;
@@ -110,17 +157,17 @@ function renderObject(
       );
 
     case "image": {
-      const imgSrc = slide.imageBase64;
+      const imgSrc = data?.imageBase64;
       if (!imgSrc) {
         return (
           <div style={{
             width: "100%", height: "100%",
             background: "#e0e0e0",
-            borderRadius: 8,
+            borderRadius: getObjectBorderRadius(obj) || 8,
           }} />
         );
       }
-      const device = obj.device || slide.device || "browser";
+      const device = obj.device || "none";
       if (device === "none") {
         return (
           <img
@@ -128,7 +175,7 @@ function renderObject(
             style={{
               width: "100%", height: "100%",
               objectFit: obj.objectFit || "cover",
-              borderRadius: 8,
+              borderRadius: getObjectBorderRadius(obj) || 8,
             }}
           />
         );

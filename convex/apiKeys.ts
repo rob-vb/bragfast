@@ -29,6 +29,7 @@ export const create = mutation({
     await ctx.db.insert("apiKeys", {
       userId,
       name,
+      key,
       keyHash,
       prefix,
       created_at: new Date().toISOString(),
@@ -64,6 +65,7 @@ export const listByUser = query({
     return keys.map((k) => ({
       id: k._id,
       name: k.name,
+      key: k.key ?? null,
       prefix: k.prefix,
       created_at: k.created_at,
     }));

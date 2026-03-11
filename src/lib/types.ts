@@ -48,14 +48,14 @@ export interface ReleaseRequest {
   font?: string
   template?: TemplateName
   slides: Array<{
-    title: string
+    title?: string
     description?: string
     image_url?: string
     device?: 'browser' | 'mobile'
     align?: 'left' | 'center' | 'right'
+    objects?: Record<string, { text?: string; url?: string }>
   }>
   formats?: Array<'landscape' | 'square' | 'portrait'>
-  transparent?: boolean
   metadata?: string
   webhook_url?: string
 }
@@ -68,7 +68,6 @@ export interface ReleaseResult {
   credits_remaining: number
   created_at: string
   completed_at?: string
-  transparent: boolean
   metadata?: string
   webhook_url?: string
 }
@@ -78,7 +77,6 @@ export interface TemplateProps {
   brand: Brand
   width: number
   height: number
-  transparent?: boolean
 }
 
 export type TemplateName = 'classic' | 'split' | 'hero' | (string & {})
@@ -86,5 +84,5 @@ export type TemplateName = 'classic' | 'split' | 'hero' | (string & {})
 export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
-  portrait: { width: 1080, height: 1350 },
+  portrait: { width: 1080, height: 1920 },
 }

@@ -7,7 +7,6 @@ export const create = mutation({
     externalId: v.string(),
     template: v.string(),
     credits_used: v.number(),
-    transparent: v.boolean(),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
   },

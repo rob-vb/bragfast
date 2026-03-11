@@ -70,7 +70,7 @@ function EditorInner() {
   }, [handleSave, state.isDirty]);
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white">
       <EditorToolbar onSave={handleSave} />
       <div className="flex flex-1 min-h-0">
         <EditorLeftSidebar />

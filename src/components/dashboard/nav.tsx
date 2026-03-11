@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 const tabs = [
   { label: "Dashboard", href: "/dashboard" },
@@ -47,7 +48,14 @@ function PixelHamburger({
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  function handleLogout() {
+    authClient.signOut().then(() => {
+      router.push("/login");
+    });
+  }
 
   // Close menu on route change
   useEffect(() => {
@@ -96,6 +104,14 @@ export function DashboardNav() {
           );
         })}
       </nav>
+
+      {/* Desktop logout */}
+      <button
+        onClick={handleLogout}
+        className="hidden md:block ml-auto font-[family-name:var(--font-press-start)] text-xs px-3 py-2 whitespace-nowrap border-2 border-[#4A3326] bg-transparent text-[#4A3326] hover:bg-red-100 shadow-[3px_3px_0_#4A3326] hover:shadow-[2px_2px_0_#4A3326] transition-all"
+      >
+        Logout
+      </button>
 
       {/* Hamburger button */}
       <div className="ml-auto md:hidden">
@@ -155,6 +171,16 @@ export function DashboardNav() {
             );
           })}
         </nav>
+
+        {/* Logout button */}
+        <div className="px-4 mt-4">
+          <button
+            onClick={handleLogout}
+            className="w-full font-[family-name:var(--font-press-start)] text-xs px-4 py-3 border-2 border-[#4A3326] bg-white text-[#4A3326] shadow-[3px_3px_0_#4A3326] hover:bg-red-100 transition-all"
+          >
+            Logout
+          </button>
+        </div>
 
         {/* Decorative pixel art at bottom */}
         <div className="absolute bottom-6 left-0 right-0 flex justify-center">

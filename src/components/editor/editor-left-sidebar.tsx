@@ -13,7 +13,7 @@ export function EditorLeftSidebar() {
 
   return (
     <div className="w-60 border-r border-zinc-200 bg-white flex flex-col h-full">
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 overflow-hidden">
         <div className="p-3 space-y-4">
           {/* Format */}
           <div className="space-y-1">

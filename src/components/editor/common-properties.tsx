@@ -1,10 +1,32 @@
 "use client";
+import { useState, useEffect, useCallback } from "react";
 import { useEditor } from "./editor-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
+
+/** Number input that allows clearing to empty, commits on blur */
+function NumberInput({ value, onChange, className }: { value: number; onChange: (v: number) => void; className?: string }) {
+  const [local, setLocal] = useState(String(value));
+  useEffect(() => { setLocal(String(value)); }, [value]);
+  const commit = useCallback(() => {
+    const n = Number(local);
+    onChange(isNaN(n) ? 0 : n);
+  }, [local, onChange]);
+  return (
+    <Input
+      type="text"
+      inputMode="numeric"
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
+      className={className}
+    />
+  );
+}
 
 export function CommonProperties() {
   const { selectedObject, dispatch, state } = useEditor();
@@ -41,6 +63,7 @@ export function CommonProperties() {
           })}
           className="h-8 text-sm"
         />
+        <p className="text-[10px] text-zinc-400 font-mono">ID: {selectedObject.id}</p>
       </div>
 
       {/* Align to canvas */}
@@ -78,35 +101,19 @@ export function CommonProperties() {
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">W</Label>
-          <Input
-            type="number" value={selectedObject.width}
-            onChange={(e) => update("width", Number(e.target.value))}
-            className="h-8 text-sm"
-          />
+          <NumberInput value={selectedObject.width} onChange={(v) => update("width", v)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">H</Label>
-          <Input
-            type="number" value={selectedObject.height}
-            onChange={(e) => update("height", Number(e.target.value))}
-            className="h-8 text-sm"
-          />
+          <NumberInput value={selectedObject.height} onChange={(v) => update("height", v)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">X</Label>
-          <Input
-            type="number" value={selectedObject.x}
-            onChange={(e) => update("x", Number(e.target.value))}
-            className="h-8 text-sm"
-          />
+          <NumberInput value={selectedObject.x} onChange={(v) => update("x", v)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Y</Label>
-          <Input
-            type="number" value={selectedObject.y}
-            onChange={(e) => update("y", Number(e.target.value))}
-            className="h-8 text-sm"
-          />
+          <NumberInput value={selectedObject.y} onChange={(v) => update("y", v)} className="h-8 text-sm" />
         </div>
       </div>
 

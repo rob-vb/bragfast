@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { CANVAS_DEFAULTS } from "../src/lib/templates/canvas-defaults";
 
 const configValidator = v.object({
   background: v.string(),
@@ -22,6 +23,7 @@ const configValidator = v.object({
 const templateObjectValidator = v.object({
   id: v.string(),
   type: v.union(
+    v.literal("text"),
     v.literal("title"),
     v.literal("description"),
     v.literal("image"),
@@ -271,115 +273,20 @@ export const seedDefaults = mutation({
         created_at: now,
         updated_at: now,
       },
-      // v2 canvas defaults
-      {
+      // v2 canvas defaults — single source of truth from CANVAS_DEFAULTS
+      ...Object.entries(CANVAS_DEFAULTS).map(([key, { name, config }]) => ({
         userId: "system",
-        externalId: "tmpl_classic_v2",
-        name: "Classic",
+        externalId: `tmpl_${key}`,
+        name,
         isDefault: true,
-        config: {
-          version: 2,
-          colors: { background: "#1a1a2e", text: "#ffffff", primary: "#e94560" },
-          formats: {
-            landscape: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 40, y: 88, width: 1120, height: 380, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 488, width: 1120, height: 80, fontSize: 36 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 576, width: 1120, height: 60, fontSize: 18 },
-              ],
-            },
-            square: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 720, width: 984, height: 120, fontSize: 48 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 856, width: 984, height: 80, fontSize: 22 },
-              ],
-            },
-            portrait: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 750, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 876, width: 984, height: 150, fontSize: 56 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 1044, width: 984, height: 100, fontSize: 24 },
-              ],
-            },
-          },
-        },
+        config,
         created_at: now,
         updated_at: now,
-      },
-      {
-        userId: "system",
-        externalId: "tmpl_split_v2",
-        name: "Split",
-        isDefault: true,
-        config: {
-          version: 2,
-          colors: { background: "#1a1a2e", text: "#ffffff", primary: "#e94560" },
-          formats: {
-            landscape: {
-              objects: [
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 200, width: 540, height: 200, fontSize: 36 },
-                { id: "image", type: "image", name: "image", x: 620, y: 88, width: 540, height: 480, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 40, y: 580, width: 540, height: 60, fontSize: 18 },
-              ],
-            },
-            square: {
-              objects: [
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 200, width: 480, height: 300, fontSize: 42 },
-                { id: "image", type: "image", name: "image", x: 556, y: 96, width: 476, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 880, width: 984, height: 80, fontSize: 22 },
-              ],
-            },
-            portrait: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 726, width: 984, height: 200, fontSize: 56 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", x: 48, y: 944, width: 984, height: 100, fontSize: 24 },
-              ],
-            },
-          },
-        },
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        userId: "system",
-        externalId: "tmpl_hero_v2",
-        name: "Hero",
-        isDefault: true,
-        config: {
-          version: 2,
-          colors: { background: "#1a1a2e", text: "#ffffff", primary: "#e94560" },
-          formats: {
-            landscape: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1200, height: 675, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 100, y: 400, width: 1000, height: 120, fontSize: 48 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 200, y: 530, width: 800, height: 80, fontSize: 20 },
-              ],
-            },
-            square: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1080, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 80, y: 720, width: 920, height: 160, fontSize: 56 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 140, y: 900, width: 800, height: 100, fontSize: 24 },
-              ],
-            },
-            portrait: {
-              objects: [
-                { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1350, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
-                { id: "title", type: "title", name: "title", opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 80, y: 950, width: 920, height: 160, fontSize: 60 },
-                { id: "description", type: "description", name: "description", opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", x: 140, y: 1130, width: 800, height: 100, fontSize: 26 },
-              ],
-            },
-          },
-        },
-        created_at: now,
-        updated_at: now,
-      },
+      })),
     ];
 
-    let seededCount = 0;
+    let inserted = 0;
+    let updated = 0;
     for (const template of defaults) {
       const existing = await ctx.db
         .query("templates")
@@ -387,10 +294,17 @@ export const seedDefaults = mutation({
         .unique();
       if (!existing) {
         await ctx.db.insert("templates", template);
-        seededCount++;
+        inserted++;
+      } else {
+        await ctx.db.patch(existing._id, {
+          name: template.name,
+          config: template.config,
+          updated_at: now,
+        });
+        updated++;
       }
     }
 
-    return { seeded: seededCount > 0, message: `Seeded ${seededCount} default templates` };
+    return { message: `Seeded ${inserted} new, updated ${updated} existing` };
   },
 });

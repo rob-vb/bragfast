@@ -5,9 +5,10 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { ConfigRenderer } from "@/lib/templates/config-renderer";
-import { CanvasRenderer } from "@/lib/templates/canvas-renderer";
+import { CanvasRenderer, type ObjectDataMap } from "@/lib/templates/canvas-renderer";
 import { loadFontsForFamily, loadFontsForObjects } from "@/lib/fonts";
 import { FORMAT_DIMENSIONS } from "@/lib/types";
+import { fetchImageAsBase64 } from "@/lib/images";
 import type { TemplateConfig } from "@/lib/templates/config-types";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
@@ -55,12 +56,28 @@ export async function POST(
     device: "browser" as const,
   };
 
+  const placeholderObjectData: ObjectDataMap = {
+    title: { text: "Title here" },
+    description: { text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  };
+
   const { width, height } = FORMAT_DIMENSIONS["landscape"];
 
   try {
     const templateConfig = template.config as TemplateConfig | CanvasTemplateConfig;
     const isCanvas = typeof templateConfig === "object" && templateConfig !== null
       && "version" in templateConfig && (templateConfig as any).version === 2;
+
+    // Inject static images (src field) into placeholder data
+    if (isCanvas) {
+      const canvasConfig = templateConfig as CanvasTemplateConfig;
+      for (const obj of canvasConfig.formats.landscape.objects) {
+        if (obj.type === "image" && obj.src && !placeholderObjectData[obj.id]?.imageBase64) {
+          const base64 = await fetchImageAsBase64(obj.src);
+          placeholderObjectData[obj.id] = { ...placeholderObjectData[obj.id], imageBase64: base64 };
+        }
+      }
+    }
 
     const fonts = isCanvas
       ? await loadFontsForObjects((templateConfig as CanvasTemplateConfig).formats.landscape.objects)
@@ -70,9 +87,8 @@ export async function POST(
       ? CanvasRenderer({
           config: templateConfig as CanvasTemplateConfig,
           format: "landscape",
-          slide: placeholderSlide,
+          objectData: placeholderObjectData,
           brand: placeholderBrand,
-          transparent: false,
         })
       : ConfigRenderer({
           config: templateConfig as TemplateConfig,
@@ -80,16 +96,18 @@ export async function POST(
           brand: placeholderBrand,
           width,
           height,
-          transparent: false,
         });
 
     const svg = await satori(jsx, { width, height, fonts });
-    const png = await sharp(Buffer.from(svg)).ensureAlpha().png().toBuffer();
+    const jpg = await sharp(Buffer.from(svg))
+      .flatten({ background: '#ffffff' })
+      .jpeg({ quality: 85 })
+      .toBuffer();
 
-    return new Response(new Uint8Array(png), {
+    return new Response(new Uint8Array(jpg), {
       status: 200,
       headers: {
-        "Content-Type": "image/png",
+        "Content-Type": "image/jpeg",
         "Cache-Control": "no-store",
       },
     });

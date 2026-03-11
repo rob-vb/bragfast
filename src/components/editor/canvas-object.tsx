@@ -1,9 +1,79 @@
 "use client";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { useEditor } from "./editor-context";
 import { SelectionHandles, type HandlePosition } from "./selection-handles";
 import type { TemplateObject } from "@/lib/templates/canvas-types";
-import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "@/lib/templates/canvas-types";
+
+/**
+ * Auto-fit font size to container.
+ * textFit=true (On): resize up or down to fill the height
+ * textFit=false (Off): only shrink if text exceeds the height
+ */
+function useAutoFitFontSize(
+  text: string,
+  baseFontSize: number,
+  containerWidth: number,
+  containerHeight: number,
+  fontFamily: string,
+  fontWeight: number,
+  lineHeight: number,
+  letterSpacing: number,
+  textFit: boolean,
+) {
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [fittedSize, setFittedSize] = useState(baseFontSize);
+
+  const deps = useMemo(() => ({
+    text, baseFontSize, containerWidth, containerHeight, fontFamily, fontWeight, lineHeight, letterSpacing, textFit,
+  }), [text, baseFontSize, containerWidth, containerHeight, fontFamily, fontWeight, lineHeight, letterSpacing, textFit]);
+
+  useEffect(() => {
+    const el = measureRef.current;
+    if (!el) return;
+
+    const minSize = 8;
+    const maxSize = 400;
+
+    const applyStyle = (size: number) => {
+      el.style.fontSize = `${size}px`;
+      el.style.fontFamily = `${deps.fontFamily}, sans-serif`;
+      el.style.fontWeight = String(deps.fontWeight);
+      el.style.lineHeight = String(deps.lineHeight);
+      el.style.letterSpacing = `${deps.letterSpacing}px`;
+      el.style.width = `${deps.containerWidth}px`;
+      el.innerText = deps.text;
+    };
+
+    if (deps.textFit) {
+      // On: scale up or down to fill the height
+      // Binary search for the largest size that fits
+      let lo = minSize;
+      let hi = maxSize;
+      while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        applyStyle(mid);
+        if (el.scrollHeight <= deps.containerHeight) {
+          lo = mid;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      setFittedSize(lo);
+    } else {
+      // Off: only shrink if it overflows
+      let size = deps.baseFontSize;
+      applyStyle(size);
+      while (el.scrollHeight > deps.containerHeight && size > minSize) {
+        size -= 1;
+        applyStyle(size);
+      }
+      setFittedSize(size);
+    }
+  }, [deps]);
+
+  return { fittedSize, measureRef };
+}
 
 const SNAP_THRESHOLD = 8; // px in canvas space
 
@@ -168,7 +238,7 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
   }, [obj.x, obj.y, obj.width, obj.height]);
 
   const handleDoubleClick = useCallback(() => {
-    if (obj.type === "title" || obj.type === "description") {
+    if (obj.type === "text") {
       setIsEditing(true);
     }
   }, [obj.type]);
@@ -207,6 +277,37 @@ export function CanvasObject({ obj, scale, isSelected }: CanvasObjectProps) {
   );
 }
 
+function AutoFitText({ obj, text, style }: { obj: TemplateObject; text: string; style: React.CSSProperties }) {
+  const { fittedSize, measureRef } = useAutoFitFontSize(
+    text,
+    obj.fontSize || 24,
+    obj.width,
+    obj.height,
+    obj.fontFamily || "Plus Jakarta Sans",
+    obj.fontWeight || 400,
+    obj.lineHeight || 1.3,
+    obj.letterSpacing || 0,
+    obj.textFit ?? false,
+  );
+
+  return (
+    <>
+      {/* Hidden measurement div */}
+      <div
+        ref={measureRef}
+        style={{
+          position: "absolute",
+          visibility: "hidden",
+          whiteSpace: "pre-wrap",
+          wordWrap: "break-word",
+          overflow: "hidden",
+        }}
+      />
+      <div style={{ ...style, fontSize: fittedSize }}>{text}</div>
+    </>
+  );
+}
+
 function renderObjectPreview(
   obj: TemplateObject,
   colors: { background: string; text: string; primary: string },
@@ -231,13 +332,8 @@ function renderObjectPreview(
                   : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start",
   };
 
-  const placeholders: Record<string, string> = {
-    title: "TITLE GOES HERE",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  };
-
-  if (obj.type === "title" || obj.type === "description") {
-    const text = obj.previewText || placeholders[obj.type] || "";
+  if (obj.type === "text") {
+    const text = obj.previewText || "Text goes here";
     if (isEditing) {
       return (
         <textarea
@@ -248,12 +344,16 @@ function renderObjectPreview(
         />
       );
     }
-    return <div style={textStyle}>{text}</div>;
+    return <AutoFitText obj={obj} text={text} style={textStyle} />;
   }
 
   if (obj.type === "image") {
-    const device = obj.device || "browser";
+    const device = obj.device || "none";
     const checkerboard = "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px";
+    const staticImgStyle: React.CSSProperties = obj.src
+      ? { width: "100%", height: "100%", objectFit: (obj.objectFit || "cover") as React.CSSProperties["objectFit"], pointerEvents: "none", userSelect: "none" as const }
+      : {};
+    const contentBg = obj.src ? undefined : checkerboard;
 
     if (device === "browser") {
       const titleBarH = 28;
@@ -277,7 +377,10 @@ function renderObjectPreview(
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
           </div>
           {/* Content area */}
-          <div style={{ flex: 1, background: checkerboard }} />
+          <div style={{ flex: 1, background: contentBg, overflow: "hidden" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {obj.src && <img src={obj.src} alt="" draggable={false} style={staticImgStyle} />}
+          </div>
         </div>
       );
     }
@@ -297,8 +400,11 @@ function renderObjectPreview(
             width: "100%", height: "100%",
             borderRadius: radius - bezel,
             overflow: "hidden",
-            background: checkerboard,
-          }} />
+            background: contentBg,
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {obj.src && <img src={obj.src} alt="" draggable={false} style={staticImgStyle} />}
+          </div>
         </div>
       );
     }
@@ -307,9 +413,13 @@ function renderObjectPreview(
     return (
       <div style={{
         width: "100%", height: "100%",
-        background: checkerboard,
-        borderRadius: 4,
-      }} />
+        background: contentBg,
+        borderRadius: getObjectBorderRadius(obj) || 4,
+        overflow: "hidden",
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {obj.src && <img src={obj.src} alt="" draggable={false} style={staticImgStyle} />}
+      </div>
     );
   }
 
@@ -319,9 +429,10 @@ function renderObjectPreview(
       <div style={{
         width: "100%", height: "100%",
         background: checkerboard,
-        borderRadius: 4,
+        borderRadius: getObjectBorderRadius(obj) || 4,
         display: "flex", alignItems: "center", justifyContent: "center",
         border: "1px dashed #a1a1aa",
+        overflow: "hidden",
       }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" />

@@ -5,7 +5,7 @@ const WINDOW_MS = 60_000; // 1 minute
 const MAX_REQUESTS: Record<string, number> = {
   trial: 10,
   starter: 30,
-  growth: 60,
+  pro: 60,
   scale: 120,
 };
 const DEFAULT_MAX = 10;

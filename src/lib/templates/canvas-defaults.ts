@@ -1,14 +1,14 @@
 import type { CanvasTemplateConfig } from "./canvas-types";
 
-function textObj(id: string, type: "title" | "description", overrides: Record<string, unknown> = {}) {
+function textObj(id: string, overrides: Record<string, unknown> = {}) {
   return {
     id,
-    type,
+    type: "text" as const,
     name: id,
     opacity: 1,
     zIndex: 0,
     fontFamily: "Plus Jakarta Sans",
-    fontWeight: type === "title" ? 700 : 400,
+    fontWeight: 400,
     letterSpacing: 0,
     lineHeight: 1.2,
     textAlign: "left" as const,
@@ -26,23 +26,26 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 40, y: 88, width: 1120, height: 380, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-            { ...textObj("title", "title"), x: 40, y: 488, width: 1120, height: 80, fontSize: 36, zIndex: 2 },
-            { ...textObj("description", "description"), x: 40, y: 576, width: 1120, height: 60, fontSize: 18, zIndex: 3 },
+            { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 102, width: 1072, height: 89, fontSize: 90, zIndex: 2 },
+            { ...textObj("description", { textAlign: "center", opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 191, width: 1072, height: 60, fontSize: 48, zIndex: 3 },
+            { id: "image", type: "image", name: "image", x: 64, y: 302, width: 1072, height: 380, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+            { id: "logo", type: "logo", name: "logo", x: 395, y: 38, width: 411, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         square: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-            { ...textObj("title", "title"), x: 48, y: 720, width: 984, height: 120, fontSize: 48, zIndex: 2 },
-            { ...textObj("description", "description"), x: 48, y: 856, width: 984, height: 80, fontSize: 22, zIndex: 3 },
+            { ...textObj("title", { fontWeight: 700 }), x: 64, y: 142, width: 952, height: 120, fontSize: 90, zIndex: 2 },
+            { ...textObj("description", { opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 251, width: 952, height: 199, fontSize: 48, zIndex: 3 },
+            { id: "image", type: "image", name: "image", x: 64, y: 540, width: 952, height: 550, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+            { id: "logo", type: "logo", name: "logo", x: 64, y: 43, width: 360, height: 77, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 750, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-            { ...textObj("title", "title"), x: 48, y: 876, width: 984, height: 150, fontSize: 56, zIndex: 2 },
-            { ...textObj("description", "description"), x: 48, y: 1044, width: 984, height: 100, fontSize: 24, zIndex: 3 },
+            { ...textObj("title", { verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 179, width: 952, height: 120, fontSize: 90, zIndex: 2 },
+            { ...textObj("description", { opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 310, width: 952, height: 256, fontSize: 48, zIndex: 3 },
+            { id: "image", type: "image", name: "image", x: 64, y: 722, width: 952, height: 1208, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+            { id: "logo", type: "logo", name: "logo", x: 64, y: 65, width: 731, height: 94, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
       },
@@ -56,23 +59,26 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { ...textObj("title", "title"), x: 40, y: 200, width: 540, height: 200, fontSize: 36, zIndex: 2 },
-            { id: "image", type: "image", name: "image", x: 620, y: 88, width: 540, height: 480, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-            { ...textObj("description", "description"), x: 40, y: 580, width: 540, height: 60, fontSize: 18, zIndex: 3 },
+            { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 263, width: 502, height: 67, zIndex: 2 },
+            { id: "image", type: "image", name: "image", x: 630, y: 64, width: 580, height: 547, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+            { ...textObj("description", { lineHeight: 1.5 }), x: 64, y: 338, width: 502, height: 153, fontSize: 24, zIndex: 3 },
+            { id: "logo", type: "logo", name: "logo", x: 64, y: 199, width: 418, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         square: {
           objects: [
-            { ...textObj("title", "title"), x: 48, y: 200, width: 480, height: 300, fontSize: 42, zIndex: 2 },
-            { id: "image", type: "image", name: "image", x: 556, y: 96, width: 476, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-            { ...textObj("description", "description"), x: 48, y: 880, width: 984, height: 80, fontSize: 22, zIndex: 3 },
+            { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 59, y: 379, width: 429, height: 186, zIndex: 2 },
+            { id: "image", type: "image", name: "image", x: 556, y: 96, width: 524, height: 890, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+            { ...textObj("description", { lineHeight: 1.5 }), x: 59, y: 585, width: 429, height: 401, fontSize: 24, zIndex: 3 },
+            { id: "logo", type: "logo", name: "logo", x: 59, y: 311, width: 406, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 48, y: 96, width: 984, height: 600, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
-            { ...textObj("title", "title"), x: 48, y: 726, width: 984, height: 200, fontSize: 56, zIndex: 2 },
-            { ...textObj("description", "description"), x: 48, y: 944, width: 984, height: 100, fontSize: 24, zIndex: 3 },
+            { id: "image", type: "image", name: "image", x: 578, y: 91, width: 502, height: 1752, opacity: 1, zIndex: 1, device: "browser", objectFit: "cover" },
+            { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 48, y: 726, width: 458, height: 200, zIndex: 2 },
+            { ...textObj("description", { lineHeight: 1.5 }), x: 48, y: 944, width: 458, height: 899, fontSize: 24, zIndex: 3 },
+            { id: "logo", type: "logo", name: "logo", x: 48, y: 672, width: 431, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
       },
@@ -87,22 +93,25 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         landscape: {
           objects: [
             { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1200, height: 675, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
-            { ...textObj("title", "title", { textAlign: "center" }), x: 100, y: 400, width: 1000, height: 120, fontSize: 48, zIndex: 2 },
-            { ...textObj("description", "description", { textAlign: "center" }), x: 200, y: 530, width: 800, height: 80, fontSize: 20, zIndex: 3 },
+            { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", textFit: true, fontSize: 80, fontWeight: 700 }), x: 64, y: 393, width: 1072, height: 120, zIndex: 2 },
+            { ...textObj("description", { textAlign: "center", fontSize: 48 }), x: 200, y: 530, width: 800, height: 80, zIndex: 3 },
+            { id: "logo", type: "logo", name: "logo", x: 367, y: 341, width: 466, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         square: {
           objects: [
             { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1080, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
-            { ...textObj("title", "title", { textAlign: "center" }), x: 80, y: 720, width: 920, height: 160, fontSize: 56, zIndex: 2 },
-            { ...textObj("description", "description", { textAlign: "center" }), x: 140, y: 900, width: 800, height: 100, fontSize: 24, zIndex: 3 },
+            { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", textFit: true, fontSize: 80, fontWeight: 700 }), x: 80, y: 720, width: 920, height: 135, zIndex: 2 },
+            { ...textObj("description", { textAlign: "center", fontSize: 48 }), x: 140, y: 872, width: 800, height: 100, zIndex: 3 },
+            { id: "logo", type: "logo", name: "logo", x: 217, y: 694, width: 646, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1350, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
-            { ...textObj("title", "title", { textAlign: "center" }), x: 80, y: 950, width: 920, height: 160, fontSize: 60, zIndex: 2 },
-            { ...textObj("description", "description", { textAlign: "center" }), x: 140, y: 1130, width: 800, height: 100, fontSize: 26, zIndex: 3 },
+            { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1920, opacity: 0.6, zIndex: 0, device: "none", objectFit: "cover" },
+            { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", textFit: true, fontSize: 80, fontWeight: 700 }), x: 76, y: 1474, width: 920, height: 134, zIndex: 2 },
+            { ...textObj("description", { textAlign: "center", fontSize: 48 }), x: 140, y: 1636, width: 800, height: 100, zIndex: 3 },
+            { id: "logo", type: "logo", name: "logo", x: 292, y: 1441, width: 497, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
       },

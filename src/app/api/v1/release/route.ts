@@ -29,8 +29,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Maximum 5 slides allowed" }, { status: 400 });
   }
   for (const slide of body.slides) {
-    if (!slide.title) {
-      return Response.json({ error: "Each slide must have a title" }, { status: 400 });
+    // New format uses objects map; legacy format requires title
+    if (!slide.objects && !slide.title) {
+      return Response.json({ error: "Each slide must have a title or objects" }, { status: 400 });
     }
     if (slide.device && !["browser", "mobile"].includes(slide.device)) {
       return Response.json({ error: "Invalid device. Use: browser, mobile" }, { status: 400 });

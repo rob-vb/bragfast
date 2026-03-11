@@ -11,18 +11,13 @@ import { Plus } from "lucide-react";
 import type { ObjectType } from "@/lib/templates/canvas-types";
 
 const ALL_TYPES: { type: ObjectType; label: string }[] = [
-  { type: "title", label: "Title" },
-  { type: "description", label: "Description" },
+  { type: "text", label: "Text" },
   { type: "image", label: "Image" },
   { type: "logo", label: "Logo" },
 ];
 
 export function AddObjectButton() {
-  const { dispatch, activeObjects } = useEditor();
-  const existingTypes = new Set(activeObjects.map((o) => o.type));
-  const available = ALL_TYPES.filter((t) => !existingTypes.has(t.type));
-
-  if (available.length === 0) return null;
+  const { dispatch } = useEditor();
 
   return (
     <DropdownMenu>
@@ -32,7 +27,7 @@ export function AddObjectButton() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        {available.map(({ type, label }) => (
+        {ALL_TYPES.map(({ type, label }) => (
           <DropdownMenuItem key={type} onClick={() => dispatch({ type: "ADD_OBJECT", objectType: type })}>
             {label}
           </DropdownMenuItem>

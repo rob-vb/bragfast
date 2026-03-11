@@ -11,7 +11,7 @@ export function EditorRightSidebar() {
 
   return (
     <div className="w-72 border-l border-zinc-200 bg-white flex flex-col h-full">
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 overflow-hidden">
         <div className="p-3">
           {!selectedObject ? (
             <p className="text-sm text-zinc-400 text-center mt-8">
