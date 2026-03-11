@@ -45,6 +45,9 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --color-brand: #4A3326;
+  --color-gold: #F8AF3C;
+  --color-surface: #FFF8F0;
 }
 
 :root {
