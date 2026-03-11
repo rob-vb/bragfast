@@ -9,7 +9,7 @@ export function PixelButton({
   variant?: "primary" | "danger" | "ghost";
 }) {
   const base =
-    "font-[family-name:var(--font-press-start)] text-xs px-4 py-2 border-2 border-brand transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed";
+    "font-[family-name:var(--font-press-start)] text-xs px-4 py-2 border-2 border-brand transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2";
 
   const variants = {
     primary:
