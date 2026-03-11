@@ -11,7 +11,6 @@ type Release = {
   status: "completed" | "pending" | "failed";
   images?: unknown;
   credits_used: number;
-  transparent: boolean;
   metadata?: string;
   webhook_url?: string;
   created_at: string;
@@ -26,7 +25,6 @@ function buildResponseBody(r: Release) {
     credits_used: r.credits_used,
     created_at: r.created_at,
     ...(r.completed_at ? { completed_at: r.completed_at } : {}),
-    transparent: r.transparent,
     ...(r.metadata ? { metadata: r.metadata } : {}),
     ...(r.webhook_url ? { webhook_url: r.webhook_url } : {}),
   };
@@ -39,11 +37,11 @@ function ExpandableRow({ release }: { release: Release }) {
   return (
     <>
       <tr
-        className="hover:bg-[#F8AF3C]/5 cursor-pointer"
+        className="hover:bg-gold/5 cursor-pointer"
         onClick={() => setOpen(!open)}
       >
         <td className="px-4 py-3 font-mono text-xs">
-          <span className="inline-block w-4 text-[#4A3326]/40 mr-1">
+          <span className="inline-block w-4 text-brand/40 mr-1">
             {open ? "▼" : "▶"}
           </span>
           {release.externalId}
@@ -60,9 +58,9 @@ function ExpandableRow({ release }: { release: Release }) {
       {open && (
         <tr>
           <td colSpan={5} className="px-4 py-0">
-            <div className="mb-4 mt-1 border-2 border-[#4A3326] bg-[#4A3326] shadow-[4px_4px_0_#4A3326]">
-              <div className="flex items-center justify-between border-b border-[#4A3326]/20 px-3 py-2">
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-[#F8AF3C]">
+            <div className="mb-4 mt-1 border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
+              <div className="flex items-center justify-between border-b border-brand/20 px-3 py-2">
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold">
                   Response
                 </span>
                 <button
@@ -72,12 +70,12 @@ function ExpandableRow({ release }: { release: Release }) {
                       JSON.stringify(response, null, 2)
                     );
                   }}
-                  className="font-[family-name:var(--font-press-start)] text-[8px] text-[#FFF8F0]/60 hover:text-[#F8AF3C] transition-colors"
+                  className="font-[family-name:var(--font-press-start)] text-[8px] text-[var(--color-surface)]/60 hover:text-gold transition-colors"
                 >
                   Copy
                 </button>
               </div>
-              <pre className="overflow-x-auto p-3 font-mono text-xs leading-relaxed text-[#FFF8F0]/80">
+              <pre className="overflow-x-auto p-3 font-mono text-xs leading-relaxed text-[var(--color-surface)]/80">
                 {JSON.stringify(response, null, 2)}
               </pre>
             </div>

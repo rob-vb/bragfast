@@ -34,7 +34,7 @@ export function BrandForm({
       logo_url: "",
       website: "",
       font: "",
-      colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
+      colors: { background: "var(--color-surface)", text: "#1A1A1A", primary: "var(--color-gold)" },
     }
   );
 
@@ -85,16 +85,16 @@ export function BrandForm({
   }
 
   const inputClass =
-    "w-full border-2 border-[#4A3326] bg-white px-3 py-2 text-sm text-[#4A3326] placeholder:text-[#4A3326]/40 focus:outline-none focus:ring-2 focus:ring-[#F8AF3C]";
+    "w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]";
 
   if (createdId) {
     return (
-      <PixelCard className="border-[#F8AF3C] bg-[#F8AF3C]/10">
-        <p className="font-[family-name:var(--font-press-start)] text-xs text-[#4A3326] mb-2">
+      <PixelCard className="border-[var(--color-gold)] bg-gold/10">
+        <p className="font-[family-name:var(--font-press-start)] text-xs text-brand mb-2">
           Brand created!
         </p>
         <div className="flex items-center gap-2">
-          <code className="flex-1 bg-white border-2 border-[#4A3326] px-3 py-2 font-mono text-xs break-all">
+          <code className="flex-1 bg-white border-2 border-brand px-3 py-2 font-mono text-xs break-all">
             {createdId}
           </code>
           <PixelButton
@@ -104,7 +104,7 @@ export function BrandForm({
             Copy
           </PixelButton>
         </div>
-        <p className="mt-2 text-xs text-[#4A3326]/60">
+        <p className="mt-2 text-xs text-brand/60">
           Use this ID in your API calls to reference this brand.
         </p>
         <div className="mt-4 flex gap-3">
@@ -125,14 +125,14 @@ export function BrandForm({
   return (
     <PixelCard>
       {brandId && (
-        <div className="mb-4 flex items-center gap-2 text-[11px] font-mono text-[#4A3326]/50">
+        <div className="mb-4 flex items-center gap-2 text-[11px] font-mono text-brand/80">
           <span>ID: {brandId}</span>
           <CopyButton text={brandId} />
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-xs font-bold text-[#4A3326]">Name *</label>
+          <label className="mb-1 block text-xs font-bold text-brand">Name *</label>
           <input
             className={inputClass}
             value={form.name}
@@ -142,7 +142,7 @@ export function BrandForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-bold text-[#4A3326]">Logo URL</label>
+          <label className="mb-1 block text-xs font-bold text-brand">Logo URL</label>
           <input
             className={inputClass}
             value={form.logo_url ?? ""}
@@ -151,7 +151,7 @@ export function BrandForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-bold text-[#4A3326]">Website</label>
+          <label className="mb-1 block text-xs font-bold text-brand">Website</label>
           <input
             className={inputClass}
             value={form.website ?? ""}
@@ -160,7 +160,7 @@ export function BrandForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-bold text-[#4A3326]">Font</label>
+          <label className="mb-1 block text-xs font-bold text-brand">Font</label>
           <select
             className={inputClass}
             value={form.font ?? ""}
@@ -183,7 +183,7 @@ export function BrandForm({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {(["background", "text", "primary"] as const).map((key) => (
             <div key={key}>
-              <label className="mb-1 block text-xs font-bold text-[#4A3326] capitalize">
+              <label className="mb-1 block text-xs font-bold text-brand capitalize">
                 {key}
               </label>
               <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export function BrandForm({
                   type="color"
                   value={form.colors[key]}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  className="h-8 w-8 cursor-pointer border-2 border-[#4A3326]"
+                  className="h-8 w-8 cursor-pointer border-2 border-brand"
                 />
                 <input
                   className={`${inputClass} font-mono text-xs`}

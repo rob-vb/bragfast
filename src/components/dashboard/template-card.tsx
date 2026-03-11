@@ -3,10 +3,23 @@
 import { useRouter } from "next/navigation";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelButton } from "@/components/dashboard/pixel-button";
+import { CopyButton } from "@/components/dashboard/copy-button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import Image from "next/image";
 
 export interface TemplateCardProps {
   id: string;
+  displayId?: string;
   name: string;
   isDefault: boolean;
   previewUrl?: string;
@@ -17,6 +30,7 @@ export interface TemplateCardProps {
 
 export function TemplateCard({
   id,
+  displayId,
   name,
   isDefault,
   previewUrl,
@@ -28,33 +42,41 @@ export function TemplateCard({
 
   return (
     <PixelCard className="flex flex-col gap-3">
-      {/* Preview thumbnail */}
-      <div className="relative aspect-video w-full overflow-hidden border-2 border-[#4A3326] bg-gray-100 flex items-center justify-center">
-        {previewUrl ? (
-          <Image
-            src={previewUrl}
-            alt={`${name} preview`}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <span className="text-xs text-[#4A3326]/40 font-[family-name:var(--font-press-start)]">
-            No preview
-          </span>
-        )}
-      </div>
+      {/* Preview thumbnail (default templates only) */}
+      {isDefault && (
+        <div className="relative aspect-video w-full overflow-hidden border-2 border-brand bg-gray-100 flex items-center justify-center">
+          {previewUrl ? (
+            <Image
+              src={previewUrl}
+              alt={`${name} preview`}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <span className="text-xs text-brand/40 font-[family-name:var(--font-press-start)]">
+              No preview
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Name + badge */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-[family-name:var(--font-press-start)] text-xs text-[#4A3326] truncate">
+        <span className="font-[family-name:var(--font-press-start)] text-xs text-brand truncate">
           {name}
         </span>
         {isDefault && (
-          <span className="inline-block border-2 border-[#4A3326] px-2 py-0.5 font-[family-name:var(--font-press-start)] text-[10px] bg-[#F8AF3C] text-[#4A3326]">
+          <span className="inline-block border-2 border-brand px-2 py-0.5 font-[family-name:var(--font-press-start)] text-[10px] bg-gold text-brand">
             Default
           </span>
         )}
       </div>
+
+      {/* Template ID */}
+      <p className="flex items-center gap-1 text-[10px] font-mono text-brand/80">
+        Template ID: {displayId ?? id}
+        <CopyButton text={displayId ?? id} />
+      </p>
 
       {/* Actions */}
       <div className="flex gap-2 flex-wrap">
@@ -75,17 +97,36 @@ export function TemplateCard({
                 Edit
               </PixelButton>
             ) : (
-              <span className="inline-block border-2 border-[#4A3326]/30 px-2 py-0.5 font-[family-name:var(--font-press-start)] text-[10px] text-[#4A3326]/40">
+              <span className="inline-block border-2 border-brand/30 px-2 py-0.5 font-[family-name:var(--font-press-start)] text-[10px] text-brand/40">
                 Legacy
               </span>
             )}
             {onDelete && (
-              <PixelButton
-                variant="danger"
-                onClick={() => onDelete(id)}
-              >
-                Delete
-              </PixelButton>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <PixelButton variant="danger">
+                    Delete
+                  </PixelButton>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete template</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete &ldquo;{name}&rdquo;? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel asChild>
+                      <PixelButton variant="ghost">Cancel</PixelButton>
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <PixelButton variant="danger" onClick={() => onDelete(id)}>
+                        Delete
+                      </PixelButton>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </>
         )}
