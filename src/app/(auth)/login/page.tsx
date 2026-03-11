@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -10,10 +10,17 @@ import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session) {
+      router.replace("/dashboard");
+    }
+  }, [isPending, session, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,14 +45,14 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">Welcome back</h1>
-      <p className="mt-2 text-sm text-[#4A3326]/60">
+      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-brand">Welcome back</h1>
+      <p className="mt-2 text-sm text-brand/60">
         Sign in to your Bragfast account
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-[#4A3326]">
+          <Label htmlFor="email" className="text-brand">
             Email
           </Label>
           <Input
@@ -56,18 +63,18 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-[#4A3326]">
+            <Label htmlFor="password" className="text-brand">
               Password
             </Label>
             <Link
               href="/forgot-password"
-              className="text-sm text-[#4A3326]/60 hover:text-[#4A3326] underline-offset-4 hover:underline"
+              className="text-sm text-brand/60 hover:text-brand underline-offset-4 hover:underline"
             >
               Forgot password?
             </Link>
@@ -79,7 +86,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
@@ -90,17 +97,17 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#F8AF3C] text-[#4A3326] font-semibold hover:bg-[#F8AF3C]/90 focus-visible:ring-[#F8AF3C]"
+          className="w-full bg-gold text-brand font-semibold hover:bg-gold/90 focus-visible:ring-gold"
         >
           {loading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#4A3326]/60">
+      <p className="mt-6 text-center text-sm text-brand/60">
         Don&apos;t have an account?{" "}
         <Link
           href="/signup"
-          className="text-[#4A3326] font-medium hover:underline underline-offset-4"
+          className="text-brand font-medium hover:underline underline-offset-4"
         >
           Create an account
         </Link>

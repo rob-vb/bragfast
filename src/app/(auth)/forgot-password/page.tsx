@@ -36,14 +36,14 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <>
-        <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">Check your email</h1>
-        <p className="mt-3 text-sm text-[#4A3326]/60 leading-relaxed">
-          If an account exists for <strong className="text-[#4A3326]">{email}</strong>,
+        <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-brand">Check your email</h1>
+        <p className="mt-3 text-sm text-brand/60 leading-relaxed">
+          If an account exists for <strong className="text-brand">{email}</strong>,
           we&apos;ve sent a password reset link.
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-block text-sm text-[#4A3326] font-medium hover:underline underline-offset-4"
+          className="mt-6 inline-block text-sm text-brand font-medium hover:underline underline-offset-4"
         >
           &larr; Back to login
         </Link>
@@ -53,16 +53,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">
+      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-brand">
         Reset your password
       </h1>
-      <p className="mt-2 text-sm text-[#4A3326]/60">
+      <p className="mt-2 text-sm text-brand/60">
         Enter your email and we&apos;ll send you a reset link
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-[#4A3326]">
+          <Label htmlFor="email" className="text-brand">
             Email
           </Label>
           <Input
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
@@ -84,16 +84,16 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#F8AF3C] text-[#4A3326] font-semibold hover:bg-[#F8AF3C]/90 focus-visible:ring-[#F8AF3C]"
+          className="w-full bg-gold text-brand font-semibold hover:bg-gold/90 focus-visible:ring-gold"
         >
           {loading ? "Sending..." : "Send reset link"}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#4A3326]/60">
+      <p className="mt-6 text-center text-sm text-brand/60">
         <Link
           href="/login"
-          className="text-[#4A3326] font-medium hover:underline underline-offset-4"
+          className="text-brand font-medium hover:underline underline-offset-4"
         >
           &larr; Back to login
         </Link>

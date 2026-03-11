@@ -8,7 +8,7 @@ export default function AuthLayout({
   return (
     <div className="flex min-h-screen">
       {/* Branded panel — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-[#F8AF3C]">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gold">
         <Image
           src="/logo-icon.svg"
           alt="Bragfast"
@@ -19,7 +19,7 @@ export default function AuthLayout({
       </div>
 
       {/* Form panel */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center bg-[#F9F6ED] px-6 py-12">
+      <div className="flex w-full lg:w-1/2 items-center justify-center bg-surface px-6 py-12">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="mb-8 flex justify-center lg:hidden">

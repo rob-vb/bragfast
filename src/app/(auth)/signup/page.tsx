@@ -54,16 +54,16 @@ export default function SignupPage() {
 
   return (
     <>
-      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-[#4A3326]">
+      <h1 className="font-[family-name:var(--font-press-start)] text-2xl leading-relaxed text-brand">
         Create your account
       </h1>
-      <p className="mt-2 text-sm text-[#4A3326]/60">
+      <p className="mt-2 text-sm text-brand/60">
         Start generating branded images in minutes
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-[#4A3326]">
+          <Label htmlFor="name" className="text-brand">
             Name
           </Label>
           <Input
@@ -74,12 +74,12 @@ export default function SignupPage() {
             onChange={(e) => setName(e.target.value)}
             required
             autoComplete="name"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-[#4A3326]">
+          <Label htmlFor="email" className="text-brand">
             Email
           </Label>
           <Input
@@ -90,12 +90,12 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-[#4A3326]">
+          <Label htmlFor="password" className="text-brand">
             Password
           </Label>
           <Input
@@ -106,12 +106,12 @@ export default function SignupPage() {
             required
             minLength={8}
             autoComplete="new-password"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirm-password" className="text-[#4A3326]">
+          <Label htmlFor="confirm-password" className="text-brand">
             Confirm password
           </Label>
           <Input
@@ -121,7 +121,7 @@ export default function SignupPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="border-[#4A3326]/20 bg-white text-[#4A3326] placeholder:text-[#4A3326]/40 focus-visible:ring-[#F8AF3C]"
+            className="border-brand/20 bg-white text-brand placeholder:text-brand/40 focus-visible:ring-gold"
           />
         </div>
 
@@ -130,23 +130,23 @@ export default function SignupPage() {
             id="terms"
             checked={agreed}
             onCheckedChange={(checked) => setAgreed(checked === true)}
-            className="mt-0.5 border-[#4A3326]/30 data-[state=checked]:bg-[#F8AF3C] data-[state=checked]:border-[#F8AF3C] data-[state=checked]:text-[#4A3326]"
+            className="mt-0.5 border-brand/30 data-[state=checked]:bg-gold data-[state=checked]:border-gold data-[state=checked]:text-brand"
           />
           <Label
             htmlFor="terms"
-            className="text-sm leading-snug text-[#4A3326]/70 font-normal"
+            className="text-sm leading-snug text-brand/70 font-normal"
           >
             I agree to the{" "}
             <Link
               href="/terms"
-              className="text-[#4A3326] underline underline-offset-4"
+              className="text-brand underline underline-offset-4"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
               href="/privacy"
-              className="text-[#4A3326] underline underline-offset-4"
+              className="text-brand underline underline-offset-4"
             >
               Privacy Policy
             </Link>
@@ -160,17 +160,17 @@ export default function SignupPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#F8AF3C] text-[#4A3326] font-semibold hover:bg-[#F8AF3C]/90 focus-visible:ring-[#F8AF3C]"
+          className="w-full bg-gold text-brand font-semibold hover:bg-gold/90 focus-visible:ring-gold"
         >
           {loading ? "Creating account..." : "Create account"}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#4A3326]/60">
+      <p className="mt-6 text-center text-sm text-brand/60">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-[#4A3326] font-medium hover:underline underline-offset-4"
+          className="text-brand font-medium hover:underline underline-offset-4"
         >
           Sign in
         </Link>
