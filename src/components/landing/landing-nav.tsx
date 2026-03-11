@@ -20,63 +20,72 @@ export function LandingNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b-2 border-[#4A3326] bg-[#FFF8F0]">
+      <header className="sticky top-0 z-50 border-b-2 border-brand bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-8">
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-[family-name:var(--font-press-start)] text-sm md:text-base text-[#4A3326]"
-          >
+          <Link href="/">
             <Image
-              src="/logo-icon.svg"
-              alt="Bragfast logo"
-              width={32}
-              height={32}
-              className="w-6 h-6 md:w-8 md:h-8"
+              src="/logo.svg"
+              alt="Bragfast"
+              width={120}
+              height={30}
+              className="h-6 md:h-8 w-auto"
+              priority
             />
-            <span className="text-[#F8AF3C]">brag</span>.fast
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-4">
             <Link
-              href="/coming-soon"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-[#4A3326] border-2 border-[#4A3326] bg-transparent shadow-[3px_3px_0_#4A3326] hover:bg-[#F8AF3C]/20 hover:shadow-[2px_2px_0_#4A3326] transition-all"
+              href="/#features"
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
             >
-              Docs
+              Features
             </Link>
             <Link
               href="/coming-soon"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-[#4A3326] border-2 border-[#4A3326] bg-transparent shadow-[3px_3px_0_#4A3326] hover:bg-[#F8AF3C]/20 hover:shadow-[2px_2px_0_#4A3326] transition-all"
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
             >
               Demo
             </Link>
             <Link
-              href="/signup"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-[#4A3326] border-2 border-[#4A3326] bg-[#F8AF3C] shadow-[3px_3px_0_#4A3326] hover:shadow-[2px_2px_0_#4A3326] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+              href="/coming-soon"
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
             >
-              Get 30 Free Credits
+              Docs
+            </Link>
+            <Link
+              href="/pricing"
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/login"
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+            >
+              Sign in
             </Link>
           </nav>
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setOpen(!open)}
-            className="relative md:hidden h-8 w-8 border-2 border-[#4A3326] bg-[#FFF8F0] shadow-[2px_2px_0_#4A3326] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
+            className="relative md:hidden h-8 w-8 border-2 border-brand bg-surface shadow-[2px_2px_0_var(--color-brand)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
             aria-label={open ? "Close menu" : "Open menu"}
           >
             <span
-              className={`absolute left-1.5 block h-[2px] w-3 bg-[#4A3326] transition-all duration-200 ${
+              className={`absolute left-1.5 block h-[2px] w-3 bg-brand transition-all duration-200 ${
                 open ? "top-[13px] rotate-45" : "top-[8px]"
               }`}
             />
             <span
-              className={`absolute left-1.5 top-[13px] block h-[2px] w-3 bg-[#4A3326] transition-opacity duration-200 ${
+              className={`absolute left-1.5 top-[13px] block h-[2px] w-3 bg-brand transition-opacity duration-200 ${
                 open ? "opacity-0" : "opacity-100"
               }`}
             />
             <span
-              className={`absolute left-1.5 block h-[2px] w-3 bg-[#4A3326] transition-all duration-200 ${
+              className={`absolute left-1.5 block h-[2px] w-3 bg-brand transition-all duration-200 ${
                 open ? "top-[13px] -rotate-45" : "top-[18px]"
               }`}
             />
@@ -86,7 +95,7 @@ export function LandingNav() {
 
       {/* Mobile overlay */}
       <div
-        className={`fixed inset-0 z-[60] bg-[#4A3326]/40 transition-opacity duration-200 md:hidden ${
+        className={`fixed inset-0 z-[60] bg-brand/40 transition-opacity duration-200 md:hidden ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setOpen(false)}
@@ -94,41 +103,55 @@ export function LandingNav() {
 
       {/* Mobile panel */}
       <div
-        className={`fixed top-0 right-0 z-[70] h-full w-64 bg-[#FFF8F0] border-l-2 border-[#4A3326] shadow-[-6px_0_0_#4A3326] transition-transform duration-250 ease-out md:hidden ${
+        className={`fixed top-0 right-0 z-[70] h-full w-64 bg-surface border-l-2 border-brand shadow-[-6px_0_0_var(--color-brand)] transition-transform duration-250 ease-out md:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-end border-b-2 border-[#4A3326] px-4 py-3">
+        <div className="flex items-center justify-end border-b-2 border-brand px-4 py-3">
           <button
             onClick={() => setOpen(false)}
-            className="relative h-8 w-8 border-2 border-[#4A3326] bg-[#FFF8F0] shadow-[2px_2px_0_#4A3326] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
+            className="relative h-8 w-8 border-2 border-brand bg-surface shadow-[2px_2px_0_var(--color-brand)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
             aria-label="Close menu"
           >
-            <span className="absolute left-1.5 top-[13px] block h-[2px] w-3 bg-[#4A3326] rotate-45" />
-            <span className="absolute left-1.5 top-[13px] block h-[2px] w-3 bg-[#4A3326] -rotate-45" />
+            <span className="absolute left-1.5 top-[13px] block h-[2px] w-3 bg-brand rotate-45" />
+            <span className="absolute left-1.5 top-[13px] block h-[2px] w-3 bg-brand -rotate-45" />
           </button>
         </div>
         <nav className="flex flex-col gap-2 p-4">
           <Link
-            href="/coming-soon"
+            href="/#features"
             onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-[#4A3326] border-2 border-[#4A3326] bg-white shadow-[3px_3px_0_#4A3326] hover:bg-[#F8AF3C]/20 transition-all"
+            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
           >
-            Docs
+            Features
           </Link>
           <Link
             href="/coming-soon"
             onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-[#4A3326] border-2 border-[#4A3326] bg-white shadow-[3px_3px_0_#4A3326] hover:bg-[#F8AF3C]/20 transition-all"
+            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
           >
             Demo
           </Link>
           <Link
-            href="/signup"
+            href="/coming-soon"
             onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-[#4A3326] border-2 border-[#4A3326] bg-[#F8AF3C] shadow-[3px_3px_0_#4A3326] transition-all"
+            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
           >
-            Get 30 Free Credits
+            Docs
+          </Link>
+          <Link
+            href="/pricing"
+            onClick={() => setOpen(false)}
+            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/login"
+            onClick={() => setOpen(false)}
+            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] transition-all"
+          >
+            Sign in
           </Link>
         </nav>
       </div>
