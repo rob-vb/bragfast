@@ -27,7 +27,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-[#4A3326]">
+      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
         Dashboard
       </h1>
 
@@ -35,33 +35,33 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {statCards.map((s) => (
           <PixelCard key={s.label}>
-            <p className="font-[family-name:var(--font-press-start)] text-2xl text-[#4A3326]">
+            <p className="font-[family-name:var(--font-press-start)] text-2xl text-brand">
               {s.value}
             </p>
-            <p className="mt-1 text-xs text-[#4A3326]/60">{s.label}</p>
+            <p className="mt-1 text-xs text-brand/60">{s.label}</p>
           </PixelCard>
         ))}
       </div>
 
-      {/* Recent orders */}
+      {/* Recent releases */}
       <div>
-        <h2 className="mb-4 font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
-          Recent Orders
+        <h2 className="mb-4 font-[family-name:var(--font-press-start)] text-sm text-brand">
+          Recent Releases
         </h2>
         {recent.length === 0 ? (
           <PixelCard>
-            <p className="text-center text-sm text-[#4A3326]/60 py-8">
+            <p className="text-center text-sm text-brand/60 py-8">
               No releases yet. Fire off your first one via the API!
             </p>
           </PixelCard>
         ) : (
           <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
             {recent.map((r) => (
-              <tr key={r._id} className="hover:bg-[#F8AF3C]/5">
+              <tr key={r._id} className="hover:bg-gold/5">
                 <td className="px-4 py-3 font-mono text-xs">
                   <Link
                     href={`/dashboard/history?id=${r.externalId}`}
-                    className="underline underline-offset-4 hover:text-[#F8AF3C]"
+                    className="underline underline-offset-4 hover:text-gold"
                   >
                     {r.externalId.slice(0, 14)}...
                   </Link>

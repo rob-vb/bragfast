@@ -22,10 +22,12 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
   }
 
   return (
-    <TemplateEditor
-      templateId={template.externalId}
-      name={template.name}
-      config={config}
-    />
+    <div className="fixed inset-0 top-[57px] z-40">
+      <TemplateEditor
+        templateId={template.externalId}
+        name={template.name}
+        config={config}
+      />
+    </div>
   );
 }

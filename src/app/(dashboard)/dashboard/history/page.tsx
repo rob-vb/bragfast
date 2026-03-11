@@ -24,7 +24,7 @@ export default async function HistoryPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-[family-name:var(--font-press-start)] text-lg text-[#4A3326]">
+        <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
           History
         </h1>
         <HistoryFilter current={status ?? "all"} />
@@ -32,7 +32,7 @@ export default async function HistoryPage({
 
       {releases.length === 0 ? (
         <PixelCard>
-          <p className="text-center text-sm text-[#4A3326]/60 py-8">
+          <p className="text-center text-sm text-brand/60 py-8">
             No releases found.
           </p>
         </PixelCard>

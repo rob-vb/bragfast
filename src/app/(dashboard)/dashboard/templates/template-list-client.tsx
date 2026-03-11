@@ -8,6 +8,7 @@ import { PixelCard } from "@/components/dashboard/pixel-card";
 
 interface TemplateItem {
   id: string;
+  displayId?: string;
   name: string;
   isDefault: boolean;
   previewUrl?: string;
@@ -71,15 +72,15 @@ export function TemplateListClient({
             colors: { background: "#ffffff", text: "#000000", primary: "#3b82f6" },
             formats: {
               landscape: { objects: [
-                { id: "title", type: "title", name: "title", x: 48, y: 400, width: 1104, height: 120, opacity: 1, zIndex: 1,
+                { id: "title", type: "text", name: "title", x: 48, y: 400, width: 1104, height: 120, opacity: 1, zIndex: 1,
                   fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top" },
               ]},
               square: { objects: [
-                { id: "title", type: "title", name: "title", x: 48, y: 720, width: 984, height: 120, opacity: 1, zIndex: 1,
+                { id: "title", type: "text", name: "title", x: 48, y: 720, width: 984, height: 120, opacity: 1, zIndex: 1,
                   fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top" },
               ]},
               portrait: { objects: [
-                { id: "title", type: "title", name: "title", x: 48, y: 900, width: 984, height: 150, opacity: 1, zIndex: 1,
+                { id: "title", type: "text", name: "title", x: 48, y: 900, width: 984, height: 150, opacity: 1, zIndex: 1,
                   fontFamily: "Plus Jakarta Sans", fontSize: 56, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top" },
               ]},
             },
@@ -98,12 +99,12 @@ export function TemplateListClient({
     <div className="space-y-8">
       {/* Default Templates */}
       <section className="space-y-4">
-        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
           Default Templates
         </h2>
         {defaults.length === 0 ? (
           <PixelCard>
-            <p className="text-center text-sm text-[#4A3326]/60 py-8">
+            <p className="text-center text-sm text-brand/60 py-8">
               No default templates available.
             </p>
           </PixelCard>
@@ -113,6 +114,7 @@ export function TemplateListClient({
               <TemplateCard
                 key={t.id}
                 id={t.id}
+                displayId={t.displayId}
                 name={t.name}
                 isDefault={t.isDefault}
                 previewUrl={t.previewUrl}
@@ -126,14 +128,14 @@ export function TemplateListClient({
       {/* My Templates */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
+          <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
             My Templates
           </h2>
           <PixelButton onClick={handleCreateBlank}>+ Create Blank</PixelButton>
         </div>
         {userTemplates.length === 0 ? (
           <PixelCard>
-            <p className="text-center text-sm text-[#4A3326]/60 py-8">
+            <p className="text-center text-sm text-brand/60 py-8">
               No templates yet. Clone a default or create a blank one!
             </p>
           </PixelCard>
@@ -143,6 +145,7 @@ export function TemplateListClient({
               <TemplateCard
                 key={t.id}
                 id={t.id}
+                displayId={t.displayId}
                 name={t.name}
                 isDefault={t.isDefault}
                 previewUrl={t.previewUrl}

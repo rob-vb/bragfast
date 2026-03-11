@@ -13,6 +13,12 @@ export default async function TemplatesPage() {
     fetchQuery(api.templates.listDefaults, {}),
   ]);
 
+  const defaultDisplayIds: Record<string, string> = {
+    tmpl_classic_v2: "classic",
+    tmpl_split_v2: "split",
+    tmpl_hero_v2: "hero",
+  };
+
   const mapTemplate = (t: {
     externalId: string;
     name: string;
@@ -21,6 +27,7 @@ export default async function TemplatesPage() {
     config: unknown;
   }) => ({
     id: t.externalId,
+    displayId: defaultDisplayIds[t.externalId],
     name: t.name,
     isDefault: t.isDefault,
     previewUrl: t.previewUrl,
@@ -35,7 +42,7 @@ export default async function TemplatesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-[family-name:var(--font-press-start)] text-lg text-[#4A3326]">
+        <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
           Templates
         </h1>
       </div>

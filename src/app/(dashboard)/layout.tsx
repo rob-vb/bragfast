@@ -13,15 +13,12 @@ export default async function DashboardLayout({
   if (!user) redirect("/login");
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0]">
+    <div className="min-h-screen bg-surface">
       {/* Top bar */}
-      <header className="sticky top-0 z-50 border-b-2 border-[#4A3326] bg-[#FFF8F0]">
+      <header className="sticky top-0 z-50 border-b-2 border-brand bg-surface">
         <div className="mx-auto flex max-w-6xl items-center gap-3 md:gap-6 px-4 py-3">
           <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
-            <Image src="/logo-icon.svg" alt="Bragfast" width={32} height={33} />
-            <span className="font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
-              BRAGFAST
-            </span>
+            <Image src="/logo.svg" alt="Bragfast" width={120} height={30} className="h-6 md:h-8 w-auto" />
           </Link>
           <DashboardNav />
         </div>
