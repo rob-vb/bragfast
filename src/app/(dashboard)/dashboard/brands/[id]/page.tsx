@@ -18,7 +18,7 @@ export default async function EditBrandPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-[#4A3326]">
+      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
         Edit Brand
       </h1>
       <BrandForm
