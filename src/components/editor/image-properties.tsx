@@ -103,6 +103,7 @@ export function ImageProperties() {
   const isImage = selectedObject.type === "image";
   const device = selectedObject.device || "none";
   const hasDeviceFrame = device !== "none";
+  const deviceColor = selectedObject.deviceColor || (device === "mobile" ? "dark" : "light");
 
   function update(property: string, value: unknown) {
     dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: true });
@@ -154,16 +155,49 @@ export function ImageProperties() {
       {isImage && (
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Device Frame</Label>
-          <Select value={device} onValueChange={(v) => update("device", v)}>
-            <SelectTrigger className="h-8 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="browser">Browser</SelectItem>
-              <SelectItem value="mobile">Mobile</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={device} onValueChange={(v) => {
+              update("device", v);
+              // Set default color when switching device type
+              if (v === "mobile") update("deviceColor", "dark");
+              else if (v === "browser") update("deviceColor", "light");
+            }}>
+              <SelectTrigger className="h-8 text-sm flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="browser">Browser</SelectItem>
+                <SelectItem value="mobile">Mobile</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasDeviceFrame && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => update("deviceColor", "light")}
+                  className={`w-6 h-6 rounded-full border-2 transition-colors ${
+                    deviceColor === "light"
+                      ? "border-blue-500"
+                      : "border-zinc-200 hover:border-zinc-300"
+                  }`}
+                  style={{ backgroundColor: "#E8E8E8" }}
+                  title="Light"
+                />
+                <button
+                  type="button"
+                  onClick={() => update("deviceColor", "dark")}
+                  className={`w-6 h-6 rounded-full border-2 transition-colors ${
+                    deviceColor === "dark"
+                      ? "border-blue-500"
+                      : "border-zinc-200 hover:border-zinc-300"
+                  }`}
+                  style={{ backgroundColor: "#1A1A1A" }}
+                  title="Dark"
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 

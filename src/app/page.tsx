@@ -251,7 +251,7 @@ export default function Home() {
             See the kitchen in action
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8">
-            Pick a template, tweak the ingredients, hit generate. Three formats, zero signup required.
+            Pick a template, tweak the ingredients, hit generate.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
