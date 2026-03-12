@@ -14,9 +14,11 @@ export default async function TemplatesPage() {
   ]);
 
   const defaultDisplayIds: Record<string, string> = {
-    tmpl_classic_v2: "classic",
-    tmpl_split_v2: "split",
-    tmpl_hero_v2: "hero",
+    tmpl_standard_browser: "standard-browser",
+    tmpl_standard_mobile: "standard-mobile",
+    tmpl_split_browser: "split-browser",
+    tmpl_split_mobile: "split-mobile",
+    tmpl_hero: "hero",
   };
 
   const mapTemplate = (t: {
