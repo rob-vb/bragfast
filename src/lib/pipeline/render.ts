@@ -141,14 +141,7 @@ export async function renderReleaseAsync(
           }
           return dataMap;
         }
-        // Fallback: title/description/image_url fields
-        const dataMap: ObjectDataMap = {};
-        if (s.title) dataMap["title"] = { text: s.title };
-        if (s.description) dataMap["description"] = { text: s.description };
-        if (s.image_url) {
-          dataMap["image"] = { imageBase64: await fetchImageAsBase64(s.image_url) };
-        }
-        return dataMap;
+        return {};
       })
     );
 
