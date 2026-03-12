@@ -1,7 +1,7 @@
 # Auth Pages Design
 
 ## Overview
-Login, sign up, and forgot password pages for Bragfast. Split-screen layout with branded panel.
+Login, sign up, and forgot password pages for brag.fast. Split-screen layout with branded panel.
 
 ## Brand Colors
 - `#F8AF3C` — amber (primary accent, branded panel bg, buttons)
@@ -15,7 +15,7 @@ Login, sign up, and forgot password pages for Bragfast. Split-screen layout with
 
 ## Left Panel (Brand)
 - Solid `#F8AF3C` background
-- Bragfast icon logo (SVG) centered
+- brag.fast icon logo (SVG) centered
 - No other elements
 
 ## Right Panel (Form)
@@ -56,7 +56,7 @@ src/app/(auth)/
   forgot-password/page.tsx
 src/components/ui/    -- shadcn components (button, input, label, checkbox)
 public/
-  logo-icon.svg       -- Bragfast icon logo for branded panel
+  logo-icon.svg       -- brag.fast icon logo for branded panel
 ```
 
 ## Route Group

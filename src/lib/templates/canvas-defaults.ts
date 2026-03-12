@@ -93,7 +93,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         landscape: {
           objects: [
             { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 263, width: 502, height: 67, zIndex: 2 },
-            { id: "image", type: "image", name: "image", x: 630, y: 64, width: 580, height: 547, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "cover" },
+            { id: "image", type: "image", name: "image", x: 630, y: 64, width: 580, height: 547, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "cover", anchorX: "left", anchorY: "top" },
             { ...textObj("description", { lineHeight: 1.5 }), x: 64, y: 338, width: 502, height: 153, fontSize: 24, zIndex: 3 },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 199, width: 418, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],

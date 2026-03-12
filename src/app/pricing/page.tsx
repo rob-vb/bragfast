@@ -5,7 +5,7 @@ import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 
 export const metadata: Metadata = {
-  title: "Pricing — Bragfast",
+  title: "Pricing — brag.fast",
   description:
     "Simple, predictable pricing. 1 credit = 1 image in 1 format. Start free, scale as you grow.",
 };

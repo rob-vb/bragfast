@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Bragfast",
-  description: "Privacy policy for the Bragfast service.",
+  title: "Privacy Policy — brag.fast",
+  description: "Privacy policy for the brag.fast service.",
 };
 
 export default function PrivacyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
               <p>
                 This Privacy Policy describes how Rob van Baaren
                 (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or
-                &quot;our&quot;), operating Bragfast from Oldenzaal,
+                &quot;our&quot;), operating brag.fast from Oldenzaal,
                 Netherlands, collects, uses, and protects your personal data
                 when you use our Service.
               </p>

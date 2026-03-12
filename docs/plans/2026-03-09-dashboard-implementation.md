@@ -143,7 +143,7 @@ export default async function DashboardLayout({
       <header className="sticky top-0 z-50 border-b-2 border-[#4A3326] bg-[#FFF8F0]">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Image src="/logo-icon.svg" alt="Bragfast" width={32} height={33} />
+            <Image src="/logo-icon.svg" alt="brag.fast" width={32} height={33} />
             <span className="font-[family-name:var(--font-press-start)] text-sm text-[#4A3326]">
               BRAGFAST
             </span>

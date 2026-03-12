@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build login, signup, and forgot-password pages with split-screen layout and Bragfast brand styling.
+**Goal:** Build login, signup, and forgot-password pages with split-screen layout and brag.fast brand styling.
 
 **Architecture:** Next.js App Router `(auth)` route group with shared split-screen layout. Custom forms call better-auth client SDK directly. shadcn/ui for form primitives.
 
@@ -51,7 +51,7 @@ git commit -m "chore: install shadcn button, input, label, checkbox components"
 - Create: `public/logo-icon.svg`
 - Create: `src/lib/auth-client.ts`
 
-**Step 1: Save the Bragfast icon logo SVG**
+**Step 1: Save the brag.fast icon logo SVG**
 
 Save the icon-only SVG (provided by user) to `public/logo-icon.svg`. This is the smaller SVG (451x467 viewBox).
 
@@ -110,7 +110,7 @@ export default function AuthLayout({
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-[#F8AF3C]">
         <Image
           src="/logo-icon.svg"
-          alt="Bragfast"
+          alt="brag.fast"
           width={160}
           height={166}
           priority
@@ -124,7 +124,7 @@ export default function AuthLayout({
           <div className="mb-8 flex justify-center lg:hidden">
             <Image
               src="/logo-icon.svg"
-              alt="Bragfast"
+              alt="brag.fast"
               width={64}
               height={66}
               priority
@@ -215,7 +215,7 @@ export default function LoginPage() {
     <>
       <h1 className="text-3xl font-bold text-[#4A3326]">Welcome back</h1>
       <p className="mt-2 text-sm text-[#4A3326]/60">
-        Sign in to your Bragfast account
+        Sign in to your brag.fast account
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">

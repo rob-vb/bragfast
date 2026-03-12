@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions — Bragfast",
-  description: "Terms and conditions for using the Bragfast service.",
+  title: "Terms and Conditions — brag.fast",
+  description: "Terms and conditions for using the brag.fast service.",
 };
 
 export default function TermsPage() {
@@ -24,7 +24,7 @@ export default function TermsPage() {
           <div className="space-y-8 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-relaxed">
             <Section title="1. Introduction">
               <p>
-                These Terms and Conditions govern your use of the Bragfast
+                These Terms and Conditions govern your use of the brag.fast
                 service (the &quot;Service&quot;) operated by Rob van Baaren
                 (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or
                 &quot;our&quot;), located in Oldenzaal, Netherlands.
@@ -48,7 +48,7 @@ export default function TermsPage() {
                   access the Service.
                 </li>
                 <li>
-                  <strong>Service</strong> — the Bragfast website, API, and
+                  <strong>Service</strong> — the brag.fast website, API, and
                   image generation platform.
                 </li>
                 <li>

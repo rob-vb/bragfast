@@ -5,7 +5,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "Bragfast — Auto-generate social images for your launches",
+  title: "brag.fast — Auto-generate social images for your launches",
   description:
     "Generate branded social media images from your releases. One API call or no-code workflow — landscape, square, and portrait formats in seconds.",
 };
@@ -279,7 +279,7 @@ export default function Home() {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/logo.svg"
-              alt="Bragfast"
+              alt="brag.fast"
               width={80}
               height={20}
               className="h-5 w-auto"

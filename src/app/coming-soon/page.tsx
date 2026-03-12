@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Coming Soon — Bragfast",
+  title: "Coming Soon — brag.fast",
   description: "This page is coming soon. Stay tuned.",
 };
 

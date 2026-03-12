@@ -20,10 +20,10 @@ export default function DocsPage() {
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 xl:gap-8 pt-8 md:pt-12 pb-10 border-b border-zinc-100">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 mb-3 sm:mb-4">
-                Bragfast API Reference
+                brag.fast API Reference
               </h1>
               <p className="text-sm text-zinc-600 leading-relaxed max-w-lg">
-                Bragfast auto-generates branded social media images for your
+                brag.fast auto-generates branded social media images for your
                 product releases. Design a brand kit, POST your release details,
                 and receive images in multiple aspect ratios.
               </p>

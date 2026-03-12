@@ -11,7 +11,7 @@ export default function AuthLayout({
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gold">
         <Image
           src="/logo-icon.svg"
-          alt="Bragfast"
+          alt="brag.fast"
           width={160}
           height={166}
           priority
@@ -25,7 +25,7 @@ export default function AuthLayout({
           <div className="mb-8 flex justify-center lg:hidden">
             <Image
               src="/logo-icon.svg"
-              alt="Bragfast"
+              alt="brag.fast"
               width={64}
               height={66}
               priority

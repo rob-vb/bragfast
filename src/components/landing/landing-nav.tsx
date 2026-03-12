@@ -26,7 +26,7 @@ export function LandingNav() {
           <Link href="/">
             <Image
               src="/logo.svg"
-              alt="Bragfast"
+              alt="brag.fast"
               width={120}
               height={30}
               className="h-6 md:h-8 w-auto"
