@@ -10,11 +10,9 @@ export interface ObjectDataMap {
   [objectId: string]: {
     text?: string;
     imageBase64?: string;
-    // Per-object overrides
     fontFamily?: string;
     color?: string;
-    deviceType?: 'browser' | 'mobile' | 'none';
-    deviceColor?: 'light' | 'dark';
+    imageFrameColor?: string;
   };
 }
 
@@ -173,9 +171,9 @@ function renderObject(
           }} />
         );
       }
-      const device = data?.deviceType || obj.device || "none";
-      const deviceColor = data?.deviceColor || obj.deviceColor || (device === "mobile" ? "dark" : "light");
-      if (device === "none") {
+      const frame = obj.imageFrame || "none";
+      const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
+      if (frame === "none") {
         return (
           <img
             src={imgSrc}
@@ -187,14 +185,14 @@ function renderObject(
           />
         );
       }
-      if (device === "mobile") {
+      if (frame === "mobile") {
         return (
           <MobileFrame
             imageBase64={imgSrc}
             primaryColor={colors.primary}
             width={obj.width}
             maxHeight={obj.height}
-            color={deviceColor}
+            color={frameColor}
           />
         );
       }
@@ -204,7 +202,7 @@ function renderObject(
           primaryColor={colors.primary}
           width={obj.width}
           maxHeight={obj.height}
-          color={deviceColor}
+          color={frameColor}
         />
       );
     }

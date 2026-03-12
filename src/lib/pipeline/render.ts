@@ -5,11 +5,9 @@ import path from "path";
 import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { ConfigRenderer } from "../templates/config-renderer";
 import { CanvasRenderer, type ObjectDataMap } from "../templates/canvas-renderer";
 import { migrateConfig } from "../templates/canvas-types";
 import { getDefaultConfig } from "../templates/default-configs";
-import type { TemplateConfig } from "../templates/config-types";
 import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { fetchImageAsBase64 } from "../images";
@@ -19,10 +17,6 @@ import { ReleaseRequest, ReleaseResult, Brand, FORMAT_DIMENSIONS } from "../type
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-function isCanvasConfig(config: unknown): config is CanvasTemplateConfig {
-  return typeof config === "object" && config !== null && "version" in config && (config as any).version === 2;
-}
 
 export async function createRelease(
   request: ReleaseRequest,
@@ -35,7 +29,7 @@ export async function createRelease(
   await convex.mutation(api.releases.create, {
     userId,
     externalId: releaseId,
-    template: request.template || "classic",
+    template: request.template || "standard-browser",
     credits_used: creditsUsed,
     metadata: request.metadata,
     webhook_url: request.webhook_url,
@@ -110,10 +104,10 @@ export async function renderReleaseAsync(
 ): Promise<void> {
   try {
     const brand = await resolveBrand(request);
-    const templateName = request.template || "classic";
+    const templateName = request.template || "standard-browser";
 
-    // Resolve template config (v1 TemplateConfig or v2 CanvasTemplateConfig)
-    let templateConfig: TemplateConfig | CanvasTemplateConfig;
+    // Resolve template config (v2 CanvasTemplateConfig)
+    let templateConfig: CanvasTemplateConfig;
     const defaultConfig = getDefaultConfig(templateName);
     if (defaultConfig) {
       templateConfig = defaultConfig;
@@ -123,16 +117,13 @@ export async function renderReleaseAsync(
       if (!tmpl.isDefault && tmpl.userId !== userId) {
         throw new Error(`Template not found: ${templateName}`);
       }
-      templateConfig = tmpl.config as TemplateConfig | CanvasTemplateConfig;
+      templateConfig = tmpl.config as CanvasTemplateConfig;
     } else {
       throw new Error(`Invalid template: ${templateName}`);
     }
 
     const formats = request.formats || ["landscape", "square", "portrait"];
-    const isCanvas = isCanvasConfig(templateConfig);
-    if (isCanvas) {
-      templateConfig = migrateConfig(templateConfig as CanvasTemplateConfig);
-    }
+    templateConfig = migrateConfig(templateConfig);
 
     // Build per-slide object data maps
     const slideDataMaps: ObjectDataMap[] = await Promise.all(
@@ -145,64 +136,39 @@ export async function renderReleaseAsync(
             if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
             if (mod.font_family) entry.fontFamily = mod.font_family;
             if (mod.color) entry.color = mod.color;
-            if (mod.device_type) entry.deviceType = mod.device_type;
-            if (mod.device_color) entry.deviceColor = mod.device_color;
+            if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
             dataMap[mod.id] = entry;
           }
           return dataMap;
         }
-        // Legacy format: title/description/image_url
-        const dataMap: ObjectDataMap = {};
-        if (s.title) dataMap["title"] = { text: s.title };
-        if (s.description) dataMap["description"] = { text: s.description };
-        if (s.image_url) {
-          dataMap["image"] = { imageBase64: await fetchImageAsBase64(s.image_url) };
-        }
-        return dataMap;
+        return {};
       })
     );
 
     // Inject static images (src field) — fetch each unique URL once
-    if (isCanvas) {
-      const canvasConfig = templateConfig as CanvasTemplateConfig;
-      const staticSrcs = new Set<string>();
-      for (const fKey of Object.keys(canvasConfig.formats) as FormatKey[]) {
-        for (const obj of canvasConfig.formats[fKey].objects) {
-          if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
-        }
+    const staticSrcs = new Set<string>();
+    for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
+      for (const obj of templateConfig.formats[fKey].objects) {
+        if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
       }
-      if (staticSrcs.size > 0) {
-        const srcEntries = await Promise.all(
-          [...staticSrcs].map(async (src) => [src, await fetchImageAsBase64(src)] as const)
-        );
-        const srcMap = Object.fromEntries(srcEntries);
-        // For each format's objects, inject into every slide's data map (API override wins)
-        for (const fKey of Object.keys(canvasConfig.formats) as FormatKey[]) {
-          for (const obj of canvasConfig.formats[fKey].objects) {
-            if (obj.type === "image" && obj.src) {
-              for (const dataMap of slideDataMaps) {
-                if (!dataMap[obj.id]?.imageBase64) {
-                  dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };
-                }
+    }
+    if (staticSrcs.size > 0) {
+      const srcEntries = await Promise.all(
+        [...staticSrcs].map(async (src) => [src, await fetchImageAsBase64(src)] as const)
+      );
+      const srcMap = Object.fromEntries(srcEntries);
+      for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
+        for (const obj of templateConfig.formats[fKey].objects) {
+          if (obj.type === "image" && obj.src) {
+            for (const dataMap of slideDataMaps) {
+              if (!dataMap[obj.id]?.imageBase64) {
+                dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };
               }
             }
           }
         }
       }
     }
-
-    // Build legacy slide format for v1 ConfigRenderer
-    const legacySlides = !isCanvas
-      ? await Promise.all(
-          request.slides.map(async (s) => ({
-            title: s.title || "",
-            description: s.description,
-            imageBase64: s.image_url ? await fetchImageAsBase64(s.image_url) : undefined,
-            device: s.device || ("browser" as const),
-            align: s.align,
-          }))
-        )
-      : [];
 
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
@@ -212,10 +178,8 @@ export async function renderReleaseAsync(
 
       // Font loading per-format: canvas configs may use different fonts per format
       // Also load brand font and any per-object font overrides
-      let fonts = isCanvas
-        ? await loadFontsForObjects((templateConfig as CanvasTemplateConfig).formats[format as FormatKey].objects)
-        : await loadFontsForFamily(brand.font_family);
-      if (isCanvas && brand.font_family) {
+      let fonts = await loadFontsForObjects(templateConfig.formats[format as FormatKey].objects);
+      if (brand.font_family) {
         const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
       }
@@ -232,20 +196,12 @@ export async function renderReleaseAsync(
       }
 
       for (let i = 0; i < slideDataMaps.length; i++) {
-        const jsx = isCanvas
-          ? CanvasRenderer({
-              config: templateConfig as CanvasTemplateConfig,
-              format: format as FormatKey,
-              objectData: slideDataMaps[i],
-              brand,
-            })
-          : ConfigRenderer({
-              config: templateConfig as TemplateConfig,
-              slide: legacySlides[i],
-              brand,
-              width,
-              height,
-            });
+        const jsx = CanvasRenderer({
+          config: templateConfig,
+          format: format as FormatKey,
+          objectData: slideDataMaps[i],
+          brand,
+        });
         const svg = await satori(jsx, { width, height, fonts });
         const jpg = await sharp(Buffer.from(svg))
           .flatten({ background: '#ffffff' })

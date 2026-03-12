@@ -26,43 +26,41 @@ function readApiKeyFromEnv(): string {
   throw new Error("TEST_API_KEY not found in env or .env.local");
 }
 
-const TEMPLATES = ["classic", "split", "hero"] as const;
+const TEMPLATES = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"] as const;
 const FONTS = ["Inter", "Raleway", "Saira"] as const;
 const FORMATS = ["landscape", "square", "portrait"] as const;
 
-const UPDATE_TYPES = {
-  website: {
+// Content varies by template purpose
+const CONTENT: Record<string, { title: string; description: string; image: string }> = {
+  "standard-browser": {
     title: "Fresh new look",
     description: "We redesigned our website from the ground up",
-    device: "browser" as const,
     image: "photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop",
   },
-  mobile: {
+  "standard-mobile": {
     title: "Now on mobile",
     description: "Take it anywhere with our brand new mobile app",
-    device: "mobile" as const,
     image: "photo-1512941937669-90a1b58e7e9c?w=600&h=1200&fit=crop",
   },
-  bugs: {
+  "split-browser": {
+    title: "Fresh new look",
+    description: "We redesigned our website from the ground up",
+    image: "photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop",
+  },
+  "split-mobile": {
+    title: "Now on mobile",
+    description: "Take it anywhere with our brand new mobile app",
+    image: "photo-1512941937669-90a1b58e7e9c?w=600&h=1200&fit=crop",
+  },
+  hero: {
     title: "Squashed 12 bugs",
-    description:
-      "Stability and performance improvements across the board",
-    device: "browser" as const, // overridden to none for hero below
+    description: "Stability and performance improvements across the board",
     image: "photo-1461749280684-dccba630e2f6?w=1200&h=800&fit=crop",
   },
-} as const;
+};
 
-type UpdateType = keyof typeof UPDATE_TYPES;
-
-function buildPayload(
-  template: string,
-  type: UpdateType,
-  font: string
-) {
-  const preset = UPDATE_TYPES[type];
-  // hero+bugs: no device frame, but still include background image
-  const device_type =
-    type === "bugs" && template === "hero" ? "none" : preset.device;
+function buildPayload(template: string, font: string) {
+  const content = CONTENT[template];
 
   return {
     template,
@@ -76,13 +74,9 @@ function buildPayload(
     slides: [
       {
         objects: [
-          { id: "title", text: preset.title },
-          { id: "description", text: preset.description },
-          {
-            id: "image",
-            image_url: `https://images.unsplash.com/${preset.image}`,
-            device_type,
-          },
+          { id: "title", text: content.title },
+          { id: "description", text: content.description },
+          { id: "image", image_url: `https://images.unsplash.com/${content.image}` },
         ],
       },
     ],
@@ -144,35 +138,33 @@ async function main() {
   let errors = 0;
 
   for (const template of TEMPLATES) {
-    for (const type of Object.keys(UPDATE_TYPES) as UpdateType[]) {
-      for (const font of FONTS) {
-        const label = `${template}-${type}-${slugify(font)}`;
+    for (const font of FONTS) {
+      const label = `${template}-${slugify(font)}`;
 
-        console.log(`Generating ${label}...`);
+      console.log(`Generating ${label}...`);
 
-        try {
-          const payload = buildPayload(template, type, font);
-          const { release_id } = await createRelease(payload);
-          await pollRelease(release_id);
+      try {
+        const payload = buildPayload(template, font);
+        const { release_id } = await createRelease(payload);
+        await pollRelease(release_id);
 
-          // Copy output files to public/demo/
-          for (const format of FORMATS) {
-            const src = path.join(OUTPUT_DIR, release_id, `${format}-1.jpg`);
-            const dest = path.join(destDir, `${label}-${format}.jpg`);
-            if (!existsSync(src)) {
-              throw new Error(`Output file not found: ${src}`);
-            }
-            copyFileSync(src, dest);
-            total++;
+        // Copy output files to public/demo/
+        for (const format of FORMATS) {
+          const src = path.join(OUTPUT_DIR, release_id, `${format}-1.jpg`);
+          const dest = path.join(destDir, `${label}-${format}.jpg`);
+          if (!existsSync(src)) {
+            throw new Error(`Output file not found: ${src}`);
           }
-          console.log(`  OK (${release_id})`);
-
-          // Delay to avoid rate limits
-          await new Promise((r) => setTimeout(r, 1500));
-        } catch (err) {
-          console.error(`  FAILED: ${err}`);
-          errors++;
+          copyFileSync(src, dest);
+          total++;
         }
+        console.log(`  OK (${release_id})`);
+
+        // Delay to avoid rate limits
+        await new Promise((r) => setTimeout(r, 1500));
+      } catch (err) {
+        console.error(`  FAILED: ${err}`);
+        errors++;
       }
     }
   }

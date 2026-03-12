@@ -235,7 +235,7 @@ while True:
             type: "string",
             required: false,
             description:
-              'Template to use: "classic", "split", "hero", or a custom template ID (e.g. "tmpl_abc123"). Defaults to "classic".',
+              'Template to use: "standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero", or a custom template ID (e.g. "tmpl_abc123"). Defaults to "standard-browser".',
           },
           {
             name: "slides",
@@ -292,20 +292,12 @@ while True:
                       "Image URL for image objects.",
                   },
                   {
-                    name: "device_type",
+                    name: "image_frame_color",
                     type: "string",
                     required: false,
                     group: "image",
                     description:
-                      'Override the device frame: "browser", "mobile", or "none". Defaults to the template\'s configured device.',
-                  },
-                  {
-                    name: "device_color",
-                    type: "string",
-                    required: false,
-                    group: "image",
-                    description:
-                      'Device frame color scheme: "light" or "dark". Browser defaults to light, mobile defaults to dark.',
+                      'Hex color for the device frame, e.g. "#ffffff" for a light frame or "#1a1a2e" for a dark one.',
                   },
                 ],
               },
@@ -339,13 +331,13 @@ while True:
   -H "Content-Type: application/json" \\
   -d '{
     "brand_id": "brd_abc123",
-    "template": "classic",
+    "template": "standard-browser",
     "slides": [
       {
         "objects": [
           { "id": "title", "text": "Launched dark mode" },
           { "id": "description", "text": "Your app, your vibe." },
-          { "id": "image", "image_url": "https://example.com/screenshot.png", "device_type": "browser" }
+          { "id": "image", "image_url": "https://example.com/screenshot.png" }
         ]
       }
     ],
@@ -359,13 +351,13 @@ while True:
   },
   body: JSON.stringify({
     brand_id: "brd_abc123",
-    template: "classic",
+    template: "standard-browser",
     slides: [
       {
         objects: [
           { id: "title", text: "Launched dark mode" },
           { id: "description", text: "Your app, your vibe." },
-          { id: "image", image_url: "https://example.com/screenshot.png", device_type: "browser" },
+          { id: "image", image_url: "https://example.com/screenshot.png" },
         ],
       },
     ],
@@ -380,13 +372,13 @@ response = requests.post(
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brd_abc123",
-        "template": "classic",
+        "template": "standard-browser",
         "slides": [
             {
                 "objects": [
                     {"id": "title", "text": "Launched dark mode"},
                     {"id": "description", "text": "Your app, your vibe."},
-                    {"id": "image", "image_url": "https://example.com/screenshot.png", "device_type": "browser"},
+                    {"id": "image", "image_url": "https://example.com/screenshot.png"},
                 ]
             }
         ],
@@ -947,10 +939,10 @@ data = response.json()`,
     title: "Templates",
     anchor: "templates",
     description:
-      "Templates control the layout of your images. brag.fast ships with three defaults — Classic, Split, and Hero. You can also create custom templates or clone a default as a starting point. Reference any template by ID when creating a release.",
+      "Templates control the layout of your images. brag.fast ships with five defaults — Standard Browser, Standard Mobile, Split Browser, Split Mobile, and Hero. You can also create custom templates or clone a default as a starting point. Reference any template by slug or ID when creating a release.",
     sampleObject: `{
-  "id": "classic",
-  "name": "Classic",
+  "id": "standard-browser",
+  "name": "Standard Browser",
   "is_default": true,
   "objects": [
     { "id": "title", "type": "text", "data": "text" },
@@ -991,8 +983,8 @@ data = response.json()`,
         responseExample: `{
   "templates": [
     {
-      "id": "classic",
-      "name": "Classic",
+      "id": "standard-browser",
+      "name": "Standard Browser",
       "is_default": true,
       "config": { "..." },
       "preview_url": null,
@@ -1024,14 +1016,14 @@ data = response.json()`,
             type: "string",
             required: true,
             description:
-              'A default name ("classic", "split", "hero") or a custom template ID ("tmpl_abc123").',
+              'A default slug ("standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero") or a custom template ID ("tmpl_abc123").',
           },
         ],
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/templates/classic \\
+          curl: `curl https://bragfast.com/api/v1/templates/standard-browser \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/classic",
+  "https://bragfast.com/api/v1/templates/standard-browser",
   {
     headers: {
       "Authorization": "Bearer bf_your_api_key",
@@ -1042,15 +1034,15 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/templates/classic",
+    "https://bragfast.com/api/v1/templates/standard-browser",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
         },
         responseStatus: 200,
         responseExample: `{
-  "id": "classic",
-  "name": "Classic",
+  "id": "standard-browser",
+  "name": "Standard Browser",
   "is_default": true,
   "objects": [
     { "id": "title", "type": "text", "data": "text" },
@@ -1284,14 +1276,14 @@ response = requests.delete(
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/templates/classic/clone \\
+          curl: `curl -X POST https://bragfast.com/api/v1/templates/standard-browser/clone \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "name": "My Classic Variant"
+    "name": "My Standard Variant"
   }'`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/classic/clone",
+  "https://bragfast.com/api/v1/templates/standard-browser/clone",
   {
     method: "POST",
     headers: {
@@ -1299,7 +1291,7 @@ response = requests.delete(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: "My Classic Variant",
+      name: "My Standard Variant",
     }),
   }
 )
@@ -1307,16 +1299,16 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/templates/classic/clone",
+    "https://bragfast.com/api/v1/templates/standard-browser/clone",
     headers={"Authorization": "Bearer bf_your_api_key"},
-    json={"name": "My Classic Variant"},
+    json={"name": "My Standard Variant"},
 )
 data = response.json()`,
         },
         responseStatus: 201,
         responseExample: `{
   "id": "tmpl_def789ghi012",
-  "name": "My Classic Variant",
+  "name": "My Standard Variant",
   "is_default": false,
   "config": { "..." },
   "created_at": "2026-03-09T12:00:00.000Z",
@@ -1339,11 +1331,11 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/templates/classic/preview \\
+          curl: `curl -X POST https://bragfast.com/api/v1/templates/standard-browser/preview \\
   -H "Authorization: Bearer bf_your_api_key" \\
   --output preview.jpg`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/classic/preview",
+  "https://bragfast.com/api/v1/templates/standard-browser/preview",
   {
     method: "POST",
     headers: {
@@ -1356,7 +1348,7 @@ const blob = await response.blob()
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/templates/classic/preview",
+    "https://bragfast.com/api/v1/templates/standard-browser/preview",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 with open("preview.jpg", "wb") as f:

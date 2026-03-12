@@ -24,10 +24,24 @@ export function uniqueSlug(name: string, existingIds: string[], currentId?: stri
 
 function migrateObject(obj: TemplateObject): TemplateObject {
   const type = obj.type as string;
-  if (type === "title" || type === "description") {
-    return { ...obj, type: "text" as ObjectType };
+  const migrated = (type === "title" || type === "description")
+    ? { ...obj, type: "text" as ObjectType }
+    : { ...obj };
+
+  // Migrate device → imageFrame
+  const raw = migrated as Record<string, unknown>;
+  if ("device" in raw && !("imageFrame" in raw)) {
+    migrated.imageFrame = raw.device as ImageFrame;
+    delete raw.device;
   }
-  return obj;
+  // Migrate deviceColor → imageFrameColor (enum to hex)
+  if ("deviceColor" in raw && !("imageFrameColor" in raw)) {
+    const dc = raw.deviceColor as string;
+    migrated.imageFrameColor = dc === "dark" ? "#1A1A1A" : "#E8E8E8";
+    delete raw.deviceColor;
+  }
+
+  return migrated;
 }
 
 export function migrateConfig(config: CanvasTemplateConfig): CanvasTemplateConfig {
@@ -45,7 +59,7 @@ export function migrateConfig(config: CanvasTemplateConfig): CanvasTemplateConfi
 }
 export type TextAlign = "left" | "center" | "right";
 export type VerticalAlign = "top" | "center" | "bottom";
-export type DeviceOption = "browser" | "mobile" | "none";
+export type ImageFrame = "browser" | "mobile" | "none";
 export type ObjectFit = "cover" | "contain";
 export type FormatKey = "landscape" | "square" | "portrait";
 
@@ -73,8 +87,8 @@ export interface TemplateObject {
 
   // Image-only
   src?: string; // Static image URL — baked into template, not overridable by API
-  device?: DeviceOption;
-  deviceColor?: 'light' | 'dark';
+  imageFrame?: ImageFrame;
+  imageFrameColor?: string;
   objectFit?: ObjectFit;
   borderRadius?: number;
   borderRadiusTL?: number;

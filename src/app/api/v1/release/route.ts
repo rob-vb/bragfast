@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Maximum 5 slides allowed" }, { status: 400 });
   }
   for (const slide of body.slides) {
-    if (!slide.objects && !slide.title) {
+    if (!slide.objects) {
       return Response.json({ error: "Each slide requires an objects array. See GET /api/v1/templates/:id for available object IDs." }, { status: 400 });
     }
     if (slide.objects) {
@@ -44,12 +44,12 @@ export async function POST(request: Request) {
     }
   }
   if (body.template) {
-    const validDefaults = ["classic", "split", "hero"];
+    const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
     const isDefault = validDefaults.includes(body.template);
     const isCustom = typeof body.template === "string" && body.template.startsWith("tmpl_");
     if (!isDefault && !isCustom) {
       return Response.json(
-        { error: "Invalid template. Must be classic, split, hero, or a template ID (tmpl_...)" },
+        { error: "Invalid template. Must be standard-browser, standard-mobile, split-browser, split-mobile, hero, or a template ID (tmpl_...)" },
         { status: 400 }
       );
     }

@@ -24,16 +24,7 @@ export interface BrandRecord {
   updated_at: string
 }
 
-export type DeviceType = 'browser' | 'mobile'
 export type TextAlign = 'left' | 'center' | 'right'
-
-export interface Slide {
-  title: string
-  description?: string
-  imageBase64?: string
-  device: DeviceType
-  align?: TextAlign
-}
 
 export interface ObjectModification {
   id: string
@@ -43,8 +34,7 @@ export interface ObjectModification {
   color?: string
   // Image objects
   image_url?: string
-  device_type?: 'browser' | 'mobile' | 'none'
-  device_color?: 'light' | 'dark'
+  image_frame_color?: string
 }
 
 export interface ReleaseRequest {
@@ -60,13 +50,6 @@ export interface ReleaseRequest {
   font_family?: string
   template?: TemplateName
   slides: Array<{
-    // Legacy flat fields (still supported)
-    title?: string
-    description?: string
-    image_url?: string
-    device?: 'browser' | 'mobile'
-    align?: 'left' | 'center' | 'right'
-    // Primary format: array of object modifications
     objects?: ObjectModification[]
   }>
   formats?: Array<'landscape' | 'square' | 'portrait'>
@@ -86,14 +69,7 @@ export interface ReleaseResult {
   webhook_url?: string
 }
 
-export interface TemplateProps {
-  slide: Slide
-  brand: Brand
-  width: number
-  height: number
-}
-
-export type TemplateName = 'classic' | 'split' | 'hero' | (string & {})
+export type TemplateName = 'standard-browser' | 'standard-mobile' | 'split-browser' | 'split-mobile' | 'hero' | (string & {})
 
 export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
