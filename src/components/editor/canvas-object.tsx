@@ -348,16 +348,16 @@ function renderObjectPreview(
   }
 
   if (obj.type === "image") {
-    const device = obj.device || "none";
+    const imageFrame = obj.imageFrame || "none";
     const checkerboard = "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px";
     const staticImgStyle: React.CSSProperties = obj.src
       ? { width: "100%", height: "100%", objectFit: (obj.objectFit || "cover") as React.CSSProperties["objectFit"], pointerEvents: "none", userSelect: "none" as const }
       : {};
     const contentBg = obj.src ? undefined : checkerboard;
 
-    const isDark = obj.deviceColor === "dark" || (!obj.deviceColor && device === "mobile");
+    const isDark = obj.imageFrameColor === "dark" || (!obj.imageFrameColor && imageFrame === "mobile");
 
-    if (device === "browser") {
+    if (imageFrame === "browser") {
       const titleBarH = 28;
       return (
         <div style={{
@@ -387,7 +387,7 @@ function renderObjectPreview(
       );
     }
 
-    if (device === "mobile") {
+    if (imageFrame === "mobile") {
       const bezel = 6;
       const radius = 24;
       return (
@@ -411,7 +411,7 @@ function renderObjectPreview(
       );
     }
 
-    // device === "none"
+    // imageFrame === "none"
     return (
       <div style={{
         width: "100%", height: "100%",
