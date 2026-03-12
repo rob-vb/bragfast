@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
+import { HeroAnimation } from "@/components/landing/hero-animation";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -96,19 +97,8 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Right: video placeholder in browser chrome */}
-          <div className="border-2 border-brand bg-white shadow-[6px_6px_0_var(--color-brand)]">
-            <div className="border-b-2 border-brand px-3 py-1.5 flex items-center gap-1.5">
-              <span className="block h-2 w-2 border border-brand bg-gold" />
-              <span className="block h-2 w-2 border border-brand bg-surface" />
-              <span className="block h-2 w-2 border border-brand bg-surface" />
-            </div>
-            <div className="aspect-video flex items-center justify-center text-brand/30 bg-surface/50">
-              <p className="font-[family-name:var(--font-press-start)] text-[10px]">
-                [ product video ]
-              </p>
-            </div>
-          </div>
+          {/* Right: animated API demo */}
+          <HeroAnimation />
         </div>
       </section>
 
