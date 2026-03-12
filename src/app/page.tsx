@@ -147,7 +147,7 @@ export default function Home() {
   bragfast.com/api/v1/release \\
   -H "Authorization: Bearer bf_key" \\
   -d '{
-    "template": "classic",
+    "template": "standard-browser",
     "slides": [{
       "objects": [
         { "id": "title",
