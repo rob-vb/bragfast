@@ -43,7 +43,7 @@ export function LandingNav() {
               Features
             </Link>
             <Link
-              href="/coming-soon"
+              href="/demo"
               className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
             >
               Demo
@@ -126,7 +126,7 @@ export function LandingNav() {
             Features
           </Link>
           <Link
-            href="/coming-soon"
+            href="/demo"
             onClick={() => setOpen(false)}
             className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
           >
