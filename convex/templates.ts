@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { CANVAS_DEFAULTS } from "../src/lib/templates/canvas-defaults";
+import { getCanvasDefaultConfig } from "../src/lib/templates/canvas-defaults";
 
 const configValidator = v.object({
   background: v.string(),
@@ -43,7 +43,8 @@ const templateObjectValidator = v.object({
   lineHeight: v.optional(v.number()),
   textAlign: v.optional(v.union(v.literal("left"), v.literal("center"), v.literal("right"))),
   verticalAlign: v.optional(v.union(v.literal("top"), v.literal("center"), v.literal("bottom"))),
-  device: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
+  imageFrame: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
+  imageFrameColor: v.optional(v.string()),
   objectFit: v.optional(v.union(v.literal("cover"), v.literal("contain"))),
   previewText: v.optional(v.string()),
 });
@@ -220,70 +221,20 @@ export const seedDefaults = mutation({
     const now = new Date().toISOString();
 
     const defaults = [
-      {
-        userId: "system",
-        externalId: "tmpl_classic",
-        name: "Classic",
-        isDefault: true,
-        config: {
-          background: "brand",
-          spacing: "normal" as const,
-          blocks: [
-            { type: "logo" as const, alignment: "left" as const },
-            { type: "image" as const, alignment: "center" as const, device: "browser" as const, display: "inline" as const },
-            { type: "title" as const, alignment: "left" as const, fontSize: "large" as const },
-            { type: "description" as const, alignment: "left" as const, fontSize: "medium" as const },
-          ],
-        },
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        userId: "system",
-        externalId: "tmpl_split",
-        name: "Split",
-        isDefault: true,
-        config: {
-          background: "brand",
-          spacing: "normal" as const,
-          blocks: [
-            { type: "logo" as const, alignment: "left" as const },
-            { type: "title" as const, alignment: "left" as const, fontSize: "large" as const, split: "left" as const },
-            { type: "image" as const, alignment: "center" as const, device: "browser" as const, display: "inline" as const, split: "right" as const },
-            { type: "description" as const, alignment: "left" as const, fontSize: "medium" as const },
-          ],
-        },
-        created_at: now,
-        updated_at: now,
-      },
-      {
-        userId: "system",
-        externalId: "tmpl_hero",
-        name: "Hero",
-        isDefault: true,
-        config: {
-          background: "brand",
-          spacing: "normal" as const,
-          blocks: [
-            { type: "image" as const, alignment: "center" as const, device: "none" as const, display: "fullBleed" as const },
-            { type: "title" as const, alignment: "left" as const, fontSize: "large" as const },
-            { type: "description" as const, alignment: "left" as const, fontSize: "medium" as const },
-          ],
-        },
-        created_at: now,
-        updated_at: now,
-      },
-      // v2 canvas defaults — single source of truth from CANVAS_DEFAULTS
-      ...Object.entries(CANVAS_DEFAULTS).map(([key, { name, config }]) => ({
-        userId: "system",
-        externalId: `tmpl_${key}`,
-        name,
-        isDefault: true,
-        config,
-        created_at: now,
-        updated_at: now,
-      })),
-    ];
+      { externalId: "tmpl_standard_browser", name: "Standard Browser", slug: "standard-browser" },
+      { externalId: "tmpl_standard_mobile", name: "Standard Mobile", slug: "standard-mobile" },
+      { externalId: "tmpl_split_browser", name: "Split Browser", slug: "split-browser" },
+      { externalId: "tmpl_split_mobile", name: "Split Mobile", slug: "split-mobile" },
+      { externalId: "tmpl_hero", name: "Hero", slug: "hero" },
+    ].map(({ externalId, name, slug }) => ({
+      userId: "",
+      externalId,
+      name,
+      isDefault: true,
+      config: getCanvasDefaultConfig(slug),
+      created_at: now,
+      updated_at: now,
+    }));
 
     let inserted = 0;
     let updated = 0;
