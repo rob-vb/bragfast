@@ -74,6 +74,7 @@ export interface TemplateObject {
   // Image-only
   src?: string; // Static image URL — baked into template, not overridable by API
   device?: DeviceOption;
+  deviceColor?: 'light' | 'dark';
   objectFit?: ObjectFit;
   borderRadius?: number;
   borderRadiusTL?: number;

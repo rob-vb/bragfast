@@ -6,12 +6,14 @@ interface BrowserFrameProps {
   width: number
   maxHeight?: number
   flush?: boolean
+  color?: 'light' | 'dark'
 }
 
-export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush }: BrowserFrameProps) {
+export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = 'light' }: BrowserFrameProps) {
   const dotSize = 10
   const titleBarHeight = 32
   const imageHeight = maxHeight ? maxHeight - titleBarHeight : undefined
+  const isDark = color === 'dark'
 
   return (
     <div
@@ -21,8 +23,8 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
         width: `${width}px`,
         borderRadius: flush ? '12px 12px 0 0' : '12px',
         overflow: 'hidden',
-        border: '1px solid rgba(0,0,0,0.08)',
-        borderBottom: flush ? 'none' : '1px solid rgba(0,0,0,0.08)',
+        border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+        borderBottom: flush ? 'none' : isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
         boxShadow: '0 12px 48px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10)',
       }}
     >
@@ -32,7 +34,7 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
           display: 'flex',
           alignItems: 'center',
           height: titleBarHeight,
-          backgroundColor: '#F0F0F0',
+          backgroundColor: isDark ? '#2A2A2A' : '#F0F0F0',
           padding: '0 14px',
           gap: 7,
           flexShrink: 0,

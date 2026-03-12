@@ -43,6 +43,8 @@ export interface ObjectModification {
   color?: string
   // Image objects
   image_url?: string
+  device_type?: 'browser' | 'mobile' | 'none'
+  device_color?: 'light' | 'dark'
 }
 
 export interface ReleaseRequest {

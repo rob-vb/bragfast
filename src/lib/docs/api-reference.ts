@@ -257,24 +257,20 @@ while True:
                     description:
                       "The object ID to modify. Find available IDs via GET /api/v1/templates/:id.",
                   },
+                  // Text object properties
                   {
                     name: "text",
                     type: "string",
                     required: false,
+                    group: "text",
                     description:
                       "Replacement text for text objects. Supports \\n for line breaks.",
-                  },
-                  {
-                    name: "image_url",
-                    type: "string",
-                    required: false,
-                    description:
-                      "Image URL for image objects.",
                   },
                   {
                     name: "font_family",
                     type: "string",
                     required: false,
+                    group: "text",
                     description:
                       "Override the font for this specific text object. Takes precedence over the top-level font_family.",
                   },
@@ -282,8 +278,34 @@ while True:
                     name: "color",
                     type: "string",
                     required: false,
+                    group: "text",
                     description:
                       'Override the text color, e.g. "#e94560".',
+                  },
+                  // Image object properties
+                  {
+                    name: "image_url",
+                    type: "string",
+                    required: false,
+                    group: "image",
+                    description:
+                      "Image URL for image objects.",
+                  },
+                  {
+                    name: "device_type",
+                    type: "string",
+                    required: false,
+                    group: "image",
+                    description:
+                      'Override the device frame: "browser", "mobile", or "none". Defaults to the template\'s configured device.',
+                  },
+                  {
+                    name: "device_color",
+                    type: "string",
+                    required: false,
+                    group: "image",
+                    description:
+                      'Device frame color scheme: "light" or "dark". Browser defaults to light, mobile defaults to dark.',
                   },
                 ],
               },
@@ -323,7 +345,7 @@ while True:
         "objects": [
           { "id": "title", "text": "Launched dark mode" },
           { "id": "description", "text": "Your app, your vibe." },
-          { "id": "image", "image_url": "https://example.com/screenshot.png" }
+          { "id": "image", "image_url": "https://example.com/screenshot.png", "device_type": "browser" }
         ]
       }
     ],
@@ -343,7 +365,7 @@ while True:
         objects: [
           { id: "title", text: "Launched dark mode" },
           { id: "description", text: "Your app, your vibe." },
-          { id: "image", image_url: "https://example.com/screenshot.png" },
+          { id: "image", image_url: "https://example.com/screenshot.png", device_type: "browser" },
         ],
       },
     ],
@@ -364,7 +386,7 @@ response = requests.post(
                 "objects": [
                     {"id": "title", "text": "Launched dark mode"},
                     {"id": "description", "text": "Your app, your vibe."},
-                    {"id": "image", "image_url": "https://example.com/screenshot.png"},
+                    {"id": "image", "image_url": "https://example.com/screenshot.png", "device_type": "browser"},
                 ]
             }
         ],

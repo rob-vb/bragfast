@@ -6,13 +6,15 @@ interface MobileFrameProps {
   width: number
   maxHeight?: number
   flush?: boolean
+  color?: 'light' | 'dark'
 }
 
-export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush }: MobileFrameProps) {
+export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = 'dark' }: MobileFrameProps) {
   const bezel = Math.round(width * 0.025)
   const cornerRadius = Math.round(width * 0.12)
   const innerRadius = Math.max(0, cornerRadius - bezel)
   const screenWidth = width - bezel * 2
+  const isDark = color === 'dark'
 
   return (
     <div
@@ -25,7 +27,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
         borderRadius: flush
           ? `${cornerRadius}px ${cornerRadius}px 0 0`
           : `${cornerRadius}px`,
-        backgroundColor: '#1A1A1A',
+        backgroundColor: isDark ? '#1A1A1A' : '#E8E8E8',
         boxShadow: '0 16px 56px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.15)',
         overflow: 'hidden',
       }}

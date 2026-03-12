@@ -13,6 +13,8 @@ export interface ObjectDataMap {
     // Per-object overrides
     fontFamily?: string;
     color?: string;
+    deviceType?: 'browser' | 'mobile' | 'none';
+    deviceColor?: 'light' | 'dark';
   };
 }
 
@@ -171,7 +173,8 @@ function renderObject(
           }} />
         );
       }
-      const device = obj.device || "none";
+      const device = data?.deviceType || obj.device || "none";
+      const deviceColor = data?.deviceColor || obj.deviceColor || (device === "mobile" ? "dark" : "light");
       if (device === "none") {
         return (
           <img
@@ -191,6 +194,7 @@ function renderObject(
             primaryColor={colors.primary}
             width={obj.width}
             maxHeight={obj.height}
+            color={deviceColor}
           />
         );
       }
@@ -200,6 +204,7 @@ function renderObject(
           primaryColor={colors.primary}
           width={obj.width}
           maxHeight={obj.height}
+          color={deviceColor}
         />
       );
     }

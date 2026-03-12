@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import type { ApiParam } from "@/lib/docs/types"
 
 function ParamRow({ param, depth = 0 }: { param: ApiParam; depth?: number }) {
@@ -47,11 +48,39 @@ function ParamRow({ param, depth = 0 }: { param: ApiParam; depth?: number }) {
         </td>
       </tr>
 
-      {param.children?.map((child) => (
-        <ParamRow key={child.name} param={child} depth={depth + 1} />
-      ))}
+      {param.children && <GroupedParamRows params={param.children} depth={depth + 1} />}
     </>
   )
+}
+
+const GROUP_LABELS: Record<string, string> = {
+  text: "Text objects",
+  image: "Image objects",
+}
+
+function GroupedParamRows({ params, depth }: { params: ApiParam[]; depth: number }) {
+  const rows: ReactNode[] = []
+  let lastGroup: string | undefined
+  for (const child of params) {
+    if (child.group && child.group !== lastGroup) {
+      rows.push(
+        <tr key={`group-${child.group}`} className="border-b border-zinc-100">
+          <td
+            colSpan={4}
+            className="pt-4 pb-1.5 align-top"
+            style={{ paddingLeft: `${depth * 16}px` }}
+          >
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300">
+              {GROUP_LABELS[child.group] ?? child.group}
+            </span>
+          </td>
+        </tr>
+      )
+      lastGroup = child.group
+    }
+    rows.push(<ParamRow key={child.name} param={child} depth={depth} />)
+  }
+  return <>{rows}</>
 }
 
 export function ParamTable({ params }: { params: ApiParam[] }) {

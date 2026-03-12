@@ -145,6 +145,8 @@ export async function renderReleaseAsync(
             if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
             if (mod.font_family) entry.fontFamily = mod.font_family;
             if (mod.color) entry.color = mod.color;
+            if (mod.device_type) entry.deviceType = mod.device_type;
+            if (mod.device_color) entry.deviceColor = mod.device_color;
             dataMap[mod.id] = entry;
           }
           return dataMap;

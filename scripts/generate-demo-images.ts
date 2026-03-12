@@ -60,8 +60,9 @@ function buildPayload(
   font: string
 ) {
   const preset = UPDATE_TYPES[type];
-  const useDevice =
-    type === "bugs" && template === "hero" ? undefined : preset.device;
+  // hero+bugs: no device frame, but still include background image
+  const device_type =
+    type === "bugs" && template === "hero" ? "none" : preset.device;
 
   return {
     template,
@@ -77,16 +78,12 @@ function buildPayload(
         objects: [
           { id: "title", text: preset.title },
           { id: "description", text: preset.description },
-          ...(useDevice
-            ? [
-                {
-                  id: "image",
-                  image_url: `https://images.unsplash.com/${preset.image}`,
-                },
-              ]
-            : []),
+          {
+            id: "image",
+            image_url: `https://images.unsplash.com/${preset.image}`,
+            device_type,
+          },
         ],
-        ...(useDevice ? { device: useDevice } : {}),
       },
     ],
     formats: [...FORMATS],
@@ -150,16 +147,6 @@ async function main() {
     for (const type of Object.keys(UPDATE_TYPES) as UpdateType[]) {
       for (const font of FONTS) {
         const label = `${template}-${type}-${slugify(font)}`;
-
-        // Skip if all 3 format images already exist
-        const allExist = FORMATS.every((f) =>
-          existsSync(path.join(destDir, `${label}-${f}.jpg`))
-        );
-        if (allExist) {
-          console.log(`Skipping ${label} (already exists)`);
-          total += 3;
-          continue;
-        }
 
         console.log(`Generating ${label}...`);
 

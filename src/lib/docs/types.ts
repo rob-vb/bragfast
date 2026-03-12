@@ -6,6 +6,7 @@ export interface ApiParam {
   required: boolean
   description: string
   children?: ApiParam[]
+  group?: string
 }
 
 export interface CodeExample {

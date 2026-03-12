@@ -48,12 +48,13 @@ const FONT_FAMILY_MAP: Record<string, string> = {
 const SLIDE_OBJECTS: Record<string, string> = {
   website: `{ "id": "title", "text": "Fresh new look" },
         { "id": "description", "text": "We redesigned our website from the ground up" },
-        { "id": "image", "image_url": "https://..." }`,
+        { "id": "image", "image_url": "https://...", "device_type": "browser" }`,
   mobile: `{ "id": "title", "text": "Now on mobile" },
         { "id": "description", "text": "Take it anywhere with our brand new mobile app" },
-        { "id": "image", "image_url": "https://..." }`,
+        { "id": "image", "image_url": "https://...", "device_type": "mobile" }`,
   bugs: `{ "id": "title", "text": "Squashed 12 bugs" },
-        { "id": "description", "text": "Stability and performance improvements across the board" }`,
+        { "id": "description", "text": "Stability and performance improvements across the board" },
+        { "id": "image", "image_url": "https://...", "device_type": "browser" }`,
 };
 
 function imagePath(template: string, type: string, font: string, format: string) {
@@ -129,7 +130,7 @@ export default function DemoPage() {
               See the kitchen in action
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 max-w-2xl mx-auto leading-relaxed">
-              Pick a template, tweak the ingredients. Three formats, zero signup.
+              Pick a template, tweak the ingredients.
             </p>
           </div>
 
@@ -231,7 +232,7 @@ export default function DemoPage() {
           )}
 
           {/* Image Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-10 md:mb-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-4 md:gap-6 mb-10 md:mb-14">
             {FORMATS.map((format) => (
               <div key={format} className="border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)]">
                 {/* Format label bar */}
