@@ -6,15 +6,14 @@ interface MobileFrameProps {
   width: number
   maxHeight?: number
   flush?: boolean
-  color?: 'light' | 'dark'
+  color?: string  // hex color for frame chrome
 }
 
-export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = 'dark' }: MobileFrameProps) {
+export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#1A1A1A' }: MobileFrameProps) {
   const bezel = Math.round(width * 0.025)
   const cornerRadius = Math.round(width * 0.12)
   const innerRadius = Math.max(0, cornerRadius - bezel)
   const screenWidth = width - bezel * 2
-  const isDark = color === 'dark'
 
   return (
     <div
@@ -27,7 +26,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
         borderRadius: flush
           ? `${cornerRadius}px ${cornerRadius}px 0 0`
           : `${cornerRadius}px`,
-        backgroundColor: isDark ? '#1A1A1A' : '#E8E8E8',
+        backgroundColor: color,
         boxShadow: '0 16px 56px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.15)',
         overflow: 'hidden',
       }}
