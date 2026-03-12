@@ -1,0 +1,97 @@
+/* src/components/landing/hero-animation.css */
+
+/* Line 1: curl -X POST bragfast.com/api/v1/release \ (42 chars) */
+@keyframes type-line1 {
+  0% { width: 0; opacity: 1; }
+  0.1% { opacity: 1; }
+  15% { width: 42ch; opacity: 1; }
+  96% { opacity: 1; }
+  100% { opacity: 0; width: 42ch; }
+}
+
+/* Line 2:   -d '{ "title": "Dark mode is here" }' (39 chars) */
+@keyframes type-line2 {
+  0%, 15% { width: 0; opacity: 0; }
+  15.1% { opacity: 1; }
+  29% { width: 39ch; opacity: 1; }
+  96% { opacity: 1; }
+  100% { opacity: 0; width: 39ch; }
+}
+
+/* Blinking cursor — used on a ▌ span */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Cursor visibility — only visible during typing phases */
+@keyframes cursor-visible {
+  0% { opacity: 1; }
+  29% { opacity: 1; }
+  29.1% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* 202 Accepted response */
+@keyframes fade-202 {
+  0%, 29% { opacity: 0; }
+  38% { opacity: 1; }
+  96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Processing dots — pulses opacity */
+@keyframes fade-processing {
+  0%, 38% { opacity: 0; }
+  42% { opacity: 1; }
+  47% { opacity: 0.4; }
+  51% { opacity: 1; }
+  56% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* 200 OK webhook */
+@keyframes fade-200 {
+  0%, 56% { opacity: 0; }
+  62% { opacity: 1; }
+  96% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Image fan: landscape (first) */
+@keyframes fan-landscape {
+  0%, 62% { opacity: 0; transform: translateY(20px) rotate(-6deg); }
+  68% { opacity: 1; transform: translateY(0) rotate(-6deg); }
+  96% { opacity: 1; transform: translateY(0) rotate(-6deg); }
+  100% { opacity: 0; transform: translateY(20px) rotate(-6deg); }
+}
+
+/* Image fan: square (second, +150ms ≈ +1.7%) */
+@keyframes fan-square {
+  0%, 63.7% { opacity: 0; transform: translateY(20px) rotate(0deg); }
+  69.7% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  96% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(20px) rotate(0deg); }
+}
+
+/* Image fan: portrait (third, +300ms ≈ +3.5%) */
+@keyframes fan-portrait {
+  0%, 65.5% { opacity: 0; transform: translateY(20px) rotate(6deg); }
+  71.5% { opacity: 1; transform: translateY(0) rotate(6deg); }
+  96% { opacity: 1; transform: translateY(0) rotate(6deg); }
+  100% { opacity: 0; transform: translateY(20px) rotate(6deg); }
+}
+
+/* Reduced motion: show final state statically */
+@media (prefers-reduced-motion: reduce) {
+  .hero-animation [style*="animation"] {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .hero-animation .hero-typing {
+    width: auto !important;
+  }
+  .hero-animation .hero-fan-img {
+    transform: none !important;
+  }
+}
