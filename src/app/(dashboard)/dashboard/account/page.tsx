@@ -6,6 +6,7 @@ import { PixelCard } from "@/components/dashboard/pixel-card";
 import { KeyManager } from "@/components/dashboard/key-manager";
 import { DeleteAccountDialog } from "@/components/dashboard/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
+import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
 
 function CreditBar({ used, total }: { used: number; total: number }) {
@@ -63,12 +64,15 @@ export default async function AccountPage() {
                 </p>
               )}
             </div>
-            <Link
-              href="/dashboard/account/upgrade"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              {isTrial ? "View Plans" : "Upgrade"}
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              {!isTrial && <ManageBillingButton />}
+              <Link
+                href="/dashboard/account/upgrade"
+                className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                {isTrial ? "View Plans" : "Upgrade"}
+              </Link>
+            </div>
           </div>
 
           {/* Credit bar */}
