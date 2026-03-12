@@ -14,6 +14,8 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
   const cornerRadius = Math.round(width * 0.12)
   const innerRadius = Math.max(0, cornerRadius - bezel)
   const screenWidth = width - bezel * 2
+  const totalBezel = flush ? bezel : bezel * 2
+  const imageHeight = maxHeight ? maxHeight - totalBezel : undefined
 
   return (
     <div
@@ -52,6 +54,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
           style={{
             display: 'flex',
             width: `${screenWidth}px`,
+            height: imageHeight ? `${imageHeight}px` : undefined,
             objectFit: 'cover',
             objectPosition: 'top',
             borderRadius: flush

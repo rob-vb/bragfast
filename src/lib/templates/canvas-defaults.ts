@@ -126,7 +126,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         landscape: {
           objects: [
             { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 263, width: 502, height: 67, zIndex: 2 },
-            { id: "image", type: "image", name: "image", x: 770, y: 64, width: 300, height: 547, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
+            { id: "image", type: "image", name: "image", x: 730, y: 48, width: 390, height: 700, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
             { ...textObj("description", { lineHeight: 1.5 }), x: 64, y: 338, width: 502, height: 153, fontSize: 24, zIndex: 3 },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 199, width: 418, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
@@ -134,14 +134,14 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         square: {
           objects: [
             { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 59, y: 379, width: 429, height: 186, zIndex: 2 },
-            { id: "image", type: "image", name: "image", x: 590, y: 96, width: 420, height: 890, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
+            { id: "image", type: "image", name: "image", x: 570, y: 80, width: 460, height: 1100, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
             { ...textObj("description", { lineHeight: 1.5 }), x: 59, y: 585, width: 429, height: 401, fontSize: 24, zIndex: 3 },
             { id: "logo", type: "logo", name: "logo", x: 59, y: 311, width: 406, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 578, y: 91, width: 602, height: 1752, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
+            { id: "image", type: "image", name: "image", x: 578, y: 91, width: 602, height: 2000, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
             { ...textObj("title", { fontSize: 72, verticalAlign: "bottom", fontWeight: 700 }), x: 48, y: 726, width: 458, height: 200, zIndex: 2 },
             { ...textObj("description", { lineHeight: 1.5 }), x: 48, y: 944, width: 458, height: 899, fontSize: 24, zIndex: 3 },
             { id: "logo", type: "logo", name: "logo", x: 48, y: 672, width: 431, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
