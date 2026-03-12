@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
+import { EditorMockup } from "@/components/landing/editor-mockup";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -203,13 +204,26 @@ export default function Home() {
                 Set up a workflow once. Every time you ship, brag.fast cooks up
                 branded images in every format you need.
               </p>
-              <Link
-                href="/docs"
-                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              <span
+                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand/40 border-2 border-brand/30 bg-white cursor-not-allowed"
               >
-                See Integrations
-              </Link>
+                Tutorials coming soon
+              </span>
             </div>
+          </div>
+
+          {/* Row 3: Template Editor — text left, mockup right */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+                Design your templates
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                If you don't want to use the default templates you can use the visual editor to unleash your creativity and create your own.
+                
+              </p>
+            </div>
+            <EditorMockup />
           </div>
 
         </div>

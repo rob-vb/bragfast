@@ -1,0 +1,71 @@
+/* Editor mockup animation — objects appear one by one on canvas */
+/* Full loop: 10s */
+/* Phase 1: Logo fades in (0-12%) */
+/* Phase 2: Title drops in (12-28%) */
+/* Phase 3: Image slides in (28-48%) */
+/* Phase 4: Hold (48-90%) */
+/* Phase 5: Reset (90-100%) */
+
+/* Object list highlights — synced with canvas */
+@keyframes highlight-logo {
+  0% { background: transparent; }
+  2% { background: var(--color-gold); }
+  12% { background: var(--color-gold); }
+  12.1% { background: transparent; }
+  90% { background: transparent; }
+  100% { background: transparent; }
+}
+
+@keyframes highlight-title {
+  0%, 12% { background: transparent; }
+  12.1% { background: var(--color-gold); }
+  28% { background: var(--color-gold); }
+  28.1% { background: transparent; }
+  100% { background: transparent; }
+}
+
+@keyframes highlight-image {
+  0%, 28% { background: transparent; }
+  28.1% { background: var(--color-gold); }
+  48% { background: var(--color-gold); }
+  48.1% { background: transparent; }
+  100% { background: transparent; }
+}
+
+/* Canvas objects appearing */
+@keyframes canvas-logo {
+  0% { opacity: 0; transform: scale(0.8); }
+  8% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes canvas-title {
+  0%, 12% { opacity: 0; transform: translateY(-10px); }
+  22% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes canvas-image {
+  0%, 28% { opacity: 0; transform: translateY(10px); }
+  40% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+/* Format indicator pulse */
+@keyframes format-pulse {
+  0%, 48% { opacity: 0; }
+  52% { opacity: 1; }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-mockup [style*="animation"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

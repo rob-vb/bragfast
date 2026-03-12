@@ -15,8 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import Image from "next/image";
-
 export interface TemplateCardProps {
   id: string;
   displayId?: string;
@@ -33,7 +31,6 @@ export function TemplateCard({
   displayId,
   name,
   isDefault,
-  previewUrl,
   isV2 = true,
   onClone,
   onDelete,
@@ -42,24 +39,6 @@ export function TemplateCard({
 
   return (
     <PixelCard className="flex flex-col gap-3">
-      {/* Preview thumbnail (default templates only) */}
-      {isDefault && (
-        <div className="relative aspect-video w-full overflow-hidden border-2 border-brand bg-gray-100 flex items-center justify-center">
-          {previewUrl ? (
-            <Image
-              src={previewUrl}
-              alt={`${name} preview`}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <span className="text-xs text-brand/40 font-[family-name:var(--font-press-start)]">
-              No preview
-            </span>
-          )}
-        </div>
-      )}
-
       {/* Name + badge */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-[family-name:var(--font-press-start)] text-xs text-brand truncate">

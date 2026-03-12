@@ -37,9 +37,12 @@ export default async function TemplatesPage() {
   });
 
   // Only show v2 canvas defaults (have version: 2 in config)
-  const v2Defaults = defaultTemplates.filter(
-    (t) => typeof t.config === "object" && t.config !== null && (t.config as Record<string, unknown>).version === 2
-  );
+  const defaultOrder = Object.keys(defaultDisplayIds);
+  const v2Defaults = defaultTemplates
+    .filter(
+      (t) => typeof t.config === "object" && t.config !== null && (t.config as Record<string, unknown>).version === 2
+    )
+    .sort((a, b) => defaultOrder.indexOf(a.externalId) - defaultOrder.indexOf(b.externalId));
 
   return (
     <div className="space-y-6">
