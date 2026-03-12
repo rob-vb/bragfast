@@ -20,7 +20,7 @@ export default defineSchema({
     name: v.string(),
     logo_url: v.optional(v.string()),
     website: v.optional(v.string()),
-    font: v.optional(v.string()),
+    font_family: v.optional(v.string()),
     colors: v.object({
       background: v.string(),
       text: v.string(),

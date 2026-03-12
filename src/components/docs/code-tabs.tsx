@@ -19,17 +19,17 @@ export function CodeTabs({
   const [active, setActive] = useState<TabKey>("curl")
 
   return (
-    <div className="overflow-hidden border-2 border-brand">
-      <div className="flex border-b border-brand/30 bg-brand">
+    <div className="rounded-lg overflow-hidden">
+      <div className="flex bg-[#1c2028] px-2 pt-2 gap-0.5">
         {(Object.keys(TAB_LABELS) as TabKey[]).map((key) => (
           <button
             key={key}
             onClick={() => setActive(key)}
             className={cn(
-              "px-3 sm:px-4 py-2.5 text-xs font-medium transition-colors min-w-[64px]",
+              "px-3 py-1.5 text-xs font-medium transition-colors rounded-t-md",
               active === key
-                ? "text-gold bg-brand/80"
-                : "text-surface/50 hover:text-surface/80 active:text-surface"
+                ? "text-zinc-200 bg-[#24292e]"
+                : "text-zinc-500 hover:text-zinc-400"
             )}
           >
             {TAB_LABELS[key]}

@@ -29,15 +29,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "Maximum 5 slides allowed" }, { status: 400 });
   }
   for (const slide of body.slides) {
-    // New format uses objects map; legacy format requires title
     if (!slide.objects && !slide.title) {
-      return Response.json({ error: "Each slide must have a title or objects" }, { status: 400 });
+      return Response.json({ error: "Each slide requires an objects array. See GET /api/v1/templates/:id for available object IDs." }, { status: 400 });
     }
-    if (slide.device && !["browser", "mobile"].includes(slide.device)) {
-      return Response.json({ error: "Invalid device. Use: browser, mobile" }, { status: 400 });
-    }
-    if (slide.align && !["left", "center", "right"].includes(slide.align)) {
-      return Response.json({ error: "Invalid align. Use: left, center, right" }, { status: 400 });
+    if (slide.objects) {
+      if (!Array.isArray(slide.objects)) {
+        return Response.json({ error: "slides[].objects must be an array" }, { status: 400 });
+      }
+      for (const mod of slide.objects) {
+        if (!mod.id || typeof mod.id !== "string") {
+          return Response.json({ error: "Each object requires a string id" }, { status: 400 });
+        }
+      }
     }
   }
   if (body.template) {

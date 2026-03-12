@@ -28,7 +28,7 @@ export default async function EditBrandPage({
           name: brand.name,
           logo_url: brand.logo_url,
           website: brand.website,
-          font: brand.font,
+          font_family: brand.font_family,
           colors: brand.colors,
         }}
       />

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       name: b.name,
       logo_url: b.logo_url,
       website: b.website,
-      font: b.font,
+      font_family: b.font_family,
       colors: b.colors,
       created_at: b.created_at,
       updated_at: b.updated_at,
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       name: body.name,
       logo_url: typeof body.logo_url === "string" ? body.logo_url : undefined,
       website: typeof body.website === "string" ? body.website : undefined,
-      font: typeof body.font === "string" ? body.font : undefined,
+      font_family: typeof body.font_family === "string" ? body.font_family : undefined,
       colors: {
         background: colors.background,
         text: colors.text,

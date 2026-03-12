@@ -7,7 +7,7 @@ export const create = mutation({
     name: v.string(),
     logo_url: v.optional(v.string()),
     website: v.optional(v.string()),
-    font: v.optional(v.string()),
+    font_family: v.optional(v.string()),
     colors: v.object({
       background: v.string(),
       text: v.string(),
@@ -28,7 +28,7 @@ export const create = mutation({
       name: args.name,
       logo_url: args.logo_url,
       website: args.website,
-      font: args.font,
+      font_family: args.font_family,
       colors: args.colors,
       created_at: now,
       updated_at: now,
@@ -61,7 +61,7 @@ export const update = mutation({
     name: v.optional(v.string()),
     logo_url: v.optional(v.string()),
     website: v.optional(v.string()),
-    font: v.optional(v.string()),
+    font_family: v.optional(v.string()),
     colors: v.optional(
       v.object({
         background: v.optional(v.string()),
@@ -83,7 +83,7 @@ export const update = mutation({
     if (updates.name !== undefined) patch.name = updates.name;
     if (updates.logo_url !== undefined) patch.logo_url = updates.logo_url;
     if (updates.website !== undefined) patch.website = updates.website;
-    if (updates.font !== undefined) patch.font = updates.font;
+    if (updates.font_family !== undefined) patch.font_family = updates.font_family;
     if (updates.colors) {
       patch.colors = { ...brand.colors, ...updates.colors };
     }
@@ -96,7 +96,7 @@ export const update = mutation({
           name: updated.name,
           logo_url: updated.logo_url,
           website: updated.website,
-          font: updated.font,
+          font_family: updated.font_family,
           colors: updated.colors,
           created_at: updated.created_at,
           updated_at: updated.updated_at,

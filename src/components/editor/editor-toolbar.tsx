@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useEditor } from "./editor-context";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Undo2, Redo2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ onSave }: EditorToolbarProps) {
   const router = useRouter();
-  const { state, dispatch } = useEditor();
+  const { state, dispatch, canUndo, canRedo } = useEditor();
   const [saving, setSaving] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -93,6 +93,29 @@ export function EditorToolbar({ onSave }: EditorToolbarProps) {
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Unsaved changes" />
         )}
       </div>
+
+      {/* Undo / Redo */}
+      <div className="flex items-center gap-0.5">
+        <button
+          onClick={() => dispatch({ type: "UNDO" })}
+          disabled={!canUndo}
+          className="w-7 h-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors disabled:text-zinc-300 disabled:hover:bg-transparent disabled:cursor-default"
+          title={`Undo (${isMac ? "\u2318" : "Ctrl+"}Z)`}
+        >
+          <Undo2 className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => dispatch({ type: "REDO" })}
+          disabled={!canRedo}
+          className="w-7 h-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors disabled:text-zinc-300 disabled:hover:bg-transparent disabled:cursor-default"
+          title={`Redo (${isMac ? "\u2318\u21E7" : "Ctrl+Shift+"}Z)`}
+        >
+          <Redo2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-5 bg-zinc-200" />
 
       {/* Save */}
       <div className="flex items-center gap-2">

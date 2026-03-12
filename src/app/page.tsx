@@ -149,8 +149,12 @@ export default function Home() {
   -d '{
     "template": "classic",
     "slides": [{
-      "title": "Dark mode is here",
-      "image_url": "https://..."
+      "objects": [
+        { "id": "title",
+          "text": "Dark mode is here" },
+        { "id": "image",
+          "image_url": "https://..." }
+      ]
     }],
     "formats": ["landscape",
       "square", "portrait"]

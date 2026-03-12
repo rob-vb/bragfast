@@ -86,7 +86,7 @@ async function resolveBrand(request: ReleaseRequest): Promise<Brand> {
           : "",
         website: record.website ?? "",
         colors: record.colors,
-        font: record.font,
+        font_family: record.font_family,
       };
     }
   }
@@ -99,7 +99,7 @@ async function resolveBrand(request: ReleaseRequest): Promise<Brand> {
       : "",
     website: "",
     colors: request.colors!,
-    font: request.font,
+    font_family: request.font_family,
   };
 }
 
@@ -138,13 +138,14 @@ export async function renderReleaseAsync(
     const slideDataMaps: ObjectDataMap[] = await Promise.all(
       request.slides.map(async (s) => {
         if (s.objects) {
-          // New format: objects keyed by ID
           const dataMap: ObjectDataMap = {};
-          for (const [id, val] of Object.entries(s.objects)) {
+          for (const mod of s.objects) {
             const entry: ObjectDataMap[string] = {};
-            if (val.text) entry.text = val.text;
-            if (val.url) entry.imageBase64 = await fetchImageAsBase64(val.url);
-            dataMap[id] = entry;
+            if (mod.text) entry.text = mod.text;
+            if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
+            if (mod.font_family) entry.fontFamily = mod.font_family;
+            if (mod.color) entry.color = mod.color;
+            dataMap[mod.id] = entry;
           }
           return dataMap;
         }
@@ -208,13 +209,24 @@ export async function renderReleaseAsync(
       const slideUrls: string[] = [];
 
       // Font loading per-format: canvas configs may use different fonts per format
-      // Also load brand font if it overrides the template's fonts
+      // Also load brand font and any per-object font overrides
       let fonts = isCanvas
         ? await loadFontsForObjects((templateConfig as CanvasTemplateConfig).formats[format as FormatKey].objects)
-        : await loadFontsForFamily(brand.font);
-      if (isCanvas && brand.font) {
-        const brandFonts = await loadFontsForFamily(brand.font);
+        : await loadFontsForFamily(brand.font_family);
+      if (isCanvas && brand.font_family) {
+        const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
+      }
+      // Load fonts for per-object font_family overrides
+      const overrideFamilies = new Set<string>();
+      for (const dataMap of slideDataMaps) {
+        for (const entry of Object.values(dataMap)) {
+          if (entry.fontFamily) overrideFamilies.add(entry.fontFamily);
+        }
+      }
+      for (const family of overrideFamilies) {
+        const overrideFonts = await loadFontsForFamily(family);
+        fonts = [...fonts, ...overrideFonts];
       }
 
       for (let i = 0; i < slideDataMaps.length; i++) {

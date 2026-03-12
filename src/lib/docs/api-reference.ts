@@ -40,7 +40,7 @@ curl -X POST https://bragfast.com/api/v1/release \\
   -H "Content-Type: application/json" \\
   -d '{
     "brand_id": "brd_abc123",
-    "slides": [{ "title": "Shipped v2.0" }],
+    "slides": [{ "objects": [{ "id": "title", "text": "Shipped v2.0" }] }],
     "webhook_url": "https://your-app.com/webhooks/bragfast"
   }'
 
@@ -56,7 +56,7 @@ const release = await fetch("https://bragfast.com/api/v1/release", {
   },
   body: JSON.stringify({
     brand_id: "brd_abc123",
-    slides: [{ title: "Shipped v2.0" }],
+    slides: [{ objects: [{ id: "title", text: "Shipped v2.0" }] }],
     webhook_url: "https://your-app.com/webhooks/bragfast",
   }),
 }).then(r => r.json())
@@ -79,7 +79,7 @@ release = requests.post(
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brd_abc123",
-        "slides": [{"title": "Shipped v2.0"}],
+        "slides": [{"objects": [{"id": "title", "text": "Shipped v2.0"}]}],
         "webhook_url": "https://your-app.com/webhooks/bragfast",
     },
 ).json()
@@ -175,14 +175,14 @@ while True:
         anchor: "create-release",
         title: "Create a release",
         description:
-          "Creates a new release and queues image generation. Returns 202 immediately — your images are cooking in the background. Poll the GET endpoint or use a webhook to know when they're served.",
+          "Creates a new release and queues image generation. Returns 202 immediately — your images are cooking in the background. Poll the GET endpoint or use a webhook to know when they're served.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
         params: [
           {
             name: "brand_id",
             type: "string",
             required: false,
             description:
-              "ID of a saved brand kit (e.g. \"brd_abc123\"). If omitted, you must provide inline colors.",
+              "ID of a saved brand kit (e.g. \"brd_abc123\"). If not provided, you must provide colors.",
           },
           {
             name: "colors",
@@ -224,11 +224,11 @@ while True:
             description: "URL to your logo image. Used with inline colors.",
           },
           {
-            name: "font",
+            name: "font_family",
             type: "string",
             required: false,
             description:
-              'Google Font name, e.g. "Inter". See the Fonts endpoint for the full menu.',
+              'Google Font applied to all text objects in the release, e.g. "Inter". Overrides the brand\'s font. Individual objects can override this with their own font_family. See the Fonts endpoint for the full menu.',
           },
           {
             name: "template",
@@ -244,50 +244,46 @@ while True:
             description: "1\u20135 slides to render. Each slide becomes one image per format.",
             children: [
               {
-                name: "title",
-                type: "string",
-                required: false,
-                description: "Slide headline. Required for default templates, optional when using objects.",
-              },
-              {
-                name: "description",
-                type: "string",
-                required: false,
-                description: "Subtitle or body text. Supports \\n for line breaks.",
-              },
-              {
-                name: "image_url",
-                type: "string",
-                required: false,
-                description: "URL to a screenshot or product image.",
-              },
-              {
-                name: "device",
-                type: "string",
-                required: false,
-                description:
-                  '"browser" or "mobile". Wraps the image in a device frame.',
-              },
-              {
-                name: "align",
-                type: "string",
-                required: false,
-                description:
-                  '"left", "center", or "right". Text alignment for the slide.',
-              },
-              {
                 name: "objects",
-                type: "object",
-                required: false,
+                type: "array",
+                required: true,
                 description:
-                  "For custom templates: a map of object IDs to their data. Get the available IDs from GET /api/v1/templates/:id. Each entry can have text and/or url.",
+                  "A list of modifications to the template's objects. Each entry targets an object by ID and provides its content, plus optional overrides. Default templates use IDs: title, description, image. Custom templates define their own — get them from GET /api/v1/templates/:id.",
                 children: [
                   {
-                    name: "<object_id>",
-                    type: "object",
+                    name: "id",
+                    type: "string",
+                    required: true,
+                    description:
+                      "The object ID to modify. Find available IDs via GET /api/v1/templates/:id.",
+                  },
+                  {
+                    name: "text",
+                    type: "string",
                     required: false,
                     description:
-                      'Object data keyed by ID. e.g. { "title_1": { "text": "Hello" }, "image_1": { "url": "https://..." } }',
+                      "Replacement text for text objects. Supports \\n for line breaks.",
+                  },
+                  {
+                    name: "image_url",
+                    type: "string",
+                    required: false,
+                    description:
+                      "Image URL for image objects.",
+                  },
+                  {
+                    name: "font_family",
+                    type: "string",
+                    required: false,
+                    description:
+                      "Override the font for this specific text object. Takes precedence over the top-level font_family.",
+                  },
+                  {
+                    name: "color",
+                    type: "string",
+                    required: false,
+                    description:
+                      'Override the text color, e.g. "#e94560".',
                   },
                 ],
               },
@@ -324,10 +320,11 @@ while True:
     "template": "classic",
     "slides": [
       {
-        "title": "Launched dark mode",
-        "description": "Your app, your vibe.",
-        "image_url": "https://example.com/screenshot.png",
-        "device": "browser"
+        "objects": [
+          { "id": "title", "text": "Launched dark mode" },
+          { "id": "description", "text": "Your app, your vibe." },
+          { "id": "image", "image_url": "https://example.com/screenshot.png" }
+        ]
       }
     ],
     "formats": ["landscape", "square"]
@@ -343,10 +340,11 @@ while True:
     template: "classic",
     slides: [
       {
-        title: "Launched dark mode",
-        description: "Your app, your vibe.",
-        image_url: "https://example.com/screenshot.png",
-        device: "browser",
+        objects: [
+          { id: "title", text: "Launched dark mode" },
+          { id: "description", text: "Your app, your vibe." },
+          { id: "image", image_url: "https://example.com/screenshot.png" },
+        ],
       },
     ],
     formats: ["landscape", "square"],
@@ -363,10 +361,11 @@ response = requests.post(
         "template": "classic",
         "slides": [
             {
-                "title": "Launched dark mode",
-                "description": "Your app, your vibe.",
-                "image_url": "https://example.com/screenshot.png",
-                "device": "browser",
+                "objects": [
+                    {"id": "title", "text": "Launched dark mode"},
+                    {"id": "description", "text": "Your app, your vibe."},
+                    {"id": "image", "image_url": "https://example.com/screenshot.png"},
+                ]
             }
         ],
         "formats": ["landscape", "square"],
@@ -381,92 +380,6 @@ data = response.json()`,
   "images": null,
   "credits_used": 2,
   "credits_remaining": 28,
-  "created_at": "2026-03-09T12:00:00.000Z",
-  "metadata": null
-}`,
-      },
-      {
-        method: "POST",
-        path: "/api/v1/release",
-        anchor: "create-release-objects",
-        title: "Create a release (custom template)",
-        description:
-          "When using a custom template, pass an objects map instead of title/description/image_url. The keys are the object IDs from the template — you can find them via GET /api/v1/templates/:id.",
-        params: [
-          {
-            name: "slides[].objects",
-            type: "object",
-            required: true,
-            description:
-              "Map of object IDs to data. Text objects take { text }, image objects take { url }.",
-          },
-        ],
-        requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/release \\
-  -H "Authorization: Bearer bf_your_api_key" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "brand_id": "brd_abc123",
-    "template": "tmpl_abc123def456",
-    "slides": [
-      {
-        "objects": {
-          "title_1": { "text": "Launched dark mode" },
-          "desc_1": { "text": "Your most requested feature." },
-          "image_1": { "url": "https://example.com/screenshot.png" }
-        }
-      }
-    ]
-  }'`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/release", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer bf_your_api_key",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    brand_id: "brd_abc123",
-    template: "tmpl_abc123def456",
-    slides: [
-      {
-        objects: {
-          title_1: { text: "Launched dark mode" },
-          desc_1: { text: "Your most requested feature." },
-          image_1: { url: "https://example.com/screenshot.png" },
-        },
-      },
-    ],
-  }),
-})
-const data = await response.json()`,
-          python: `import requests
-
-response = requests.post(
-    "https://bragfast.com/api/v1/release",
-    headers={"Authorization": "Bearer bf_your_api_key"},
-    json={
-        "brand_id": "brd_abc123",
-        "template": "tmpl_abc123def456",
-        "slides": [
-            {
-                "objects": {
-                    "title_1": {"text": "Launched dark mode"},
-                    "desc_1": {"text": "Your most requested feature."},
-                    "image_1": {"url": "https://example.com/screenshot.png"},
-                }
-            }
-        ],
-    },
-)
-data = response.json()`,
-        },
-        responseStatus: 202,
-        responseExample: `{
-  "release_id": "rel_def456",
-  "status": "pending",
-  "images": null,
-  "credits_used": 3,
-  "credits_remaining": 18,
   "created_at": "2026-03-09T12:00:00.000Z",
   "metadata": null
 }`,
@@ -544,7 +457,7 @@ data = response.json()`,
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
-  "font": "Inter",
+  "font_family": "Inter",
   "colors": {
     "background": "#1a1a2e",
     "text": "#ffffff",
@@ -606,7 +519,7 @@ data = response.json()`,
             description: "Your website URL.",
           },
           {
-            name: "font",
+            name: "font_family",
             type: "string",
             required: false,
             description: 'Google Font name, e.g. "Inter". See the Fonts endpoint for options.',
@@ -625,7 +538,7 @@ data = response.json()`,
     },
     "logo_url": "https://example.com/logo.png",
     "website": "https://acme.com",
-    "font": "Inter"
+    "font_family": "Inter"
   }'`,
           javascript: `const response = await fetch("https://bragfast.com/api/v1/brands", {
   method: "POST",
@@ -642,7 +555,7 @@ data = response.json()`,
     },
     logo_url: "https://example.com/logo.png",
     website: "https://acme.com",
-    font: "Inter",
+    font_family: "Inter",
   }),
 })
 const data = await response.json()`,
@@ -660,7 +573,7 @@ response = requests.post(
         },
         "logo_url": "https://example.com/logo.png",
         "website": "https://acme.com",
-        "font": "Inter",
+        "font_family": "Inter",
     },
 )
 data = response.json()`,
@@ -671,7 +584,7 @@ data = response.json()`,
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
-  "font": "Inter",
+  "font_family": "Inter",
   "colors": {
     "background": "#1a1a2e",
     "text": "#ffffff",
@@ -721,7 +634,7 @@ data = response.json()`,
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
-  "font": "Inter",
+  "font_family": "Inter",
   "colors": {
     "background": "#1a1a2e",
     "text": "#ffffff",
@@ -761,7 +674,7 @@ data = response.json()`,
     "name": "Acme Inc",
     "logo_url": "https://example.com/logo.png",
     "website": "https://acme.com",
-    "font": "Inter",
+    "font_family": "Inter",
     "colors": {
       "background": "#1a1a2e",
       "text": "#ffffff",
@@ -832,7 +745,7 @@ data = response.json()`,
             description: "New website URL.",
           },
           {
-            name: "font",
+            name: "font_family",
             type: "string",
             required: false,
             description: "New Google Font name.",
@@ -874,7 +787,7 @@ data = response.json()`,
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
-  "font": "Inter",
+  "font_family": "Inter",
   "colors": {
     "background": "#1a1a2e",
     "text": "#ffffff",

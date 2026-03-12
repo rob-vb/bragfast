@@ -25,7 +25,7 @@ export async function GET(
     name: brand.name,
     logo_url: brand.logo_url,
     website: brand.website,
-    font: brand.font,
+    font_family: brand.font_family,
     colors: brand.colors,
     created_at: brand.created_at,
     updated_at: brand.updated_at,
@@ -53,7 +53,7 @@ export async function PATCH(
   if (typeof body.name === "string") updates.name = body.name;
   if (typeof body.logo_url === "string") updates.logo_url = body.logo_url;
   if (typeof body.website === "string") updates.website = body.website;
-  if (typeof body.font === "string") updates.font = body.font;
+  if (typeof body.font_family === "string") updates.font_family = body.font_family;
   if (body.colors && typeof body.colors === "object" && !Array.isArray(body.colors)) {
     const c = body.colors as Record<string, unknown>;
     const colorsUpdate: Record<string, string> = {};

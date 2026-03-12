@@ -37,10 +37,11 @@ interface UndoableState {
   current: EditorState;
   past: EditorState[];
   future: EditorState[];
+  preDrag: EditorState | null;
 }
 
 const MAX_UNDO = 50;
-const NON_UNDOABLE_ACTIONS = new Set(["SELECT_OBJECT", "SWITCH_FORMAT", "UNDO", "REDO", "MARK_SAVED", "MOVE_OBJECT", "RESIZE_OBJECT"]);
+const NON_UNDOABLE_ACTIONS = new Set(["SELECT_OBJECT", "SWITCH_FORMAT", "UNDO", "REDO", "MARK_SAVED"]);
 
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
@@ -192,6 +193,7 @@ function undoableReducer(state: UndoableState, action: EditorAction): UndoableSt
       past: state.past.slice(0, -1),
       current: prev,
       future: [state.current, ...state.future],
+      preDrag: null,
     };
   }
   if (action.type === "REDO") {
@@ -201,11 +203,32 @@ function undoableReducer(state: UndoableState, action: EditorAction): UndoableSt
       past: [...state.past, state.current],
       current: next,
       future: state.future.slice(1),
+      preDrag: null,
     };
   }
 
   const newCurrent = editorReducer(state.current, action);
   if (newCurrent === state.current) return state;
+
+  // Drag/resize: capture pre-drag snapshot on first move, don't push to history
+  if (action.type === "MOVE_OBJECT" || action.type === "RESIZE_OBJECT") {
+    return {
+      ...state,
+      current: newCurrent,
+      preDrag: state.preDrag ?? state.current,
+    };
+  }
+
+  // Commit: push the pre-drag snapshot (not current) to history
+  if (action.type === "COMMIT_MOVE") {
+    if (!state.preDrag) return { ...state, current: newCurrent };
+    return {
+      past: [...state.past.slice(-MAX_UNDO + 1), state.preDrag],
+      current: newCurrent,
+      future: [],
+      preDrag: null,
+    };
+  }
 
   if (NON_UNDOABLE_ACTIONS.has(action.type)) {
     return { ...state, current: newCurrent };
@@ -215,6 +238,7 @@ function undoableReducer(state: UndoableState, action: EditorAction): UndoableSt
     past: [...state.past.slice(-MAX_UNDO + 1), state.current],
     current: newCurrent,
     future: [],
+    preDrag: null,
   };
 }
 
@@ -311,6 +335,7 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
     current: initialState,
     past: [],
     future: [],
+    preDrag: null,
   });
 
   const dispatch = useCallback((action: EditorAction) => rawDispatch(action), []);

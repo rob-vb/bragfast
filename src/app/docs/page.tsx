@@ -29,7 +29,7 @@ export default function DocsPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              <div className="rounded-lg bg-zinc-900 px-4 sm:px-5 py-3 sm:py-4">
+              <div className="rounded-lg bg-[#24292e] px-4 sm:px-5 py-3 sm:py-4">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                   Base URL
                 </span>
@@ -38,11 +38,11 @@ export default function DocsPage() {
                 </p>
               </div>
 
-              <div className="rounded-lg border border-zinc-200 px-4 sm:px-5 py-3 sm:py-4">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
+              <div className="rounded-lg bg-[#24292e] px-4 sm:px-5 py-3 sm:py-4">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                   Authentication
                 </span>
-                <p className="mt-1 text-sm font-mono text-zinc-700 break-all">
+                <p className="mt-1 text-sm font-mono text-zinc-300 break-all">
                   Authorization: Bearer bf_...
                 </p>
               </div>
@@ -51,8 +51,8 @@ export default function DocsPage() {
 
           {/* API Sections */}
           <div className="divide-y divide-zinc-100">
-            {API_REFERENCE.map((section) => (
-              <DocsSection key={section.anchor} section={section} />
+            {API_REFERENCE.map((section, index) => (
+              <DocsSection key={section.anchor} section={section} index={index} />
             ))}
           </div>
         </main>

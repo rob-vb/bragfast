@@ -47,8 +47,8 @@ export default async function BrandsPage() {
                     />
                   ))}
                 </div>
-                {brand.font && (
-                  <p className="mt-2 text-xs text-brand/60">{brand.font}</p>
+                {brand.font_family && (
+                  <p className="mt-2 text-xs text-brand/60">{brand.font_family}</p>
                 )}
                 <p className="mt-2 flex items-center gap-1 text-[10px] font-mono text-brand/80">
                   Brand ID: {brand.externalId}

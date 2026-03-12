@@ -10,7 +10,7 @@ export interface Brand {
   logoBase64: string
   website: string
   colors: BrandColors
-  font?: string
+  font_family?: string
 }
 
 // Stored/API record shape; snake_case matches project convention
@@ -35,6 +35,16 @@ export interface Slide {
   align?: TextAlign
 }
 
+export interface ObjectModification {
+  id: string
+  // Text objects
+  text?: string
+  font_family?: string
+  color?: string
+  // Image objects
+  image_url?: string
+}
+
 export interface ReleaseRequest {
   brand_id?: string
   // Required when brand_id is absent:
@@ -45,15 +55,17 @@ export interface ReleaseRequest {
   }
   name?: string
   logo_url?: string
-  font?: string
+  font_family?: string
   template?: TemplateName
   slides: Array<{
+    // Legacy flat fields (still supported)
     title?: string
     description?: string
     image_url?: string
     device?: 'browser' | 'mobile'
     align?: 'left' | 'center' | 'right'
-    objects?: Record<string, { text?: string; url?: string }>
+    // Primary format: array of object modifications
+    objects?: ObjectModification[]
   }>
   formats?: Array<'landscape' | 'square' | 'portrait'>
   metadata?: string

@@ -11,7 +11,7 @@ type BrandData = {
   name: string;
   logo_url?: string;
   website?: string;
-  font?: string;
+  font_family?: string;
   colors: { background: string; text: string; primary: string };
 };
 
@@ -33,7 +33,7 @@ export function BrandForm({
       name: "",
       logo_url: "",
       website: "",
-      font: "",
+      font_family: "",
       colors: { background: "var(--color-surface)", text: "#1A1A1A", primary: "var(--color-gold)" },
     }
   );
@@ -163,8 +163,8 @@ export function BrandForm({
           <label className="mb-1 block text-xs font-bold text-brand">Font</label>
           <select
             className={inputClass}
-            value={form.font ?? ""}
-            onChange={(e) => update("font", e.target.value)}
+            value={form.font_family ?? ""}
+            onChange={(e) => update("font_family", e.target.value)}
           >
             <option value="">Default</option>
             {Object.entries(FONT_CATALOG).map(([category, fonts]) => (

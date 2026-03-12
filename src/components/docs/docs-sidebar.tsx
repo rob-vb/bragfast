@@ -44,16 +44,16 @@ export function DocsSidebar({
     >
       <a
         href="/docs"
-        className="block text-sm font-bold text-brand mb-1 px-3 font-[family-name:var(--font-press-start)]"
+        className="block text-sm font-mono font-bold text-zinc-900 mb-0.5 px-3"
       >
         brag.fast
       </a>
-      <span className="block text-xs text-brand/50 mb-6 px-3">API v1</span>
+      <span className="block text-[11px] text-zinc-400 mb-8 px-3">v1</span>
 
       {groups.map((group, i) => (
         <div key={i} className="mb-6">
           {group.label && (
-            <h3 className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-brand/50">
+            <h3 className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
               {group.label}
             </h3>
           )}
@@ -65,10 +65,10 @@ export function DocsSidebar({
                   <a
                     href={`#${item.anchor}`}
                     className={cn(
-                      "block px-3 py-1.5 text-sm transition-colors hover:bg-gold/10 hover:text-brand",
+                      "block px-3 py-1.5 text-[13px] rounded-md transition-colors",
                       isChild
-                        ? "pl-6 text-brand/50 text-[13px]"
-                        : "text-brand/70 font-medium"
+                        ? "pl-6 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50"
+                        : "text-zinc-600 font-medium hover:text-zinc-900 hover:bg-zinc-50"
                     )}
                   >
                     {item.title.trim()}

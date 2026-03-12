@@ -5,12 +5,14 @@ import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
 
-// Object data keyed by object ID
+// Object data keyed by object ID — values are resolved (URLs already fetched to base64)
 export interface ObjectDataMap {
   [objectId: string]: {
     text?: string;
-    url?: string;
-    imageBase64?: string; // resolved from url
+    imageBase64?: string;
+    // Per-object overrides
+    fontFamily?: string;
+    color?: string;
   };
 }
 
@@ -112,12 +114,14 @@ function renderObject(
   brand: Brand,
   colors: { background: string; text: string; primary: string },
 ) {
-  const fontFamily = brand.font || obj.fontFamily || "Plus Jakarta Sans";
+  const fontFamily = brand.font_family || obj.fontFamily || "Plus Jakarta Sans";
   const data = objectData[obj.id];
 
   switch (obj.type) {
     case "text": {
       const text = data?.text || obj.previewText || "Text";
+      const resolvedFont = data?.fontFamily || fontFamily;
+      const resolvedColor = data?.color || obj.color || colors.text;
       const fontSize = autoFitFontSize(
         text, obj.fontSize || 24, obj.width, obj.height,
         obj.fontWeight || 400, obj.lineHeight || 1.2, obj.letterSpacing || 0,
@@ -125,13 +129,13 @@ function renderObject(
       );
       return (
         <div style={{
-          fontFamily,
+          fontFamily: resolvedFont,
           fontSize,
           fontWeight: obj.fontWeight || 400,
           letterSpacing: obj.letterSpacing || 0,
           lineHeight: obj.lineHeight || 1.2,
           textAlign: obj.textAlign || "left",
-          color: obj.color || colors.text,
+          color: resolvedColor,
           width: "100%",
           wordWrap: "break-word",
           display: "flex",
