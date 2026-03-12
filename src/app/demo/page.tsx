@@ -12,15 +12,11 @@ import {
 } from "@/components/ui/select";
 
 const TEMPLATES = [
-  { value: "classic", label: "Classic" },
-  { value: "split", label: "Split" },
+  { value: "standard-browser", label: "Standard Browser" },
+  { value: "standard-mobile", label: "Standard Mobile" },
+  { value: "split-browser", label: "Split Browser" },
+  { value: "split-mobile", label: "Split Mobile" },
   { value: "hero", label: "Hero" },
-];
-
-const UPDATE_TYPES = [
-  { value: "website", label: "Website redesign" },
-  { value: "mobile", label: "Mobile app" },
-  { value: "bugs", label: "Bug fixes" },
 ];
 
 const FONTS = [
@@ -44,29 +40,15 @@ const FONT_FAMILY_MAP: Record<string, string> = {
   saira: "Saira",
 };
 
-// Slide objects per update type for the curl snippet
-const SLIDE_OBJECTS: Record<string, string> = {
-  website: `{ "id": "title", "text": "Fresh new look" },
-        { "id": "description", "text": "We redesigned our website from the ground up" },
-        { "id": "image", "image_url": "https://...", "device_type": "browser" }`,
-  mobile: `{ "id": "title", "text": "Now on mobile" },
-        { "id": "description", "text": "Take it anywhere with our brand new mobile app" },
-        { "id": "image", "image_url": "https://...", "device_type": "mobile" }`,
-  bugs: `{ "id": "title", "text": "Squashed 12 bugs" },
-        { "id": "description", "text": "Stability and performance improvements across the board" },
-        { "id": "image", "image_url": "https://...", "device_type": "browser" }`,
-};
-
-function imagePath(template: string, type: string, font: string, format: string) {
-  return `/demo/${template}-${type}-${font}-${format}.jpg`;
+function imagePath(template: string, font: string, format: string) {
+  return `/demo/${template}-${font}-${format}.jpg`;
 }
 
 const PROGRESS_DURATION = 2400; // total fake generation time in ms
 const PROGRESS_INTERVAL = 30; // update tick
 
 export default function DemoPage() {
-  const [template, setTemplate] = useState("classic");
-  const [updateType, setUpdateType] = useState("website");
+  const [template, setTemplate] = useState("standard-browser");
   const [font, setFont] = useState("inter");
   const [generated, setGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -112,7 +94,9 @@ export default function DemoPage() {
     "font_family": "${FONT_FAMILY_MAP[font]}",
     "slides": [{
       "objects": [
-        ${SLIDE_OBJECTS[updateType]}
+        { "id": "title", "text": "..." },
+        { "id": "description", "text": "..." },
+        { "id": "image", "image_url": "..." }
       ]
     }],
     "formats": ["landscape", "square", "portrait"]
@@ -148,29 +132,6 @@ export default function DemoPage() {
                   </SelectTrigger>
                   <SelectContent className="border-2 border-brand rounded-none bg-surface shadow-[3px_3px_0_var(--color-brand)]">
                     {TEMPLATES.map((t) => (
-                      <SelectItem
-                        key={t.value}
-                        value={t.value}
-                        className="font-[family-name:var(--font-geist-sans)] text-sm rounded-none focus:bg-gold/30"
-                      >
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Update Type */}
-              <div className="flex-1">
-                <label className="block font-[family-name:var(--font-press-start)] text-[9px] mb-2 text-brand/60">
-                  Type of update
-                </label>
-                <Select value={updateType} onValueChange={setUpdateType}>
-                  <SelectTrigger className="w-full border-2 border-brand bg-surface rounded-none shadow-[2px_2px_0_var(--color-brand)] font-[family-name:var(--font-geist-sans)] text-sm h-10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="border-2 border-brand rounded-none bg-surface shadow-[3px_3px_0_var(--color-brand)]">
-                    {UPDATE_TYPES.map((t) => (
                       <SelectItem
                         key={t.value}
                         value={t.value}
@@ -249,8 +210,8 @@ export default function DemoPage() {
                 <div className="relative bg-surface/50">
                   {generated ? (
                     <Image
-                      src={imagePath(template, updateType, font, format)}
-                      alt={`${template} ${updateType} ${font} — ${format}`}
+                      src={imagePath(template, font, format)}
+                      alt={`${template} ${font} — ${format}`}
                       width={format === "landscape" ? 1200 : 1080}
                       height={
                         format === "landscape"
