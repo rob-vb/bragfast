@@ -101,9 +101,9 @@ export function ImageProperties() {
   if (selectedObject.type !== "image" && selectedObject.type !== "logo") return null;
 
   const isImage = selectedObject.type === "image";
-  const device = selectedObject.device || "none";
-  const hasDeviceFrame = device !== "none";
-  const deviceColor = selectedObject.deviceColor || (device === "mobile" ? "dark" : "light");
+  const imageFrame = selectedObject.imageFrame || "none";
+  const hasDeviceFrame = imageFrame !== "none";
+  const imageFrameColor = selectedObject.imageFrameColor || (imageFrame === "mobile" ? "#1A1A1A" : "#E8E8E8");
 
   function update(property: string, value: unknown) {
     dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: true });
@@ -155,49 +155,61 @@ export function ImageProperties() {
       {isImage && (
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Device Frame</Label>
-          <div className="flex items-center gap-2">
-            <Select value={device} onValueChange={(v) => {
-              update("device", v);
-              // Set default color when switching device type
-              if (v === "mobile") update("deviceColor", "dark");
-              else if (v === "browser") update("deviceColor", "light");
-            }}>
-              <SelectTrigger className="h-8 text-sm flex-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="browser">Browser</SelectItem>
-                <SelectItem value="mobile">Mobile</SelectItem>
-              </SelectContent>
-            </Select>
-            {hasDeviceFrame && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => update("deviceColor", "light")}
-                  className={`w-6 h-6 rounded-full border-2 transition-colors ${
-                    deviceColor === "light"
-                      ? "border-blue-500"
-                      : "border-zinc-200 hover:border-zinc-300"
-                  }`}
-                  style={{ backgroundColor: "#E8E8E8" }}
-                  title="Light"
+          <Select value={imageFrame} onValueChange={(v) => {
+            update("imageFrame", v);
+            // Set default color when switching frame type
+            if (v === "mobile") update("imageFrameColor", "#1A1A1A");
+            else if (v === "browser") update("imageFrameColor", "#E8E8E8");
+          }}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="browser">Browser</SelectItem>
+              <SelectItem value="mobile">Mobile</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasDeviceFrame && (
+            <div className="flex items-center gap-2 mt-1.5">
+              <button
+                type="button"
+                onClick={() => update("imageFrameColor", "#E8E8E8")}
+                className={`w-6 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
+                  imageFrameColor === "#E8E8E8"
+                    ? "border-blue-500"
+                    : "border-zinc-200 hover:border-zinc-300"
+                }`}
+                style={{ backgroundColor: "#E8E8E8" }}
+                title="Light"
+              />
+              <button
+                type="button"
+                onClick={() => update("imageFrameColor", "#1A1A1A")}
+                className={`w-6 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
+                  imageFrameColor === "#1A1A1A"
+                    ? "border-blue-500"
+                    : "border-zinc-200 hover:border-zinc-300"
+                }`}
+                style={{ backgroundColor: "#1A1A1A" }}
+                title="Dark"
+              />
+              <div className="flex items-center gap-1 flex-1">
+                <input
+                  type="color"
+                  value={imageFrameColor}
+                  onChange={(e) => update("imageFrameColor", e.target.value)}
+                  className="w-7 h-7 rounded border border-zinc-200 cursor-pointer flex-shrink-0"
                 />
-                <button
-                  type="button"
-                  onClick={() => update("deviceColor", "dark")}
-                  className={`w-6 h-6 rounded-full border-2 transition-colors ${
-                    deviceColor === "dark"
-                      ? "border-blue-500"
-                      : "border-zinc-200 hover:border-zinc-300"
-                  }`}
-                  style={{ backgroundColor: "#1A1A1A" }}
-                  title="Dark"
+                <Input
+                  value={imageFrameColor}
+                  onChange={(e) => update("imageFrameColor", e.target.value)}
+                  className="h-7 text-xs font-mono"
+                  placeholder="#E8E8E8"
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
