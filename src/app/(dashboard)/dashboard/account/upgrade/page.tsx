@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
+import { UpgradeButton } from "./upgrade-button";
 import Link from "next/link";
 
 export default async function UpgradePage() {
@@ -191,9 +192,7 @@ function PlanCard({
             Current Plan
           </span>
         ) : (
-          <span className="block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand/30 text-brand/40 bg-brand/5 cursor-not-allowed">
-            Coming Soon
-          </span>
+          <UpgradeButton planId={plan.id} />
         )}
       </div>
     </div>
