@@ -299,6 +299,22 @@ while True:
                     description:
                       'Hex color for the device frame, e.g. "#ffffff" for a light frame or "#1a1a2e" for a dark one.',
                   },
+                  {
+                    name: "anchor_x",
+                    type: "string",
+                    required: false,
+                    group: "image",
+                    description:
+                      'Horizontal anchor point for the image when cropped by object-fit cover. One of "left", "center", "right". Defaults to template setting (usually "center").',
+                  },
+                  {
+                    name: "anchor_y",
+                    type: "string",
+                    required: false,
+                    group: "image",
+                    description:
+                      'Vertical anchor point for the image when cropped by object-fit cover. One of "top", "center", "bottom". Defaults to template setting (usually "top").',
+                  },
                 ],
               },
             ],

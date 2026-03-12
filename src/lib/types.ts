@@ -35,6 +35,8 @@ export interface ObjectModification {
   // Image objects
   image_url?: string
   image_frame_color?: string
+  anchor_x?: 'left' | 'center' | 'right'
+  anchor_y?: 'top' | 'center' | 'bottom'
 }
 
 export interface ReleaseRequest {

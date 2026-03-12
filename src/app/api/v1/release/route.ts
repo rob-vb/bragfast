@@ -40,6 +40,12 @@ export async function POST(request: Request) {
         if (!mod.id || typeof mod.id !== "string") {
           return Response.json({ error: "Each object requires a string id" }, { status: 400 });
         }
+        if (mod.anchor_x && !["left", "center", "right"].includes(mod.anchor_x)) {
+          return Response.json({ error: 'anchor_x must be "left", "center", or "right"' }, { status: 400 });
+        }
+        if (mod.anchor_y && !["top", "center", "bottom"].includes(mod.anchor_y)) {
+          return Response.json({ error: 'anchor_y must be "top", "center", or "bottom"' }, { status: 400 });
+        }
       }
     }
   }

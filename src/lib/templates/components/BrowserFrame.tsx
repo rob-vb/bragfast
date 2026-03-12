@@ -7,9 +7,10 @@ interface BrowserFrameProps {
   maxHeight?: number
   flush?: boolean
   color?: string  // hex color for frame chrome
+  objectPosition?: string  // CSS object-position for the screenshot
 }
 
-export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#E8E8E8' }: BrowserFrameProps) {
+export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#E8E8E8', objectPosition = 'center top' }: BrowserFrameProps) {
   const dotSize = 10
   const titleBarHeight = 32
   const imageHeight = maxHeight ? maxHeight - titleBarHeight : undefined
@@ -52,7 +53,7 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
           width: `${width}px`,
           height: imageHeight ? `${imageHeight}px` : undefined,
           objectFit: 'cover',
-          objectPosition: 'top',
+          objectPosition,
         }}
       />
     </div>

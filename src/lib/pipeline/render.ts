@@ -137,6 +137,8 @@ export async function renderReleaseAsync(
             if (mod.font_family) entry.fontFamily = mod.font_family;
             if (mod.color) entry.color = mod.color;
             if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
+            if (mod.anchor_x) entry.anchorX = mod.anchor_x;
+            if (mod.anchor_y) entry.anchorY = mod.anchor_y;
             dataMap[mod.id] = entry;
           }
           return dataMap;

@@ -226,6 +226,35 @@ export function ImageProperties() {
         </Select>
       </div>
 
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-xs text-zinc-500">Anchor X</Label>
+          <Select value={selectedObject.anchorX || "center"} onValueChange={(v) => update("anchorX", v)}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="left">Left</SelectItem>
+              <SelectItem value="center">Center</SelectItem>
+              <SelectItem value="right">Right</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-zinc-500">Anchor Y</Label>
+          <Select value={selectedObject.anchorY || "center"} onValueChange={(v) => update("anchorY", v)}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="top">Top</SelectItem>
+              <SelectItem value="center">Center</SelectItem>
+              <SelectItem value="bottom">Bottom</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Border Radius — only when no device frame wrapping */}
       {(!isImage || !hasDeviceFrame) && (
         <div className="space-y-1.5">

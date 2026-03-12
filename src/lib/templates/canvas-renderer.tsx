@@ -13,6 +13,8 @@ export interface ObjectDataMap {
     fontFamily?: string;
     color?: string;
     imageFrameColor?: string;
+    anchorX?: string;
+    anchorY?: string;
   };
 }
 
@@ -26,7 +28,7 @@ interface CanvasRendererProps {
 export function CanvasRenderer({ config, format, objectData, brand }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format];
-  const colors = config.brandId ? brand.colors : config.colors;
+  const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
 
   return (
@@ -173,6 +175,9 @@ function renderObject(
       }
       const frame = obj.imageFrame || "none";
       const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
+      const anchorX = data?.anchorX || obj.anchorX || "center";
+      const anchorY = data?.anchorY || obj.anchorY || "top";
+      const objectPosition = `${anchorX} ${anchorY}`;
       if (frame === "none") {
         return (
           <img
@@ -180,6 +185,7 @@ function renderObject(
             style={{
               width: "100%", height: "100%",
               objectFit: obj.objectFit || "cover",
+              objectPosition,
               borderRadius: getObjectBorderRadius(obj) || 8,
             }}
           />
@@ -193,6 +199,7 @@ function renderObject(
             width={obj.width}
             maxHeight={obj.height}
             color={frameColor}
+            objectPosition={objectPosition}
           />
         );
       }
@@ -203,6 +210,7 @@ function renderObject(
           width={obj.width}
           maxHeight={obj.height}
           color={frameColor}
+          objectPosition={objectPosition}
         />
       );
     }

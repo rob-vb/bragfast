@@ -61,6 +61,8 @@ export type TextAlign = "left" | "center" | "right";
 export type VerticalAlign = "top" | "center" | "bottom";
 export type ImageFrame = "browser" | "mobile" | "none";
 export type ObjectFit = "cover" | "contain";
+export type AnchorX = "left" | "center" | "right";
+export type AnchorY = "top" | "center" | "bottom";
 export type FormatKey = "landscape" | "square" | "portrait";
 
 export interface TemplateObject {
@@ -90,6 +92,8 @@ export interface TemplateObject {
   imageFrame?: ImageFrame;
   imageFrameColor?: string;
   objectFit?: ObjectFit;
+  anchorX?: AnchorX;
+  anchorY?: AnchorY;
   borderRadius?: number;
   borderRadiusTL?: number;
   borderRadiusTR?: number;

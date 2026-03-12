@@ -31,26 +31,30 @@ const FONTS = ["Inter", "Raleway", "Saira"] as const;
 const FORMATS = ["landscape", "square", "portrait"] as const;
 
 // Content varies by template purpose
-const CONTENT: Record<string, { title: string; description: string; image: string }> = {
+const CONTENT: Record<string, { title: string; description: string; image: string; localImage?: boolean }> = {
   "standard-browser": {
     title: "Fresh new look",
     description: "We redesigned our website from the ground up",
-    image: "photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop",
+    image: "honeybee.png",
+    localImage: true,
   },
   "standard-mobile": {
     title: "Now on mobile",
     description: "Take it anywhere with our brand new mobile app",
-    image: "photo-1512941937669-90a1b58e7e9c?w=600&h=1200&fit=crop",
+    image: "netflix.png",
+    localImage: true,
   },
   "split-browser": {
     title: "Fresh new look",
     description: "We redesigned our website from the ground up",
-    image: "photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop",
+    image: "honeybee.png",
+    localImage: true,
   },
   "split-mobile": {
     title: "Now on mobile",
     description: "Take it anywhere with our brand new mobile app",
-    image: "photo-1512941937669-90a1b58e7e9c?w=600&h=1200&fit=crop",
+    image: "netflix.png",
+    localImage: true,
   },
   hero: {
     title: "Squashed 12 bugs",
@@ -59,24 +63,35 @@ const CONTENT: Record<string, { title: string; description: string; image: strin
   },
 };
 
+// Colors per template group
+const COLORS: Record<string, { background: string; text: string; primary: string }> = {
+  default: { background: "#104139", text: "#EFFBF9", primary: "#31C4AB" },
+  standard: { background: "#EFFBF9", text: "#104139", primary: "#31C4AB" },
+  split: { background: "#EFFBF9", text: "#104139", primary: "#31C4AB" },
+};
+
+function getColors(template: string) {
+  const group = template.split("-")[0];
+  return COLORS[group] ?? COLORS.default;
+}
+
 function buildPayload(template: string, font: string) {
   const content = CONTENT[template];
+  const imageUrl = content.localImage
+    ? `${BASE}/demo/${content.image}`
+    : `https://images.unsplash.com/${content.image}`;
 
   return {
     template,
     font_family: font,
-    colors: {
-      background: "#4A3326",
-      text: "#FFF8F0",
-      primary: "#F8AF3C",
-    },
+    colors: getColors(template),
     name: "Acme Inc",
     slides: [
       {
         objects: [
           { id: "title", text: content.title },
           { id: "description", text: content.description },
-          { id: "image", image_url: `https://images.unsplash.com/${content.image}` },
+          { id: "image", image_url: imageUrl },
         ],
       },
     ],
