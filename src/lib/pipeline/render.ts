@@ -12,7 +12,7 @@ import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types"
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { fetchImageAsBase64 } from "../images";
 import { uploadImage } from "../storage/r2";
-import { ReleaseRequest, ReleaseResult, Brand, FORMAT_DIMENSIONS } from "../types";
+import { ReleaseRequest, ReleaseResult, Brand, FORMAT_DIMENSIONS, calculateCredits } from "../types";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
@@ -23,8 +23,7 @@ export async function createRelease(
   userId: string
 ): Promise<ReleaseResult> {
   const releaseId = `rel_${crypto.randomUUID().slice(0, 10)}`;
-  const formats = request.formats || ["landscape", "square", "portrait"];
-  const creditsUsed = request.slides.length * formats.length;
+  const creditsUsed = calculateCredits(request.formats);
 
   await convex.mutation(api.releases.create, {
     userId,
@@ -122,70 +121,69 @@ export async function renderReleaseAsync(
       throw new Error(`Invalid template: ${templateName}`);
     }
 
-    const formats = request.formats || ["landscape", "square", "portrait"];
     templateConfig = migrateConfig(templateConfig);
 
-    // Build per-slide object data maps
-    const slideDataMaps: ObjectDataMap[] = await Promise.all(
-      request.slides.map(async (s) => {
-        if (s.objects) {
-          const dataMap: ObjectDataMap = {};
-          for (const mod of s.objects) {
-            const entry: ObjectDataMap[string] = {};
-            if (mod.text) entry.text = mod.text;
-            if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
-            if (mod.font_family) entry.fontFamily = mod.font_family;
-            if (mod.color) entry.color = mod.color;
-            if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
-            if (mod.anchor_x) entry.anchorX = mod.anchor_x;
-            if (mod.anchor_y) entry.anchorY = mod.anchor_y;
-            dataMap[mod.id] = entry;
-          }
-          return dataMap;
-        }
-        return {};
-      })
-    );
+    const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
-    // Inject static images (src field) — fetch each unique URL once
+    // Collect all static image src URLs across all formats (fetch once)
     const staticSrcs = new Set<string>();
     for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
       for (const obj of templateConfig.formats[fKey].objects) {
         if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
       }
     }
+    const srcMap: Record<string, string> = {};
     if (staticSrcs.size > 0) {
       const srcEntries = await Promise.all(
         [...staticSrcs].map(async (src) => [src, await fetchImageAsBase64(src)] as const)
       );
-      const srcMap = Object.fromEntries(srcEntries);
-      for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
-        for (const obj of templateConfig.formats[fKey].objects) {
-          if (obj.type === "image" && obj.src) {
-            for (const dataMap of slideDataMaps) {
-              if (!dataMap[obj.id]?.imageBase64) {
-                dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };
-              }
+      Object.assign(srcMap, Object.fromEntries(srcEntries));
+    }
+
+    for (const formatEntry of request.formats) {
+      const format = formatEntry.name;
+      const { width, height } = FORMAT_DIMENSIONS[format];
+      const slideUrls: string[] = [];
+
+      // Build slideDataMaps for THIS format's slides
+      const slideDataMaps: ObjectDataMap[] = await Promise.all(
+        formatEntry.slides.map(async (s) => {
+          if (s.objects) {
+            const dataMap: ObjectDataMap = {};
+            for (const mod of s.objects) {
+              const entry: ObjectDataMap[string] = {};
+              if (mod.text) entry.text = mod.text;
+              if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
+              if (mod.font_family) entry.fontFamily = mod.font_family;
+              if (mod.color) entry.color = mod.color;
+              if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
+              if (mod.anchor_x) entry.anchorX = mod.anchor_x;
+              if (mod.anchor_y) entry.anchorY = mod.anchor_y;
+              dataMap[mod.id] = entry;
+            }
+            return dataMap;
+          }
+          return {};
+        })
+      );
+
+      // Inject static images for this format
+      for (const obj of templateConfig.formats[format as FormatKey].objects) {
+        if (obj.type === "image" && obj.src && srcMap[obj.src]) {
+          for (const dataMap of slideDataMaps) {
+            if (!dataMap[obj.id]?.imageBase64) {
+              dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };
             }
           }
         }
       }
-    }
 
-    const images: Record<string, { slides: string[]; dimensions: string }> = {};
-
-    for (const format of formats) {
-      const { width, height } = FORMAT_DIMENSIONS[format];
-      const slideUrls: string[] = [];
-
-      // Font loading per-format: canvas configs may use different fonts per format
-      // Also load brand font and any per-object font overrides
+      // Font loading
       let fonts = await loadFontsForObjects(templateConfig.formats[format as FormatKey].objects);
       if (brand.font_family) {
         const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
       }
-      // Load fonts for per-object font_family overrides
       const overrideFamilies = new Set<string>();
       for (const dataMap of slideDataMaps) {
         for (const entry of Object.values(dataMap)) {
@@ -197,6 +195,7 @@ export async function renderReleaseAsync(
         fonts = [...fonts, ...overrideFonts];
       }
 
+      // Render slides
       for (let i = 0; i < slideDataMaps.length; i++) {
         const jsx = CanvasRenderer({
           config: templateConfig,
@@ -244,8 +243,7 @@ export async function renderReleaseAsync(
     console.error(`Render failed for ${releaseId}:`, err);
 
     // Refund reserved credits on render failure
-    const formats = request.formats || ["landscape", "square", "portrait"];
-    const amount = request.slides.length * formats.length;
+    const amount = calculateCredits(request.formats);
     try {
       await convex.mutation(api.userProfiles.refund, { userId, amount });
     } catch (refundErr) {
