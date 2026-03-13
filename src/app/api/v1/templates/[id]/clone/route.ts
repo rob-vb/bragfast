@@ -3,6 +3,7 @@ import { authenticate } from "@/lib/auth/authenticate";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
+import { resolveTemplateId } from "@/lib/templates/resolve-id";
 
 export async function POST(
   request: Request,
@@ -16,7 +17,8 @@ export async function POST(
   const rateLimitResponse = await checkRateLimit(auth.userId);
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = resolveTemplateId(rawId);
 
   // Lookup source template
   const source = await fetchQuery(api.templates.getByExternalId, {

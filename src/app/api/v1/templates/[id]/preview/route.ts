@@ -9,6 +9,7 @@ import { loadFontsForObjects } from "@/lib/fonts";
 import { FORMAT_DIMENSIONS } from "@/lib/types";
 import { fetchImageAsBase64 } from "@/lib/images";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
+import { resolveTemplateId } from "@/lib/templates/resolve-id";
 
 export async function POST(
   request: Request,
@@ -22,7 +23,8 @@ export async function POST(
   const rateLimitResponse = await checkRateLimit(auth.userId);
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = resolveTemplateId(rawId);
 
   const template = await fetchQuery(api.templates.getByExternalId, {
     externalId: id,
@@ -38,13 +40,13 @@ export async function POST(
   }
 
   const placeholderBrand = {
-    name: "Product",
+    name: "brag.fast",
     logoBase64: "",
-    website: "example.com",
+    website: "brag.fast",
     colors: {
-      background: "#1a1a2e",
-      text: "#ffffff",
-      primary: "#e94560",
+      background: "#FFF8F0",
+      text: "#1A1A1A",
+      primary: "#F8AF3C",
     },
   };
 
