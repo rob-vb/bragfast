@@ -40,7 +40,7 @@ curl -X POST https://bragfast.com/api/v1/release \\
   -H "Content-Type: application/json" \\
   -d '{
     "brand_id": "brd_abc123",
-    "slides": [{ "objects": [{ "id": "title", "text": "Shipped v2.0" }] }],
+    "formats": [{ "name": "landscape", "slides": [{ "objects": [{ "id": "title", "text": "Shipped v2.0" }] }] }],
     "webhook_url": "https://your-app.com/webhooks/bragfast"
   }'
 
@@ -56,7 +56,7 @@ const release = await fetch("https://bragfast.com/api/v1/release", {
   },
   body: JSON.stringify({
     brand_id: "brd_abc123",
-    slides: [{ objects: [{ id: "title", text: "Shipped v2.0" }] }],
+    formats: [{ name: "landscape", slides: [{ objects: [{ id: "title", text: "Shipped v2.0" }] }] }],
     webhook_url: "https://your-app.com/webhooks/bragfast",
   }),
 }).then(r => r.json())
@@ -79,7 +79,7 @@ release = requests.post(
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brd_abc123",
-        "slides": [{"objects": [{"id": "title", "text": "Shipped v2.0"}]}],
+        "formats": [{"name": "landscape", "slides": [{"objects": [{"id": "title", "text": "Shipped v2.0"}]}]}],
         "webhook_url": "https://your-app.com/webhooks/bragfast",
     },
 ).json()
@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Every image costs 1 credit. Total per release = slides \u00d7 formats (e.g. 2 slides \u00d7 3 formats = 6 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 1,000, Pro ($79/mo) — 5,000, Scale ($159/mo) — 25,000.",
+      "Every image costs 1 credit. Total per release = sum of slides across all format entries (e.g. 1 landscape slide + 2 square slides = 3 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 1,000, Pro ($79/mo) — 5,000, Scale ($159/mo) — 25,000.",
     endpoints: [],
   },
 
@@ -156,12 +156,12 @@ while True:
     title: "Releases",
     anchor: "releases",
     description:
-      "Releases are the main course. You send in slides with text and optional screenshots, and brag.fast generates branded images in your chosen formats and template. Each slide becomes one image per format.",
+      "Releases are the main course. You send in format entries, each with its own slides containing text and optional screenshots. brag.fast generates branded images for each format using its slides and the chosen template.",
     sampleObject: `{
   "release_id": "rel_abc123",
   "status": "pending",
   "images": null,
-  "credits_used": 9,
+  "credits_used": 3,
   "credits_remaining": 21,
   "created_at": "2026-03-09T12:00:00.000Z",
   "completed_at": null,
@@ -238,93 +238,99 @@ while True:
               'Template to use: "standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero", or a custom template ID (e.g. "tmpl_abc123"). Defaults to "standard-browser".',
           },
           {
-            name: "slides",
+            name: "formats",
             type: "array",
             required: true,
-            description: "1\u20135 slides to render. Each slide becomes one image per format.",
+            description: "Array of format entries. Each entry specifies a format and its slides. Total credits = sum of slides across all entries.",
             children: [
               {
-                name: "objects",
-                type: "array",
+                name: "name",
+                type: "string",
                 required: true,
                 description:
-                  "A list of modifications to the template's objects. Each entry targets an object by ID and provides its content, plus optional overrides. Default templates use IDs: title, description, image. Custom templates define their own — get them from GET /api/v1/templates/:id.",
+                  'Format name: "landscape" (1200×675), "square" (1080×1080), or "portrait" (1080×1920).',
+              },
+              {
+                name: "slides",
+                type: "array",
+                required: true,
+                description: "1–5 slides for this format. Each slide becomes one image.",
                 children: [
                   {
-                    name: "id",
-                    type: "string",
-                    required: true,
-                    description:
-                      "The object ID to modify. Find available IDs via GET /api/v1/templates/:id.",
-                  },
-                  // Text object properties
-                  {
-                    name: "text",
-                    type: "string",
+                    name: "objects",
+                    type: "array",
                     required: false,
-                    group: "text",
                     description:
-                      "Replacement text for text objects. Supports \\n for line breaks.",
-                  },
-                  {
-                    name: "font_family",
-                    type: "string",
-                    required: false,
-                    group: "text",
-                    description:
-                      "Override the font for this specific text object. Takes precedence over the top-level font_family.",
-                  },
-                  {
-                    name: "color",
-                    type: "string",
-                    required: false,
-                    group: "text",
-                    description:
-                      'Override the text color, e.g. "#e94560".',
-                  },
-                  // Image object properties
-                  {
-                    name: "image_url",
-                    type: "string",
-                    required: false,
-                    group: "image",
-                    description:
-                      "Image URL for image objects.",
-                  },
-                  {
-                    name: "image_frame_color",
-                    type: "string",
-                    required: false,
-                    group: "image",
-                    description:
-                      'Hex color for the device frame, e.g. "#ffffff" for a light frame or "#1a1a2e" for a dark one.',
-                  },
-                  {
-                    name: "anchor_x",
-                    type: "string",
-                    required: false,
-                    group: "image",
-                    description:
-                      'Horizontal anchor point for the image when cropped by object-fit cover. One of "left", "center", "right". Defaults to template setting (usually "center").',
-                  },
-                  {
-                    name: "anchor_y",
-                    type: "string",
-                    required: false,
-                    group: "image",
-                    description:
-                      'Vertical anchor point for the image when cropped by object-fit cover. One of "top", "center", "bottom". Defaults to template setting (usually "top").',
+                      "A list of modifications to the template's objects. Each entry targets an object by ID and provides its content, plus optional overrides. Default templates use IDs: title, description, image. Custom templates define their own — get them from GET /api/v1/templates/:id.",
+                    children: [
+                      {
+                        name: "id",
+                        type: "string",
+                        required: true,
+                        description:
+                          "The object ID to modify. Find available IDs via GET /api/v1/templates/:id.",
+                      },
+                      {
+                        name: "text",
+                        type: "string",
+                        required: false,
+                        group: "text",
+                        description:
+                          "Replacement text for text objects. Supports \\n for line breaks.",
+                      },
+                      {
+                        name: "font_family",
+                        type: "string",
+                        required: false,
+                        group: "text",
+                        description:
+                          "Override the font for this specific text object. Takes precedence over the top-level font_family.",
+                      },
+                      {
+                        name: "color",
+                        type: "string",
+                        required: false,
+                        group: "text",
+                        description:
+                          'Override the text color, e.g. "#e94560".',
+                      },
+                      {
+                        name: "image_url",
+                        type: "string",
+                        required: false,
+                        group: "image",
+                        description:
+                          "Image URL for image objects.",
+                      },
+                      {
+                        name: "image_frame_color",
+                        type: "string",
+                        required: false,
+                        group: "image",
+                        description:
+                          'Hex color for the device frame, e.g. "#ffffff" for a light frame or "#1a1a2e" for a dark one.',
+                      },
+                      {
+                        name: "anchor_x",
+                        type: "string",
+                        required: false,
+                        group: "image",
+                        description:
+                          'Horizontal anchor point for the image when cropped by object-fit cover. One of "left", "center", "right". Defaults to template setting (usually "center").',
+                      },
+                      {
+                        name: "anchor_y",
+                        type: "string",
+                        required: false,
+                        group: "image",
+                        description:
+                          'Vertical anchor point for the image when cropped by object-fit cover. One of "top", "center", "bottom". Defaults to template setting (usually "top").',
+                      },
+                    ],
                   },
                 ],
               },
             ],
-          },
-          {
-            name: "formats",
-            type: "array",
-            required: false,
-            description:
-              'Which sizes to generate: "landscape" (1200\u00d7675), "square" (1080\u00d71080), "portrait" (1080\u00d71920). Defaults to all three.',
           },
           {
             name: "metadata",
@@ -348,16 +354,32 @@ while True:
   -d '{
     "brand_id": "brd_abc123",
     "template": "standard-browser",
-    "slides": [
+    "formats": [
       {
-        "objects": [
-          { "id": "title", "text": "Launched dark mode" },
-          { "id": "description", "text": "Your app, your vibe." },
-          { "id": "image", "image_url": "https://example.com/screenshot.png" }
+        "name": "landscape",
+        "slides": [
+          {
+            "objects": [
+              { "id": "title", "text": "Launched dark mode" },
+              { "id": "description", "text": "Your app, your vibe." },
+              { "id": "image", "image_url": "https://example.com/screenshot.png" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "square",
+        "slides": [
+          {
+            "objects": [
+              { "id": "title", "text": "Launched dark mode" },
+              { "id": "description", "text": "Your app, your vibe." },
+              { "id": "image", "image_url": "https://example.com/screenshot.png" }
+            ]
+          }
         ]
       }
-    ],
-    "formats": ["landscape", "square"]
+    ]
   }'`,
           javascript: `const response = await fetch("https://bragfast.com/api/v1/release", {
   method: "POST",
@@ -368,16 +390,32 @@ while True:
   body: JSON.stringify({
     brand_id: "brd_abc123",
     template: "standard-browser",
-    slides: [
+    formats: [
       {
-        objects: [
-          { id: "title", text: "Launched dark mode" },
-          { id: "description", text: "Your app, your vibe." },
-          { id: "image", image_url: "https://example.com/screenshot.png" },
+        name: "landscape",
+        slides: [
+          {
+            objects: [
+              { id: "title", text: "Launched dark mode" },
+              { id: "description", text: "Your app, your vibe." },
+              { id: "image", image_url: "https://example.com/screenshot.png" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "square",
+        slides: [
+          {
+            objects: [
+              { id: "title", text: "Launched dark mode" },
+              { id: "description", text: "Your app, your vibe." },
+              { id: "image", image_url: "https://example.com/screenshot.png" },
+            ],
+          },
         ],
       },
     ],
-    formats: ["landscape", "square"],
   }),
 })
 const data = await response.json()`,
@@ -389,16 +427,32 @@ response = requests.post(
     json={
         "brand_id": "brd_abc123",
         "template": "standard-browser",
-        "slides": [
+        "formats": [
             {
-                "objects": [
-                    {"id": "title", "text": "Launched dark mode"},
-                    {"id": "description", "text": "Your app, your vibe."},
-                    {"id": "image", "image_url": "https://example.com/screenshot.png"},
-                ]
-            }
+                "name": "landscape",
+                "slides": [
+                    {
+                        "objects": [
+                            {"id": "title", "text": "Launched dark mode"},
+                            {"id": "description", "text": "Your app, your vibe."},
+                            {"id": "image", "image_url": "https://example.com/screenshot.png"},
+                        ]
+                    }
+                ],
+            },
+            {
+                "name": "square",
+                "slides": [
+                    {
+                        "objects": [
+                            {"id": "title", "text": "Launched dark mode"},
+                            {"id": "description", "text": "Your app, your vibe."},
+                            {"id": "image", "image_url": "https://example.com/screenshot.png"},
+                        ]
+                    }
+                ],
+            },
         ],
-        "formats": ["landscape", "square"],
     },
 )
 data = response.json()`,
