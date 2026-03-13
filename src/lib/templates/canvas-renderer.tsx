@@ -12,6 +12,7 @@ export interface ObjectDataMap {
     imageBase64?: string;
     fontFamily?: string;
     color?: string;
+    imageFrame?: string;
     imageFrameColor?: string;
     anchorX?: string;
     anchorY?: string;
@@ -184,7 +185,7 @@ function renderObject(
           }} />
         );
       }
-      const frame = obj.imageFrame || "none";
+      const frame = data?.imageFrame || obj.imageFrame || "none";
       const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
       const anchorX = data?.anchorX || obj.anchorX || "center";
       const anchorY = data?.anchorY || obj.anchorY || "top";

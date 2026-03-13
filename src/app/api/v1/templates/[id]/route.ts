@@ -36,9 +36,9 @@ export async function GET(
     return Response.json({ error: "Template not found" }, { status: 404 });
   }
 
-  // Extract object IDs from the first format to show available modifications
+  // Extract objects from the first format to show available modifications
   const config = template.config as Record<string, unknown>;
-  const formats = config.formats as Record<string, { objects?: { id: string; type: string }[] }> | undefined;
+  const formats = config.formats as Record<string, { objects?: Record<string, unknown>[] }> | undefined;
   const firstFormat = formats ? Object.values(formats)[0] : undefined;
   const objects = firstFormat?.objects ?? [];
 
@@ -47,9 +47,31 @@ export async function GET(
     name: template.name,
     is_default: template.isDefault,
     objects: objects.map((o) => {
-      const type = o.type === "title" || o.type === "description" ? "text" : o.type;
-      const dataShape = type === "text" ? "text" : type === "image" ? "url" : "auto";
-      return { id: o.id, type, data: dataShape };
+      const rawType = o.type as string;
+      const type = rawType === "title" || rawType === "description" ? "text" : rawType;
+
+      if (type === "text") {
+        return {
+          id: o.id,
+          type,
+          text: null,
+          font_family: null,
+          color: (o.color as string) ?? null,
+        };
+      }
+      if (type === "image") {
+        return {
+          id: o.id,
+          type,
+          image_url: null,
+          image_frame: (o.imageFrame as string) ?? "none",
+          image_frame_color: (o.imageFrameColor as string) ?? null,
+          anchor_x: (o.anchorX as string) ?? "center",
+          anchor_y: (o.anchorY as string) ?? "top",
+        };
+      }
+      // logo — not directly editable via release objects
+      return { id: o.id, type };
     }),
     preview_url: template.previewUrl ?? null,
     created_at: template.created_at,

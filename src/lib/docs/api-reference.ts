@@ -303,6 +303,14 @@ while True:
                           "Image URL for image objects.",
                       },
                       {
+                        name: "image_frame",
+                        type: "string",
+                        required: false,
+                        group: "image",
+                        description:
+                          'Override the device frame type. One of "browser", "mobile", or "none". Defaults to the template\'s setting — see GET /api/v1/templates/:id.',
+                      },
+                      {
                         name: "image_frame_color",
                         type: "string",
                         required: false,
@@ -1079,7 +1087,7 @@ data = response.json()`,
         anchor: "retrieve-template",
         title: "Retrieve a template",
         description:
-          "Returns a single template by ID, including its configurable objects. Use the objects list to know which IDs to pass in your release's slides.objects map.",
+          "Returns a single template by ID, including its configurable objects with their current defaults. Each object shows the properties you can override in your release's slides.objects array — use the same field names.",
         params: [
           {
             name: "id",
@@ -1115,10 +1123,10 @@ data = response.json()`,
   "name": "Standard Browser",
   "is_default": true,
   "objects": [
-    { "id": "title", "type": "text", "data": "text" },
-    { "id": "description", "type": "text", "data": "text" },
-    { "id": "image", "type": "image", "data": "url" },
-    { "id": "logo", "type": "logo", "data": "auto" }
+    { "id": "title", "type": "text", "text": null, "font_family": null, "color": "#EFFBF9" },
+    { "id": "description", "type": "text", "text": null, "font_family": null, "color": "#EFFBF9" },
+    { "id": "image", "type": "image", "image_url": null, "image_frame": "browser", "image_frame_color": "#E8E8E8", "anchor_x": "center", "anchor_y": "top" },
+    { "id": "logo", "type": "logo" }
   ],
   "preview_url": null,
   "created_at": "2026-01-01T00:00:00.000Z",

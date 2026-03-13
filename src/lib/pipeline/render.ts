@@ -156,6 +156,7 @@ export async function renderReleaseAsync(
               if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
               if (mod.font_family) entry.fontFamily = mod.font_family;
               if (mod.color) entry.color = mod.color;
+              if (mod.image_frame) entry.imageFrame = mod.image_frame;
               if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
               if (mod.anchor_x) entry.anchorX = mod.anchor_x;
               if (mod.anchor_y) entry.anchorY = mod.anchor_y;

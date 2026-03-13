@@ -36,6 +36,7 @@ export interface ObjectModification {
   color?: string
   // Image objects
   image_url?: string
+  image_frame?: 'browser' | 'mobile' | 'none'
   image_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
