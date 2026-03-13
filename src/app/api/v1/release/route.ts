@@ -1,8 +1,8 @@
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
-import { validateReleaseColors } from "@/lib/validation";
+import { validateReleaseColors, validateFormats } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
-import { ReleaseRequest } from "@/lib/types";
+import { ReleaseRequest, calculateCredits } from "@/lib/types";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
@@ -22,33 +22,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!body.slides || !Array.isArray(body.slides) || body.slides.length === 0) {
-    return Response.json({ error: "At least 1 slide is required" }, { status: 400 });
+  // Format & slide validation
+  const formatError = validateFormats(body.formats);
+  if (formatError) {
+    return Response.json({ error: formatError }, { status: 400 });
   }
-  if (body.slides.length > 5) {
-    return Response.json({ error: "Maximum 5 slides allowed" }, { status: 400 });
-  }
-  for (const slide of body.slides) {
-    if (!slide.objects) {
-      return Response.json({ error: "Each slide requires an objects array. See GET /api/v1/templates/:id for available object IDs." }, { status: 400 });
-    }
-    if (slide.objects) {
-      if (!Array.isArray(slide.objects)) {
-        return Response.json({ error: "slides[].objects must be an array" }, { status: 400 });
-      }
-      for (const mod of slide.objects) {
-        if (!mod.id || typeof mod.id !== "string") {
-          return Response.json({ error: "Each object requires a string id" }, { status: 400 });
-        }
-        if (mod.anchor_x && !["left", "center", "right"].includes(mod.anchor_x)) {
-          return Response.json({ error: 'anchor_x must be "left", "center", or "right"' }, { status: 400 });
-        }
-        if (mod.anchor_y && !["top", "center", "bottom"].includes(mod.anchor_y)) {
-          return Response.json({ error: 'anchor_y must be "top", "center", or "bottom"' }, { status: 400 });
-        }
-      }
-    }
-  }
+
+  // Template validation (unchanged)
   if (body.template) {
     const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
     const isDefault = validDefaults.includes(body.template);
@@ -60,14 +40,6 @@ export async function POST(request: Request) {
       );
     }
   }
-  if (body.formats) {
-    const valid = ["landscape", "square", "portrait"];
-    for (const f of body.formats) {
-      if (!valid.includes(f)) {
-        return Response.json({ error: `Invalid format: ${f}` }, { status: 400 });
-      }
-    }
-  }
 
   // Validate brand_id OR inline colors
   const colorError = validateReleaseColors(body as unknown as Record<string, unknown>);
@@ -76,8 +48,7 @@ export async function POST(request: Request) {
   }
 
   // Atomically reserve credits BEFORE render (prevents race conditions)
-  const formats = body.formats || ["landscape", "square", "portrait"];
-  const creditsNeeded = body.slides.length * formats.length;
+  const creditsNeeded = calculateCredits(body.formats);
 
   let remaining: number;
   try {
@@ -117,7 +88,7 @@ export async function POST(request: Request) {
     // Refund on release creation failure
     await fetchMutation(api.userProfiles.refund, {
       userId: auth.userId,
-      amount: creditsNeeded,
+      amount: calculateCredits(body.formats),
     }).catch(console.error);
     console.error("Failed to create release:", err);
     return Response.json(
