@@ -92,14 +92,16 @@ export default function DemoPage() {
   -d '{
     "template": "${template}",
     "font_family": "${FONT_FAMILY_MAP[font]}",
-    "slides": [{
-      "objects": [
-        { "id": "title", "text": "..." },
-        { "id": "description", "text": "..." },
-        { "id": "image", "image_url": "..." }
-      ]
-    }],
-    "formats": ["landscape", "square", "portrait"]
+    "formats": [{
+      "name": "landscape",
+      "slides": [{
+        "objects": [
+          { "id": "title", "text": "..." },
+          { "id": "description", "text": "..." },
+          { "id": "image", "image_url": "..." }
+        ]
+      }]
+    }]
   }'`;
 
   return (
