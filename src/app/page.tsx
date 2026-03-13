@@ -139,16 +139,17 @@ export default function Home() {
   -H "Authorization: Bearer bf_key" \\
   -d '{
     "template": "standard-browser",
-    "slides": [{
-      "objects": [
-        { "id": "title",
-          "text": "Dark mode is here" },
-        { "id": "image",
-          "image_url": "https://..." }
-      ]
-    }],
-    "formats": ["landscape",
-      "square", "portrait"]
+    "formats": [{
+      "name": "landscape",
+      "slides": [{
+        "objects": [
+          { "id": "title",
+            "text": "Dark mode is here" },
+          { "id": "image",
+            "image_url": "https://..." }
+        ]
+      }]
+    }]
   }'`}
                 </code>
               </pre>
