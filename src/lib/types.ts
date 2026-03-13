@@ -1,3 +1,5 @@
+import type { FormatKey } from "./templates/canvas-types"
+
 export interface BrandColors {
   background: string
   text: string
@@ -39,6 +41,13 @@ export interface ObjectModification {
   anchor_y?: 'top' | 'center' | 'bottom'
 }
 
+export interface FormatEntry {
+  name: FormatKey
+  slides: Array<{
+    objects?: ObjectModification[]
+  }>
+}
+
 export interface ReleaseRequest {
   brand_id?: string
   // Required when brand_id is absent:
@@ -51,10 +60,7 @@ export interface ReleaseRequest {
   logo_url?: string
   font_family?: string
   template?: TemplateName
-  slides: Array<{
-    objects?: ObjectModification[]
-  }>
-  formats?: Array<'landscape' | 'square' | 'portrait'>
+  formats: FormatEntry[]
   metadata?: string
   webhook_url?: string
 }
@@ -77,4 +83,8 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
   portrait: { width: 1080, height: 1920 },
+}
+
+export function calculateCredits(formats: FormatEntry[]): number {
+  return formats.reduce((sum, f) => sum + f.slides.length, 0)
 }
