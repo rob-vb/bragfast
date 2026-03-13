@@ -67,16 +67,16 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         square: {
           objects: [
-            { ...textObj("title", { fontWeight: 700 }), x: 64, y: 142, width: 952, height: 120, fontSize: 90, zIndex: 2 },
-            { ...textObj("description", { opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 251, width: 952, height: 199, fontSize: 48, zIndex: 3 },
+            { ...textObj("title", { textAlign: "center", fontWeight: 700 }), x: 64, y: 142, width: 952, height: 120, fontSize: 90, zIndex: 2 },
+            { ...textObj("description", { textAlign: "center", opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 251, width: 952, height: 199, fontSize: 48, zIndex: 3 },
             { id: "image", type: "image", name: "image", x: 215, y: 540, width: 650, height: 700, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 43, width: 360, height: 77, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         portrait: {
           objects: [
-            { ...textObj("title", { verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 179, width: 952, height: 120, fontSize: 90, zIndex: 2 },
-            { ...textObj("description", { opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 310, width: 952, height: 256, fontSize: 48, zIndex: 3 },
+            { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", fontWeight: 700 }), x: 64, y: 179, width: 952, height: 120, fontSize: 90, zIndex: 2 },
+            { ...textObj("description", { textAlign: "center", opacity: 0.8, lineHeight: 1.5 }), x: 64, y: 310, width: 952, height: 256, fontSize: 48, zIndex: 3 },
             { id: "image", type: "image", name: "image", x: 215, y: 722, width: 650, height: 1358, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover" },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 65, width: 731, height: 94, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
@@ -161,7 +161,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1200, height: 675, opacity: 0.6, zIndex: 0, imageFrame: "none", objectFit: "cover" },
             { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", textFit: true, fontSize: 80, fontWeight: 700 }), x: 64, y: 393, width: 1072, height: 120, zIndex: 2 },
             { ...textObj("description", { textAlign: "center", fontSize: 48 }), x: 200, y: 530, width: 800, height: 80, zIndex: 3 },
-            { id: "logo", type: "logo", name: "logo", x: 367, y: 341, width: 466, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
+            { id: "logo", type: "logo", name: "logo", x: 367, y: 311, width: 466, height: 72, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         square: {
@@ -169,7 +169,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1080, opacity: 0.6, zIndex: 0, imageFrame: "none", objectFit: "cover" },
             { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", textFit: true, fontSize: 80, fontWeight: 700 }), x: 80, y: 720, width: 920, height: 135, zIndex: 2 },
             { ...textObj("description", { textAlign: "center", fontSize: 48 }), x: 140, y: 872, width: 800, height: 100, zIndex: 3 },
-            { id: "logo", type: "logo", name: "logo", x: 217, y: 694, width: 646, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
+            { id: "logo", type: "logo", name: "logo", x: 217, y: 653, width: 646, height: 72, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
         portrait: {
@@ -177,7 +177,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1920, opacity: 0.6, zIndex: 0, imageFrame: "none", objectFit: "cover" },
             { ...textObj("title", { textAlign: "center", verticalAlign: "bottom", textFit: true, fontSize: 80, fontWeight: 700 }), x: 76, y: 1474, width: 920, height: 134, zIndex: 2 },
             { ...textObj("description", { textAlign: "center", fontSize: 48 }), x: 140, y: 1636, width: 800, height: 100, zIndex: 3 },
-            { id: "logo", type: "logo", name: "logo", x: 292, y: 1441, width: 497, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
+            { id: "logo", type: "logo", name: "logo", x: 292, y: 1402, width: 497, height: 72, opacity: 1, zIndex: 4, objectFit: "contain" },
           ],
         },
       },

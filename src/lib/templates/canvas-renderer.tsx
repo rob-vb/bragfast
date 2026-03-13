@@ -149,18 +149,29 @@ function renderObject(
       );
     }
 
-    case "logo":
+    case "logo": {
       if (!brand.logoBase64) return null;
+      const logoAnchorX = obj.anchorX || "center";
+      const logoJustify = logoAnchorX === "center" ? "center"
+                        : logoAnchorX === "right" ? "flex-end" : "flex-start";
       return (
-        <img
-          src={brand.logoBase64}
-          style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: obj.objectFit || "contain",
-          }}
-        />
+        <div style={{
+          width: "100%", height: "100%",
+          display: "flex",
+          justifyContent: logoJustify,
+          alignItems: "center",
+        }}>
+          <img
+            src={brand.logoBase64}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: obj.objectFit || "contain",
+            }}
+          />
+        </div>
       );
+    }
 
     case "image": {
       const imgSrc = data?.imageBase64;
