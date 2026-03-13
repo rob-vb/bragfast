@@ -8,7 +8,7 @@ import { CanvasRenderer, type ObjectDataMap } from "@/lib/templates/canvas-rende
 import { loadFontsForObjects } from "@/lib/fonts";
 import { FORMAT_DIMENSIONS } from "@/lib/types";
 import { fetchImageAsBase64 } from "@/lib/images";
-import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import { resolveTemplateId } from "@/lib/templates/resolve-id";
 
 export async function POST(
@@ -50,29 +50,44 @@ export async function POST(
     },
   };
 
+  // Parse optional body for format
+  let format: FormatKey = "landscape";
+  try {
+    const body = await request.json();
+    if (body.format && Object.keys(FORMAT_DIMENSIONS).includes(body.format)) {
+      format = body.format as FormatKey;
+    }
+  } catch {
+    // Body is optional
+  }
+
   const placeholderObjectData: ObjectDataMap = {
     title: { text: "Title here" },
     description: { text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
   };
 
-  const { width, height } = FORMAT_DIMENSIONS["landscape"];
+  const { width, height } = FORMAT_DIMENSIONS[format];
 
   try {
     const templateConfig = template.config as CanvasTemplateConfig;
 
+    if (!templateConfig.formats[format]) {
+      return Response.json({ error: `Format "${format}" not available for this template` }, { status: 400 });
+    }
+
     // Inject static images (src field) into placeholder data
-    for (const obj of templateConfig.formats.landscape.objects) {
+    for (const obj of templateConfig.formats[format].objects) {
       if (obj.type === "image" && obj.src && !placeholderObjectData[obj.id]?.imageBase64) {
         const base64 = await fetchImageAsBase64(obj.src);
         placeholderObjectData[obj.id] = { ...placeholderObjectData[obj.id], imageBase64: base64 };
       }
     }
 
-    const fonts = await loadFontsForObjects(templateConfig.formats.landscape.objects);
+    const fonts = await loadFontsForObjects(templateConfig.formats[format].objects);
 
     const jsx = CanvasRenderer({
       config: templateConfig,
-      format: "landscape",
+      format,
       objectData: placeholderObjectData,
       brand: placeholderBrand,
     });
