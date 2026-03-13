@@ -77,19 +77,27 @@ interface ReleaseRequest {
 }
 ```
 
+## Credits
+
+`credits = sum of slides.length across all format entries`
+
+Example: 1 landscape slide + 2 square slides = 3 credits.
+
 ## Validation Rules
 
-- `formats` is required, must have at least one entry
-- `name` must be one of `landscape`, `square`, `portrait`
+- `formats` is required, must have at least one entry. No default formats — omitting `formats` is a validation error.
+- `name` must be a valid `FormatKey` (`landscape` | `square` | `portrait`). Derive from existing `FormatKey` type, not a redeclared union.
 - Duplicate format names rejected
 - Each format entry must have at least one slide
+- Max 5 slides per format entry
 - `objects` within a slide is optional (template defaults apply)
+- Object-level validation (`id`, `anchor_x`, `anchor_y` values, etc.) unchanged
 
 ## Render Pipeline Change
 
 Current: double loop — outer `formats`, inner `slides`, with a single pre-built `slideDataMaps` array.
 
-New: iterate `formats` array, each entry brings its own slides. Build `slideDataMaps` per format entry instead of once upfront.
+New: iterate `formats` array, each entry brings its own slides. Build `slideDataMaps` per format entry instead of once upfront. Static image injection (template `src` fields) must also move inside the per-format loop since slide counts differ per format.
 
 ## Response Shape
 
