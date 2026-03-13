@@ -1,5 +1,6 @@
 import { authenticate } from "@/lib/auth/authenticate";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
+import { isValidHexColor } from "@/lib/validation";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
@@ -64,6 +65,15 @@ export async function POST(request: Request) {
       { error: "colors must include background, text, and primary (hex strings)" },
       { status: 400 }
     );
+  }
+
+  for (const key of ["background", "text", "primary"] as const) {
+    if (!isValidHexColor(colors[key] as string)) {
+      return Response.json(
+        { error: `colors.${key} must be a valid hex color (e.g. "#1a1a2e")` },
+        { status: 400 }
+      );
+    }
   }
 
   try {

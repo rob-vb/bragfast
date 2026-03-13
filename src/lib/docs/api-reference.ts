@@ -39,7 +39,7 @@ curl -X POST https://bragfast.com/api/v1/release \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "brand_id": "brd_abc123",
+    "brand_id": "brand_abc123",
     "formats": [{ "name": "landscape", "slides": [{ "objects": [{ "id": "title", "text": "Shipped v2.0" }] }] }],
     "webhook_url": "https://your-app.com/webhooks/bragfast"
   }'
@@ -55,7 +55,7 @@ const release = await fetch("https://bragfast.com/api/v1/release", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    brand_id: "brd_abc123",
+    brand_id: "brand_abc123",
     formats: [{ name: "landscape", slides: [{ objects: [{ id: "title", text: "Shipped v2.0" }] }] }],
     webhook_url: "https://your-app.com/webhooks/bragfast",
   }),
@@ -78,7 +78,7 @@ release = requests.post(
     "https://bragfast.com/api/v1/release",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
-        "brand_id": "brd_abc123",
+        "brand_id": "brand_abc123",
         "formats": [{"name": "landscape", "slides": [{"objects": [{"id": "title", "text": "Shipped v2.0"}]}]}],
         "webhook_url": "https://your-app.com/webhooks/bragfast",
     },
@@ -182,7 +182,7 @@ while True:
             type: "string",
             required: false,
             description:
-              "ID of a saved brand kit (e.g. \"brd_abc123\"). If not provided, you must provide colors.",
+              "ID of a saved brand kit (e.g. \"brand_abc123\"). If not provided, you must provide colors.",
           },
           {
             name: "colors",
@@ -360,7 +360,7 @@ while True:
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "brand_id": "brd_abc123",
+    "brand_id": "brand_abc123",
     "template": "standard-browser",
     "formats": [
       {
@@ -396,7 +396,7 @@ while True:
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    brand_id: "brd_abc123",
+    brand_id: "brand_abc123",
     template: "standard-browser",
     formats: [
       {
@@ -433,7 +433,7 @@ response = requests.post(
     "https://bragfast.com/api/v1/release",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
-        "brand_id": "brd_abc123",
+        "brand_id": "brand_abc123",
         "template": "standard-browser",
         "formats": [
             {
@@ -473,7 +473,8 @@ data = response.json()`,
   "credits_used": 2,
   "credits_remaining": 28,
   "created_at": "2026-03-09T12:00:00.000Z",
-  "metadata": null
+  "metadata": null,
+  "webhook_url": null
 }`,
       },
       {
@@ -532,7 +533,9 @@ data = response.json()`,
   "credits_used": 2,
   "credits_remaining": 28,
   "created_at": "2026-03-09T12:00:00.000Z",
-  "completed_at": "2026-03-09T12:00:05.000Z"
+  "completed_at": "2026-03-09T12:00:05.000Z",
+  "metadata": null,
+  "webhook_url": null
 }`,
       },
     ],
@@ -545,7 +548,7 @@ data = response.json()`,
     description:
       "Brand kits are your visual identity — colors, logo, font, and website. Set one up once, then reference it by ID in every release. Think of it as your signature recipe.",
     sampleObject: `{
-  "id": "brd_abc123",
+  "id": "brand_abc123",
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
@@ -672,7 +675,7 @@ data = response.json()`,
         },
         responseStatus: 201,
         responseExample: `{
-  "id": "brd_abc123",
+  "id": "brand_abc123",
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
@@ -701,10 +704,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/brands/brd_abc123 \\
+          curl: `curl https://bragfast.com/api/v1/brands/brand_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/brands/brd_abc123",
+  "https://bragfast.com/api/v1/brands/brand_abc123",
   {
     headers: {
       "Authorization": "Bearer bf_your_api_key",
@@ -715,14 +718,14 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/brands/brd_abc123",
+    "https://bragfast.com/api/v1/brands/brand_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
         },
         responseStatus: 200,
         responseExample: `{
-  "id": "brd_abc123",
+  "id": "brand_abc123",
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
@@ -762,7 +765,7 @@ data = response.json()`,
         responseStatus: 200,
         responseExample: `[
   {
-    "id": "brd_abc123",
+    "id": "brand_abc123",
     "name": "Acme Inc",
     "logo_url": "https://example.com/logo.png",
     "website": "https://acme.com",
@@ -844,14 +847,14 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X PATCH https://bragfast.com/api/v1/brands/brd_abc123 \\
+          curl: `curl -X PATCH https://bragfast.com/api/v1/brands/brand_abc123 \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "colors": { "primary": "#00ff88" }
   }'`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/brands/brd_abc123",
+  "https://bragfast.com/api/v1/brands/brand_abc123",
   {
     method: "PATCH",
     headers: {
@@ -867,7 +870,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.patch(
-    "https://bragfast.com/api/v1/brands/brd_abc123",
+    "https://bragfast.com/api/v1/brands/brand_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={"colors": {"primary": "#00ff88"}},
 )
@@ -875,7 +878,7 @@ data = response.json()`,
         },
         responseStatus: 200,
         responseExample: `{
-  "id": "brd_abc123",
+  "id": "brand_abc123",
   "name": "Acme Inc",
   "logo_url": "https://example.com/logo.png",
   "website": "https://acme.com",
@@ -905,10 +908,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X DELETE https://bragfast.com/api/v1/brands/brd_abc123 \\
+          curl: `curl -X DELETE https://bragfast.com/api/v1/brands/brand_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/brands/brd_abc123",
+  "https://bragfast.com/api/v1/brands/brand_abc123",
   {
     method: "DELETE",
     headers: {
@@ -920,7 +923,7 @@ data = response.json()`,
           python: `import requests
 
 response = requests.delete(
-    "https://bragfast.com/api/v1/brands/brd_abc123",
+    "https://bragfast.com/api/v1/brands/brand_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 # 204 No Content on success`,
@@ -1399,7 +1402,7 @@ data = response.json()`,
         anchor: "preview-template",
         title: "Preview a template",
         description:
-          "Generates a JPEG preview of the template with placeholder content. Returns the image directly (not JSON). Handy for seeing what a template looks like before using it in a release.",
+          "Generates a JPEG preview of the template with placeholder content. Returns the image directly (not JSON). Handy for seeing what a template looks like before using it in a release. Optionally pass a format in the request body to preview a specific aspect ratio.",
         params: [
           {
             name: "id",
@@ -1407,12 +1410,28 @@ data = response.json()`,
             required: true,
             description: "The template ID (path parameter). Works with defaults and custom templates.",
           },
+          {
+            name: "format",
+            type: "string",
+            required: false,
+            description:
+              'The format to preview: "landscape", "square", or "portrait". Defaults to "landscape".',
+          },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/templates/standard-browser/preview \\
+          curl: `# Landscape (default)
+curl -X POST https://bragfast.com/api/v1/templates/standard-browser/preview \\
   -H "Authorization: Bearer bf_your_api_key" \\
-  --output preview.jpg`,
-          javascript: `const response = await fetch(
+  --output preview.jpg
+
+# Square format
+curl -X POST https://bragfast.com/api/v1/templates/standard-browser/preview \\
+  -H "Authorization: Bearer bf_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"format": "square"}' \\
+  --output preview-square.jpg`,
+          javascript: `// Landscape (default)
+const response = await fetch(
   "https://bragfast.com/api/v1/templates/standard-browser/preview",
   {
     method: "POST",
@@ -1421,20 +1440,41 @@ data = response.json()`,
     },
   }
 )
+
+// Square format
+const response = await fetch(
+  "https://bragfast.com/api/v1/templates/standard-browser/preview",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer bf_your_api_key",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ format: "square" }),
+  }
+)
 const blob = await response.blob()
 // Save or display the JPEG image`,
           python: `import requests
 
+# Landscape (default)
 response = requests.post(
     "https://bragfast.com/api/v1/templates/standard-browser/preview",
     headers={"Authorization": "Bearer bf_your_api_key"},
+)
+
+# Square format
+response = requests.post(
+    "https://bragfast.com/api/v1/templates/standard-browser/preview",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+    json={"format": "square"},
 )
 with open("preview.jpg", "wb") as f:
     f.write(response.content)`,
         },
         responseStatus: 200,
         responseExample: `// Returns a JPEG image (Content-Type: image/jpeg)
-// Landscape format (1200x675) with placeholder data`,
+// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1350)`,
       },
     ],
   },

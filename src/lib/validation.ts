@@ -4,6 +4,11 @@ const VALID_FORMATS = Object.keys(FORMAT_DIMENSIONS)
 const VALID_ANCHOR_X = ['left', 'center', 'right']
 const VALID_ANCHOR_Y = ['top', 'center', 'bottom']
 const VALID_IMAGE_FRAMES = ['browser', 'mobile', 'none']
+const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+
+export function isValidHexColor(value: string): boolean {
+  return HEX_COLOR_RE.test(value)
+}
 
 export function validateFormats(formats: unknown): string | null {
   if (!formats || !Array.isArray(formats) || formats.length === 0) {
@@ -58,6 +63,11 @@ export function validateReleaseColors(body: Record<string, unknown>): string | n
     const colors = body.colors as Record<string, unknown> | undefined
     if (!colors?.background || !colors?.text || !colors?.primary) {
       return 'colors.background, colors.text, and colors.primary are required when brand_id is not provided'
+    }
+    for (const key of ['background', 'text', 'primary'] as const) {
+      if (typeof colors[key] === 'string' && !isValidHexColor(colors[key] as string)) {
+        return `colors.${key} must be a valid hex color (e.g. "#1a1a2e")`
+      }
     }
   }
   return null

@@ -1,4 +1,5 @@
 import { authenticate } from "@/lib/auth/authenticate";
+import { isValidHexColor } from "@/lib/validation";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { isR2Url, keyFromUrl, deleteByKey } from "@/lib/storage/r2";
@@ -61,6 +62,14 @@ export async function PATCH(
     if (typeof c.background === "string") colorsUpdate.background = c.background;
     if (typeof c.text === "string") colorsUpdate.text = c.text;
     if (typeof c.primary === "string") colorsUpdate.primary = c.primary;
+    for (const [key, val] of Object.entries(colorsUpdate)) {
+      if (!isValidHexColor(val)) {
+        return Response.json(
+          { error: `colors.${key} must be a valid hex color (e.g. "#1a1a2e")` },
+          { status: 400 }
+        );
+      }
+    }
     if (Object.keys(colorsUpdate).length > 0) updates.colors = colorsUpdate;
   }
 

@@ -3,7 +3,7 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { ReleaseRequest, calculateCredits } from "@/lib/types";
-import { fetchMutation } from "convex/nextjs";
+import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
 export async function POST(request: Request) {
@@ -45,6 +45,16 @@ export async function POST(request: Request) {
   const colorError = validateReleaseColors(body as unknown as Record<string, unknown>);
   if (colorError) {
     return Response.json({ error: colorError }, { status: 400 });
+  }
+
+  // Verify brand exists when brand_id is provided
+  if (body.brand_id) {
+    const brand = await fetchQuery(api.brands.getByExternalId, {
+      externalId: body.brand_id,
+    });
+    if (!brand || brand.userId !== auth.userId) {
+      return Response.json({ error: "Brand not found" }, { status: 404 });
+    }
   }
 
   // Atomically reserve credits BEFORE render (prevents race conditions)
