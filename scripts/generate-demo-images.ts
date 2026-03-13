@@ -31,11 +31,12 @@ const FONTS = ["Inter", "Raleway", "Saira"] as const;
 const FORMATS = ["landscape", "square", "portrait"] as const;
 
 // Content varies by template purpose
-const CONTENT: Record<string, { title: string; description: string; image: string; localImage?: boolean }> = {
+type ImageAnchor = { anchor_y?: string; anchor_x?: string };
+const CONTENT: Record<string, { title: string; description: string; image: string; localImage?: boolean; brandId?: string; imageAnchors?: Record<string, ImageAnchor> }> = {
   "standard-browser": {
     title: "Fresh new look",
     description: "We redesigned our website from the ground up",
-    image: "honeybee.png",
+    image: "browserdemo.jpg",
     localImage: true,
   },
   "standard-mobile": {
@@ -47,7 +48,7 @@ const CONTENT: Record<string, { title: string; description: string; image: strin
   "split-browser": {
     title: "Fresh new look",
     description: "We redesigned our website from the ground up",
-    image: "honeybee.png",
+    image: "browserdemo.jpg",
     localImage: true,
   },
   "split-mobile": {
@@ -57,9 +58,15 @@ const CONTENT: Record<string, { title: string; description: string; image: strin
     localImage: true,
   },
   hero: {
-    title: "Squashed 12 bugs",
-    description: "Stability and performance improvements across the board",
-    image: "photo-1461749280684-dccba630e2f6?w=1200&h=800&fit=crop",
+    title: "New mobile app",
+    description: "Available now on iOS and Android",
+    image: "herodemo.jpg",
+    localImage: true,
+    brandId: "brand_fa431022-c",
+    imageAnchors: {
+      landscape: { anchor_y: "top" },
+      square: { anchor_y: "top" },
+    },
   },
 };
 
@@ -75,27 +82,35 @@ function getColors(template: string) {
   return COLORS[group] ?? COLORS.default;
 }
 
-function buildPayload(template: string, font: string) {
+function buildPayload(template: string, font: string, format: typeof FORMATS[number]) {
   const content = CONTENT[template];
   const imageUrl = content.localImage
     ? `${BASE}/demo/${content.image}`
     : `https://images.unsplash.com/${content.image}`;
+
+  const imageObj: Record<string, string> = { id: "image", image_url: imageUrl };
+  const anchors = content.imageAnchors?.[format];
+  if (anchors?.anchor_x) imageObj.anchor_x = anchors.anchor_x;
+  if (anchors?.anchor_y) imageObj.anchor_y = anchors.anchor_y;
 
   return {
     template,
     font_family: font,
     colors: getColors(template),
     name: "Acme Inc",
-    slides: [
-      {
-        objects: [
-          { id: "title", text: content.title },
-          { id: "description", text: content.description },
-          { id: "image", image_url: imageUrl },
-        ],
-      },
-    ],
-    formats: [...FORMATS],
+    ...(content.brandId && { brand_id: content.brandId }),
+    formats: [{
+      name: format,
+      slides: [
+        {
+          objects: [
+            { id: "title", text: content.title },
+            { id: "description", text: content.description },
+            imageObj,
+          ],
+        },
+      ],
+    }],
   };
 }
 
@@ -159,12 +174,11 @@ async function main() {
       console.log(`Generating ${label}...`);
 
       try {
-        const payload = buildPayload(template, font);
-        const { release_id } = await createRelease(payload);
-        await pollRelease(release_id);
-
-        // Copy output files to public/demo/
         for (const format of FORMATS) {
+          const payload = buildPayload(template, font, format);
+          const { release_id } = await createRelease(payload);
+          await pollRelease(release_id);
+
           const src = path.join(OUTPUT_DIR, release_id, `${format}-1.jpg`);
           const dest = path.join(destDir, `${label}-${format}.jpg`);
           if (!existsSync(src)) {
@@ -172,11 +186,11 @@ async function main() {
           }
           copyFileSync(src, dest);
           total++;
-        }
-        console.log(`  OK (${release_id})`);
 
-        // Delay to avoid rate limits
-        await new Promise((r) => setTimeout(r, 1500));
+          // Delay to avoid rate limits
+          await new Promise((r) => setTimeout(r, 500));
+        }
+        console.log(`  OK`);
       } catch (err) {
         console.error(`  FAILED: ${err}`);
         errors++;
