@@ -1,6 +1,7 @@
 import { authenticate } from "@/lib/auth/authenticate";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
+import { isR2Url, keyFromUrl, deleteByKey } from "@/lib/storage/r2";
 
 export async function GET(
   request: Request,
@@ -63,6 +64,15 @@ export async function PATCH(
     if (Object.keys(colorsUpdate).length > 0) updates.colors = colorsUpdate;
   }
 
+  // If logo_url is changing, check if old logo was on R2 so we can clean it up
+  let oldLogoKey: string | null = null;
+  if (typeof updates.logo_url === "string") {
+    const brand = await fetchQuery(api.brands.getByExternalId, { externalId: id });
+    if (brand?.logo_url && brand.logo_url !== updates.logo_url) {
+      oldLogoKey = keyFromUrl(brand.logo_url);
+    }
+  }
+
   try {
     const updated = await fetchMutation(api.brands.update, {
       externalId: id,
@@ -74,6 +84,14 @@ export async function PATCH(
     if (!updated) {
       return Response.json({ error: "Brand not found" }, { status: 404 });
     }
+
+    // Clean up old R2 logo after successful save (fire-and-forget)
+    if (oldLogoKey) {
+      deleteByKey(oldLogoKey).catch((err) =>
+        console.error("Failed to delete old logo:", err)
+      );
+    }
+
     return Response.json(updated);
   } catch (err) {
     console.error("Failed to update brand:", err);

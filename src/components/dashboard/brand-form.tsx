@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
@@ -84,6 +84,37 @@ export function BrandForm({
     router.refresh();
   }
 
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleLogoUpload(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Logo must be under 5MB");
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp", "image/svg+xml"].includes(file.type)) {
+      setError("Logo must be PNG, JPEG, WebP, or SVG");
+      return;
+    }
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/v1/upload", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Upload failed");
+        return;
+      }
+      update("logo_url", data.url);
+    } catch {
+      setError("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const inputClass =
     "w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]";
 
@@ -142,12 +173,49 @@ export function BrandForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-bold text-brand">Logo URL</label>
+          <label className="mb-1 block text-xs font-bold text-brand">Logo</label>
+          <div
+            className="mb-2 flex items-center gap-3 border-2 border-dashed border-brand/30 bg-white p-3 cursor-pointer hover:border-brand/60 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const file = e.dataTransfer.files[0];
+              if (file) handleLogoUpload(file);
+            }}
+          >
+            {form.logo_url ? (
+              <img
+                src={form.logo_url}
+                alt="Logo preview"
+                className="h-10 w-10 object-contain border border-brand/10"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center border-2 border-brand/20 text-brand/30 text-lg">
+                +
+              </div>
+            )}
+            <div className="flex-1 text-xs text-brand/60">
+              {uploading ? "Uploading..." : "Click or drag to upload (PNG, JPEG, WebP, SVG, max 5MB)"}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleLogoUpload(file);
+                e.target.value = "";
+              }}
+            />
+          </div>
           <input
             className={inputClass}
             value={form.logo_url ?? ""}
             onChange={(e) => update("logo_url", e.target.value)}
-            placeholder="https://..."
+            placeholder="https://... or upload above"
           />
         </div>
         <div>

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 
 const client = new S3Client({
   region: 'auto',
@@ -11,6 +11,19 @@ const client = new S3Client({
 
 const BUCKET = process.env.R2_BUCKET_NAME!
 const PUBLIC_URL = process.env.R2_PUBLIC_URL!
+
+export function isR2Url(url: string): boolean {
+  return url.startsWith(PUBLIC_URL)
+}
+
+export function keyFromUrl(url: string): string | null {
+  if (!isR2Url(url)) return null
+  return url.slice(PUBLIC_URL.length + 1)
+}
+
+export async function deleteByKey(key: string): Promise<void> {
+  await client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
+}
 
 export async function deleteByPrefix(prefix: string): Promise<number> {
   let deleted = 0
