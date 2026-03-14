@@ -247,7 +247,8 @@ export async function renderReleaseAsync(
       if (result) await callWebhook(request.webhook_url, result);
     }
   } catch (err) {
-    console.error(`Render failed for ${releaseId}:`, err);
+    const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
+    console.error(`Render failed for ${releaseId}: ${errMsg}`);
 
     // Refund reserved credits on render failure
     const amount = calculateCredits({ output: "image", formats: request.formats });
