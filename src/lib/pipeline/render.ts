@@ -20,9 +20,10 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function createRelease(
   request: ReleaseRequest,
-  userId: string
+  userId: string,
+  sourceInfo?: { source: "api" | "github"; sourceMetadata?: string }
 ): Promise<ReleaseResult> {
-  const releaseId = `rel_${crypto.randomUUID().slice(0, 10)}`;
+  const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
   const creditsUsed = calculateCredits(request.formats);
 
   await convex.mutation(api.releases.create, {
@@ -32,10 +33,12 @@ export async function createRelease(
     credits_used: creditsUsed,
     metadata: request.metadata,
     webhook_url: request.webhook_url,
+    source: sourceInfo?.source,
+    sourceMetadata: sourceInfo?.sourceMetadata,
   });
 
   return {
-    release_id: releaseId,
+    cook_id: releaseId,
     status: "pending",
     images: null,
     credits_used: creditsUsed,
@@ -54,7 +57,7 @@ export async function getRelease(
   });
   if (!r) return null;
   return {
-    release_id: r.externalId,
+    cook_id: r.externalId,
     status: r.status,
     images: r.images ?? null,
     credits_used: r.credits_used,

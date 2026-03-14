@@ -9,6 +9,8 @@ export const create = mutation({
     credits_used: v.number(),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
+    source: v.optional(v.union(v.literal("api"), v.literal("github"))),
+    sourceMetadata: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
@@ -53,6 +55,17 @@ export const markCompleted = mutation({
       completed_at: new Date().toISOString(),
     });
   },
+});
+
+export const getBySourceMetadata = query({
+  args: { sourceMetadata: v.string() },
+  handler: async (ctx, { sourceMetadata }) =>
+    ctx.db
+      .query("releases")
+      .withIndex("by_sourceMetadata", (q) =>
+        q.eq("sourceMetadata", sourceMetadata)
+      )
+      .first(),
 });
 
 export const markFailed = mutation({

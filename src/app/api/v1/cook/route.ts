@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats } from "@/lib/validation";
@@ -87,12 +88,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await createRelease(body, auth.userId);
+    const result = await createRelease(body, auth.userId, { source: "api" });
     result.credits_remaining = remaining;
     // Credits already reserved — render refunds on failure
-    renderReleaseAsync(result.release_id, body, auth.userId).catch(
-      console.error
-    );
+    after(() => renderReleaseAsync(result.cook_id, body, auth.userId));
     return Response.json(result, { status: 202 });
   } catch (err) {
     // Refund on release creation failure
