@@ -39,7 +39,8 @@ export async function createRelease(
 
   return {
     cook_id: releaseId,
-    status: "pending",
+    output: "image" as const,
+    status: "pending" as const,
     images: null,
     credits_used: creditsUsed,
     credits_remaining: -1, // filled by caller
@@ -58,8 +59,10 @@ export async function getRelease(
   if (!r) return null;
   return {
     cook_id: r.externalId,
+    output: (r.output ?? "image") as "image" | "video",
     status: r.status,
     images: r.images ?? null,
+    videos: r.videos ?? null,
     credits_used: r.credits_used,
     credits_remaining: -1, // filled by caller
     created_at: r.created_at,

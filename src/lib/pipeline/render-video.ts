@@ -31,8 +31,10 @@ export function createVideoRelease(
     cookId,
     result: {
       cook_id: cookId,
+      output: "video" as const,
       status: "pending" as const,
       images: null,
+      videos: null,
       credits_used: creditsUsed,
       credits_remaining: 0,
       created_at: new Date().toISOString(),
