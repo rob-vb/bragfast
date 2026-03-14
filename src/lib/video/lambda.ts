@@ -61,10 +61,9 @@ export async function renderVideo({
         inputProps,
         codec: "h264",
         timeoutInMilliseconds: 240000,
-        // Render all frames in 1 chunk to minimize concurrent Lambda invocations.
-        // Default chunking spawns many Lambdas which hits concurrency limits on
-        // accounts with low limits (default is 10).
-        framesPerLambda: 600,
+        // ~2-3 chunks for a typical 12s video. Parallelizes rendering
+        // across multiple Lambdas for faster wall-clock time (~15-20s vs ~70s).
+        framesPerLambda: 200,
       }),
     "renderMediaOnLambda"
   );
