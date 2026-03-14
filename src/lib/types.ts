@@ -68,8 +68,10 @@ export interface ReleaseRequest {
 
 export interface ReleaseResult {
   cook_id: string
+  output: 'image' | 'video'
   status: 'pending' | 'completed' | 'failed'
   images: Record<string, { slides: string[]; dimensions: string }> | null
+  videos?: Record<string, { url: string; duration: number; dimensions: string }> | null
   credits_used: number
   credits_remaining: number
   created_at: string
@@ -86,6 +88,18 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   portrait: { width: 1080, height: 1920 },
 }
 
-export function calculateCredits(formats: FormatEntry[]): number {
-  return formats.reduce((sum, f) => sum + f.slides.length, 0)
+export type CookOutput = "image" | "video";
+
+export type CookCreditsInput =
+  | { output?: "image"; formats: FormatEntry[] }
+  | { output: "video"; formats: { name: string; scenes: unknown[] }[] };
+
+export function calculateCredits(input: CookCreditsInput): number {
+  if (input.output === "video") {
+    return input.formats.length * 5;
+  }
+  return (input as { formats: FormatEntry[] }).formats.reduce(
+    (sum, f) => sum + f.slides.length,
+    0
+  );
 }

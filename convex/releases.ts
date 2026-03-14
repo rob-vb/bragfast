@@ -11,11 +11,13 @@ export const create = mutation({
     webhook_url: v.optional(v.string()),
     source: v.optional(v.union(v.literal("api"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
+    output: v.optional(v.union(v.literal("image"), v.literal("video"))),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
     await ctx.db.insert("releases", {
       ...args,
+      output: args.output ?? "image",
       status: "pending",
       created_at: now,
     });
@@ -42,18 +44,24 @@ export const getByExternalId = query({
 });
 
 export const markCompleted = mutation({
-  args: { externalId: v.string(), images: v.any() },
-  handler: async (ctx, { externalId, images }) => {
+  args: {
+    externalId: v.string(),
+    images: v.optional(v.any()),
+    videos: v.optional(v.any()),
+  },
+  handler: async (ctx, args) => {
     const r = await ctx.db
       .query("releases")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .withIndex("by_externalId", (q) => q.eq("externalId", args.externalId))
       .first();
     if (!r) throw new Error("Release not found");
-    await ctx.db.patch(r._id, {
+    const patch: Record<string, unknown> = {
       status: "completed",
-      images,
       completed_at: new Date().toISOString(),
-    });
+    };
+    if (args.images) patch.images = args.images;
+    if (args.videos) patch.videos = args.videos;
+    await ctx.db.patch(r._id, patch);
   },
 });
 

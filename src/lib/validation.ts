@@ -1,4 +1,5 @@
 import { FORMAT_DIMENSIONS } from './types'
+import { isDefaultVideoTemplate } from './video/defaults'
 
 const VALID_FORMATS = Object.keys(FORMAT_DIMENSIONS)
 const VALID_ANCHOR_X = ['left', 'center', 'right']
@@ -56,6 +57,36 @@ export function validateFormats(formats: unknown): string | null {
   }
 
   return null
+}
+
+export function validateVideoFormats(
+  formats: { name: string; scenes: unknown[] }[]
+): string | null {
+  if (!Array.isArray(formats) || formats.length === 0) {
+    return "formats must be a non-empty array";
+  }
+  const validNames = ["landscape", "square", "portrait"];
+  const seen = new Set<string>();
+  for (const format of formats) {
+    if (!validNames.includes(format.name)) {
+      return `Invalid format name: ${format.name}`;
+    }
+    if (seen.has(format.name)) {
+      return `Duplicate format: ${format.name}`;
+    }
+    seen.add(format.name);
+    if (!Array.isArray(format.scenes) || format.scenes.length === 0) {
+      return `${format.name}: scenes must be a non-empty array`;
+    }
+  }
+  return null;
+}
+
+export function validateVideoTemplate(template: string | undefined): string | null {
+  if (!template) return null;
+  if (isDefaultVideoTemplate(template)) return null;
+  if (template.startsWith("vtmpl_")) return null;
+  return `Invalid video template. Must be a default name (e.g. "product-update") or a template ID (vtmpl_...)`;
 }
 
 export function validateReleaseColors(body: Record<string, unknown>): string | null {

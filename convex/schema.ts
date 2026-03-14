@@ -70,7 +70,9 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("failed")
     ),
+    output: v.optional(v.union(v.literal("image"), v.literal("video"))),
     images: v.optional(v.any()),
+    videos: v.optional(v.any()),
     credits_used: v.number(),
     transparent: v.optional(v.boolean()),
     metadata: v.optional(v.string()),
@@ -83,6 +85,19 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_externalId", ["externalId"])
     .index("by_sourceMetadata", ["sourceMetadata"]),
+
+  videoTemplates: defineTable({
+    userId: v.string(),
+    externalId: v.string(),
+    name: v.string(),
+    isDefault: v.boolean(),
+    config: v.any(),
+    previewUrl: v.optional(v.string()),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_externalId", ["externalId"]),
 
   githubInstallations: defineTable({
     userId: v.string(),

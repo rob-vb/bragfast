@@ -186,7 +186,7 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
   });
 
   // 9. Reserve credits
-  const creditsNeeded = calculateCredits(releaseRequest.formats);
+  const creditsNeeded = calculateCredits({ output: "image", formats: releaseRequest.formats });
   try {
     await convex.mutation(api.userProfiles.reserve, {
       userId,
