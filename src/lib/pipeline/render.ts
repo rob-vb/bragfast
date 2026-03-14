@@ -20,7 +20,8 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function createRelease(
   request: ReleaseRequest,
-  userId: string
+  userId: string,
+  sourceInfo?: { source: "api" | "github"; sourceMetadata?: string }
 ): Promise<ReleaseResult> {
   const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
   const creditsUsed = calculateCredits(request.formats);
@@ -32,6 +33,8 @@ export async function createRelease(
     credits_used: creditsUsed,
     metadata: request.metadata,
     webhook_url: request.webhook_url,
+    source: sourceInfo?.source,
+    sourceMetadata: sourceInfo?.sourceMetadata,
   });
 
   return {
