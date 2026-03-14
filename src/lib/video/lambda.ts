@@ -63,16 +63,12 @@ export async function renderVideo({
 export async function deployRemotionToLambda() {
   const entryPoint = path.resolve(process.cwd(), "src/remotion/index.ts");
 
-  const bundleResult = await bundle({
-    entryPoint,
-    onProgress: (p) => console.log(`Bundling: ${Math.round(p * 100)}%`),
-  });
-
   const { bucketName } = await getOrCreateBucket({ region: REGION });
 
+  console.log("Deploying site to S3...");
   const { serveUrl } = await deploySite({
     bucketName,
-    entryPoint: bundleResult,
+    entryPoint,
     region: REGION,
     siteName: "bragfast-video",
   });
