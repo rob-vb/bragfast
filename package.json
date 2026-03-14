@@ -7,7 +7,9 @@
     "build": "npx convex codegen --typecheck=disable 2>/dev/null; next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest"
+    "test": "vitest",
+    "remotion:deploy": "tsx scripts/deploy-remotion.ts",
+    "remotion:studio": "remotion studio src/remotion/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1003.0",
