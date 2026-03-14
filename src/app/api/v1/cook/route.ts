@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   }
 
   // Atomically reserve credits BEFORE render (prevents race conditions)
-  const creditsNeeded = calculateCredits(body.formats);
+  const creditsNeeded = calculateCredits({ output: "image", formats: body.formats });
 
   let remaining: number;
   try {
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     // Refund on release creation failure
     await fetchMutation(api.userProfiles.refund, {
       userId: auth.userId,
-      amount: calculateCredits(body.formats),
+      amount: calculateCredits({ output: "image", formats: body.formats }),
     }).catch(console.error);
     console.error("Failed to create release:", err);
     return Response.json(

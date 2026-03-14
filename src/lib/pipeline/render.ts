@@ -24,7 +24,7 @@ export async function createRelease(
   sourceInfo?: { source: "api" | "github"; sourceMetadata?: string }
 ): Promise<ReleaseResult> {
   const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
-  const creditsUsed = calculateCredits(request.formats);
+  const creditsUsed = calculateCredits({ output: "image", formats: request.formats });
 
   await convex.mutation(api.releases.create, {
     userId,
@@ -247,7 +247,7 @@ export async function renderReleaseAsync(
     console.error(`Render failed for ${releaseId}:`, err);
 
     // Refund reserved credits on render failure
-    const amount = calculateCredits(request.formats);
+    const amount = calculateCredits({ output: "image", formats: request.formats });
     try {
       await convex.mutation(api.userProfiles.refund, { userId, amount });
     } catch (refundErr) {
