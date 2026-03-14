@@ -6,7 +6,7 @@ export const API_REFERENCE: ApiSection[] = [
     title: "Introduction",
     anchor: "introduction",
     description:
-      "brag.fast is an API that auto-generates branded social media images for your product releases. Set up a brand kit, POST your release details, and get back images in landscape, square, and portrait — ready to serve. One API call, a full plate of content.",
+      "brag.fast is an API that auto-generates branded social media images for your product updates. Set up a brand kit, POST your content, and get back images in landscape, square, and portrait — ready to serve. One API call, a full plate of content.",
     endpoints: [],
   },
 
@@ -28,14 +28,14 @@ export const API_REFERENCE: ApiSection[] = [
     endpoints: [
       {
         method: "POST",
-        path: "/api/v1/release",
+        path: "/api/v1/cook",
         anchor: "async-flow",
         title: "How it works",
         description:
-          "Two ways to get your images when they're done:\n\n1. Polling — call GET /api/v1/release/:id until the status flips from \"pending\" to \"completed\".\n\n2. Webhook — pass a webhook_url when creating the release. brag.fast will POST the completed release object (same shape as the GET response, with image URLs) to that URL when the images are served hot.\n\nPolling is simpler for scripts. Webhooks are better for production — no looping, just a callback.",
+          "Two ways to get your images when they're done:\n\n1. Polling — call GET /api/v1/cook/:id until the status flips from \"pending\" to \"completed\".\n\n2. Webhook — pass a webhook_url when creating the cook. brag.fast will POST the completed cook object (same shape as the GET response, with image URLs) to that URL when the images are served hot.\n\nPolling is simpler for scripts. Webhooks are better for production — no looping, just a callback.",
         requestExample: {
-          curl: `# 1. Fire off a release
-curl -X POST https://bragfast.com/api/v1/release \\
+          curl: `# 1. Fire off a cook
+curl -X POST https://bragfast.com/api/v1/cook \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -45,10 +45,10 @@ curl -X POST https://bragfast.com/api/v1/release \\
   }'
 
 # 2. Or poll until it's ready
-curl https://bragfast.com/api/v1/release/rel_abc123 \\
+curl https://bragfast.com/api/v1/cook/cook_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
-          javascript: `// 1. Create a release (returns immediately)
-const release = await fetch("https://bragfast.com/api/v1/release", {
+          javascript: `// 1. Start a cook (returns immediately)
+const cook = await fetch("https://bragfast.com/api/v1/cook", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -66,16 +66,16 @@ let result
 do {
   await new Promise(r => setTimeout(r, 2000))
   result = await fetch(
-    \`https://bragfast.com/api/v1/release/\${release.release_id}\`,
+    \`https://bragfast.com/api/v1/cook/\${cook.cook_id}\`,
     { headers: { "Authorization": "Bearer bf_your_api_key" } }
   ).then(r => r.json())
 } while (result.status === "pending")`,
           python: `import requests
 import time
 
-# 1. Create a release (returns immediately)
-release = requests.post(
-    "https://bragfast.com/api/v1/release",
+# 1. Start a cook (returns immediately)
+cook = requests.post(
+    "https://bragfast.com/api/v1/cook",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
@@ -88,7 +88,7 @@ release = requests.post(
 while True:
     time.sleep(2)
     result = requests.get(
-        f"https://bragfast.com/api/v1/release/{release['release_id']}",
+        f"https://bragfast.com/api/v1/cook/{cook['cook_id']}",
         headers={"Authorization": "Bearer bf_your_api_key"},
     ).json()
     if result["status"] != "pending":
@@ -96,7 +96,7 @@ while True:
         },
         responseStatus: 202,
         responseExample: `{
-  "release_id": "rel_abc123",
+  "cook_id": "cook_abc123",
   "status": "pending",
   "images": null,
   "credits_used": 3,
@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Every image costs 1 credit. Total per release = sum of slides across all format entries (e.g. 1 landscape slide + 2 square slides = 3 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 1,000, Pro ($79/mo) — 5,000, Scale ($159/mo) — 25,000.",
+      "Every image costs 1 credit. Total per cook = sum of slides across all format entries (e.g. 1 landscape slide + 2 square slides = 3 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 1,000, Pro ($79/mo) — 5,000, Scale ($159/mo) — 25,000.",
     endpoints: [],
   },
 
@@ -151,14 +151,14 @@ while True:
 }`,
   },
 
-  // ─── Releases ──────────────────────────────────────────────────────
+  // ─── Images ────────────────────────────────────────────────────────
   {
-    title: "Releases",
-    anchor: "releases",
+    title: "Images",
+    anchor: "images",
     description:
-      "Releases are the main course. You send in format entries, each with its own slides containing text and optional screenshots. brag.fast generates branded images for each format using its slides and the chosen template.",
+      "Images are the main course. You send in format entries, each with its own slides containing text and optional screenshots. brag.fast generates branded images for each format using its slides and the chosen template.",
     sampleObject: `{
-  "release_id": "rel_abc123",
+  "cook_id": "cook_abc123",
   "status": "pending",
   "images": null,
   "credits_used": 3,
@@ -171,11 +171,11 @@ while True:
     endpoints: [
       {
         method: "POST",
-        path: "/api/v1/release",
-        anchor: "create-release",
-        title: "Create a release",
+        path: "/api/v1/cook",
+        anchor: "cook-images",
+        title: "Cook images",
         description:
-          "Creates a new release and queues image generation. Returns 202 immediately — your images are cooking in the background. Poll the GET endpoint or use a webhook to know when they're served.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
+          "Queues image generation and returns 202 immediately — your images are cooking in the background. Poll the GET endpoint or use a webhook to know when they're served.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
         params: [
           {
             name: "brand_id",
@@ -228,7 +228,7 @@ while True:
             type: "string",
             required: false,
             description:
-              'Google Font applied to all text objects in the release, e.g. "Inter". Overrides the brand\'s font. Individual objects can override this with their own font_family. See the Fonts endpoint for the full menu.',
+              'Google Font applied to all text objects in the cook, e.g. "Inter". Overrides the brand\'s font. Individual objects can override this with their own font_family. See the Fonts endpoint for the full menu.',
           },
           {
             name: "template",
@@ -345,18 +345,18 @@ while True:
             type: "string",
             required: false,
             description:
-              "Anything you want to store with the release, e.g. a record ID from your database.",
+              "Anything you want to store with the cook, e.g. a record ID from your database.",
           },
           {
             name: "webhook_url",
             type: "string",
             required: false,
             description:
-              "URL where brag.fast will POST the completed release object when rendering finishes.",
+              "URL where brag.fast will POST the completed cook object when rendering finishes.",
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/release \\
+          curl: `curl -X POST https://bragfast.com/api/v1/cook \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -389,7 +389,7 @@ while True:
       }
     ]
   }'`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/release", {
+          javascript: `const response = await fetch("https://bragfast.com/api/v1/cook", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -430,7 +430,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/release",
+    "https://bragfast.com/api/v1/cook",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
@@ -467,7 +467,7 @@ data = response.json()`,
         },
         responseStatus: 202,
         responseExample: `{
-  "release_id": "rel_abc123",
+  "cook_id": "cook_abc123",
   "status": "pending",
   "images": null,
   "credits_used": 2,
@@ -479,24 +479,24 @@ data = response.json()`,
       },
       {
         method: "GET",
-        path: "/api/v1/release/:id",
-        anchor: "retrieve-release",
-        title: "Retrieve a release",
+        path: "/api/v1/cook/:id",
+        anchor: "check-cook",
+        title: "Check a cook",
         description:
-          'Poll this endpoint to check on your release. When status flips to "completed", the images object will have CDN URLs for each format. If it\'s "failed", something burned — credits are auto-refunded.',
+          'Poll this endpoint to check on your cook. When status flips to "completed", the images object will have CDN URLs for each format. If it\'s "failed", something burned — credits are auto-refunded.',
         params: [
           {
             name: "id",
             type: "string",
             required: true,
-            description: "The release ID returned from the create endpoint.",
+            description: "The cook ID returned from the cook endpoint.",
           },
         ],
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/release/rel_abc123 \\
+          curl: `curl https://bragfast.com/api/v1/cook/cook_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/release/rel_abc123",
+  "https://bragfast.com/api/v1/cook/cook_abc123",
   {
     headers: {
       "Authorization": "Bearer bf_your_api_key",
@@ -507,25 +507,25 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/release/rel_abc123",
+    "https://bragfast.com/api/v1/cook/cook_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
         },
         responseStatus: 200,
         responseExample: `{
-  "release_id": "rel_abc123",
+  "cook_id": "cook_abc123",
   "status": "completed",
   "images": {
     "landscape": {
       "slides": [
-        "https://cdn.bragfast.com/rel_abc123/landscape/slide-1.jpg"
+        "https://cdn.bragfast.com/cook_abc123/landscape/slide-1.jpg"
       ],
       "dimensions": "1200x675"
     },
     "square": {
       "slides": [
-        "https://cdn.bragfast.com/rel_abc123/square/slide-1.jpg"
+        "https://cdn.bragfast.com/cook_abc123/square/slide-1.jpg"
       ],
       "dimensions": "1080x1080"
     }
@@ -541,12 +541,21 @@ data = response.json()`,
     ],
   },
 
+  // ─── Videos ────────────────────────────────────────────────────────
+  {
+    title: "Videos",
+    anchor: "videos",
+    description:
+      "Same endpoint, moving pictures. Video support is coming soon — you'll use the same POST /api/v1/cook endpoint with a video-specific template. Stay tuned.",
+    endpoints: [],
+  },
+
   // ─── Brands ────────────────────────────────────────────────────────
   {
     title: "Brands",
     anchor: "brands",
     description:
-      "Brand kits are your visual identity — colors, logo, font, and website. Set one up once, then reference it by ID in every release. Think of it as your signature recipe.",
+      "Brand kits are your visual identity — colors, logo, font, and website. Set one up once, then reference it by ID in every cook. Think of it as your signature recipe.",
     sampleObject: `{
   "id": "brand_abc123",
   "name": "Acme Inc",
@@ -953,7 +962,7 @@ response = requests.delete(
         anchor: "list-fonts",
         title: "List available fonts",
         description:
-          "Returns all available Google Fonts grouped by category. Pick any name and use it as the font field on a brand or release.",
+          "Returns all available Google Fonts grouped by category. Pick any name and use it as the font field on a brand or cook.",
         requestExample: {
           curl: `curl https://bragfast.com/api/v1/fonts \\
   -H "Authorization: Bearer bf_your_api_key"`,
@@ -1020,7 +1029,7 @@ data = response.json()`,
     title: "Templates",
     anchor: "templates",
     description:
-      "Templates control the layout of your images. brag.fast ships with five defaults — Standard Browser, Standard Mobile, Split Browser, Split Mobile, and Hero. You can also create custom templates or clone a default as a starting point. Reference any template by slug or ID when creating a release.",
+      "Templates control the layout of your images. brag.fast ships with five defaults — Standard Browser, Standard Mobile, Split Browser, Split Mobile, and Hero. You can also create custom templates or clone a default as a starting point. Reference any template by slug or ID when cooking images.",
     sampleObject: `{
   "id": "standard-browser",
   "name": "Standard Browser",
@@ -1090,7 +1099,7 @@ data = response.json()`,
         anchor: "retrieve-template",
         title: "Retrieve a template",
         description:
-          "Returns a single template by ID, including its configurable objects with their current defaults. Each object shows the properties you can override in your release's slides.objects array — use the same field names.",
+          "Returns a single template by ID, including its configurable objects with their current defaults. Each object shows the properties you can override in your cook's slides.objects array — use the same field names.",
         params: [
           {
             name: "id",
@@ -1402,7 +1411,7 @@ data = response.json()`,
         anchor: "preview-template",
         title: "Preview a template",
         description:
-          "Generates a JPEG preview of the template with placeholder content. Returns the image directly (not JSON). Handy for seeing what a template looks like before using it in a release. Optionally pass a format in the request body to preview a specific aspect ratio.",
+          "Generates a JPEG preview of the template with placeholder content. Returns the image directly (not JSON). Handy for seeing what a template looks like before using it in a cook. Optionally pass a format in the request body to preview a specific aspect ratio.",
         params: [
           {
             name: "id",

@@ -125,7 +125,7 @@ git commit -m "feat: add calculateCredits helper for per-format slide counts"
 ### Task 3: Rewrite route validation
 
 **Files:**
-- Modify: `src/app/api/v1/release/route.ts:25-80`
+- Modify: `src/app/api/v1/cook/route.ts:25-80`
 
 - [ ] **Step 1: Write failing validation tests**
 
@@ -273,7 +273,7 @@ git commit -m "feat: add validateFormats for per-format slide validation"
 ### Task 4: Update route handler
 
 **Files:**
-- Modify: `src/app/api/v1/release/route.ts`
+- Modify: `src/app/api/v1/cook/route.ts`
 
 - [ ] **Step 1: Replace ALL old validation with new**
 
@@ -329,7 +329,7 @@ Expected: No errors from route.ts
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/app/api/v1/release/route.ts
+git add src/app/api/v1/cook/route.ts
 git commit -m "refactor: update release route for per-format slides validation"
 ```
 
@@ -683,7 +683,7 @@ git commit -m "docs: update API reference for per-format slides"
 Replace the curl example payload:
 
 ```
-curl -X POST https://bragfast.com/api/v1/release \\
+curl -X POST https://bragfast.com/api/v1/cook \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer bf_key" \\
   -d '{
@@ -721,7 +721,7 @@ git commit -m "docs: update landing page curl example for per-format slides"
 Replace the payload in the curlSnippet template literal:
 
 ```
-curl -X POST https://bragfast.com/api/v1/release \\
+curl -X POST https://bragfast.com/api/v1/cook \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -d '{
@@ -763,4 +763,4 @@ Expected: No errors
 
 - [ ] **Step 3: Verify dev server starts**
 
-Run: `npm run dev` — confirm no startup errors, hit `/api/v1/release` endpoint mentally or via curl to check validation works.
+Run: `npm run dev` — confirm no startup errors, hit `/api/v1/cook` endpoint mentally or via curl to check validation works.

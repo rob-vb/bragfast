@@ -436,7 +436,7 @@ Note the `id` returned (e.g. `brand_abc123`).
 **Step 3: Create a release using the brand**
 
 ```bash
-curl -s -X POST http://localhost:3000/api/v1/releases \
+curl -s -X POST http://localhost:3000/api/v1/cook \
   -H "Content-Type: application/json" \
   -d '{
     "brand_id": "brand_REPLACE_WITH_ID",
@@ -448,7 +448,7 @@ curl -s -X POST http://localhost:3000/api/v1/releases \
 **Step 4: Poll until completed and open image**
 
 ```bash
-RELEASE_ID="rel_REPLACE_ME"
-curl -s http://localhost:3000/api/v1/releases/$RELEASE_ID | jq '.status,.images'
+COOK_ID="cook_REPLACE_ME"
+curl -s http://localhost:3000/api/v1/cook/$COOK_ID | jq '.status,.images'
 # Then open the slide URL in browser to visually verify the brand colors/logo
 ```

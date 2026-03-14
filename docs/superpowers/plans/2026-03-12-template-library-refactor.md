@@ -372,7 +372,7 @@ git commit -m "refactor: remove v1 renderer path, update field names in pipeline
 ### Task 7: Update release route validation
 
 **Files:**
-- Modify: `src/app/api/v1/release/route.ts`
+- Modify: `src/app/api/v1/cook/route.ts`
 
 - [ ] **Step 1: Update valid template names**
 
@@ -388,7 +388,7 @@ Also remove the legacy `!slide.objects && !slide.title` fallback check if presen
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/app/api/v1/release/route.ts
+git add src/app/api/v1/cook/route.ts
 git commit -m "refactor: update valid default template names in release route"
 ```
 

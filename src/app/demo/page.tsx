@@ -86,7 +86,7 @@ export default function DemoPage() {
     }, PROGRESS_INTERVAL);
   }, []);
 
-  const curlSnippet = `curl -X POST bragfast.com/api/v1/release \\
+  const curlSnippet = `curl -X POST bragfast.com/api/v1/cook \\
   -H "Authorization: Bearer bf_your_key" \\
   -H "Content-Type: application/json" \\
   -d '{

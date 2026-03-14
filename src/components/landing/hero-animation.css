@@ -1,12 +1,12 @@
 /* src/components/landing/hero-animation.css */
 
-/* Line 1: curl -X POST bragfast.com/api/v1/release \ (42 chars) */
+/* Line 1: curl -X POST bragfast.com/api/v1/cook \ (39 chars) */
 @keyframes type-line1 {
   0% { width: 0; opacity: 1; }
   0.1% { opacity: 1; }
-  15% { width: 42ch; opacity: 1; }
+  15% { width: 39ch; opacity: 1; }
   96% { opacity: 1; }
-  100% { opacity: 0; width: 42ch; }
+  100% { opacity: 0; width: 39ch; }
 }
 
 /* Line 2:   -d '{ "title": "Fresh new look" }' (37 chars) */

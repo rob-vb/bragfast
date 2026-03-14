@@ -39,7 +39,7 @@ src/components/dashboard/block-properties.tsx           — Block property edito
 convex/schema.ts                        — Add templates table
 src/lib/types.ts                        — Add config types, update TemplateName
 src/lib/pipeline/render.ts              — Resolve template configs from Convex
-src/app/api/v1/release/route.ts         — Accept tmpl_ IDs in validation
+src/app/api/v1/cook/route.ts         — Accept tmpl_ IDs in validation
 src/lib/templates/registry.ts           — Remove after migration verified
 src/components/dashboard/nav.tsx        — Add Templates tab
 ```
@@ -779,7 +779,7 @@ Use the existing API to generate images with each template and compare against p
 
 ```bash
 # Test classic
-curl -X POST http://localhost:3000/api/v1/release \
+curl -X POST http://localhost:3000/api/v1/cook \
   -H "Authorization: Bearer <test_key>" \
   -H "Content-Type: application/json" \
   -d '{"template":"classic","brand_id":"<test_brand>","slides":[{"title":"Test Title","description":"Test description","image_url":"https://placehold.co/800x600"}],"formats":["landscape"]}'
@@ -1196,7 +1196,7 @@ git commit -m "feat: add clone and preview template endpoints"
 ### Task 12: Update release route to accept template IDs
 
 **Files:**
-- Modify: `src/app/api/v1/release/route.ts:42`
+- Modify: `src/app/api/v1/cook/route.ts:42`
 
 - [ ] **Step 1: Update template validation**
 
@@ -1232,7 +1232,7 @@ Run: `npm run build`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/app/api/v1/release/route.ts
+git add src/app/api/v1/cook/route.ts
 git commit -m "feat: accept custom template IDs in /v1/release"
 ```
 

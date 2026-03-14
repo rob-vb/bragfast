@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     const result = await createRelease(body, auth.userId);
     result.credits_remaining = remaining;
     // Credits already reserved — render refunds on failure
-    renderReleaseAsync(result.release_id, body, auth.userId).catch(
+    renderReleaseAsync(result.cook_id, body, auth.userId).catch(
       console.error
     );
     return Response.json(result, { status: 202 });

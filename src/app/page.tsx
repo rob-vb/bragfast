@@ -135,7 +135,7 @@ export default function Home() {
               <pre className="p-4 overflow-x-auto">
                 <code className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm text-surface/90 leading-relaxed">
 {`curl -X POST \\
-  bragfast.com/api/v1/release \\
+  bragfast.com/api/v1/cook \\
   -H "Authorization: Bearer bf_key" \\
   -d '{
     "template": "standard-browser",

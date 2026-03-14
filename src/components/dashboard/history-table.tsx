@@ -19,7 +19,7 @@ type Release = {
 
 function buildResponseBody(r: Release) {
   return {
-    release_id: r.externalId,
+    cook_id: r.externalId,
     status: r.status,
     images: r.images ?? null,
     credits_used: r.credits_used,

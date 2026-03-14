@@ -114,9 +114,9 @@ function buildPayload(template: string, font: string, format: typeof FORMATS[num
   };
 }
 
-async function createRelease(payload: ReturnType<typeof buildPayload>, retries = 5): Promise<{ release_id: string }> {
+async function createRelease(payload: ReturnType<typeof buildPayload>, retries = 5): Promise<{ cook_id: string }> {
   for (let attempt = 0; attempt < retries; attempt++) {
-    const res = await fetch(`${BASE}/api/v1/release`, {
+    const res = await fetch(`${BASE}/api/v1/cook`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${API_KEY}`,
@@ -132,9 +132,9 @@ async function createRelease(payload: ReturnType<typeof buildPayload>, retries =
     }
     if (!res.ok) {
       const body = await res.text();
-      throw new Error(`POST /api/v1/release failed (${res.status}): ${body}`);
+      throw new Error(`POST /api/v1/cook failed (${res.status}): ${body}`);
     }
-    return (await res.json()) as { release_id: string };
+    return (await res.json()) as { cook_id: string };
   }
   throw new Error("Rate limited after all retries");
 }
@@ -142,7 +142,7 @@ async function createRelease(payload: ReturnType<typeof buildPayload>, retries =
 async function pollRelease(id: string, maxWait = 30_000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < maxWait) {
-    const res = await fetch(`${BASE}/api/v1/release/${id}`, {
+    const res = await fetch(`${BASE}/api/v1/cook/${id}`, {
       headers: { Authorization: `Bearer ${API_KEY}` },
     });
     if (res.ok) {
@@ -176,10 +176,10 @@ async function main() {
       try {
         for (const format of FORMATS) {
           const payload = buildPayload(template, font, format);
-          const { release_id } = await createRelease(payload);
-          await pollRelease(release_id);
+          const { cook_id } = await createRelease(payload);
+          await pollRelease(cook_id);
 
-          const src = path.join(OUTPUT_DIR, release_id, `${format}-1.jpg`);
+          const src = path.join(OUTPUT_DIR, cook_id, `${format}-1.jpg`);
           const dest = path.join(destDir, `${label}-${format}.jpg`);
           if (!existsSync(src)) {
             throw new Error(`Output file not found: ${src}`);

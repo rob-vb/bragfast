@@ -66,7 +66,7 @@ Old aliases (`classic`, `split`, `hero`, `classic_v2`, `split_v2`, `hero_v2`) ar
 
 Update from `'classic' | 'split' | 'hero' | (string & {})` to `'standard-browser' | 'standard-mobile' | 'split-browser' | 'split-mobile' | 'hero' | (string & {})`.
 
-### Release route validation (release/route.ts)
+### Release route validation (cook/route.ts)
 
 Update hardcoded valid template names from `["classic", "split", "hero"]` to the 5 new slugs. Update default fallback from `"classic"` to `"standard-browser"`.
 
@@ -196,7 +196,7 @@ For image objects with `imageFrame` = "browser" or "mobile":
 6. `src/lib/templates/components/BrowserFrame.tsx` — hex color prop
 7. `src/lib/templates/components/MobileFrame.tsx` — hex color prop
 8. `src/lib/pipeline/render.ts` — remove legacy path, ObjectDataMap, field mapping, default template
-9. `src/app/api/v1/release/route.ts` — update valid template names, default
+9. `src/app/api/v1/cook/route.ts` — update valid template names, default
 10. `src/components/editor/*` — frame color picker UI
 11. `src/lib/docs/api-reference.ts` — docs update
 12. `src/app/page.tsx` — homepage example

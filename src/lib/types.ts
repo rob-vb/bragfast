@@ -67,7 +67,7 @@ export interface ReleaseRequest {
 }
 
 export interface ReleaseResult {
-  release_id: string
+  cook_id: string
   status: 'pending' | 'completed' | 'failed'
   images: Record<string, { slides: string[]; dimensions: string }> | null
   credits_used: number

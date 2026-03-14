@@ -25,10 +25,10 @@ export function HeroAnimation() {
           {/* Line 1: curl command */}
           <div
             className="hero-typing overflow-hidden whitespace-nowrap"
-            style={{ animation: `type-line1 ${LOOP}`, width: 0, opacity: 0, animationTimingFunction: "steps(42, end)" }}
+            style={{ animation: `type-line1 ${LOOP}`, width: 0, opacity: 0, animationTimingFunction: "steps(39, end)" }}
           >
             <span className="text-[#ff9f6b]">curl</span>
-            <span className="text-surface/90"> -X POST bragfast.com/api/v1/release \</span>
+            <span className="text-surface/90"> -X POST bragfast.com/api/v1/cook \</span>
           </div>
 
           {/* Line 2: payload */}
@@ -58,7 +58,7 @@ export function HeroAnimation() {
           {/* 202 response */}
           <div style={{ animation: `fade-202 ${LOOP}`, opacity: 0 }}>
             <span className="text-gold">← 202 Accepted</span>
-            <span className="text-surface/60">{`  { release_id: "rel_a1b2c3" }`}</span>
+            <span className="text-surface/60">{`  { cook_id: "cook_a1b2c3" }`}</span>
           </div>
 
           {/* Blank line */}
