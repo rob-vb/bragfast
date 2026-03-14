@@ -1,4 +1,7 @@
 import { after } from "next/server";
+
+export const maxDuration = 60;
+
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats, validateVideoFormats, validateVideoTemplate } from "@/lib/validation";

@@ -10,6 +10,8 @@ import {
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { calculateCredits } from "@/lib/types";
 
+export const maxDuration = 60;
+
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(request: Request) {
