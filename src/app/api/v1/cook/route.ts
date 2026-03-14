@@ -131,7 +131,10 @@ export async function POST(request: Request) {
       result.webhook_url = body.webhook_url;
 
       after(() => {
-        renderVideoAsync(cookId, auth.userId, body).catch(console.error);
+        console.log(`[VIDEO] Starting async render for ${cookId}`);
+        renderVideoAsync(cookId, auth.userId, body)
+          .then(() => console.log(`[VIDEO] Render complete for ${cookId}`))
+          .catch((err) => console.error(`[VIDEO] Render failed for ${cookId}:`, err));
       });
 
       return Response.json(result, { status: 202 });
