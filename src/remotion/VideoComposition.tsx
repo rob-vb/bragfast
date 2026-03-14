@@ -1,5 +1,6 @@
-import React from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import React, { useEffect, useState } from "react";
+import { AbsoluteFill, continueRender, delayRender, useVideoConfig } from "remotion";
+import { loadBrandFont } from "./fonts";
 import {
   TransitionSeries,
   linearTiming,
@@ -58,6 +59,25 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({
 }) => {
   const { fps } = useVideoConfig();
   const transitionFrames = Math.round(template.transition_duration * fps);
+
+  // Load brand font before rendering
+  const [fontLoaded, setFontLoaded] = useState(false);
+  const [handle] = useState(() => delayRender("Loading brand font"));
+
+  useEffect(() => {
+    loadBrandFont(brand.fontFamily)
+      .then(() => {
+        setFontLoaded(true);
+        continueRender(handle);
+      })
+      .catch((err) => {
+        console.error("Font loading failed, continuing with fallback:", err);
+        setFontLoaded(true);
+        continueRender(handle);
+      });
+  }, [brand.fontFamily, handle]);
+
+  if (!fontLoaded) return null;
 
   const elements: React.ReactNode[] = [];
 

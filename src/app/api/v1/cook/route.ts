@@ -57,14 +57,30 @@ export async function POST(request: Request) {
       return Response.json({ error: videoTemplateError }, { status: 400 });
     }
 
+    // Resolve template config for scene validation
+    const templateName = body.template ?? "product-update";
+    let templateConfig = getDefaultVideoTemplate(templateName);
+
+    // For custom templates, fetch from DB
+    if (!templateConfig && templateName.startsWith("vtmpl_")) {
+      const customTmpl = await fetchQuery(api.videoTemplates.getByExternalId, {
+        externalId: templateName,
+      });
+      if (!customTmpl || customTmpl.userId !== auth.userId) {
+        return Response.json({ error: "Video template not found" }, { status: 404 });
+      }
+      templateConfig = customTmpl.config;
+    }
+
+    if (!templateConfig) {
+      return Response.json({ error: `Unknown video template: ${templateName}` }, { status: 400 });
+    }
+
     // Validate scenes against template
-    const template = getDefaultVideoTemplate(body.template ?? "product-update");
-    if (template) {
-      for (const format of body.formats) {
-        const sceneError = validateVideoScenes(format.scenes, template.scenes);
-        if (sceneError) {
-          return Response.json({ error: `${format.name}: ${sceneError}` }, { status: 400 });
-        }
+    for (const format of body.formats) {
+      const sceneError = validateVideoScenes(format.scenes, templateConfig.scenes);
+      if (sceneError) {
+        return Response.json({ error: `${format.name}: ${sceneError}` }, { status: 400 });
       }
     }
 
