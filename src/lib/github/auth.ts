@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const APP_ID = process.env.GITHUB_APP_ID!;
+const CLIENT_ID = process.env.GITHUB_APP_CLIENT_ID!;
 
 function getPrivateKey(): string {
   const raw = process.env.GITHUB_APP_PRIVATE_KEY!;
@@ -21,7 +21,7 @@ export function createAppJwt(): string {
   const payload = {
     iat: now - 60, // clock drift allowance
     exp: now + 600, // 10 min max
-    iss: APP_ID,
+    iss: CLIENT_ID,
   };
 
   const segments = [

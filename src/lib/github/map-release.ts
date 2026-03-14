@@ -85,11 +85,20 @@ export function mapReleaseToRequest(
     ],
   }));
 
-  return {
-    brand_id: config.brandId,
+  const request: ReleaseRequest = {
     template: config.template ?? "standard-browser",
     formats,
   };
+
+  if (config.brandId) {
+    request.brand_id = config.brandId;
+  } else {
+    // Fallback colors when no brand is configured
+    request.colors = { background: "#0f172a", text: "#f8fafc", primary: "#3b82f6" };
+    request.name = payload.repository.owner.login;
+  }
+
+  return request;
 }
 
 export function buildSourceMetadata(payload: GitHubReleasePayload): string {
