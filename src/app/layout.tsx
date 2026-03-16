@@ -21,7 +21,7 @@ const pressStart2P = Press_Start_2P({
 export const metadata: Metadata = {
   title: "brag.fast — Auto-generate social images for your launches",
   description:
-    "Generate branded social media images from your releases. One API call or no-code workflow — landscape, square, and portrait formats in seconds.",
+    "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
   icons: {
     icon: [
       { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
