@@ -10,6 +10,8 @@ export const upsert = mutation({
     formats: v.optional(v.array(v.string())),
     skipPrereleases: v.optional(v.boolean()),
     tagFilter: v.optional(v.string()),
+    webhookUrl: v.optional(v.string()),
+    enabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
@@ -27,17 +29,20 @@ export const upsert = mutation({
       if (args.skipPrereleases !== undefined)
         updates.skipPrereleases = args.skipPrereleases;
       if (args.tagFilter !== undefined) updates.tagFilter = args.tagFilter;
+      if (args.webhookUrl !== undefined) updates.webhookUrl = args.webhookUrl;
+      if (args.enabled !== undefined) updates.enabled = args.enabled;
       await ctx.db.patch(existing._id, updates);
     } else {
       await ctx.db.insert("githubRepoConfigs", {
         installationId: args.installationId,
         repoFullName: args.repoFullName,
-        enabled: true,
+        enabled: args.enabled ?? true,
         brandId: args.brandId,
         template: args.template,
         formats: args.formats,
         skipPrereleases: args.skipPrereleases ?? true,
         tagFilter: args.tagFilter,
+        webhookUrl: args.webhookUrl,
         created_at: now,
         updated_at: now,
       });
