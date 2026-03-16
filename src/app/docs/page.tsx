@@ -34,7 +34,7 @@ export default function DocsPage() {
                   Base URL
                 </span>
                 <p className="mt-1 text-sm font-mono text-emerald-400 break-all">
-                  https://bragfast.com/api/v1
+                  https://brag.fast/api/v1
                 </p>
               </div>
 

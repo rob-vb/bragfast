@@ -1,6 +1,6 @@
 /* src/components/landing/hero-animation.css */
 
-/* Line 1: curl -X POST bragfast.com/api/v1/cook \ (39 chars) */
+/* Line 1: curl -X POST brag.fast/api/v1/cook \ (39 chars) */
 @keyframes type-line1 {
   0% { width: 0; opacity: 1; }
   0.1% { opacity: 1; }

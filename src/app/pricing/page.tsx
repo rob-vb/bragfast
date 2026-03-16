@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: "How does the GitHub integration work?",
-    a: "Install the Bragfast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
+    a: "Install the brag.fast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
   },
   {
     q: "What does AI analysis do?",

@@ -46,7 +46,7 @@ Replace the right-side video placeholder in the landing hero with an auto-loopin
 Each line is a separate `<span>` element for independent typing animation:
 
 ```
-Line 1: curl -X POST bragfast.com/api/v1/cook \
+Line 1: curl -X POST brag.fast/api/v1/cook \
 Line 2:   -d '{ "title": "Dark mode is here" }'
 Line 3: (blank)
 Line 4: ← 202 Accepted  { cook_id: "cook_a1b2c3" }

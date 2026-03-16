@@ -1,7 +1,7 @@
 # Homepage & Pricing Page Optimization — Design Spec
 
 ## Goal
-Showcase Bragfast's USPs so visitors (both devs and non-technical stakeholders) immediately understand what the product does and why it matters.
+Showcase brag.fast's USPs so visitors (both devs and non-technical stakeholders) immediately understand what the product does and why it matters.
 
 ## Constraints
 - No video features (not in MVP)
@@ -42,7 +42,7 @@ Currently visual-left/text-right using `order-` classes. Flip to text-left/visua
 
 #### Section 4: AI Analysis (visual left, text right) — NEW
 - **Headline:** "AI picks the best ingredients"
-- **Copy:** Bragfast reads your changelog, categorizes changes (features, fixes, breaking), and generates a smart summary. Review before serving or let it run fully automated.
+- **Copy:** brag.fast reads your changelog, categorizes changes (features, fixes, breaking), and generates a smart summary. Review before serving or let it run fully automated.
 - **Visual:** New component — `AIAnalysisMockup`. Shows a stylized release card with:
   - Release title ("v2.4.0") at top
   - 3 category pills: "3 New Features" (gold bg), "5 Bug Fixes" (white bg), "1 Breaking Change" (brand bg, surface text)
@@ -74,7 +74,7 @@ Currently visual-left/text-right using `order-` classes. Flip to text-left/visua
 ## Pricing Page Changes
 
 ### Hero — minor tweak
-Add a line above the existing credit/trial subheading that explains what Bragfast does, e.g.: "Auto-generate branded social images from your releases — via API or GitHub." Keep food metaphor in tone.
+Add a line above the existing credit/trial subheading that explains what brag.fast does, e.g.: "Auto-generate branded social images from your releases — via API or GitHub." Keep food metaphor in tone.
 
 ### New: Feature Showcase ("Everything on the menu")
 Insert between hero and pricing cards. 3×2 grid of 6 feature cards.

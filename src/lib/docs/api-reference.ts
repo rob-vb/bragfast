@@ -35,7 +35,7 @@ export const API_REFERENCE: ApiSection[] = [
           "Two ways to get your images when they're done:\n\n1. Polling — call GET /api/v1/cook/:id until the status flips from \"pending\" to \"completed\".\n\n2. Webhook — pass a webhook_url when creating the cook. brag.fast will POST the completed cook object (same shape as the GET response, with image URLs) to that URL when the images are served hot.\n\nPolling is simpler for scripts. Webhooks are better for production — no looping, just a callback.",
         requestExample: {
           curl: `# 1. Fire off a cook
-curl -X POST https://bragfast.com/api/v1/cook \\
+curl -X POST https://brag.fast/api/v1/cook \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -45,10 +45,10 @@ curl -X POST https://bragfast.com/api/v1/cook \\
   }'
 
 # 2. Or poll until it's ready
-curl https://bragfast.com/api/v1/cook/cook_abc123 \\
+curl https://brag.fast/api/v1/cook/cook_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `// 1. Start a cook (returns immediately)
-const cook = await fetch("https://bragfast.com/api/v1/cook", {
+const cook = await fetch("https://brag.fast/api/v1/cook", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -66,7 +66,7 @@ let result
 do {
   await new Promise(r => setTimeout(r, 2000))
   result = await fetch(
-    \`https://bragfast.com/api/v1/cook/\${cook.cook_id}\`,
+    \`https://brag.fast/api/v1/cook/\${cook.cook_id}\`,
     { headers: { "Authorization": "Bearer bf_your_api_key" } }
   ).then(r => r.json())
 } while (result.status === "pending")`,
@@ -75,7 +75,7 @@ import time
 
 # 1. Start a cook (returns immediately)
 cook = requests.post(
-    "https://bragfast.com/api/v1/cook",
+    "https://brag.fast/api/v1/cook",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
@@ -88,7 +88,7 @@ cook = requests.post(
 while True:
     time.sleep(2)
     result = requests.get(
-        f"https://bragfast.com/api/v1/cook/{cook['cook_id']}",
+        f"https://brag.fast/api/v1/cook/{cook['cook_id']}",
         headers={"Authorization": "Bearer bf_your_api_key"},
     ).json()
     if result["status"] != "pending":
@@ -356,7 +356,7 @@ while True:
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/cook \\
+          curl: `curl -X POST https://brag.fast/api/v1/cook \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -389,7 +389,7 @@ while True:
       }
     ]
   }'`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/cook", {
+          javascript: `const response = await fetch("https://brag.fast/api/v1/cook", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -430,7 +430,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/cook",
+    "https://brag.fast/api/v1/cook",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
@@ -493,10 +493,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/cook/cook_abc123 \\
+          curl: `curl https://brag.fast/api/v1/cook/cook_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/cook/cook_abc123",
+  "https://brag.fast/api/v1/cook/cook_abc123",
   {
     headers: {
       "Authorization": "Bearer bf_your_api_key",
@@ -507,7 +507,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/cook/cook_abc123",
+    "https://brag.fast/api/v1/cook/cook_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
@@ -630,7 +630,7 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/brands \\
+          curl: `curl -X POST https://brag.fast/api/v1/brands \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -644,7 +644,7 @@ data = response.json()`,
     "website": "https://acme.com",
     "font_family": "Inter"
   }'`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/brands", {
+          javascript: `const response = await fetch("https://brag.fast/api/v1/brands", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -666,7 +666,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/brands",
+    "https://brag.fast/api/v1/brands",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "name": "Acme Inc",
@@ -713,10 +713,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/brands/brand_abc123 \\
+          curl: `curl https://brag.fast/api/v1/brands/brand_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/brands/brand_abc123",
+  "https://brag.fast/api/v1/brands/brand_abc123",
   {
     headers: {
       "Authorization": "Bearer bf_your_api_key",
@@ -727,7 +727,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/brands/brand_abc123",
+    "https://brag.fast/api/v1/brands/brand_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
@@ -755,9 +755,9 @@ data = response.json()`,
         title: "List all brands",
         description: "Returns all brand kits for your account.",
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/brands \\
+          curl: `curl https://brag.fast/api/v1/brands \\
   -H "Authorization: Bearer bf_your_api_key"`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/brands", {
+          javascript: `const response = await fetch("https://brag.fast/api/v1/brands", {
   headers: {
     "Authorization": "Bearer bf_your_api_key",
   },
@@ -766,7 +766,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/brands",
+    "https://brag.fast/api/v1/brands",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
@@ -856,14 +856,14 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X PATCH https://bragfast.com/api/v1/brands/brand_abc123 \\
+          curl: `curl -X PATCH https://brag.fast/api/v1/brands/brand_abc123 \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "colors": { "primary": "#00ff88" }
   }'`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/brands/brand_abc123",
+  "https://brag.fast/api/v1/brands/brand_abc123",
   {
     method: "PATCH",
     headers: {
@@ -879,7 +879,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.patch(
-    "https://bragfast.com/api/v1/brands/brand_abc123",
+    "https://brag.fast/api/v1/brands/brand_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={"colors": {"primary": "#00ff88"}},
 )
@@ -917,10 +917,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X DELETE https://bragfast.com/api/v1/brands/brand_abc123 \\
+          curl: `curl -X DELETE https://brag.fast/api/v1/brands/brand_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/brands/brand_abc123",
+  "https://brag.fast/api/v1/brands/brand_abc123",
   {
     method: "DELETE",
     headers: {
@@ -932,7 +932,7 @@ data = response.json()`,
           python: `import requests
 
 response = requests.delete(
-    "https://bragfast.com/api/v1/brands/brand_abc123",
+    "https://brag.fast/api/v1/brands/brand_abc123",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 # 204 No Content on success`,
@@ -964,9 +964,9 @@ response = requests.delete(
         description:
           "Returns all available Google Fonts grouped by category. Pick any name and use it as the font field on a brand or cook.",
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/fonts \\
+          curl: `curl https://brag.fast/api/v1/fonts \\
   -H "Authorization: Bearer bf_your_api_key"`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/fonts", {
+          javascript: `const response = await fetch("https://brag.fast/api/v1/fonts", {
   headers: {
     "Authorization": "Bearer bf_your_api_key",
   },
@@ -975,7 +975,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/fonts",
+    "https://brag.fast/api/v1/fonts",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
@@ -1053,9 +1053,9 @@ data = response.json()`,
         description:
           "Returns the three default templates plus any custom templates you've created.",
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/templates \\
+          curl: `curl https://brag.fast/api/v1/templates \\
   -H "Authorization: Bearer bf_your_api_key"`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/templates", {
+          javascript: `const response = await fetch("https://brag.fast/api/v1/templates", {
   headers: {
     "Authorization": "Bearer bf_your_api_key",
   },
@@ -1064,7 +1064,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/templates",
+    "https://brag.fast/api/v1/templates",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
@@ -1110,10 +1110,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl https://bragfast.com/api/v1/templates/standard-browser \\
+          curl: `curl https://brag.fast/api/v1/templates/standard-browser \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/standard-browser",
+  "https://brag.fast/api/v1/templates/standard-browser",
   {
     headers: {
       "Authorization": "Bearer bf_your_api_key",
@@ -1124,7 +1124,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.get(
-    "https://bragfast.com/api/v1/templates/standard-browser",
+    "https://brag.fast/api/v1/templates/standard-browser",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 data = response.json()`,
@@ -1168,7 +1168,7 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/templates \\
+          curl: `curl -X POST https://brag.fast/api/v1/templates \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1182,7 +1182,7 @@ data = response.json()`,
       ]
     }
   }'`,
-          javascript: `const response = await fetch("https://bragfast.com/api/v1/templates", {
+          javascript: `const response = await fetch("https://brag.fast/api/v1/templates", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -1204,7 +1204,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/templates",
+    "https://brag.fast/api/v1/templates",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "name": "My Custom Template",
@@ -1264,14 +1264,14 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X PATCH https://bragfast.com/api/v1/templates/tmpl_abc123def456 \\
+          curl: `curl -X PATCH https://brag.fast/api/v1/templates/tmpl_abc123def456 \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "Updated Template Name"
   }'`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/tmpl_abc123def456",
+  "https://brag.fast/api/v1/templates/tmpl_abc123def456",
   {
     method: "PATCH",
     headers: {
@@ -1287,7 +1287,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.patch(
-    "https://bragfast.com/api/v1/templates/tmpl_abc123def456",
+    "https://brag.fast/api/v1/templates/tmpl_abc123def456",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={"name": "Updated Template Name"},
 )
@@ -1320,10 +1320,10 @@ data = response.json()`,
           },
         ],
         requestExample: {
-          curl: `curl -X DELETE https://bragfast.com/api/v1/templates/tmpl_abc123def456 \\
+          curl: `curl -X DELETE https://brag.fast/api/v1/templates/tmpl_abc123def456 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/tmpl_abc123def456",
+  "https://brag.fast/api/v1/templates/tmpl_abc123def456",
   {
     method: "DELETE",
     headers: {
@@ -1335,7 +1335,7 @@ data = response.json()`,
           python: `import requests
 
 response = requests.delete(
-    "https://bragfast.com/api/v1/templates/tmpl_abc123def456",
+    "https://brag.fast/api/v1/templates/tmpl_abc123def456",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 # 204 No Content on success`,
@@ -1366,14 +1366,14 @@ response = requests.delete(
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://bragfast.com/api/v1/templates/standard-browser/clone \\
+          curl: `curl -X POST https://brag.fast/api/v1/templates/standard-browser/clone \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "My Standard Variant"
   }'`,
           javascript: `const response = await fetch(
-  "https://bragfast.com/api/v1/templates/standard-browser/clone",
+  "https://brag.fast/api/v1/templates/standard-browser/clone",
   {
     method: "POST",
     headers: {
@@ -1389,7 +1389,7 @@ const data = await response.json()`,
           python: `import requests
 
 response = requests.post(
-    "https://bragfast.com/api/v1/templates/standard-browser/clone",
+    "https://brag.fast/api/v1/templates/standard-browser/clone",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={"name": "My Standard Variant"},
 )
@@ -1429,19 +1429,19 @@ data = response.json()`,
         ],
         requestExample: {
           curl: `# Landscape (default)
-curl -X POST https://bragfast.com/api/v1/templates/standard-browser/preview \\
+curl -X POST https://brag.fast/api/v1/templates/standard-browser/preview \\
   -H "Authorization: Bearer bf_your_api_key" \\
   --output preview.jpg
 
 # Square format
-curl -X POST https://bragfast.com/api/v1/templates/standard-browser/preview \\
+curl -X POST https://brag.fast/api/v1/templates/standard-browser/preview \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{"format": "square"}' \\
   --output preview-square.jpg`,
           javascript: `// Landscape (default)
 const response = await fetch(
-  "https://bragfast.com/api/v1/templates/standard-browser/preview",
+  "https://brag.fast/api/v1/templates/standard-browser/preview",
   {
     method: "POST",
     headers: {
@@ -1452,7 +1452,7 @@ const response = await fetch(
 
 // Square format
 const response = await fetch(
-  "https://bragfast.com/api/v1/templates/standard-browser/preview",
+  "https://brag.fast/api/v1/templates/standard-browser/preview",
   {
     method: "POST",
     headers: {
@@ -1468,13 +1468,13 @@ const blob = await response.blob()
 
 # Landscape (default)
 response = requests.post(
-    "https://bragfast.com/api/v1/templates/standard-browser/preview",
+    "https://brag.fast/api/v1/templates/standard-browser/preview",
     headers={"Authorization": "Bearer bf_your_api_key"},
 )
 
 # Square format
 response = requests.post(
-    "https://bragfast.com/api/v1/templates/standard-browser/preview",
+    "https://brag.fast/api/v1/templates/standard-browser/preview",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={"format": "square"},
 )
