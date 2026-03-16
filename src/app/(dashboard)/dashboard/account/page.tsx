@@ -8,6 +8,7 @@ import { DeleteAccountDialog } from "@/components/dashboard/delete-account-dialo
 import { PLANS } from "@/lib/plans";
 import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
+import { GitHubSection } from "@/components/dashboard/github-section";
 
 function CreditBar({ used, total }: { used: number; total: number }) {
   const remaining = Math.max(0, total - used);
@@ -35,6 +36,21 @@ export default async function AccountPage() {
   const stats = await fetchQuery(api.userProfiles.getStats, {
     userId: user._id,
   });
+
+  const [installations, brands, defaultTemplates, userTemplates, skippedReleases] =
+    await Promise.all([
+      fetchQuery(api.githubInstallations.listByUserId, { userId: user._id }),
+      fetchQuery(api.brands.listByUser, { userId: user._id }),
+      fetchQuery(api.templates.listDefaults, {}),
+      fetchQuery(api.templates.listByUser, { userId: user._id }),
+      fetchQuery(api.githubSkippedReleases.listByUserId, { userId: user._id }),
+    ]);
+
+  const allTemplates = [...defaultTemplates, ...userTemplates].map((t) => ({
+    externalId: t.externalId,
+    name: t.name,
+  }));
+  const brandList = brands.map((b) => ({ externalId: b.externalId, name: b.name }));
 
   const plan = PLANS[stats.plan as keyof typeof PLANS];
   const isTrial = stats.plan === "trial";
@@ -120,7 +136,21 @@ export default async function AccountPage() {
         <KeyManager />
       </PixelCard>
 
-      {/* Card 3 — Danger Zone */}
+      {/* Card 3 — GitHub Integration */}
+      <PixelCard>
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand mb-4">
+          GitHub Integration
+        </h2>
+        <GitHubSection
+          installations={installations}
+          brands={brandList}
+          templates={allTemplates}
+          skippedReleases={skippedReleases}
+          appSlug={process.env.NEXT_PUBLIC_GITHUB_APP_SLUG ?? ""}
+        />
+      </PixelCard>
+
+      {/* Card 4 — Danger Zone */}
       <div className="border-2 border-red-700 bg-red-50/80 p-5 shadow-[4px_4px_0_var(--color-brand)]">
         <h2 className="font-[family-name:var(--font-press-start)] text-sm text-red-700 mb-2">
           Danger Zone
