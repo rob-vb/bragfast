@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const name = body.name || "default";
 
   // Ensure user has a profile with trial credits
-  await fetchMutation(api.userProfiles.create, { userId: user._id });
+  await fetchMutation(api.userProfiles.create, { userId: user._id, email: user.email });
 
   const result = await fetchMutation(api.apiKeys.create, {
     userId: user._id,

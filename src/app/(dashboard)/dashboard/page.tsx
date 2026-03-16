@@ -1,4 +1,4 @@
-import { fetchQuery } from "convex/nextjs";
+import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
@@ -10,6 +10,9 @@ import Link from "next/link";
 export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+
+  // Ensure trial profile exists (grants 30 credits on first visit)
+  await fetchMutation(api.userProfiles.create, { userId: user._id, email: user.email });
 
   const [stats, releases] = await Promise.all([
     fetchQuery(api.userProfiles.getStats, { userId: user._id }),

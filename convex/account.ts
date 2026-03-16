@@ -52,13 +52,14 @@ export const deleteAccount = mutation({
       await ctx.db.delete(rl._id);
     }
 
-    // Delete user profile
+    // Zero out credits but keep the profile row as a tombstone
+    // so re-registration with the same email won't get free trial credits
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect();
-    for (const p of profile) {
-      await ctx.db.delete(p._id);
+      .first();
+    if (profile) {
+      await ctx.db.patch(profile._id, { creditsRemaining: 0, plan: "trial" });
     }
 
     return { releaseIds };

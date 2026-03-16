@@ -5,6 +5,7 @@ export default defineSchema({
   // Credits and plan info (separate from component-managed user table)
   userProfiles: defineTable({
     userId: v.string(),
+    email: v.optional(v.string()),
     creditsRemaining: v.number(),
     plan: v.union(
       v.literal("trial"),
@@ -12,7 +13,9 @@ export default defineSchema({
       v.literal("pro"),
       v.literal("scale")
     ),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_email", ["email"]),
 
   brands: defineTable({
     userId: v.string(),

@@ -12,16 +12,25 @@ export const getByUserId = query({
 });
 
 export const create = mutation({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: { userId: v.string(), email: v.string() },
+  handler: async (ctx, { userId, email }) => {
+    // Check if this userId already has a profile
     const existing = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (existing) return existing._id;
+
+    // Check if this email had a previous profile (re-registration)
+    const previous = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+
     return ctx.db.insert("userProfiles", {
       userId,
-      creditsRemaining: 30,
+      email,
+      creditsRemaining: previous ? 0 : 30,
       plan: "trial",
     });
   },
