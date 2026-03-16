@@ -6,12 +6,16 @@ import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats, validateVideoFormats, validateVideoTemplate } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
-import { validateVideoScenes } from "@/lib/video/validation";
-import { getDefaultVideoTemplate } from "@/lib/video/defaults";
-import { createVideoRelease, renderVideoAsync } from "@/lib/pipeline/render-video";
 import { ReleaseRequest, calculateCredits } from "@/lib/types";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
+
+// Lazy-loaded to avoid pulling Remotion's heavy native deps into every request
+const loadVideoModules = () => Promise.all([
+  import("@/lib/video/validation"),
+  import("@/lib/video/defaults"),
+  import("@/lib/pipeline/render-video"),
+] as const);
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
@@ -50,6 +54,8 @@ export async function POST(request: Request) {
 
   // ── Video branch ──────────────────────────────────────────────
   if (isVideo) {
+    const [{ validateVideoScenes }, { getDefaultVideoTemplate }, { createVideoRelease, renderVideoAsync }] = await loadVideoModules();
+
     const videoFormatError = validateVideoFormats(body.formats);
     if (videoFormatError) {
       return Response.json({ error: videoFormatError }, { status: 400 });

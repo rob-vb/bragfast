@@ -7,7 +7,11 @@ const nextConfig: NextConfig = {
     "@remotion/renderer",
     "@remotion/lambda-client",
     "@remotion/serverless-client",
+    "sharp",
   ],
+  outputFileTracingIncludes: {
+    "/api/**": ["./src/assets/fonts/**/*"],
+  },
 };
 
 export default nextConfig;
