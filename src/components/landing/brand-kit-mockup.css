@@ -1,0 +1,59 @@
+/* Brand kit mockup animation — config builds up then shows output */
+/* Full loop: 10s */
+
+@keyframes brand-logo {
+  0% { opacity: 0; transform: scale(0.8); }
+  8% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes brand-swatch-1 {
+  0%, 10% { opacity: 0; transform: scale(0); }
+  14% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes brand-swatch-2 {
+  0%, 14% { opacity: 0; transform: scale(0); }
+  18% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes brand-swatch-3 {
+  0%, 18% { opacity: 0; transform: scale(0); }
+  22% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes brand-swatch-4 {
+  0%, 22% { opacity: 0; transform: scale(0); }
+  26% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes brand-font {
+  0%, 28% { opacity: 0; transform: translateX(-6px); }
+  36% { opacity: 1; transform: translateX(0); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes brand-output {
+  0%, 42% { opacity: 0; transform: translateY(6px); }
+  52% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-kit-mockup [style*="animation"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
