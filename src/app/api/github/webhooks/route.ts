@@ -187,6 +187,10 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
     formats: repoConfig?.formats,
   });
 
+  if (repoConfig?.webhookUrl) {
+    releaseRequest.webhook_url = repoConfig.webhookUrl;
+  }
+
   // 9. Reserve credits
   const creditsNeeded = calculateCredits({ output: "image", formats: releaseRequest.formats });
   try {
