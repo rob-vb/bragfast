@@ -2,7 +2,7 @@
 
 ## Context
 
-Bragfast generates branded images for product updates via an API-first pipeline (Satori + Sharp). Users want **video output** for the same use cases — product announcements, feature showcases, changelog videos — for social media distribution. This spec adds video generation using Remotion, rendered on AWS Lambda, stored in Cloudflare R2.
+brag.fast generates branded images for product updates via an API-first pipeline (Satori + Sharp). Users want **video output** for the same use cases — product announcements, feature showcases, changelog videos — for social media distribution. This spec adds video generation using Remotion, rendered on AWS Lambda, stored in Cloudflare R2.
 
 ## Decisions
 

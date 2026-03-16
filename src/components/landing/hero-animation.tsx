@@ -28,7 +28,7 @@ export function HeroAnimation() {
             style={{ animation: `type-line1 ${LOOP}`, width: 0, opacity: 0, animationTimingFunction: "steps(39, end)" }}
           >
             <span className="text-[#ff9f6b]">curl</span>
-            <span className="text-surface/90"> -X POST bragfast.com/api/v1/cook \</span>
+            <span className="text-surface/90"> -X POST brag.fast/api/v1/cook \</span>
           </div>
 
           {/* Line 2: payload */}

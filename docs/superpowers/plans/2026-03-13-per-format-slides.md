@@ -683,7 +683,7 @@ git commit -m "docs: update API reference for per-format slides"
 Replace the curl example payload:
 
 ```
-curl -X POST https://bragfast.com/api/v1/cook \\
+curl -X POST https://brag.fast/api/v1/cook \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer bf_key" \\
   -d '{
@@ -721,7 +721,7 @@ git commit -m "docs: update landing page curl example for per-format slides"
 Replace the payload in the curlSnippet template literal:
 
 ```
-curl -X POST https://bragfast.com/api/v1/cook \\
+curl -X POST https://brag.fast/api/v1/cook \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -d '{

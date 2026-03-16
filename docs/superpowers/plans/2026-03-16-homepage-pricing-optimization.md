@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Expand homepage and pricing page to showcase all Bragfast USPs with dedicated feature sections, mockup components, and an auth-aware nav.
+**Goal:** Expand homepage and pricing page to showcase all brag.fast USPs with dedicated feature sections, mockup components, and an auth-aware nav.
 
 **Architecture:** Modify two existing pages (`src/app/page.tsx`, `src/app/pricing/page.tsx`), one shared component (`landing-nav.tsx`), one data file (`pricing-data.tsx`), and create two new mockup components (`AIAnalysisMockup`, `BrandKitMockup`) following the same pattern as `EditorMockup`.
 
@@ -531,7 +531,7 @@ After the GitHub section, add:
       AI picks the best ingredients
     </h2>
     <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-      Bragfast reads your changelog, categorizes changes — features, fixes, breaking — and generates a smart summary. Review before serving or let it run fully automated.
+      brag.fast reads your changelog, categorizes changes — features, fixes, breaking — and generates a smart summary. Review before serving or let it run fully automated.
     </p>
   </div>
 </div>
@@ -726,7 +726,7 @@ In `src/app/pricing/page.tsx`, add two entries to the `FAQS` array (before the l
 ```tsx
 {
   q: "How does the GitHub integration work?",
-  a: "Install the Bragfast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
+  a: "Install the brag.fast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
 },
 {
   q: "What does AI analysis do?",

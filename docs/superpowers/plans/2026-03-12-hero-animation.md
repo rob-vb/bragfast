@@ -37,7 +37,7 @@ The full loop is 8.6s. Keyframe percentages for each phase:
 ```css
 /* src/components/landing/hero-animation.css */
 
-/* Line 1: curl -X POST bragfast.com/api/v1/cook \ (42 chars) */
+/* Line 1: curl -X POST brag.fast/api/v1/cook \ (42 chars) */
 @keyframes type-line1 {
   0% { width: 0; opacity: 1; }
   0.1% { opacity: 1; }
@@ -183,7 +183,7 @@ export function HeroAnimation() {
             style={{ animation: `type-line1 ${LOOP}`, width: 0, opacity: 0, animationTimingFunction: "steps(42, end)" }}
           >
             <span className="text-[#ff9f6b]">curl</span>
-            <span className="text-surface/90"> -X POST bragfast.com/api/v1/cook \</span>
+            <span className="text-surface/90"> -X POST brag.fast/api/v1/cook \</span>
           </div>
 
           {/* Line 2: payload */}
