@@ -128,6 +128,7 @@ export default defineSchema({
     formats: v.optional(v.array(v.string())),
     skipPrereleases: v.boolean(),
     tagFilter: v.optional(v.string()),
+    webhookUrl: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
   })
