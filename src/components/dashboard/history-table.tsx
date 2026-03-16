@@ -8,7 +8,7 @@ type Release = {
   _id: string;
   externalId: string;
   template: string;
-  status: "completed" | "pending" | "failed";
+  status: "completed" | "pending" | "pending_review" | "failed" | "dismissed";
   images?: unknown;
   credits_used: number;
   metadata?: string;
