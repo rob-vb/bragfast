@@ -270,6 +270,9 @@ export async function renderReleaseAsync(
       const result = await getRelease(releaseId);
       if (result) await callWebhook(request.webhook_url, result);
     }
+
+    // Re-throw so callers (e.g. debug sync mode) can surface the error
+    throw err;
   }
 }
 

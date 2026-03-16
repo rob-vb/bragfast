@@ -220,7 +220,7 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
   });
 
   // 11. Render in background
-  after(() => renderReleaseAsync(result.cook_id, releaseRequest, userId));
+  after(() => renderReleaseAsync(result.cook_id, releaseRequest, userId).catch(() => {}));
 
   return Response.json({ ok: true, cook_id: result.cook_id });
 }

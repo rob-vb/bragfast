@@ -230,7 +230,7 @@ export async function POST(request: Request) {
       return Response.json({ ...result, status: "completed" }, { status: 200 });
     }
 
-    after(() => renderReleaseAsync(result.cook_id, imageBody, auth.userId));
+    after(() => renderReleaseAsync(result.cook_id, imageBody, auth.userId).catch(() => {}));
     return Response.json(result, { status: 202 });
   } catch (err) {
     // Refund on release creation failure
