@@ -3,9 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { authClient } from "@/lib/auth-client";
 
 export function LandingNav() {
   const [open, setOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    authClient.getSession().then((res) => {
+      if (res.data?.user) setLoggedIn(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -61,10 +69,10 @@ export function LandingNav() {
               Pricing
             </Link>
             <Link
-              href="/login"
+              href={loggedIn ? "/dashboard" : "/login"}
               className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
             >
-              Sign in
+              {loggedIn ? "Dashboard" : "Sign in"}
             </Link>
           </nav>
 
@@ -147,11 +155,11 @@ export function LandingNav() {
             Pricing
           </Link>
           <Link
-            href="/login"
+            href={loggedIn ? "/dashboard" : "/login"}
             onClick={() => setOpen(false)}
             className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] transition-all"
           >
-            Sign in
+            {loggedIn ? "Dashboard" : "Sign in"}
           </Link>
         </nav>
       </div>
