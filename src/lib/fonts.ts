@@ -20,15 +20,27 @@ const LOCAL_FAMILY = "Plus Jakarta Sans";
 
 function loadLocalFonts(): FontConfig[] {
   if (fontCache.has(LOCAL_FAMILY)) return fontCache.get(LOCAL_FAMILY)!;
-  const dir = path.join(process.cwd(), "src/assets/fonts");
-  const regular = readFileSync(path.join(dir, "PlusJakartaSans-Regular.ttf"));
-  const bold = readFileSync(path.join(dir, "PlusJakartaSans-Bold.ttf"));
-  const fonts: FontConfig[] = [
-    { name: LOCAL_FAMILY, data: regular.buffer as ArrayBuffer, weight: 400, style: "normal" },
-    { name: LOCAL_FAMILY, data: bold.buffer as ArrayBuffer, weight: 700, style: "normal" },
-  ];
-  fontCache.set(LOCAL_FAMILY, fonts);
-  return fonts;
+  try {
+    const dir = path.join(process.cwd(), "src/assets/fonts");
+    const regular = readFileSync(path.join(dir, "PlusJakartaSans-Regular.ttf"));
+    const bold = readFileSync(path.join(dir, "PlusJakartaSans-Bold.ttf"));
+    const fonts: FontConfig[] = [
+      { name: LOCAL_FAMILY, data: regular.buffer as ArrayBuffer, weight: 400, style: "normal" },
+      { name: LOCAL_FAMILY, data: bold.buffer as ArrayBuffer, weight: 700, style: "normal" },
+    ];
+    fontCache.set(LOCAL_FAMILY, fonts);
+    return fonts;
+  } catch {
+    // Font files not bundled (e.g. Vercel serverless) — will be fetched from Google Fonts
+    return [];
+  }
+}
+
+async function loadLocalFontsAsync(): Promise<FontConfig[]> {
+  const local = loadLocalFonts();
+  if (local.length > 0) return local;
+  // Fallback: fetch Plus Jakarta Sans from Google Fonts
+  return loadGoogleFont(LOCAL_FAMILY);
 }
 
 async function fetchGoogleFontBuffer(family: string, weight: number): Promise<ArrayBuffer | null> {
@@ -53,7 +65,7 @@ async function loadGoogleFont(family: string): Promise<FontConfig[]> {
   ]);
   if (!regularBuf) {
     console.warn(`Failed to fetch Google Font "${family}", falling back to ${LOCAL_FAMILY}`);
-    return loadLocalFonts();
+    return loadLocalFontsAsync();
   }
   const fonts: FontConfig[] = [
     { name: family, data: regularBuf, weight: 400, style: "normal" },
@@ -64,7 +76,7 @@ async function loadGoogleFont(family: string): Promise<FontConfig[]> {
 }
 
 export async function loadFontsForFamily(family: string | undefined): Promise<FontConfig[]> {
-  if (!family || family === LOCAL_FAMILY) return loadLocalFonts();
+  if (!family || family === LOCAL_FAMILY) return loadLocalFontsAsync();
   return loadGoogleFont(family);
 }
 
@@ -83,7 +95,7 @@ export async function loadFontsForObjects(objects: TemplateObject[]): Promise<Fo
     }
   }
 
-  if (needed.size === 0) return loadLocalFonts();
+  if (needed.size === 0) return loadLocalFontsAsync();
 
   const allFonts: FontConfig[] = [];
   const fetches: Promise<void>[] = [];
@@ -102,6 +114,6 @@ export async function loadFontsForObjects(objects: TemplateObject[]): Promise<Fo
   await Promise.all(fetches);
 
   // Always include local font as fallback
-  allFonts.push(...loadLocalFonts());
+  allFonts.push(...(await loadLocalFontsAsync()));
   return allFonts;
 }
