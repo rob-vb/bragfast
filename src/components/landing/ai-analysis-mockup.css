@@ -1,0 +1,52 @@
+/* AI Analysis mockup animation — elements appear sequentially */
+/* Full loop: 10s */
+
+@keyframes ai-title {
+  0% { opacity: 0; transform: translateY(-6px); }
+  8% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes ai-pill-1 {
+  0%, 10% { opacity: 0; transform: scale(0.8); }
+  16% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes ai-pill-2 {
+  0%, 16% { opacity: 0; transform: scale(0.8); }
+  22% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes ai-pill-3 {
+  0%, 22% { opacity: 0; transform: scale(0.8); }
+  28% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes ai-summary {
+  0%, 35% { opacity: 0; }
+  42% { opacity: 1; }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@keyframes ai-buttons {
+  0%, 50% { opacity: 0; transform: translateY(4px); }
+  58% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-analysis-mockup [style*="animation"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
