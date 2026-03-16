@@ -56,7 +56,7 @@ export default function PricingPage() {
       <section className="px-4 pt-16 pb-12 md:pt-24 md:pb-16 md:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-[family-name:var(--font-press-start)] text-lg md:text-2xl leading-relaxed mb-4">
-            Start showing what you've been cooking.
+            Start showing what you&apos;ve been cooking.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
             Auto-generate branded social images from your releases — via API or GitHub.
