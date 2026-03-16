@@ -519,13 +519,13 @@ data = response.json()`,
   "images": {
     "landscape": {
       "slides": [
-        "https://cdn.bragfast.com/cook_abc123/landscape/slide-1.jpg"
+        "https://cdn.brag.fast/cook_abc123/landscape/slide-1.jpg"
       ],
       "dimensions": "1200x675"
     },
     "square": {
       "slides": [
-        "https://cdn.bragfast.com/cook_abc123/square/slide-1.jpg"
+        "https://cdn.brag.fast/cook_abc123/square/slide-1.jpg"
       ],
       "dimensions": "1080x1080"
     }
@@ -1086,7 +1086,7 @@ data = response.json()`,
       "name": "My Custom Template",
       "is_default": false,
       "config": { "..." },
-      "preview_url": "https://cdn.bragfast.com/previews/tmpl_abc123.jpg",
+      "preview_url": "https://cdn.brag.fast/previews/tmpl_abc123.jpg",
       "created_at": "2026-03-01T10:00:00.000Z",
       "updated_at": "2026-03-05T14:30:00.000Z"
     }
@@ -1299,7 +1299,7 @@ data = response.json()`,
   "name": "Updated Template Name",
   "is_default": false,
   "config": { "..." },
-  "preview_url": "https://cdn.bragfast.com/previews/tmpl_abc123.jpg",
+  "preview_url": "https://cdn.brag.fast/previews/tmpl_abc123.jpg",
   "created_at": "2026-03-01T10:00:00.000Z",
   "updated_at": "2026-03-09T12:00:00.000Z"
 }`,
