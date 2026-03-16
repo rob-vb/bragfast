@@ -46,23 +46,39 @@ function PendingCard({ release, onAction }: { release: PendingRelease; onAction:
 
   async function handleApprove() {
     setLoading(true);
-    await fetch(`/api/github/releases/${release.externalId}/approve`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editing ? { aiContent: editedContent } : {}),
-    });
-    setLoading(false);
-    onAction();
+    try {
+      const res = await fetch(`/api/github/releases/${release.externalId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing ? { aiContent: editedContent } : {}),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to approve release");
+        return;
+      }
+      onAction();
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDismiss() {
     setLoading(true);
-    await fetch(`/api/github/releases/${release.externalId}/approve`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-    });
-    setLoading(false);
-    onAction();
+    try {
+      const res = await fetch(`/api/github/releases/${release.externalId}/approve`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to dismiss release");
+        return;
+      }
+      onAction();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

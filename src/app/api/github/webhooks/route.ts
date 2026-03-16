@@ -12,7 +12,6 @@ import { calculateCredits } from "@/lib/types";
 import { analyzeRelease } from "@/lib/github/analyze-release";
 import { getDefaultConfig } from "@/lib/templates/default-configs";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
-import type { FormatKey } from "@/lib/templates/canvas-types";
 
 export const maxDuration = 60;
 
@@ -221,7 +220,6 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
   const autoApprove = repoConfig?.autoApprove ?? false;
 
   // 10. Build ReleaseRequest from AI content
-  const formatNames = (repoConfig?.formats ?? ["landscape"]) as FormatKey[];
   const releaseRequest = mapReleaseToRequest(payload, {
     brandId: repoConfig?.brandId,
     template: repoConfig?.template,
