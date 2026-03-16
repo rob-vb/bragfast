@@ -9,6 +9,10 @@ import {
 } from "@/lib/github/map-release";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { calculateCredits } from "@/lib/types";
+import { analyzeRelease } from "@/lib/github/analyze-release";
+import { getDefaultConfig } from "@/lib/templates/default-configs";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
+import type { FormatKey } from "@/lib/templates/canvas-types";
 
 export const maxDuration = 60;
 
@@ -180,47 +184,113 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
     return Response.json({ ok: true, skipped: "duplicate" });
   }
 
-  // 8. Build ReleaseRequest
+  // 8. Load template to discover available object slots
+  const templateName = repoConfig?.template ?? "standard-browser";
+  let templateConfig: CanvasTemplateConfig | null = null;
+
+  const defaultConfig = getDefaultConfig(templateName);
+  if (defaultConfig) {
+    templateConfig = defaultConfig;
+  } else if (templateName.startsWith("tmpl_")) {
+    const tmpl = await convex.query(api.templates.getByExternalId, { externalId: templateName });
+    if (tmpl) templateConfig = tmpl.config as CanvasTemplateConfig;
+  }
+
+  // Extract object slots from the first format (slots are same across formats)
+  const templateObjects = templateConfig
+    ? Object.values(templateConfig.formats)[0].objects.map((o) => ({
+        id: o.id,
+        type: o.type as "text" | "image" | "logo",
+      }))
+    : [
+        { id: "title", type: "text" as const },
+        { id: "description", type: "text" as const },
+      ];
+
+  // 9. AI analysis
+  const maxSlides = repoConfig?.maxSlides ?? 1;
+  const aiResult = await analyzeRelease({
+    releaseName: payload.release.name || payload.release.tag_name,
+    releaseTag: payload.release.tag_name,
+    releaseBody: payload.release.body || "",
+    templateObjects,
+    maxSlides,
+  });
+
+  const aiContentJson = JSON.stringify(aiResult);
+  const autoApprove = repoConfig?.autoApprove ?? false;
+
+  // 10. Build ReleaseRequest from AI content
+  const formatNames = (repoConfig?.formats ?? ["landscape"]) as FormatKey[];
   const releaseRequest = mapReleaseToRequest(payload, {
     brandId: repoConfig?.brandId,
     template: repoConfig?.template,
     formats: repoConfig?.formats,
   });
 
+  // Override the mechanical slides with AI-generated content
+  for (const formatEntry of releaseRequest.formats) {
+    formatEntry.slides = aiResult.slides;
+  }
+
   if (repoConfig?.webhookUrl) {
     releaseRequest.webhook_url = repoConfig.webhookUrl;
   }
 
-  // 9. Reserve credits
-  const creditsNeeded = calculateCredits({ output: "image", formats: releaseRequest.formats });
-  try {
-    await convex.mutation(api.userProfiles.reserve, {
-      userId,
-      amount: creditsNeeded,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "";
-    if (msg.includes("Insufficient credits")) {
-      await convex.mutation(api.githubSkippedReleases.log, {
+  if (autoApprove) {
+    // 11a. Auto-approve: reserve credits, create release, render
+    const creditsNeeded = calculateCredits({ output: "image", formats: releaseRequest.formats });
+    try {
+      await convex.mutation(api.userProfiles.reserve, {
         userId,
-        repoFullName,
-        releaseTag,
-        releaseName: payload.release.name ?? undefined,
-        reason: "insufficient_credits",
+        amount: creditsNeeded,
       });
-      return Response.json({ ok: true, skipped: "insufficient_credits" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("Insufficient credits")) {
+        await convex.mutation(api.githubSkippedReleases.log, {
+          userId,
+          repoFullName,
+          releaseTag,
+          releaseName: payload.release.name ?? undefined,
+          reason: "insufficient_credits",
+        });
+        return Response.json({ ok: true, skipped: "insufficient_credits" });
+      }
+      throw err;
     }
-    throw err;
+
+    const result = await createRelease(releaseRequest, userId, {
+      source: "github",
+      sourceMetadata,
+    });
+
+    after(() => renderReleaseAsync(result.cook_id, releaseRequest, userId));
+    return Response.json({ ok: true, cook_id: result.cook_id, mode: "auto" });
+  } else {
+    // 11b. Manual approval: store as pending_review, no credits reserved yet
+    const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+
+    // Snapshot render config at webhook time to prevent config drift
+    const pendingConfig = JSON.stringify({
+      template: repoConfig?.template ?? "standard-browser",
+      formats: repoConfig?.formats ?? ["landscape"],
+      brandId: repoConfig?.brandId,
+      webhookUrl: repoConfig?.webhookUrl,
+    });
+
+    await convex.mutation(api.releases.create, {
+      userId,
+      externalId: releaseId,
+      template: releaseRequest.template || "standard-browser",
+      credits_used: 0, // updated to actual amount on approval
+      source: "github",
+      sourceMetadata,
+      status: "pending_review",
+      aiContent: aiContentJson,
+      pendingConfig,
+    });
+
+    return Response.json({ ok: true, cook_id: releaseId, mode: "pending_review" });
   }
-
-  // 10. Create release with source metadata
-  const result = await createRelease(releaseRequest, userId, {
-    source: "github",
-    sourceMetadata,
-  });
-
-  // 11. Render in background
-  after(() => renderReleaseAsync(result.cook_id, releaseRequest, userId));
-
-  return Response.json({ ok: true, cook_id: result.cook_id });
 }
