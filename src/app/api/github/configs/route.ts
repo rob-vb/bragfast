@@ -45,6 +45,8 @@ export async function PUT(request: Request) {
     skipPrereleases: body.skipPrereleases,
     tagFilter: body.tagFilter || undefined,
     webhookUrl: body.webhookUrl || undefined,
+    autoApprove: body.autoApprove,
+    maxSlides: body.maxSlides,
   });
 
   return Response.json({ success: true });

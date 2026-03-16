@@ -17,6 +17,8 @@ type RepoConfig = {
   skipPrereleases: boolean;
   tagFilter?: string;
   webhookUrl?: string;
+  autoApprove?: boolean;
+  maxSlides?: number;
 };
 
 type Props = {
@@ -38,6 +40,8 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
   const [skipPrereleases, setSkipPrereleases] = useState(config?.skipPrereleases ?? true);
   const [tagFilter, setTagFilter] = useState(config?.tagFilter ?? "");
   const [webhookUrl, setWebhookUrl] = useState(config?.webhookUrl ?? "");
+  const [autoApprove, setAutoApprove] = useState(config?.autoApprove ?? false);
+  const [maxSlides, setMaxSlides] = useState(config?.maxSlides ?? 1);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(!!config?.enabled);
 
@@ -63,6 +67,8 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
           skipPrereleases,
           tagFilter: tagFilter || undefined,
           webhookUrl: webhookUrl || undefined,
+          autoApprove,
+          maxSlides,
         }),
       });
       if (!res.ok) console.error("Save failed:", await res.text());
@@ -168,6 +174,31 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
               placeholder="https://your-app.com/webhooks/bragfast"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
+            />
+          </div>
+
+          {/* Auto-approve */}
+          <label className="flex items-center gap-2 text-xs text-brand cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoApprove}
+              onChange={(e) => setAutoApprove(e.target.checked)}
+              className="accent-[var(--color-gold)]"
+            />
+            Auto-approve (skip manual review)
+          </label>
+
+          {/* Max slides */}
+          <div>
+            <label className="block text-xs text-brand/60 mb-1">Max slides per release</label>
+            <input
+              type="number"
+              min={1}
+              max={5}
+              className={inputClass}
+              value={maxSlides}
+              onChange={(e) => setMaxSlides(Math.max(1, Math.min(5, Number(e.target.value))))}
+              style={{ maxWidth: 80 }}
             />
           </div>
 

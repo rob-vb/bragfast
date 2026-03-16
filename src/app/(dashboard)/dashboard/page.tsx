@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelTable } from "@/components/dashboard/pixel-table";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
+import { PendingReviews } from "@/components/dashboard/pending-reviews";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -14,9 +15,10 @@ export default async function DashboardPage() {
   // Ensure trial profile exists (grants 30 credits on first visit)
   await fetchMutation(api.userProfiles.create, { userId: user._id, email: user.email });
 
-  const [stats, releases] = await Promise.all([
+  const [stats, releases, pendingReleases] = await Promise.all([
     fetchQuery(api.userProfiles.getStats, { userId: user._id }),
     fetchQuery(api.releases.listByUser, { userId: user._id }),
+    fetchQuery(api.releases.listPendingByUser, { userId: user._id }),
   ]);
 
   const recent = releases.slice(0, 10);
@@ -45,6 +47,11 @@ export default async function DashboardPage() {
           </PixelCard>
         ))}
       </div>
+
+      {/* Pending Reviews */}
+      {pendingReleases.length > 0 && (
+        <PendingReviews releases={pendingReleases} />
+      )}
 
       {/* Recent releases */}
       <div>
