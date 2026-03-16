@@ -34,7 +34,7 @@ export function BrandForm({
       logo_url: "",
       website: "",
       font_family: "",
-      colors: { background: "var(--color-surface)", text: "#1A1A1A", primary: "var(--color-gold)" },
+      colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
     }
   );
 
@@ -234,7 +234,7 @@ export function BrandForm({
             value={form.font_family ?? ""}
             onChange={(e) => update("font_family", e.target.value)}
           >
-            <option value="">Default</option>
+            <option value="">Plus Jakarta Sans</option>
             {Object.entries(FONT_CATALOG).map(([category, fonts]) => (
               <optgroup key={category} label={category}>
                 {fonts.map((font) => (
