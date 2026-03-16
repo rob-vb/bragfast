@@ -248,7 +248,7 @@ export async function renderReleaseAsync(
     }
   } catch (err) {
     const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
-    console.error(`Render failed for ${releaseId}: ${errMsg}`);
+    console.error(`[RENDER_ERROR] ${releaseId} | ${errMsg}`);
 
     // Refund reserved credits on render failure
     const amount = calculateCredits({ output: "image", formats: request.formats });

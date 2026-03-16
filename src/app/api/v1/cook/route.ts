@@ -214,7 +214,22 @@ export async function POST(request: Request) {
   try {
     const result = await createRelease(imageBody, auth.userId, { source: "api" });
     result.credits_remaining = remaining;
-    // Credits already reserved — render refunds on failure
+
+    // DEBUG: render synchronously to surface errors in response
+    const debugSync = request.headers.get("x-debug-sync") === "1";
+    if (debugSync) {
+      try {
+        await renderReleaseAsync(result.cook_id, imageBody, auth.userId);
+      } catch (renderErr) {
+        return Response.json({
+          error: "Render failed",
+          details: renderErr instanceof Error ? renderErr.message : String(renderErr),
+          stack: renderErr instanceof Error ? renderErr.stack : undefined,
+        }, { status: 500 });
+      }
+      return Response.json({ ...result, status: "completed" }, { status: 200 });
+    }
+
     after(() => renderReleaseAsync(result.cook_id, imageBody, auth.userId));
     return Response.json(result, { status: 202 });
   } catch (err) {
