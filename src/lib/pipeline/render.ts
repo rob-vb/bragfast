@@ -248,7 +248,7 @@ export async function renderReleaseAsync(
     }
   } catch (err) {
     const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
-    console.error(`[RENDER_ERROR] ${releaseId} | ${errMsg}`);
+    console.error(`Render failed for ${releaseId}: ${errMsg}`);
 
     // Refund reserved credits on render failure
     const amount = calculateCredits({ output: "image", formats: request.formats });
@@ -270,9 +270,6 @@ export async function renderReleaseAsync(
       const result = await getRelease(releaseId);
       if (result) await callWebhook(request.webhook_url, result);
     }
-
-    // Re-throw so callers (e.g. debug sync mode) can surface the error
-    throw err;
   }
 }
 
