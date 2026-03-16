@@ -15,6 +15,8 @@ type Release = {
   webhook_url?: string;
   created_at: string;
   completed_at?: string;
+  source?: "api" | "github";
+  sourceMetadata?: string;
 };
 
 function buildResponseBody(r: Release) {
@@ -27,6 +29,10 @@ function buildResponseBody(r: Release) {
     ...(r.completed_at ? { completed_at: r.completed_at } : {}),
     ...(r.metadata ? { metadata: r.metadata } : {}),
     ...(r.webhook_url ? { webhook_url: r.webhook_url } : {}),
+    ...(r.source ? { source: r.source } : {}),
+    ...(r.sourceMetadata ? (() => {
+      try { return { sourceMetadata: JSON.parse(r.sourceMetadata) }; } catch { return {}; }
+    })() : {}),
   };
 }
 
@@ -45,6 +51,11 @@ function ExpandableRow({ release }: { release: Release }) {
             {open ? "▼" : "▶"}
           </span>
           {release.externalId}
+          {release.source === "github" && (
+            <span className="ml-2">
+              <PixelBadge label="GitHub" variant="github" />
+            </span>
+          )}
         </td>
         <td className="px-4 py-3 text-xs">{release.template}</td>
         <td className="px-4 py-3">
