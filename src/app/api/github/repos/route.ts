@@ -18,7 +18,16 @@ export async function GET() {
     return Response.json({ repos: [] });
   }
 
-  const token = await getInstallationToken(active.installationId);
+  let token: string;
+  try {
+    token = await getInstallationToken(active.installationId);
+  } catch (err) {
+    console.error("Failed to get GitHub installation token:", err);
+    return Response.json(
+      { error: "GitHub authentication failed" },
+      { status: 502 }
+    );
+  }
 
   const repos: Array<{
     full_name: string;
@@ -47,7 +56,8 @@ export async function GET() {
     }
 
     const data = await res.json();
-    for (const r of data.repositories) {
+    const repoList = data.repositories ?? [];
+    for (const r of repoList) {
       repos.push({
         full_name: r.full_name,
         name: r.name,
@@ -56,7 +66,7 @@ export async function GET() {
       });
     }
 
-    if (repos.length >= data.total_count || data.repositories.length < 100) break;
+    if (repos.length >= (data.total_count ?? 0) || repoList.length < 100) break;
     page++;
   }
 
