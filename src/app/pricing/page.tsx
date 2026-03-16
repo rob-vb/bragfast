@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
+import { Terminal, Palette, GitBranch, Sparkles, Paintbrush, LayoutGrid } from "lucide-react";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
@@ -32,6 +34,14 @@ const FAQS = [
     a: "Images are hosted on our global CDN indefinitely. Hotlink them directly in your posts, blog, or app.",
   },
   {
+    q: "How does the GitHub integration work?",
+    a: "Install the Bragfast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
+  },
+  {
+    q: "What does AI analysis do?",
+    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on Pro and Scale plans.",
+  },
+  {
     q: "Do you offer refunds?",
     a: "No. All plans are prepaid and non-refundable. You can cancel or downgrade anytime — changes take effect at the end of your billing cycle.",
   },
@@ -48,12 +58,47 @@ export default function PricingPage() {
           <h1 className="font-[family-name:var(--font-press-start)] text-lg md:text-2xl leading-relaxed mb-4">
             Start showing what you've been cooking.
           </h1>
+          <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
+            Auto-generate branded social images from your releases — via API or GitHub.
+          </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
             1 credit = 1 image in 1 format. Sign up and get{" "}
             <strong className="text-brand">30 free credits</strong> to
             try it out —{" "}
             <strong className="text-brand">no credit card required</strong>.
           </p>
+        </div>
+      </section>
+
+      {/* Feature Showcase */}
+      <section className="px-4 pb-12 md:pb-16 md:px-8">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-8">
+            Everything on the menu
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {[
+              { icon: Terminal, title: "API Access", desc: "One API call, three formats. Branded images in seconds." },
+              { icon: Palette, title: "Template Editor", desc: "Design your own templates with the visual editor." },
+              { icon: GitBranch, title: "GitHub Integration", desc: "Auto-generate visuals when you publish a release." },
+              { icon: Sparkles, title: "AI Analysis", desc: "Smart changelog summaries and categorization." },
+              { icon: Paintbrush, title: "Brand Kits", desc: "Your logo, colors, and fonts on every image." },
+              { icon: LayoutGrid, title: "Multiple Formats", desc: "Landscape, square, and portrait in one render." },
+            ].map((feature) => (
+              <div
+                key={feature.title}
+                className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]"
+              >
+                <feature.icon className="h-6 w-6 text-brand mb-2" />
+                <h3 className="font-[family-name:var(--font-press-start)] text-[10px] mb-1.5">
+                  {feature.title}
+                </h3>
+                <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-relaxed">
+                  {feature.desc}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -244,6 +289,37 @@ export default function PricingPage() {
           </Link>
         </div>
       </section>
+      {/* Footer */}
+      <footer className="py-8 border-t-2 border-brand bg-surface">
+        <div className="mx-auto max-w-5xl px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo.svg"
+              alt="brag.fast"
+              width={80}
+              height={20}
+              className="h-5 w-auto"
+            />
+          </Link>
+          <p className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60">
+            Feed your audience
+          </p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/terms"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/privacy"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Privacy
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
