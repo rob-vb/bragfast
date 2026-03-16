@@ -113,3 +113,26 @@ export const listByUserId = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect(),
 });
+
+export const toggle = mutation({
+  args: {
+    installationId: v.number(),
+    userId: v.string(),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, { installationId, userId, enabled }) => {
+    const inst = await ctx.db
+      .query("githubInstallations")
+      .withIndex("by_installationId", (q) =>
+        q.eq("installationId", installationId)
+      )
+      .first();
+    if (!inst || inst.userId !== userId) {
+      throw new Error("Installation not found");
+    }
+    await ctx.db.patch(inst._id, {
+      enabled,
+      updated_at: new Date().toISOString(),
+    });
+  },
+});
