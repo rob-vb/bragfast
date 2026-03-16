@@ -6,7 +6,7 @@
 
 ## What is brag.fast?
 
-An API-first service for indie hackers and developers. POST your release details to the API and get back branded images in multiple aspect ratios. Designed to plug directly into n8n, Zapier, CI/CD pipelines, or any automation flow.
+An API-first service for indie hackers and developers. POST your release details to the API and get back branded images in multiple aspect ratios. Connect the GitHub App to auto-generate images from releases, or call the API directly from any pipeline.
 
 One API call. A full plate of visual content.
 
@@ -331,12 +331,12 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 
 ### Plans
 
-| Plan | Price | Credits | Per credit | Brand Kits |
-|------|-------|---------|-----------|------------|
-| Trial | Free (no card) | 30 (one-time) | - | 1 |
-| Starter | $39/mo | 800 | $0.049 | 1 |
-| Growth | $79/mo | 2,000 / 3,000 / 4,000 | $0.040 - $0.035 | 5 |
-| Scale | $149/mo | 5,000 / 7,500 / 10,000 | $0.030 - $0.025 | Unlimited |
+| Plan | Price | Credits | Brand Kits | Rate Limit |
+|------|-------|---------|------------|------------|
+| Trial | Free (no card) | 30 (one-time) | 1 | 10/min |
+| Starter | $29/mo | 1,500 | 3 | 30/min |
+| Pro | $69/mo | 5,000 | 10 | 60/min |
+| Scale | $139/mo | 15,000 | Unlimited | 120/min |
 
 ### Usage Examples
 
@@ -362,42 +362,34 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 
 ---
 
-## Automation Integrations
+## GitHub Integration
 
-### n8n / Zapier
+### GitHub App
 
-- **Zapier Action:** "Generate Release Assets" → POST /v1/release
-- **n8n:** HTTP Request node works natively with the API
+Install the brag.fast GitHub App, select repos, and configure per-repo settings. Every time a release is published, brag.fast automatically:
 
-### Example n8n Flow
+1. Receives the webhook from GitHub
+2. AI analyzes the changelog and picks key highlights
+3. Generates branded images using your brand kit and template
+4. Holds images for review — or auto-approves if configured
 
-1. GitHub Webhook (new release tag) →
-2. HTTP Request to brag.fast /v1/release →
-3. Post to X (landscape image) →
-4. Post to LinkedIn (landscape image) →
-5. Post to Instagram (square images as carousel) →
-6. Slack notification with all asset links
+### Per-Repo Configuration
 
-### GitHub Action
+- Brand kit selection
+- Template choice
+- Output formats (landscape, square, portrait)
+- Tag filters (only trigger on matching tags)
+- Skip pre-releases toggle
+- Auto-approve toggle (skip review, generate and publish immediately)
+- Max slides per release
 
-```yaml
-- name: Brag about this release
-  run: |
-    curl -X POST https://api.brag.fast/v1/release \
-      -H "Authorization: Bearer ${{ secrets.BRAGFAST_KEY }}" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "brand_id": "br_abc123",
-        "template": "classic",
-        "slides": [
-          {
-            "title": "${{ github.event.release.name }}",
-            "description": "${{ github.event.release.body }}"
-          }
-        ],
-        "formats": ["landscape", "square"]
-      }'
-```
+### Review Flow
+
+When auto-approve is off, generated images land in a "Pending Reviews" queue in the dashboard. Users can:
+
+- **Approve** — publish the images
+- **Edit** — modify AI-suggested content before generating
+- **Dismiss** — skip the release
 
 ---
 
@@ -450,8 +442,7 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 
 ### Phase 4: Launch (Week 5-6)
 
-- [ ] n8n template workflow (downloadable JSON)
-- [ ] GitHub Action example in docs
+- [x] GitHub App integration (auto-trigger on releases)
 - [ ] Product Hunt launch
 - [ ] Post on X, Indie Hackers, r/SideProject
 - [ ] Meta-launch: generate brag.fast's own launch assets using brag.fast
@@ -461,10 +452,9 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 ## Backlog (Post-MVP)
 
 - [ ] **Video generation** — Remotion-based animated videos from slides (Slide, Stack, Zoom animation styles), async rendering via Hetzner VPS, webhook delivery, 3 credits per video render
-- [ ] Zapier app submission
 - [ ] Additional image templates
 - [ ] Custom template builder (premium tier)
-- [ ] GitHub App (auto-trigger on releases, zero config)
+- [ ] n8n / Zapier integration (HTTP Request works natively with the API)
 
 ---
 

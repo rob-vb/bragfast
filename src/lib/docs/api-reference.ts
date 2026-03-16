@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Every image costs 1 credit. Total per cook = sum of slides across all format entries (e.g. 1 landscape slide + 2 square slides = 3 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 1,000, Pro ($79/mo) — 5,000, Scale ($159/mo) — 25,000.",
+      "Every image costs 1 credit. Total per cook = sum of slides across all format entries (e.g. 1 landscape slide + 2 square slides = 3 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 1,500, Pro ($69/mo) — 5,000, Scale ($139/mo) — 15,000.",
     endpoints: [],
   },
 
