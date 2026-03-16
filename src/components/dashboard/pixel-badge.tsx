@@ -1,7 +1,9 @@
 const statusStyles: Record<string, string> = {
   completed: "bg-green-400 text-brand",
   pending: "bg-yellow-300 text-brand",
+  pending_review: "bg-blue-400 text-white",
   failed: "bg-red-400 text-white",
+  dismissed: "bg-brand/20 text-brand",
   active: "bg-green-400 text-brand",
   suspended: "bg-orange-400 text-brand",
   removed: "bg-red-400 text-white",
@@ -9,7 +11,7 @@ const statusStyles: Record<string, string> = {
 };
 
 type Props =
-  | { status: "completed" | "pending" | "failed"; label?: never; variant?: never }
+  | { status: "completed" | "pending" | "pending_review" | "failed" | "dismissed"; label?: never; variant?: never }
   | { label: string; variant?: string; status?: never };
 
 export function PixelBadge(props: Props) {

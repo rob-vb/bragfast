@@ -70,8 +70,10 @@ export default defineSchema({
     template: v.string(),
     status: v.union(
       v.literal("pending"),
+      v.literal("pending_review"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
+      v.literal("dismissed")
     ),
     output: v.optional(v.union(v.literal("image"), v.literal("video"))),
     images: v.optional(v.any()),
@@ -82,6 +84,8 @@ export default defineSchema({
     webhook_url: v.optional(v.string()),
     source: v.optional(v.union(v.literal("api"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
+    aiContent: v.optional(v.string()),
+    pendingConfig: v.optional(v.string()),
     created_at: v.string(),
     completed_at: v.optional(v.string()),
   })
@@ -129,6 +133,8 @@ export default defineSchema({
     skipPrereleases: v.boolean(),
     tagFilter: v.optional(v.string()),
     webhookUrl: v.optional(v.string()),
+    autoApprove: v.optional(v.boolean()),
+    maxSlides: v.optional(v.number()),
     created_at: v.string(),
     updated_at: v.string(),
   })

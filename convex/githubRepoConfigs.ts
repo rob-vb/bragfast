@@ -11,6 +11,8 @@ export const upsert = mutation({
     skipPrereleases: v.optional(v.boolean()),
     tagFilter: v.optional(v.string()),
     webhookUrl: v.optional(v.string()),
+    autoApprove: v.optional(v.boolean()),
+    maxSlides: v.optional(v.number()),
     enabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -30,6 +32,8 @@ export const upsert = mutation({
         updates.skipPrereleases = args.skipPrereleases;
       if (args.tagFilter !== undefined) updates.tagFilter = args.tagFilter;
       if (args.webhookUrl !== undefined) updates.webhookUrl = args.webhookUrl;
+      if (args.autoApprove !== undefined) updates.autoApprove = args.autoApprove;
+      if (args.maxSlides !== undefined) updates.maxSlides = args.maxSlides;
       if (args.enabled !== undefined) updates.enabled = args.enabled;
       await ctx.db.patch(existing._id, updates);
     } else {
@@ -43,6 +47,8 @@ export const upsert = mutation({
         skipPrereleases: args.skipPrereleases ?? true,
         tagFilter: args.tagFilter,
         webhookUrl: args.webhookUrl,
+        autoApprove: args.autoApprove,
+        maxSlides: args.maxSlides,
         created_at: now,
         updated_at: now,
       });
