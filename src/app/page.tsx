@@ -9,7 +9,7 @@ import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 export const metadata: Metadata = {
   title: "brag.fast — Auto-generate social images for your launches",
   description:
-    "Generate branded social media images from your releases. One API call or no-code workflow — landscape, square, and portrait formats in seconds.",
+    "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
 };
 
 function PricingCard({
@@ -156,22 +156,24 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Row 2: No-Code — visual left, text right */}
+          {/* Row 2: GitHub Integration — visual left, text right */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
-              {/* Workflow diagram */}
+              {/* GitHub webhook flow */}
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
                 <div className="flex flex-col gap-3">
                   {[
-                    { icon: "&#9889;", label: "New release", bg: "bg-white" },
-                    { icon: "&#127859;", label: "brag.fast generates images", bg: "bg-gold" },
-                    { icon: "&#10003;", label: "Post to socials", bg: "bg-white" },
-                  ].map((step, i) => (
-                    <div key={step.label}>
-                      <div className={`flex items-center gap-3 border-2 border-brand px-4 py-3 ${step.bg}`}>
-                        <span className="text-base" dangerouslySetInnerHTML={{ __html: step.icon }} />
+                    { step: "01", label: "You publish a release on GitHub", bg: "bg-white" },
+                    { step: "02", label: "AI reads your changelog, picks the highlights", bg: "bg-gold" },
+                    { step: "03", label: "Branded images, ready to serve", bg: "bg-white" },
+                  ].map((item, i) => (
+                    <div key={item.step}>
+                      <div className={`flex items-center gap-3 border-2 border-brand px-4 py-3 ${item.bg}`}>
+                        <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40">
+                          {item.step}
+                        </span>
                         <p className="font-[family-name:var(--font-press-start)] text-[9px]">
-                          {step.label}
+                          {item.label}
                         </p>
                       </div>
                       {i < 2 && (
@@ -184,32 +186,29 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                {/* Integration badges */}
                 <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t-2 border-brand/10">
-                  {["n8n", "Zapier", "GitHub Actions"].map((name) => (
-                    <span
-                      key={name}
-                      className="font-[family-name:var(--font-press-start)] text-[8px] px-2 py-1 border border-brand/30 text-brand/60"
-                    >
-                      {name}
-                    </span>
-                  ))}
+                  <span className="font-[family-name:var(--font-press-start)] text-[8px] px-2 py-1 border border-brand/30 text-brand/60">
+                    Zero config
+                  </span>
+                  <span className="font-[family-name:var(--font-press-start)] text-[8px] px-2 py-1 border border-brand/30 text-brand/60">
+                    Review or auto-approve
+                  </span>
                 </div>
               </div>
             </div>
             <div className="order-1 md:order-2">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                We&apos;ve got the no-code cooks covered aswell
+                Ship a release, we plate it
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                Set up a workflow once. Every time you ship, brag.fast cooks up
-                branded images in every format you need.
+                Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
               </p>
-              <span
-                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand/40 border-2 border-brand/30 bg-white cursor-not-allowed"
+              <Link
+                href="/signup"
+                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Tutorials coming soon
-              </span>
+                Connect GitHub
+              </Link>
             </div>
           </div>
 
