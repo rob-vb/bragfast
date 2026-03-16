@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
 import { EditorMockup } from "@/components/landing/editor-mockup";
+import { AIAnalysisMockup } from "@/components/landing/ai-analysis-mockup";
+import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -117,7 +119,7 @@ export default function Home() {
                 Developers, POST and receive
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                Cooked new features? Use our REST API to generate images. Ready to serve.
+                One API call, three formats. Automate branded release visuals from any CI/CD pipeline — your team sees results without touching a design tool.
               </p>
               <Link
                 href="/docs"
@@ -153,12 +155,54 @@ export default function Home() {
   }'`}
                 </code>
               </pre>
+              <div className="flex items-center gap-2 px-4 pb-3 pt-1">
+                <span className="font-[family-name:var(--font-geist-mono)] text-[8px] text-surface/40">
+                  Output:
+                </span>
+                {["16:9", "1:1", "4:5"].map((fmt) => (
+                  <span
+                    key={fmt}
+                    className="font-[family-name:var(--font-press-start)] text-[6px] text-surface/60 border border-surface/20 px-1.5 py-0.5"
+                  >
+                    {fmt}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Row 2: GitHub Integration — visual left, text right */}
+          {/* Row 2: Template Editor — visual left, text right */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
+              <EditorMockup />
+            </div>
+            <div className="order-1 md:order-2">
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+                Cook up your own templates
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
+              </p>
+            </div>
+          </div>
+
+          {/* Row 3: GitHub Integration — text left, visual right */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+                Ship a release, we plate it
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
+                Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
+              </p>
+              <Link
+                href="/signup"
+                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Connect GitHub
+              </Link>
+            </div>
+            <div>
               {/* GitHub webhook flow */}
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
                 <div className="flex flex-col gap-3">
@@ -196,34 +240,34 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Row 4: AI Analysis — visual left, text right */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="order-2 md:order-1">
+              <AIAnalysisMockup />
+            </div>
             <div className="order-1 md:order-2">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                Ship a release, we plate it
+                AI picks the best ingredients
               </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Bragfast reads your changelog, categorizes changes — features, fixes, breaking — and generates a smart summary. Review before serving or let it run fully automated.
               </p>
-              <Link
-                href="/signup"
-                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Connect GitHub
-              </Link>
             </div>
           </div>
 
-          {/* Row 3: Template Editor — text left, mockup right */}
+          {/* Row 5: Brand Kits — text left, visual right */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                Design your templates
+                Season everything to taste
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                If you don't want to use the default templates you can use the visual editor to unleash your creativity and create your own.
-                
+                Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
               </p>
             </div>
-            <EditorMockup />
+            <BrandKitMockup />
           </div>
 
         </div>
