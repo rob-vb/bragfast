@@ -28,12 +28,14 @@ Reorder to match USP priority: API → Editor → GitHub → AI Analysis → Bra
 - **Visual:** Keep existing curl mockup. Add output preview below it (3 format thumbnails: landscape/square/portrait) to show what comes back.
 - **CTA:** "Read the Docs" (keep existing)
 
-#### Section 2: Template Editor (visual left, text right) — EXISTS, move to position 2, refresh copy
-- **Headline:** "Cook up your own templates" (food metaphor)
+#### Section 2: Template Editor (visual left, text right) — EXISTS, move to position 2, refresh copy + flip layout
+Currently text-left/visual-right with no ordering classes. Flip to visual-left/text-right using `order-` classes (same pattern as current GitHub section).
+- **Headline:** "Cook up your own templates" (changed from "Design your templates")
 - **Copy:** No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
 - **Visual:** Existing EditorMockup component (unchanged).
 
-#### Section 3: GitHub Integration (text left, visual right) — EXISTS, move to position 3, refresh copy
+#### Section 3: GitHub Integration (text left, visual right) — EXISTS, move to position 3, flip layout
+Currently visual-left/text-right using `order-` classes. Flip to text-left/visual-right by removing the `order-` classes.
 - **Headline:** "Ship a release, we plate it" (keep existing — on-brand)
 - **Copy:** Keep existing copy, it's solid. Emphasize zero-config and auto-approve options.
 - **Visual:** Keep existing 3-step flow diagram (already retro style with steps + tags).
@@ -65,7 +67,7 @@ Reorder to match USP priority: API → Editor → GitHub → AI Analysis → Bra
 ## Pricing Page Changes
 
 ### Hero — minor tweak
-Sharpen subheading to give product context for direct-landing visitors. Keep food metaphor.
+Add a line above the existing credit/trial subheading that explains what Bragfast does, e.g.: "Auto-generate branded social images from your releases — via API or GitHub." Keep food metaphor in tone.
 
 ### New: Feature Showcase ("Everything on the menu")
 Insert between hero and pricing cards. 3×2 grid of 6 feature cards.
@@ -85,10 +87,10 @@ Each card: Lucide icon (24px) + Press Start 2P title (10px) + Geist Sans one-lin
 ### Pricing Cards — unchanged
 
 ### Feature Comparison Table — expand
-Add new rows to `FEATURES` in `src/lib/pricing-data.tsx`:
-- `{ name: "AI analysis", starter: false, pro: true, scale: true }`
-- `{ name: "GitHub repos", starter: "1", pro: "5", scale: "Unlimited" }`
-- `{ name: "Custom fonts", starter: false, pro: "5", scale: "Unlimited" }`
+Add new rows to `FEATURES` in `src/lib/pricing-data.tsx`. Insert in logical groupings:
+- After "Brand kits" row: `{ name: "Custom fonts", starter: false, pro: "5", scale: "Unlimited" }`
+- After "GitHub integration" row: `{ name: "GitHub repos", starter: "1", pro: "5", scale: "Unlimited" }`
+- After "GitHub repos" row: `{ name: "AI analysis", starter: false, pro: true, scale: true }`
 
 Note: "Brand kits" and "Webhooks" already exist in the table — don't duplicate.
 
