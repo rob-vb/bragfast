@@ -150,7 +150,7 @@ function PlanCard({
     <div
       className={`relative border-2 border-brand p-5 flex flex-col ${
         featured
-          ? "bg-gold shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
+          ? "bg-white shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
           : "bg-white shadow-[3px_3px_0_var(--color-brand)]"
       }`}
     >

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { Terminal, Palette, GitBranch, Sparkles, Paintbrush, LayoutGrid } from "lucide-react";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
@@ -39,7 +38,7 @@ const FAQS = [
   },
   {
     q: "What does AI analysis do?",
-    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on Pro and Scale plans.",
+    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on all paid plans.",
   },
   {
     q: "Do you offer refunds?",
@@ -67,38 +66,6 @@ export default function PricingPage() {
             try it out —{" "}
             <strong className="text-brand">no credit card required</strong>.
           </p>
-        </div>
-      </section>
-
-      {/* Feature Showcase */}
-      <section className="px-4 pb-12 md:pb-16 md:px-8">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-8">
-            Everything on the menu
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {[
-              { icon: Terminal, title: "API Access", desc: "One API call, three formats. Branded images in seconds." },
-              { icon: Palette, title: "Template Editor", desc: "Design your own templates with the visual editor." },
-              { icon: GitBranch, title: "GitHub Integration", desc: "Auto-generate visuals when you publish a release." },
-              { icon: Sparkles, title: "AI Analysis", desc: "Smart changelog summaries and categorization." },
-              { icon: Paintbrush, title: "Brand Kits", desc: "Your logo, colors, and fonts on every image." },
-              { icon: LayoutGrid, title: "Multiple Formats", desc: "Landscape, square, and portrait in one render." },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]"
-              >
-                <feature.icon className="h-6 w-6 text-brand mb-2" />
-                <h3 className="font-[family-name:var(--font-press-start)] text-[10px] mb-1.5">
-                  {feature.title}
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-relaxed">
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -208,54 +175,11 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Credit Calculator */}
-      <section className="px-4 py-16 md:py-20 md:px-8">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-8">
-            How credits work
-          </h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                example: "1 slide, 1 format",
-                credits: "1 credit",
-                detail: "Quick social post",
-              },
-              {
-                example: "1 slide, 3 formats",
-                credits: "3 credits",
-                detail: "Full social kit",
-              },
-              {
-                example: "5 slides, 3 formats",
-                credits: "15 credits",
-                detail: "Launch carousel",
-              },
-            ].map((item) => (
-              <div
-                key={item.example}
-                className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]"
-              >
-                <p className="font-[family-name:var(--font-press-start)] text-[10px] mb-2">
-                  {item.credits}
-                </p>
-                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
-                  {item.example}
-                </p>
-                <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-1">
-                  {item.detail}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section className="px-4 py-16 md:py-20 md:px-8 bg-white border-y-2 border-brand">
+      <section className="px-4 py-16 md:py-20 md:px-8">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-10">
-            Questions?
+            Frequently Asked Questions
           </h2>
           <dl className="space-y-6">
             {FAQS.map((faq) => (
@@ -335,7 +259,7 @@ function PricingCard({
     <div
       className={`relative border-2 border-brand p-5 flex flex-col ${
         featured
-          ? "bg-gold shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
+          ? "bg-white shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
           : "bg-white shadow-[3px_3px_0_var(--color-brand)]"
       }`}
     >
@@ -377,11 +301,7 @@ function PricingCard({
       <div className="mt-auto">
         <Link
           href="/signup"
-          className={`block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand transition-all ${
-            featured
-              ? "bg-brand text-surface shadow-[3px_3px_0_rgba(0,0,0,0.3)] hover:shadow-[1px_1px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px]"
-              : "bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
-          }`}
+          className="block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand transition-all bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
         >
           {plan.price === 0 ? "Start Free" : "Get Started"}
         </Link>
