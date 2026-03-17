@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     q: "What does AI analysis do?",
-    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on Pro and Scale plans.",
+    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on all paid plans.",
   },
   {
     q: "Do you offer refunds?",
