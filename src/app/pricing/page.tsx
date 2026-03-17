@@ -259,7 +259,7 @@ function PricingCard({
     <div
       className={`relative border-2 border-brand p-5 flex flex-col ${
         featured
-          ? "bg-gold shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
+          ? "bg-white shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
           : "bg-white shadow-[3px_3px_0_var(--color-brand)]"
       }`}
     >
@@ -301,11 +301,7 @@ function PricingCard({
       <div className="mt-auto">
         <Link
           href="/signup"
-          className={`block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand transition-all ${
-            featured
-              ? "bg-brand text-surface shadow-[3px_3px_0_rgba(0,0,0,0.3)] hover:shadow-[1px_1px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px]"
-              : "bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
-          }`}
+          className="block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand transition-all bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
         >
           {plan.price === 0 ? "Start Free" : "Get Started"}
         </Link>
