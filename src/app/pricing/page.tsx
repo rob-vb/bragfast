@@ -175,54 +175,11 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Credit Calculator */}
-      <section className="px-4 py-16 md:py-20 md:px-8">
-        <div className="mx-auto max-w-3xl">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-8">
-            How credits work
-          </h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                example: "1 slide, 1 format",
-                credits: "1 credit",
-                detail: "Quick social post",
-              },
-              {
-                example: "1 slide, 3 formats",
-                credits: "3 credits",
-                detail: "Full social kit",
-              },
-              {
-                example: "5 slides, 3 formats",
-                credits: "15 credits",
-                detail: "Launch carousel",
-              },
-            ].map((item) => (
-              <div
-                key={item.example}
-                className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]"
-              >
-                <p className="font-[family-name:var(--font-press-start)] text-[10px] mb-2">
-                  {item.credits}
-                </p>
-                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
-                  {item.example}
-                </p>
-                <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-1">
-                  {item.detail}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* FAQ */}
-      <section className="px-4 py-16 md:py-20 md:px-8 bg-white border-y-2 border-brand">
+      <section className="px-4 py-16 md:py-20 md:px-8">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-10">
-            Questions?
+            Frequently Asked Questions
           </h2>
           <dl className="space-y-6">
             {FAQS.map((faq) => (
