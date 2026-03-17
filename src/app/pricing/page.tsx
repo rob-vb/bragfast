@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { Terminal, Palette, GitBranch, Sparkles, Paintbrush, LayoutGrid } from "lucide-react";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
@@ -67,38 +66,6 @@ export default function PricingPage() {
             try it out —{" "}
             <strong className="text-brand">no credit card required</strong>.
           </p>
-        </div>
-      </section>
-
-      {/* Feature Showcase */}
-      <section className="px-4 pb-12 md:pb-16 md:px-8">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-8">
-            Everything on the menu
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {[
-              { icon: Terminal, title: "API Access", desc: "One API call, three formats. Branded images in seconds." },
-              { icon: Palette, title: "Template Editor", desc: "Design your own templates with the visual editor." },
-              { icon: GitBranch, title: "GitHub Integration", desc: "Auto-generate visuals when you publish a release." },
-              { icon: Sparkles, title: "AI Analysis", desc: "Smart changelog summaries and categorization." },
-              { icon: Paintbrush, title: "Brand Kits", desc: "Your logo, colors, and fonts on every image." },
-              { icon: LayoutGrid, title: "Multiple Formats", desc: "Landscape, square, and portrait in one render." },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]"
-              >
-                <feature.icon className="h-6 w-6 text-brand mb-2" />
-                <h3 className="font-[family-name:var(--font-press-start)] text-[10px] mb-1.5">
-                  {feature.title}
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-relaxed">
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
