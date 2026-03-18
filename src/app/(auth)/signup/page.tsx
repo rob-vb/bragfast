@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { sendWelcomeEmailAction } from "@/lib/actions/send-welcome-email";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -47,6 +48,8 @@ export default function SignupPage() {
       return;
     }
 
+    // Fire-and-forget welcome email — don't block navigation
+    sendWelcomeEmailAction().catch(() => {});
     router.push("/dashboard");
   }
 
