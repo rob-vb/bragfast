@@ -51,7 +51,7 @@ Output format:
 Rules:
 - For text slots: write concise, marketing-friendly copy. Not raw changelogs.
 - "title" slot: catchy headline, not just the version number. 5-10 words max.
-- "description" slot: write a clear, benefit-focused description. Use \\n for line breaks. For multiple points, use a bullet list like "• Point one\\n• Point two\\n• Point three". Keep each bullet under 10 words.
+- "description" slot: write a clear, benefit-focused description. NEVER join points with " • " on one line. Always separate points with \\n line breaks. Example: "• Track API calls\\n• View responses\\n• Filter with ease". Keep each bullet under 10 words.
 - For image slots: only fill if you find image URLs in the release body (markdown ![alt](url) syntax). Otherwise omit the slot.
 - You have up to ${input.maxSlides} slide(s). ${input.maxSlides > 1 ? `IMPORTANT: Use multiple slides when the release has enough content. Spread key points across slides — one main idea per slide is better than cramming everything into one. Each slide should feel like its own announcement.` : "Use exactly 1 slide."}
 - Each slide must include at least the "title" object.
