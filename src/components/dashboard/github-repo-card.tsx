@@ -3,6 +3,17 @@
 import { useState } from "react";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Brand = { externalId: string; name: string };
 type Template = { externalId: string; name: string };
@@ -78,9 +89,6 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
     }
   }
 
-  const inputClass =
-    "w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]";
-
   return (
     <PixelCard>
       <div className="flex items-center justify-between">
@@ -94,15 +102,14 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
             <span className="text-[10px] text-brand/40 border border-brand/20 px-1">private</span>
           )}
         </button>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <span className="text-xs text-brand/60">Enabled</span>
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Label htmlFor={`enabled-${repo.full_name}`} className="text-xs text-brand/60">Enabled</Label>
+          <Switch
+            id={`enabled-${repo.full_name}`}
             checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            className="accent-[var(--color-gold)]"
+            onCheckedChange={setEnabled}
           />
-        </label>
+        </div>
       </div>
 
       {expanded && (
@@ -111,94 +118,90 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
             <p className="text-xs text-brand/50">{repo.description}</p>
           )}
 
-          <div>
-            <label className="block text-xs text-brand/60 mb-1">Brand</label>
-            <select className={inputClass} value={brandId} onChange={(e) => setBrandId(e.target.value)}>
-              <option value="">None (fallback colors)</option>
-              {brands.map((b) => (
-                <option key={b.externalId} value={b.externalId}>{b.name}</option>
-              ))}
-            </select>
+          <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Brand</Label>
+            <Select value={brandId || "__none__"} onValueChange={(v) => setBrandId(v === "__none__" ? "" : v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None (fallback colors)</SelectItem>
+                {brands.map((b) => (
+                  <SelectItem key={b.externalId} value={b.externalId}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <label className="block text-xs text-brand/60 mb-1">Template</label>
-            <select className={inputClass} value={template} onChange={(e) => setTemplate(e.target.value)}>
-              {templates.map((t) => (
-                <option key={t.externalId} value={t.externalId}>{t.name}</option>
-              ))}
-            </select>
+          <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Template</Label>
+            <Select value={template} onValueChange={setTemplate}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.externalId} value={t.externalId}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <label className="block text-xs text-brand/60 mb-1">Formats</label>
+          <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Formats</Label>
             <div className="flex gap-3">
               {FORMAT_OPTIONS.map((f) => (
-                <label key={f} className="flex items-center gap-1 text-xs text-brand cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div key={f} className="flex items-center gap-1.5">
+                  <Checkbox
+                    id={`format-${f}-${repo.full_name}`}
                     checked={formats.includes(f)}
-                    onChange={() => toggleFormat(f)}
-                    className="accent-[var(--color-gold)]"
+                    onCheckedChange={() => toggleFormat(f)}
                   />
-                  {f}
-                </label>
+                  <Label htmlFor={`format-${f}-${repo.full_name}`} className="text-xs text-brand cursor-pointer">{f}</Label>
+                </div>
               ))}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-brand/60 mb-1">Tag filter</label>
-            <input
-              className={inputClass}
-              placeholder="v*"
-              value={tagFilter}
-              onChange={(e) => setTagFilter(e.target.value)}
-            />
+          <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Tag filter</Label>
+            <Input placeholder="v*" value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} />
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-brand cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Switch
+              id={`skip-prereleases-${repo.full_name}`}
               checked={skipPrereleases}
-              onChange={(e) => setSkipPrereleases(e.target.checked)}
-              className="accent-[var(--color-gold)]"
+              onCheckedChange={setSkipPrereleases}
             />
-            Skip pre-releases
-          </label>
+            <Label htmlFor={`skip-prereleases-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Skip pre-releases</Label>
+          </div>
 
-          <div>
-            <label className="block text-xs text-brand/60 mb-1">Webhook URL (optional)</label>
-            <input
-              className={inputClass}
-              placeholder="https://your-app.com/webhooks/bragfast"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-            />
+          <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Webhook URL (optional)</Label>
+            <Input placeholder="https://your-app.com/webhooks/bragfast" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
           </div>
 
           {/* Auto-approve */}
-          <label className="flex items-center gap-2 text-xs text-brand cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Switch
+              id={`auto-approve-${repo.full_name}`}
               checked={autoApprove}
-              onChange={(e) => setAutoApprove(e.target.checked)}
-              className="accent-[var(--color-gold)]"
+              onCheckedChange={setAutoApprove}
             />
-            Auto-approve (skip manual review)
-          </label>
+            <Label htmlFor={`auto-approve-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Auto-approve (skip manual review)</Label>
+          </div>
 
           {/* Max slides */}
-          <div>
-            <label className="block text-xs text-brand/60 mb-1">Max slides per release</label>
-            <input
+          <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Max slides per release</Label>
+            <Input
               type="number"
               min={1}
               max={5}
-              className={inputClass}
+              className="max-w-20"
               value={maxSlides}
               onChange={(e) => setMaxSlides(Math.max(1, Math.min(5, Number(e.target.value))))}
-              style={{ maxWidth: 80 }}
             />
           </div>
 
