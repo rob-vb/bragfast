@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendWelcomeEmail, sendResetPasswordEmail } from "@/lib/email";
+import { sendResetPasswordEmail } from "@/lib/email";
 import crypto from "crypto";
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -26,9 +26,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { type, to, data } = body;
     switch (type) {
-      case "welcome":
-        await sendWelcomeEmail(to, data.name);
-        break;
       case "reset-password":
         await sendResetPasswordEmail(to, data.resetUrl);
         break;
