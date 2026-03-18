@@ -6,67 +6,13 @@ import { HeroAnimation } from "@/components/landing/hero-animation";
 import { EditorMockup } from "@/components/landing/editor-mockup";
 import { AIAnalysisMockup } from "@/components/landing/ai-analysis-mockup";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
-import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
+import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "brag.fast — Auto-generate social images for your launches",
   description:
     "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
 };
-
-function PricingCard({
-  plan,
-  featured,
-}: {
-  plan: PlanConfig;
-  featured?: boolean;
-}) {
-  return (
-    <div
-      className={`relative border-2 border-brand p-5 flex flex-col ${
-        featured
-          ? "bg-white shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
-          : "bg-white shadow-[3px_3px_0_var(--color-brand)]"
-      }`}
-    >
-      {featured && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 font-[family-name:var(--font-press-start)] text-[8px] bg-brand text-surface px-2 py-1 whitespace-nowrap border border-brand">
-          Most popular
-        </span>
-      )}
-
-      <h3 className="font-[family-name:var(--font-press-start)] text-[10px] mb-3">
-        {plan.name}
-      </h3>
-
-      <div className="mb-1">
-        <span className="font-[family-name:var(--font-press-start)] text-xl md:text-2xl">
-          ${plan.price}
-        </span>
-        <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-          /mo
-        </span>
-      </div>
-
-      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 mb-4">
-        {plan.credits.toLocaleString()} credits/mo
-      </p>
-
-      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mb-5">
-        {plan.label}
-      </p>
-
-      <div className="mt-auto">
-        <Link
-          href="/signup"
-          className="block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand transition-all bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
-        >
-          Get Started
-        </Link>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   return (
@@ -222,10 +168,10 @@ export default function Home() {
                   ))}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t-2 border-brand/10">
-                  <span className="font-[family-name:var(--font-press-start)] text-[8px] px-2 py-1 border border-brand/30 text-brand/60">
+                  <span className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border border-brand/30 text-brand/60">
                     Zero config
                   </span>
-                  <span className="font-[family-name:var(--font-press-start)] text-[8px] px-2 py-1 border border-brand/30 text-brand/60">
+                  <span className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border border-brand/30 text-brand/60">
                     Review or auto-approve
                   </span>
                 </div>
@@ -264,22 +210,70 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S3: Pricing */}
+      {/* S3: Pricing — Retro Menu Board */}
       <section className="py-16 md:py-20 bg-white border-y-2 border-brand">
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-10 text-center">
-            Start free. Scale when you&apos;re hungry.
-          </h2>
+        <div className="mx-auto max-w-2xl px-4 md:px-8">
+          {/* Menu board card */}
+          <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
+            {/* Menu header bar */}
+            <div className="bg-brand text-gold px-5 py-4 text-center">
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
+                &#9654; Order Up
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
+                1 credit = 1 image in 1 format
+              </p>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {PAID_PLANS.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} featured={plan.id === "pro"} />
-            ))}
+            {/* Menu items */}
+            <div className="divide-y-2 divide-brand/10">
+              {PAID_PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`px-5 py-4 flex items-center gap-4 ${
+                    plan.id === "pro" ? "bg-gold/10" : "bg-white"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-[family-name:var(--font-press-start)] text-[10px]">
+                        {plan.name}
+                      </h3>
+                      {plan.id === "pro" && (
+                        <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-brand text-gold px-1.5 py-0.5 border border-brand">
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-0.5">
+                      {plan.label} &middot; {plan.credits.toLocaleString()} credits/mo
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
+                      ${plan.price}
+                    </span>
+                    <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50">
+                      /mo
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Menu footer */}
+            <div className="bg-surface px-5 py-4 text-center border-t-2 border-brand">
+              <Link
+                href="/signup"
+                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Start with 30 Free Credits
+              </Link>
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
+                No credit card required
+              </p>
+            </div>
           </div>
-
-          <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60 text-center mt-6">
-            1 credit = 1 image in 1 format
-          </p>
         </div>
       </section>
 
@@ -324,7 +318,7 @@ export default function Home() {
               className="h-5 w-auto"
             />
           </Link>
-          <p className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60">
+          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60">
             Feed your audience
           </p>
           <div className="flex items-center gap-4">

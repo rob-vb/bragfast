@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelButton } from "@/components/dashboard/pixel-button";
+import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
 import Link from "next/link";
 import { CopyButton } from "@/components/dashboard/copy-button";
 
@@ -25,11 +26,11 @@ export default async function BrandsPage() {
       </div>
 
       {brands.length === 0 ? (
-        <PixelCard>
-          <p className="text-center text-sm text-brand/60 py-8">
-            No brands yet. Create your first brand kit!
-          </p>
-        </PixelCard>
+        <PixelEmptyState
+          title="No brands yet"
+          description="Set your colors, logo, and fonts. Every image comes out on-brand."
+          cta={{ label: "Create Brand", href: "/dashboard/brands/new" }}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {brands.map((brand) => (

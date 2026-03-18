@@ -18,9 +18,14 @@ export default async function EditBrandPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
-        Edit Brand
-      </h1>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 font-[family-name:var(--font-press-start)] text-[10px] text-brand/50">
+        <a href="/dashboard/brands" className="hover:text-brand transition-colors">
+          Brands
+        </a>
+        <span aria-hidden="true">&rsaquo;</span>
+        <span className="text-brand truncate max-w-[200px]">{brand.name}</span>
+      </nav>
       <BrandForm
         action="edit"
         brandId={brand.externalId}

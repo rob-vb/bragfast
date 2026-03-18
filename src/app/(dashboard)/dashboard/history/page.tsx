@@ -2,8 +2,8 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
-import { PixelCard } from "@/components/dashboard/pixel-card";
 import { HistoryFilter } from "@/components/dashboard/history-filter";
+import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
 import { HistoryTable } from "@/components/dashboard/history-table";
 
 export default async function HistoryPage({
@@ -31,11 +31,11 @@ export default async function HistoryPage({
       </div>
 
       {releases.length === 0 ? (
-        <PixelCard>
-          <p className="text-center text-sm text-brand/60 py-8">
-            No releases found.
-          </p>
-        </PixelCard>
+        <PixelEmptyState
+          title="No releases yet"
+          description="Your release history will appear here once you generate your first images."
+          cta={{ label: "Get Started", href: "/docs" }}
+        />
       ) : (
         <HistoryTable releases={releases} />
       )}

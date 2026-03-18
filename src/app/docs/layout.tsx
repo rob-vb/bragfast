@@ -11,5 +11,9 @@ export default function DocsLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return (
+    <div className="border-t-[3px] border-brand">
+      {children}
+    </div>
+  )
 }

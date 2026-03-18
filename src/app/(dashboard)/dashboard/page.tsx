@@ -6,7 +6,57 @@ import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelTable } from "@/components/dashboard/pixel-table";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
 import { PendingReviews } from "@/components/dashboard/pending-reviews";
+import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { PLANS } from "@/lib/plans";
 import Link from "next/link";
+
+function CreditMeter({
+  used,
+  total,
+  plan,
+}: {
+  used: number;
+  total: number;
+  plan: string;
+}) {
+  const remaining = Math.max(0, total - used);
+  const segments = 20;
+  const filled = Math.round((remaining / total) * segments);
+  const pct = total > 0 ? Math.round((remaining / total) * 100) : 0;
+
+  return (
+    <div className="border-2 border-brand bg-white p-5 shadow-[4px_4px_0_var(--color-brand)]">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="font-[family-name:var(--font-press-start)] text-xs text-brand">
+            Credits
+          </h2>
+          <p className="text-xs text-brand/60 mt-0.5">{plan} plan</p>
+        </div>
+        <span className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+          {remaining} / {total}
+        </span>
+      </div>
+
+      {/* Segmented pixel-art progress bar */}
+      <div className="flex gap-[3px]">
+        {Array.from({ length: segments }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-6 flex-1 border border-brand/10 ${
+              i < filled ? "bg-gold" : "bg-brand/10"
+            }`}
+          />
+        ))}
+      </div>
+
+      <p className="text-right text-[10px] text-brand/50 mt-1.5 font-[family-name:var(--font-press-start)]">
+        {pct}% remaining
+      </p>
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -15,20 +65,24 @@ export default async function DashboardPage() {
   // Ensure trial profile exists (grants 30 credits on first visit)
   await fetchMutation(api.userProfiles.create, { userId: user._id, email: user.email });
 
-  const [stats, releases, pendingReleases] = await Promise.all([
+  const [stats, releases, pendingReleases, brands] = await Promise.all([
     fetchQuery(api.userProfiles.getStats, { userId: user._id }),
     fetchQuery(api.releases.listByUser, { userId: user._id }),
     fetchQuery(api.releases.listPendingByUser, { userId: user._id }),
+    fetchQuery(api.brands.listByUser, { userId: user._id }),
   ]);
 
   const recent = releases.slice(0, 10);
+  const plan = PLANS[stats.plan as keyof typeof PLANS];
 
   const statCards = [
-    { label: "Credits Left", value: stats.creditsRemaining },
     { label: "Used (Month)", value: stats.creditsUsedThisMonth },
     { label: "Releases", value: stats.totalReleases },
     { label: "Images", value: stats.totalImages },
   ];
+
+  const hasBrands = brands.length > 0;
+  const hasReleases = releases.length > 0;
 
   return (
     <div className="space-y-8">
@@ -36,8 +90,18 @@ export default async function DashboardPage() {
         Dashboard
       </h1>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {/* Onboarding checklist — shown only for brand-new users */}
+      <OnboardingChecklist hasBrands={hasBrands} hasReleases={hasReleases} />
+
+      {/* Credit meter — primary dashboard element */}
+      <CreditMeter
+        used={stats.creditsUsedThisMonth}
+        total={plan.credits}
+        plan={plan.name}
+      />
+
+      {/* Secondary stats */}
+      <div className="grid grid-cols-3 gap-4">
         {statCards.map((s) => (
           <PixelCard key={s.label}>
             <p className="font-[family-name:var(--font-press-start)] text-2xl text-brand">
@@ -59,11 +123,12 @@ export default async function DashboardPage() {
           Recent Releases
         </h2>
         {recent.length === 0 ? (
-          <PixelCard>
-            <p className="text-center text-sm text-brand/60 py-8">
-              No releases yet. Fire off your first one via the API!
-            </p>
-          </PixelCard>
+          <PixelEmptyState
+            title="Time to cook!"
+            description="Generate your first branded images via the API or connect GitHub."
+            cta={{ label: "Read the Docs", href: "/docs" }}
+            secondaryCta={{ label: "Connect GitHub", href: "/dashboard/account" }}
+          />
         ) : (
           <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
             {recent.map((r) => (

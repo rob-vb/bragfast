@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
-import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
+import { PAID_PLANS } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 
 export const metadata: Metadata = {
@@ -69,13 +69,73 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing Cards */}
+      {/* Pricing — Retro Menu Board */}
       <section className="px-4 pb-16 md:pb-20 md:px-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid gap-4 md:grid-cols-3">
-            {PAID_PLANS.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} featured={plan.id === "pro"} />
-            ))}
+        <div className="mx-auto max-w-2xl">
+          <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
+            {/* Menu header bar */}
+            <div className="bg-brand text-gold px-5 py-4 text-center">
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm">
+                &#9654; Order Up
+              </h2>
+            </div>
+
+            {/* Menu items */}
+            <div className="divide-y-2 divide-brand/10">
+              {PAID_PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`px-5 py-4 flex items-center gap-4 ${
+                    plan.id === "pro" ? "bg-gold/10" : "bg-white"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-[family-name:var(--font-press-start)] text-[10px]">
+                        {plan.name}
+                      </h3>
+                      {plan.id === "pro" && (
+                        <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-brand text-gold px-1.5 py-0.5 border border-brand">
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-0.5">
+                      {plan.label} &middot; {plan.credits.toLocaleString()} credits/mo
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {plan.price === 0 ? (
+                      <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
+                        Free
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
+                          ${plan.price}
+                        </span>
+                        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50">
+                          /mo
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Menu footer */}
+            <div className="bg-surface px-5 py-4 text-center border-t-2 border-brand">
+              <Link
+                href="/signup"
+                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Start with 30 Free Credits
+              </Link>
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
+                No credit card required
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -225,7 +285,7 @@ export default function PricingPage() {
               className="h-5 w-auto"
             />
           </Link>
-          <p className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60">
+          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60">
             Feed your audience
           </p>
           <div className="flex items-center gap-4">
@@ -248,64 +308,3 @@ export default function PricingPage() {
   );
 }
 
-function PricingCard({
-  plan,
-  featured,
-}: {
-  plan: PlanConfig;
-  featured?: boolean;
-}) {
-  return (
-    <div
-      className={`relative border-2 border-brand p-5 flex flex-col ${
-        featured
-          ? "bg-white shadow-[6px_6px_0_var(--color-brand)] md:-translate-y-2"
-          : "bg-white shadow-[3px_3px_0_var(--color-brand)]"
-      }`}
-    >
-      {featured && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 font-[family-name:var(--font-press-start)] text-[8px] bg-brand text-surface px-2 py-1 whitespace-nowrap border border-brand">
-          Most popular
-        </span>
-      )}
-
-      <h3 className="font-[family-name:var(--font-press-start)] text-[10px] mb-3">
-        {plan.name}
-      </h3>
-
-      <div className="mb-1">
-        {plan.price === 0 ? (
-          <span className="font-[family-name:var(--font-press-start)] text-xl md:text-2xl">
-            Free
-          </span>
-        ) : (
-          <>
-            <span className="font-[family-name:var(--font-press-start)] text-xl md:text-2xl">
-              ${plan.price}
-            </span>
-            <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-              /mo
-            </span>
-          </>
-        )}
-      </div>
-
-      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 mb-4">
-        {plan.credits.toLocaleString()} credits{plan.price > 0 ? "/mo" : ""}
-      </p>
-
-      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mb-5">
-        {plan.label}
-      </p>
-
-      <div className="mt-auto">
-        <Link
-          href="/signup"
-          className="block text-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 border-2 border-brand transition-all bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
-        >
-          {plan.price === 0 ? "Start Free" : "Get Started"}
-        </Link>
-      </div>
-    </div>
-  );
-}

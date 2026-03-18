@@ -19,8 +19,8 @@ export default function DocsPage() {
           {/* Hero / Base URL */}
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 xl:gap-8 pt-8 md:pt-12 pb-10 border-b border-zinc-100">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 mb-3 sm:mb-4">
-                brag.fast API Reference
+              <h1 className="font-[family-name:var(--font-press-start)] text-base sm:text-lg text-brand mb-3 sm:mb-4">
+                API Reference
               </h1>
               <p className="text-sm text-zinc-600 leading-relaxed max-w-lg">
                 brag.fast auto-generates branded social media images for your

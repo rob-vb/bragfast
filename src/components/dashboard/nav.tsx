@@ -23,23 +23,23 @@ function PixelHamburger({
   return (
     <button
       onClick={onClick}
-      className="relative md:hidden h-8 w-8 border-2 border-brand bg-surface shadow-[2px_2px_0_var(--color-brand)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
+      className="relative md:hidden h-11 w-11 border-2 border-brand bg-surface shadow-[2px_2px_0_var(--color-brand)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all focus:outline-2 focus:outline-offset-2 focus:outline-gold"
       aria-label={open ? "Close menu" : "Open menu"}
     >
       {/* Three pixel bars that morph into X */}
       <span
-        className={`absolute left-1.5 block h-[2px] w-3 bg-brand transition-all duration-200 ${
-          open ? "top-[13px] rotate-45" : "top-[8px]"
+        className={`absolute left-2.5 block h-[2px] w-4 bg-brand transition-all duration-200 ${
+          open ? "top-[20px] rotate-45" : "top-[14px]"
         }`}
       />
       <span
-        className={`absolute left-1.5 top-[13px] block h-[2px] w-3 bg-brand transition-opacity duration-200 ${
+        className={`absolute left-2.5 top-[20px] block h-[2px] w-4 bg-brand transition-opacity duration-200 ${
           open ? "opacity-0" : "opacity-100"
         }`}
       />
       <span
-        className={`absolute left-1.5 block h-[2px] w-3 bg-brand transition-all duration-200 ${
-          open ? "top-[13px] -rotate-45" : "top-[18px]"
+        className={`absolute left-2.5 block h-[2px] w-4 bg-brand transition-all duration-200 ${
+          open ? "top-[20px] -rotate-45" : "top-[26px]"
         }`}
       />
     </button>
@@ -77,7 +77,7 @@ export function DashboardNav() {
   return (
     <>
       {/* Desktop nav */}
-      <nav className="hidden md:flex gap-1">
+      <nav className="hidden md:flex gap-1" aria-label="Dashboard navigation">
         {tabs.map((tab) => {
           const isActive =
             tab.href === "/dashboard"
@@ -108,7 +108,7 @@ export function DashboardNav() {
       {/* Desktop logout */}
       <button
         onClick={handleLogout}
-        className="hidden md:block ml-auto font-[family-name:var(--font-press-start)] text-xs px-3 py-2 whitespace-nowrap border-2 border-[#4A3326] bg-transparent text-[#4A3326] hover:bg-red-100 shadow-[3px_3px_0_#4A3326] hover:shadow-[2px_2px_0_#4A3326] transition-all"
+        className="hidden md:block ml-auto font-[family-name:var(--font-press-start)] text-xs px-3 py-2 whitespace-nowrap border-2 border-brand bg-transparent text-brand hover:bg-red-100 shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] transition-all"
       >
         Logout
       </button>
@@ -176,7 +176,7 @@ export function DashboardNav() {
         <div className="px-4 mt-4">
           <button
             onClick={handleLogout}
-            className="w-full font-[family-name:var(--font-press-start)] text-xs px-4 py-3 border-2 border-[#4A3326] bg-white text-[#4A3326] shadow-[3px_3px_0_#4A3326] hover:bg-red-100 transition-all"
+            className="w-full font-[family-name:var(--font-press-start)] text-xs px-4 py-3 border-2 border-brand bg-white text-brand shadow-[3px_3px_0_var(--color-brand)] hover:bg-red-100 transition-all"
           >
             Logout
           </button>
@@ -184,7 +184,7 @@ export function DashboardNav() {
 
         {/* Decorative pixel art at bottom */}
         <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-          <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/20 tracking-widest">
+          <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/20 tracking-widest" aria-hidden="true">
             ........
           </span>
         </div>
