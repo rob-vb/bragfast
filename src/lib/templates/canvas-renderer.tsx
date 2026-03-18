@@ -130,6 +130,7 @@ function renderObject(
         obj.fontWeight || 400, obj.lineHeight || 1.2, obj.letterSpacing || 0,
         obj.textFit ?? false,
       );
+      const lines = text.split("\n");
       return (
         <div style={{
           fontFamily: resolvedFont,
@@ -142,10 +143,13 @@ function renderObject(
           width: "100%",
           wordWrap: "break-word",
           display: "flex",
+          flexDirection: "column",
           justifyContent: obj.textAlign === "center" ? "center"
                         : obj.textAlign === "right" ? "flex-end" : "flex-start",
         }}>
-          {text}
+          {lines.length > 1
+            ? lines.map((line, i) => <div key={i}>{line}</div>)
+            : text}
         </div>
       );
     }
