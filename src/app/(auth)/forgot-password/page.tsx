@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { Input } from "@/components/ui/input";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -77,7 +78,7 @@ export default function ForgotPasswordPage() {
               <label htmlFor="email" className="block text-sm font-bold text-brand">
                 Email
               </label>
-              <input
+              <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
@@ -85,7 +86,6 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 

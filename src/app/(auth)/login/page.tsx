@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function LoginPage() {
               <label htmlFor="email" className="block text-sm font-bold text-brand">
                 Email
               </label>
-              <input
+              <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
@@ -64,7 +65,6 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 
@@ -80,14 +80,13 @@ export default function LoginPage() {
                   Forgot?
                 </Link>
               </div>
-              <input
+              <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 

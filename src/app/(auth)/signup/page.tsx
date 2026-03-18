@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -64,7 +66,7 @@ export default function SignupPage() {
               <label htmlFor="name" className="block text-sm font-bold text-brand">
                 Name
               </label>
-              <input
+              <Input
                 id="name"
                 type="text"
                 placeholder="Jane Smith"
@@ -72,7 +74,6 @@ export default function SignupPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 autoComplete="name"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 
@@ -80,7 +81,7 @@ export default function SignupPage() {
               <label htmlFor="email" className="block text-sm font-bold text-brand">
                 Email
               </label>
-              <input
+              <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
@@ -88,7 +89,6 @@ export default function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 
@@ -96,7 +96,7 @@ export default function SignupPage() {
               <label htmlFor="password" className="block text-sm font-bold text-brand">
                 Password
               </label>
-              <input
+              <Input
                 id="password"
                 type="password"
                 value={password}
@@ -104,7 +104,6 @@ export default function SignupPage() {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 
@@ -112,24 +111,22 @@ export default function SignupPage() {
               <label htmlFor="confirm-password" className="block text-sm font-bold text-brand">
                 Confirm password
               </label>
-              <input
+              <Input
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
               />
             </div>
 
             <div className="flex items-start gap-3">
-              <input
+              <Checkbox
                 id="terms"
-                type="checkbox"
                 checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 h-4 w-4 border-2 border-brand appearance-none checked:bg-gold checked:border-brand cursor-pointer relative checked:after:content-['✓'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-brand checked:after:text-xs checked:after:font-bold"
+                onCheckedChange={(checked) => setAgreed(checked === true)}
+                className="mt-0.5"
               />
               <label htmlFor="terms" className="text-sm leading-snug text-brand/70">
                 I agree to the{" "}
