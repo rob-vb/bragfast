@@ -6,7 +6,7 @@ export const FEATURES: {
   pro: string | boolean;
   scale: string | boolean;
 }[] = [
-  { name: "API credits / month", starter: "800", pro: "10,000", scale: "50,000" },
+  { name: "API credits / month", starter: "800", pro: "8,000", scale: "40,000" },
   { name: "Templates", starter: "All", pro: "All", scale: "All" },
   { name: "Custom templates", starter: true, pro: true, scale: true },
   { name: "Brand kits", starter: "3", pro: "10", scale: "Unlimited" },

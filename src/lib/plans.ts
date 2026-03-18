@@ -26,15 +26,15 @@ export const PLANS: Record<PlanId, PlanConfig> = {
   pro: {
     id: "pro",
     name: "Pro",
-    price: 119,
-    credits: 10_000,
+    price: 109,
+    credits: 8_000,
     label: "The full stack",
   },
   scale: {
     id: "scale",
     name: "Scale",
-    price: 239,
-    credits: 50_000,
+    price: 219,
+    credits: 40_000,
     label: "All-you-can-eat",
   },
 };
