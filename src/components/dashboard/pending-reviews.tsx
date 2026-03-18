@@ -43,15 +43,29 @@ function PendingCard({ release, onAction }: { release: PendingRelease; onAction:
   const [loading, setLoading] = useState(false);
   const slides = parseAiContent(release.aiContent);
   const meta = parseSourceMeta(release.sourceMetadata);
-  const [editedContent, setEditedContent] = useState(release.aiContent ?? "");
+  const [editedContent, setEditedContent] = useState(() => {
+    try {
+      return JSON.stringify(JSON.parse(release.aiContent ?? ""), null, 2);
+    } catch {
+      return release.aiContent ?? "";
+    }
+  });
 
   async function handleApprove() {
+    if (editing) {
+      try {
+        JSON.parse(editedContent);
+      } catch {
+        alert("Invalid JSON — please fix the syntax before saving.");
+        return;
+      }
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/github/releases/${release.externalId}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editing ? { aiContent: editedContent } : {}),
+        body: JSON.stringify(editing ? { aiContent: JSON.stringify(JSON.parse(editedContent)) } : {}),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
