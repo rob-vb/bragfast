@@ -195,12 +195,18 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
     if (tmpl) templateConfig = tmpl.config as CanvasTemplateConfig;
   }
 
-  // Extract object slots from the first format (slots are same across formats)
+  // Extract object slots from the first format with line capacity hints
   const templateObjects = templateConfig
-    ? Object.values(templateConfig.formats)[0].objects.map((o) => ({
-        id: o.id,
-        type: o.type as "text" | "image" | "logo",
-      }))
+    ? Object.values(templateConfig.formats)[0].objects.map((o) => {
+        const slot: { id: string; type: "text" | "image" | "logo"; maxLines?: number } = {
+          id: o.id,
+          type: o.type as "text" | "image" | "logo",
+        };
+        if (o.type === "text" && o.height && o.fontSize) {
+          slot.maxLines = Math.max(1, Math.floor(o.height / ((o.fontSize) * (o.lineHeight || 1.2))));
+        }
+        return slot;
+      })
     : [
         { id: "title", type: "text" as const },
         { id: "description", type: "text" as const },

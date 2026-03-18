@@ -6,6 +6,7 @@ const anthropic = new Anthropic();
 type TemplateObjectSlot = {
   id: string;
   type: "text" | "image" | "logo";
+  maxLines?: number;
 };
 
 type AnalysisInput = {
@@ -26,7 +27,7 @@ export function buildAnalysisPrompt(input: AnalysisInput): {
 } {
   const textSlots = input.templateObjects
     .filter((o) => o.type === "text")
-    .map((o) => `- "${o.id}" (text)`)
+    .map((o) => `- "${o.id}" (text${o.maxLines ? `, fits ~${o.maxLines} line${o.maxLines > 1 ? "s" : ""}` : ""})`)
     .join("\n");
   const imageSlots = input.templateObjects
     .filter((o) => o.type === "image")
@@ -51,7 +52,7 @@ Output format:
 Rules:
 - For text slots: write concise, marketing-friendly copy. Not raw changelogs.
 - "title" slot: catchy headline, not just the version number. 5-10 words max.
-- "description" slot: write a clear, benefit-focused description. NEVER join points with " • " on one line. Always separate points with \\n line breaks. Example: "• Track API calls\\n• View responses\\n• Filter with ease". Keep each bullet under 10 words.
+- "description" slot: write a clear, benefit-focused description. Check the slot's line limit. If it fits only 1 line, write a single punchy sentence (no bullets). If it fits 3+ lines, use a bullet list with \\n line breaks like "• Point one\\n• Point two\\n• Point three". NEVER join bullets with " • " on one line. Keep each bullet under 10 words.
 - For image slots: only fill if you find image URLs in the release body (markdown ![alt](url) syntax). Otherwise omit the slot.
 - You have up to ${input.maxSlides} slide(s). ${input.maxSlides > 1 ? `IMPORTANT: Use multiple slides when the release has enough content. Spread key points across slides — one main idea per slide is better than cramming everything into one. Each slide should feel like its own announcement.` : "Use exactly 1 slide."}
 - Each slide must include at least the "title" object.

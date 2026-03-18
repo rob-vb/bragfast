@@ -82,13 +82,19 @@ function autoFitFontSize(
     const avgCharWidth = size * charWidthRatio + letterSpacing;
     const charsPerLine = Math.floor(containerWidth / avgCharWidth);
     if (charsPerLine < 1) return false;
-    const words = text.split(/\s+/);
-    let lines = 1;
-    let lineLen = 0;
-    for (const word of words) {
-      if (lineLen === 0) { lineLen = word.length; }
-      else if (lineLen + 1 + word.length > charsPerLine) { lines++; lineLen = word.length; }
-      else { lineLen += 1 + word.length; }
+    // Split on explicit \n first, then word-wrap each paragraph
+    const paragraphs = text.split("\n");
+    let lines = 0;
+    for (const para of paragraphs) {
+      const words = para.split(/\s+/).filter(Boolean);
+      if (words.length === 0) { lines++; continue; }
+      let lineLen = 0;
+      for (const word of words) {
+        if (lineLen === 0) { lineLen = word.length; }
+        else if (lineLen + 1 + word.length > charsPerLine) { lines++; lineLen = word.length; }
+        else { lineLen += 1 + word.length; }
+      }
+      lines++;
     }
     return lines * size * lineHeight <= containerHeight;
   };
@@ -144,8 +150,8 @@ function renderObject(
           wordWrap: "break-word",
           display: "flex",
           flexDirection: "column",
-          justifyContent: obj.textAlign === "center" ? "center"
-                        : obj.textAlign === "right" ? "flex-end" : "flex-start",
+          alignItems: obj.textAlign === "center" ? "center"
+                    : obj.textAlign === "right" ? "flex-end" : "flex-start",
         }}>
           {lines.length > 1
             ? lines.map((line, i) => <div key={i}>{line}</div>)
