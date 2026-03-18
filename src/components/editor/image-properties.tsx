@@ -109,6 +109,10 @@ export function ImageProperties() {
     dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: true });
   }
 
+  function updatePerFormat(property: string, value: unknown) {
+    dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: false });
+  }
+
   async function handleFileUpload(file: File) {
     setUploading(true);
     try {
@@ -229,7 +233,7 @@ export function ImageProperties() {
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Anchor X</Label>
-          <Select value={selectedObject.anchorX || "center"} onValueChange={(v) => update("anchorX", v)}>
+          <Select value={selectedObject.anchorX || "center"} onValueChange={(v) => updatePerFormat("anchorX", v)}>
             <SelectTrigger className="h-8 text-sm">
               <SelectValue />
             </SelectTrigger>
@@ -242,7 +246,7 @@ export function ImageProperties() {
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Anchor Y</Label>
-          <Select value={selectedObject.anchorY || "center"} onValueChange={(v) => update("anchorY", v)}>
+          <Select value={selectedObject.anchorY || "center"} onValueChange={(v) => updatePerFormat("anchorY", v)}>
             <SelectTrigger className="h-8 text-sm">
               <SelectValue />
             </SelectTrigger>

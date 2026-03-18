@@ -4,7 +4,7 @@ import { useState } from "react";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
-import { Textarea } from "@/components/ui/textarea";
+import { JsonEditor } from "@/components/ui/json-editor";
 
 type PendingRelease = {
   _id: string;
@@ -136,10 +136,9 @@ function PendingCard({ release, onAction }: { release: PendingRelease; onAction:
 
         {/* Edit mode */}
         {editing && (
-          <Textarea
-            className="text-xs font-mono min-h-[120px]"
+          <JsonEditor
             value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
+            onChange={setEditedContent}
           />
         )}
 
