@@ -8,13 +8,15 @@ Replace raw HTML form elements in dashboard and auth pages with shadcn/Radix com
 
 ### Keep as-is
 - **PixelButton** — all dashboard/auth submit buttons
+- **Auth page submit buttons** — raw `<button>` elements with hand-rolled retro CSS (not PixelButton, but intentionally styled; standardizing these to PixelButton is a separate task)
 - **Editor components** — already shadcn, no changes
 - **Auth page layout** — NES card wrappers, header bars
 - **Color pickers** (`<input type="color">`) — no shadcn equivalent
 - **File inputs** — hidden, invisible to user
 
-### New component to install
+### New components to install
 - shadcn **Switch** (not yet in `src/components/ui/`)
+- shadcn **Textarea** (not yet in `src/components/ui/`)
 
 ### Replacements
 
@@ -62,6 +64,21 @@ Replace raw HTML form elements in dashboard and auth pages with shadcn/Radix com
 | Element | Current | Target |
 |---|---|---|
 | Email input | raw `<input>` | shadcn **Input** |
+
+#### delete-account-dialog.tsx
+| Element | Current | Target |
+|---|---|---|
+| Confirmation input | raw `<input>` | shadcn **Input** |
+| Label | raw `<label>` | shadcn **Label** |
+
+#### pending-reviews.tsx
+| Element | Current | Target |
+|---|---|---|
+| Edit textarea | raw `<textarea>` | shadcn **Textarea** |
+
+## Migration gotcha: Radix Select empty values
+
+Radix Select does not support `value=""`. The brand select in github-repo-card (`<option value="">None</option>`) and the font select in brand-form (`<option value="">Plus Jakarta Sans</option>`) need a sentinel value (e.g., `"none"` or `"__default__"`) mapped back to `undefined`/`""` in the save handler.
 
 ## Styling approach
 
