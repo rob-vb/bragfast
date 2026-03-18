@@ -24,6 +24,32 @@ export const createAuth = (
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
+      sendResetPassword: async ({ user, url }) => {
+        // siteUrl is process.env.SITE_URL — must be the Next.js app origin
+        try {
+          const res = await fetch(`${siteUrl}/api/internal/send-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.INTERNAL_API_SECRET}`,
+            },
+            body: JSON.stringify({
+              type: "reset-password",
+              to: user.email,
+              data: { resetUrl: url },
+            }),
+          });
+          if (!res.ok) {
+            console.error(
+              "Failed to send reset email:",
+              res.status,
+              await res.text(),
+            );
+          }
+        } catch (err) {
+          console.error("Failed to send reset email:", err);
+        }
+      },
     },
     user: {
       deleteUser: {
