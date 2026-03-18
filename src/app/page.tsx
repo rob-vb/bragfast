@@ -218,7 +218,7 @@ export default function Home() {
             {/* Menu header bar */}
             <div className="bg-brand text-gold px-5 py-4 text-center">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
-                &#9654; Order Up
+                brag.fast menu
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
                 1 credit = 1 image in 1 format

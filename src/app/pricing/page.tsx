@@ -76,7 +76,7 @@ export default function PricingPage() {
             {/* Menu header bar */}
             <div className="bg-brand text-gold px-5 py-4 text-center">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm">
-                &#9654; Order Up
+                brag.fast menu
               </h2>
             </div>
 
