@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { PixelButton } from "@/components/dashboard/pixel-button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,15 +62,13 @@ export function DeleteAccountDialog({ userEmail }: { userEmail: string }) {
         </AlertDialogHeader>
 
         <div className="space-y-2">
-          <label className="text-xs text-brand/60">
+          <Label className="text-xs text-brand/60">
             Type <strong className="text-brand">{userEmail}</strong> to
             confirm
-          </label>
-          <input
-            type="text"
+          </Label>
+          <Input
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
-            className="w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 focus:outline-none focus:ring-2 focus:ring-red-500"
             placeholder={userEmail}
             autoComplete="off"
           />

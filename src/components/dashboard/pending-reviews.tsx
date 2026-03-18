@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
+import { Textarea } from "@/components/ui/textarea";
 
 type PendingRelease = {
   _id: string;
@@ -121,8 +122,8 @@ function PendingCard({ release, onAction }: { release: PendingRelease; onAction:
 
         {/* Edit mode */}
         {editing && (
-          <textarea
-            className="w-full border-2 border-brand bg-white px-3 py-2 text-xs font-mono text-brand min-h-[120px] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
+          <Textarea
+            className="text-xs font-mono min-h-[120px]"
             value={editedContent}
             onChange={(e) => setEditedContent(e.target.value)}
           />

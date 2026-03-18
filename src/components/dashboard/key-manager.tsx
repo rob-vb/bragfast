@@ -5,6 +5,7 @@ import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelTable } from "@/components/dashboard/pixel-table";
 import { CopyButton } from "@/components/dashboard/copy-button";
+import { Input } from "@/components/ui/input";
 
 type ApiKey = { id: string; name: string; key: string | null; prefix: string; created_at: string };
 
@@ -45,21 +46,17 @@ export function KeyManager() {
     setKeys((prev) => prev.filter((k) => k.id !== id));
   }
 
-  const inputClass =
-    "w-full border-2 border-brand bg-white px-3 py-2 text-sm text-brand placeholder:text-brand/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]";
-
   return (
     <div className="space-y-4">
       {/* Create form */}
       <div className="flex flex-wrap items-end gap-3">
         {showCreate ? (
           <>
-            <input
-              className={inputClass}
+            <Input
+              className="max-w-60"
               placeholder="Key name (optional)"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ maxWidth: 240 }}
             />
             <PixelButton onClick={handleCreate} disabled={loading}>
               {loading ? "..." : "Generate"}
