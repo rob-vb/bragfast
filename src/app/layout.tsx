@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Press_Start_2P } from "next/font/google";
+import Script from "next/script";
 import { PostHogProvider } from "@/components/posthog-provider";
 import "./globals.css";
 
@@ -71,7 +72,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} antialiased`}
       >
         <PostHogProvider>{children}</PostHogProvider>
-        <script
+        <Script
+          id="org-schema"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
