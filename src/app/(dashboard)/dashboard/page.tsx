@@ -11,17 +11,16 @@ import { PLANS } from "@/lib/plans";
 import Link from "next/link";
 
 function CreditMeter({
-  used,
+  remaining,
   total,
   plan,
 }: {
-  used: number;
+  remaining: number;
   total: number;
   plan: string;
 }) {
-  const remaining = Math.max(0, total - used);
   const segments = 20;
-  const filled = Math.round((remaining / total) * segments);
+  const filled = Math.round((Math.min(remaining, total) / total) * segments);
   const pct = total > 0 ? Math.round((remaining / total) * 100) : 0;
 
   return (
@@ -91,7 +90,7 @@ export default async function DashboardPage() {
 
       {/* Credit meter — primary dashboard element */}
       <CreditMeter
-        used={stats.creditsUsedThisMonth}
+        remaining={stats.creditsRemaining}
         total={plan.credits}
         plan={plan.name}
       />

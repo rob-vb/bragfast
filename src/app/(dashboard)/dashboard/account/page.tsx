@@ -10,10 +10,9 @@ import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
 import { GitHubSection } from "@/components/dashboard/github-section";
 
-function CreditBar({ used, total }: { used: number; total: number }) {
-  const remaining = Math.max(0, total - used);
+function CreditBar({ remaining, total }: { remaining: number; total: number }) {
   const blocks = 20;
-  const filled = Math.round((remaining / total) * blocks);
+  const filled = Math.min(blocks, Math.round((remaining / total) * blocks));
 
   return (
     <div className="flex gap-[3px]">
@@ -101,7 +100,7 @@ export default async function AccountPage() {
                 {stats.creditsRemaining} / {plan.credits}
               </span>
             </div>
-            <CreditBar used={stats.creditsUsedThisMonth} total={plan.credits} />
+            <CreditBar remaining={stats.creditsRemaining} total={plan.credits} />
           </div>
 
           {/* Stats */}
