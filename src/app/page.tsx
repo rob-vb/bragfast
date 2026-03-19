@@ -60,7 +60,7 @@ export default function Home() {
                 Developers, POST and receive
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                One API call, three formats. Automate branded release visuals from any CI/CD pipeline — your team sees results without touching a design tool.
+                Set up an API call and get polished release images back, ready to post. Multiple formats, multiple templates, zero design tools.
               </p>
               <Link
                 href="/docs"

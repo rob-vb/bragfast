@@ -356,7 +356,7 @@ function renderObjectPreview(
       : {};
     const contentBg = obj.src ? undefined : checkerboard;
 
-    const isDark = obj.imageFrameColor === "dark" || (!obj.imageFrameColor && imageFrame === "mobile");
+    const frameColor = obj.imageFrameColor || (imageFrame === "mobile" ? "#1A1A1A" : "#E8E8E8");
 
     if (imageFrame === "browser") {
       const titleBarH = 28;
@@ -365,14 +365,14 @@ function renderObjectPreview(
           width: "100%", height: "100%",
           borderRadius: 8,
           overflow: "hidden",
-          background: isDark ? "#1c1c1e" : "#e4e4e7",
+          background: frameColor,
           boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
           display: "flex", flexDirection: "column",
         }}>
           {/* Title bar */}
           <div style={{
             height: titleBarH, minHeight: titleBarH,
-            background: isDark ? "#2a2a2a" : "#f4f4f5",
+            background: frameColor,
             display: "flex", alignItems: "center", paddingLeft: 10, gap: 5,
           }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />
@@ -395,7 +395,7 @@ function renderObjectPreview(
         <div style={{
           width: "100%", height: "100%",
           borderRadius: radius,
-          background: isDark ? "#1c1c1e" : "#e8e8e8",
+          background: frameColor,
           padding: bezel,
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
         }}>
