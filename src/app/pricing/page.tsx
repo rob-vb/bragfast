@@ -62,7 +62,7 @@ export default function PricingPage() {
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
             1 credit = 1 image in 1 format. Sign up and get{" "}
-            <strong className="text-brand">30 free credits</strong> to
+            <strong className="text-brand">10 free credits</strong> to
             try it out —{" "}
             <strong className="text-brand">no credit card required</strong>.
           </p>
@@ -130,7 +130,7 @@ export default function PricingPage() {
                 href="/signup"
                 className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start with 30 Free Credits
+                Start with 10 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
                 No credit card required
@@ -263,13 +263,13 @@ export default function PricingPage() {
             Start free. Upgrade when you&apos;re ready.
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/80 leading-relaxed mb-8">
-            30 free credits. No credit card required.
+            10 free credits. No credit card required.
           </p>
           <Link
             href="/signup"
             className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-surface border-2 border-brand bg-brand shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
           >
-            Get 30 Free Credits
+            Get 10 Free Credits
           </Link>
         </div>
       </section>

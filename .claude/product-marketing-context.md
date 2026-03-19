@@ -7,7 +7,7 @@
 **What it does:** brag.fast takes release details via one API call or GitHub integration and outputs branded images in landscape (16:9), square (1:1), and portrait (4:5) — ready for social media in seconds. AI reads your changelog, categorizes changes, and generates smart summaries.
 **Product category:** Social media image automation / release marketing
 **Product type:** SaaS (API-first)
-**Business model:** Credit-based monthly plans. 1 credit = 1 image in 1 format. Free trial (30 credits, no card), Starter $29/mo (800), Pro $109/mo (8,000), Scale $219/mo (40,000).
+**Business model:** Credit-based monthly plans. 1 credit = 1 image in 1 format. Free trial (10 credits, no card), Starter $29/mo (800), Pro $109/mo (8,000), Scale $219/mo (40,000).
 
 ## Target Audience
 **Target companies:** Solo developers, indie hackers, small dev teams, startups
@@ -100,5 +100,5 @@
 
 ## Goals
 **Business goal:** Acquire early indie hacker customers, validate product-market fit
-**Conversion action:** Sign up for free trial (30 credits, no card)
+**Conversion action:** Sign up for free trial (10 credits, no card)
 **Current metrics:** Pre-launch / early stage

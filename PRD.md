@@ -333,7 +333,7 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 
 | Plan | Price | Credits | Brand Kits | Rate Limit |
 |------|-------|---------|------------|------------|
-| Trial | Free (no card) | 30 (one-time) | 1 | 10/min |
+| Trial | Free (no card) | 10 (one-time) | 1 | 10/min |
 | Starter | $29/mo | 1,500 | 3 | 30/min |
 | Pro | $69/mo | 5,000 | 10 | 60/min |
 | Scale | $139/mo | 15,000 | Unlimited | 120/min |
@@ -348,7 +348,7 @@ Warm cream background, charcoal text, egg-yolk orange accents. Minimal and spaci
 ### Trial Details
 
 - No credit card required, just create an account
-- 30 credits to use the full product (all templates, all formats)
+- 10 credits to use the full product (all templates, all formats)
 - Credits don't expire but don't refill
 - Once depleted: "Your plate is empty. Pick a plan to keep serving."
 
@@ -435,7 +435,7 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 
 - [ ] Dashboard UI (brand kit form with Google Font picker, release history, API key management)
 - [ ] Stripe integration (3 paid plans with flexible credit tiers)
-- [x] Trial credit system (30 credits on signup, decrement on use)
+- [x] Trial credit system (10 credits on signup, decrement on use)
 - [ ] Credit usage tracking + upgrade prompts
 - [ ] Landing page on brag.fast
 - [ ] Developer docs site (reference: https://developers.bannerbear.com — clean sidebar nav, endpoint docs with request/response examples, code snippets)

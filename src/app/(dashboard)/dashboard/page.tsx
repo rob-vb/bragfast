@@ -61,7 +61,7 @@ export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
-  // Ensure trial profile exists (grants 30 credits on first visit)
+  // Ensure trial profile exists (grants 10 credits on first visit)
   await fetchMutation(api.userProfiles.create, { userId: user._id, email: user.email });
 
   const [stats, releases, pendingReleases, brands] = await Promise.all([

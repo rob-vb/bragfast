@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
 import { EditorMockup } from "@/components/landing/editor-mockup";
-import { AIAnalysisMockup } from "@/components/landing/ai-analysis-mockup";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { PAID_PLANS } from "@/lib/plans";
 
@@ -28,14 +27,14 @@ export default function Home() {
               Show what you&apos;ve been cooking
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast auto-generates (branded) images from one API call. Landscape, square, and portrait, so you can post them to your socials immediately.
+              brag.fast auto-generates (branded) images. Landscape, square, and portrait, so you can post them to your socials immediately.
               Feed your audience.
             </p>
             <Link
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Get 30 Free Credits
+              Get 10 Free Credits
             </Link>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-3">
               No credit card required
@@ -179,24 +178,12 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Row 4: AI Analysis — visual left, text right */}
+          {/* Row 4: Brand Kits — visual left, text right */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
-              <AIAnalysisMockup />
+              <BrandKitMockup />
             </div>
             <div className="order-1 md:order-2">
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                AI picks the best ingredients
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                brag.fast reads your changelog, categorizes changes — features, fixes, breaking — and generates a smart summary. Review before serving or let it run fully automated.
-              </p>
-            </div>
-          </div>
-
-          {/* Row 5: Brand Kits — text left, visual right */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div>
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
                 Season everything to taste
               </h2>
@@ -204,7 +191,6 @@ export default function Home() {
                 Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
               </p>
             </div>
-            <BrandKitMockup />
           </div>
 
         </div>
@@ -267,7 +253,7 @@ export default function Home() {
                 href="/signup"
                 className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start with 30 Free Credits
+                Start with 10 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
                 No credit card required
@@ -297,7 +283,7 @@ export default function Home() {
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Get 30 Free Credits
+              Get 10 Free Credits
             </Link>
           </div>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60 mt-4">

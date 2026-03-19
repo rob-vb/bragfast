@@ -16,7 +16,7 @@ function priceToPlan(priceId: string): "starter" | "pro" | "scale" | null {
 }
 
 const PLAN_CREDITS: Record<string, number> = {
-  trial: 30,
+  trial: 10,
   starter: 1_500,
   pro: 5_000,
   scale: 15_000,
