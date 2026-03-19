@@ -3,7 +3,6 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
-import { EditorMockup } from "@/components/landing/editor-mockup";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { PAID_PLANS } from "@/lib/plans";
@@ -116,7 +115,12 @@ export default function Home() {
           {/* Row 2: Template Editor — visual left, text right */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
-              <EditorMockup />
+              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
+                <LazyVideo
+                  src="/demo/template_editor_compressed.mp4"
+                  className="w-full rounded-sm border border-brand"
+                />
+              </div>
             </div>
             <div className="order-1 md:order-2">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
@@ -144,7 +148,7 @@ export default function Home() {
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
                 <LazyVideo
                   src="/demo/github_release_demo_compressed.mp4"
-                  className="w-full rounded-sm"
+                  className="w-full rounded-sm border border-brand"
                 />
               </div>
             </div>
