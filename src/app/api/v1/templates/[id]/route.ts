@@ -2,7 +2,6 @@ import { authenticate } from "@/lib/auth/authenticate";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
-import { resolveTemplateId } from "@/lib/templates/resolve-id";
 
 const VALID_BLOCK_TYPES = ["title", "description", "text", "image", "logo"] as const;
 
@@ -28,8 +27,7 @@ export async function GET(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: rawId } = await params;
-  const id = resolveTemplateId(rawId);
+  const { id } = await params;
   const template = await fetchQuery(api.templates.getByExternalId, {
     externalId: id,
   });
@@ -93,8 +91,7 @@ export async function PATCH(
   const rateLimitResponse = await checkRateLimit(auth.userId);
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { id: rawId } = await params;
-  const id = resolveTemplateId(rawId);
+  const { id } = await params;
 
   let body: Record<string, unknown>;
   try {
@@ -164,8 +161,7 @@ export async function DELETE(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id: rawId } = await params;
-  const id = resolveTemplateId(rawId);
+  const { id } = await params;
   try {
     await fetchMutation(api.templates.remove, {
       externalId: id,

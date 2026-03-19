@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getCanvasDefaultConfig } from "../src/lib/templates/canvas-defaults";
+import { CANVAS_DEFAULTS, getCanvasDefaultConfig } from "../src/lib/templates/canvas-defaults";
 
 const configValidator = v.object({
   background: v.string(),
@@ -220,16 +220,11 @@ export const seedDefaults = mutation({
   handler: async (ctx) => {
     const now = new Date().toISOString();
 
-    const defaults = [
-      { externalId: "tmpl_standard_browser", name: "Standard Browser", slug: "standard-browser" },
-      { externalId: "tmpl_standard_mobile", name: "Standard Mobile", slug: "standard-mobile" },
-      { externalId: "tmpl_split_browser", name: "Split Browser", slug: "split-browser" },
-      { externalId: "tmpl_split_mobile", name: "Split Mobile", slug: "split-mobile" },
-      { externalId: "tmpl_hero", name: "Hero", slug: "hero" },
-    ].map(({ externalId, name, slug }) => ({
+    const slugs = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
+    const defaults = slugs.map((slug) => ({
       userId: "",
-      externalId,
-      name,
+      externalId: slug,
+      name: CANVAS_DEFAULTS[slug]?.name ?? slug,
       isDefault: true,
       config: getCanvasDefaultConfig(slug),
       created_at: now,
@@ -256,6 +251,19 @@ export const seedDefaults = mutation({
       }
     }
 
-    return { message: `Seeded ${inserted} new, updated ${updated} existing` };
+    // Clean up old tmpl_* default records
+    const allDefaults = await ctx.db
+      .query("templates")
+      .filter((q) => q.eq(q.field("isDefault"), true))
+      .collect();
+    let deleted = 0;
+    for (const tmpl of allDefaults) {
+      if (tmpl.externalId.startsWith("tmpl_")) {
+        await ctx.db.delete(tmpl._id);
+        deleted++;
+      }
+    }
+
+    return { message: `Seeded ${inserted} new, updated ${updated} existing, deleted ${deleted} old` };
   },
 });
