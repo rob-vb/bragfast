@@ -26,6 +26,7 @@ export const metadata: Metadata = {
   title: "brag.fast — Auto-generate social images for your launches",
   description:
     "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+  alternates: { canonical: siteUrl },
   openGraph: {
     title: "brag.fast — Auto-generate social images for your launches",
     description:
@@ -70,6 +71,18 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} antialiased`}
       >
         <PostHogProvider>{children}</PostHogProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "brag.fast",
+              url: siteUrl,
+              logo: `${siteUrl}/logo.svg`,
+            }),
+          }}
+        />
       </body>
     </html>
   );

@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "brag.fast — Auto-generate social images for your launches",
   description:
     "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+  alternates: { canonical: "/" },
 };
 
 export default function Home() {
@@ -268,6 +269,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SoftwareApplication JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "brag.fast",
+            applicationCategory: "DesignApplication",
+            operatingSystem: "Web",
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "USD",
+            },
+          }),
+        }}
+      />
+
       {/* S8: Footer */}
       <footer className="py-8 border-t-2 border-brand bg-surface">
         <div className="mx-auto max-w-5xl px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -284,6 +304,30 @@ export default function Home() {
             Feed your audience
           </p>
           <div className="flex items-center gap-4">
+            <Link
+              href="/docs"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Docs
+            </Link>
+            <Link
+              href="/pricing"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/demo"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Demo
+            </Link>
+            <Link
+              href="/support"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Support
+            </Link>
             <Link
               href="/terms"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"

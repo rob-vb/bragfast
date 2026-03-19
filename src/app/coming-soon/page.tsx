@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Coming Soon — brag.fast",
   description: "This page is coming soon. Stay tuned.",
+  robots: { index: false },
 };
 
 export default function ComingSoon() {

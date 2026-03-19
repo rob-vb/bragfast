@@ -4,6 +4,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 export const metadata: Metadata = {
   title: "Privacy Policy — brag.fast",
   description: "Privacy policy for the brag.fast service.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

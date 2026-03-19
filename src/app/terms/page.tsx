@@ -5,6 +5,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 export const metadata: Metadata = {
   title: "Terms and Conditions — brag.fast",
   description: "Terms and conditions for using the brag.fast service.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

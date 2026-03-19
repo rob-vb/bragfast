@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Support — brag.fast",
   description:
     "Get in touch anytime. Questions, bug reports, feature requests — we read every message.",
+  alternates: { canonical: "/support" },
 };
 
 export default function SupportPage() {
@@ -56,6 +57,30 @@ export default function SupportPage() {
             Feed your audience
           </p>
           <div className="flex items-center gap-4">
+            <Link
+              href="/docs"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Docs
+            </Link>
+            <Link
+              href="/pricing"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/demo"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Demo
+            </Link>
+            <Link
+              href="/support"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Support
+            </Link>
             <Link
               href="/terms"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"

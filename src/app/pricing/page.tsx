@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Pricing — brag.fast",
   description:
     "Simple, predictable pricing. 1 credit = 1 image in 1 format. Start free, scale as you grow.",
+  alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
@@ -254,6 +255,23 @@ export default function PricingPage() {
             ))}
           </dl>
         </div>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: FAQS.map((faq) => ({
+                "@type": "Question",
+                name: faq.q,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.a,
+                },
+              })),
+            }),
+          }}
+        />
       </section>
 
       {/* Final CTA */}
@@ -289,6 +307,30 @@ export default function PricingPage() {
             Feed your audience
           </p>
           <div className="flex items-center gap-4">
+            <Link
+              href="/docs"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Docs
+            </Link>
+            <Link
+              href="/pricing"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/demo"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Demo
+            </Link>
+            <Link
+              href="/support"
+              className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
+            >
+              Support
+            </Link>
             <Link
               href="/terms"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
