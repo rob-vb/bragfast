@@ -5,6 +5,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
 import { EditorMockup } from "@/components/landing/editor-mockup";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
+import { LazyVideo } from "@/components/landing/lazy-video";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -139,41 +140,12 @@ export default function Home() {
 
             </div>
             <div>
-              {/* GitHub webhook flow */}
+              {/* Demo video */}
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-                <div className="flex flex-col gap-3">
-                  {[
-                    { step: "01", label: "You publish a release on GitHub", bg: "bg-white" },
-                    { step: "02", label: "AI reads your changelog, picks the highlights", bg: "bg-gold" },
-                    { step: "03", label: "Branded images, ready to serve", bg: "bg-white" },
-                  ].map((item, i) => (
-                    <div key={item.step}>
-                      <div className={`flex items-center gap-3 border-2 border-brand px-4 py-3 ${item.bg}`}>
-                        <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40">
-                          {item.step}
-                        </span>
-                        <p className="font-[family-name:var(--font-press-start)] text-[9px]">
-                          {item.label}
-                        </p>
-                      </div>
-                      {i < 2 && (
-                        <div className="flex justify-center py-1">
-                          <span className="font-[family-name:var(--font-press-start)] text-brand/30 text-xs">
-                            &darr;
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t-2 border-brand/10">
-                  <span className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border border-brand/30 text-brand/60">
-                    Zero config
-                  </span>
-                  <span className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border border-brand/30 text-brand/60">
-                    Review or auto-approve
-                  </span>
-                </div>
+                <LazyVideo
+                  src="/demo/github_release_demo_compressed.mp4"
+                  className="w-full rounded-sm"
+                />
               </div>
             </div>
           </div>
