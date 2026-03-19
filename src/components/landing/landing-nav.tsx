@@ -69,6 +69,12 @@ export function LandingNav() {
               Pricing
             </Link>
             <Link
+              href="/support"
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
+            >
+              Support
+            </Link>
+            <Link
               href={loggedIn ? "/dashboard" : "/login"}
               className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
             >
@@ -153,6 +159,13 @@ export function LandingNav() {
             className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
           >
             Pricing
+          </Link>
+          <Link
+            href="/support"
+            onClick={() => setOpen(false)}
+            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
+          >
+            Support
           </Link>
           <Link
             href={loggedIn ? "/dashboard" : "/login"}
