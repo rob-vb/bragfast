@@ -160,9 +160,9 @@ async function resolveBrand(request: VideoRenderRequest) {
     name: request.name ?? "Brand",
     logoBase64,
     colors: request.colors ?? {
-      background: "#0F0F0F",
-      text: "#FFFFFF",
-      primary: "#6366F1",
+      background: "#1a1a2e",
+      text: "#ffffff",
+      primary: "#e94560",
     },
     fontFamily: request.font_family ?? "Plus Jakarta Sans",
   };

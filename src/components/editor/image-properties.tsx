@@ -219,7 +219,7 @@ export function ImageProperties() {
 
       <div className="space-y-1">
         <Label className="text-xs text-zinc-500">Object Fit</Label>
-        <Select value={selectedObject.objectFit || "cover"} onValueChange={(v) => update("objectFit", v)}>
+        <Select value={selectedObject.objectFit || "cover"} onValueChange={(v) => updatePerFormat("objectFit", v)}>
           <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>

@@ -13,14 +13,21 @@ describe('release request validation', () => {
     })).toBeNull()
   })
 
-  it('fails when neither brand_id nor colors provided', () => {
-    expect(validateReleaseColors({ formats: [{ name: 'landscape', slides: [{}] }] })).toMatch(/colors/)
+  it('passes when neither brand_id nor colors provided (falls back to template colors)', () => {
+    expect(validateReleaseColors({ formats: [{ name: 'landscape', slides: [{}] }] })).toBeNull()
   })
 
-  it('fails when colors is incomplete', () => {
+  it('passes when colors is partial (missing fields fall back to template colors)', () => {
     expect(validateReleaseColors({
       colors: { background: '#fff' },
       formats: [{ name: 'landscape', slides: [{}] }],
-    })).toMatch(/colors/)
+    })).toBeNull()
+  })
+
+  it('fails when color value is invalid hex', () => {
+    expect(validateReleaseColors({
+      colors: { background: 'not-a-color', text: '#000', primary: '#f00' },
+      formats: [{ name: 'landscape', slides: [{}] }],
+    })).toMatch(/colors\.background/)
   })
 })

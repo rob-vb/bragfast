@@ -182,14 +182,14 @@ while True:
             type: "string",
             required: false,
             description:
-              "ID of a saved brand kit (e.g. \"brand_abc123\"). If not provided, you must provide colors.",
+              "ID of a saved brand kit (e.g. \"brand_abc123\"). If omitted, uses inline colors or defaults to dark theme (#1a1a2e, #ffffff, #e94560).",
           },
           {
             name: "colors",
             type: "object",
             required: false,
             description:
-              "Inline brand colors. Required when brand_id is not provided.",
+              "Inline brand colors. Optional — defaults to dark theme if omitted.",
             children: [
               {
                 name: "background",

@@ -90,13 +90,10 @@ export function validateVideoTemplate(template: string | undefined): string | nu
 }
 
 export function validateReleaseColors(body: Record<string, unknown>): string | null {
-  if (!body.brand_id) {
-    const colors = body.colors as Record<string, unknown> | undefined
-    if (!colors?.background || !colors?.text || !colors?.primary) {
-      return 'colors.background, colors.text, and colors.primary are required when brand_id is not provided'
-    }
+  const colors = body.colors as Record<string, unknown> | undefined
+  if (colors) {
     for (const key of ['background', 'text', 'primary'] as const) {
-      if (typeof colors[key] === 'string' && !isValidHexColor(colors[key] as string)) {
+      if (colors[key] !== undefined && typeof colors[key] === 'string' && !isValidHexColor(colors[key] as string)) {
         return `colors.${key} must be a valid hex color (e.g. "#1a1a2e")`
       }
     }

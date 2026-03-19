@@ -12,7 +12,7 @@ import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types"
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { fetchImageAsBase64 } from "../images";
 import { uploadImage } from "../storage/r2";
-import { ReleaseRequest, ReleaseResult, Brand, FORMAT_DIMENSIONS, calculateCredits } from "../types";
+import { ReleaseRequest, ReleaseResult, Brand, BrandColors, FORMAT_DIMENSIONS, calculateCredits } from "../types";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
@@ -72,7 +72,7 @@ export async function getRelease(
   };
 }
 
-async function resolveBrand(request: ReleaseRequest): Promise<Brand> {
+async function resolveBrand(request: ReleaseRequest, fallbackColors: BrandColors): Promise<Brand> {
   if (request.brand_id) {
     const record = await convex.query(api.brands.getByExternalId, {
       externalId: request.brand_id,
@@ -90,14 +90,14 @@ async function resolveBrand(request: ReleaseRequest): Promise<Brand> {
     }
   }
 
-  // Inline brand from request (validated upstream — colors guaranteed present)
+  // Inline brand from request — falls back to template's manual colors if none provided
   return {
     name: request.name ?? "",
     logoBase64: request.logo_url
       ? await fetchImageAsBase64(request.logo_url)
       : "",
     website: "",
-    colors: request.colors!,
+    colors: request.colors ?? fallbackColors,
     font_family: request.font_family,
   };
 }
@@ -108,7 +108,6 @@ export async function renderReleaseAsync(
   userId: string
 ): Promise<void> {
   try {
-    const brand = await resolveBrand(request);
     const templateName = request.template || "standard-browser";
 
     // Resolve template config (v2 CanvasTemplateConfig)
@@ -128,6 +127,8 @@ export async function renderReleaseAsync(
     }
 
     templateConfig = migrateConfig(templateConfig);
+
+    const brand = await resolveBrand(request, templateConfig.colors);
 
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
