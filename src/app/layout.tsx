@@ -19,10 +19,36 @@ const pressStart2P = Press_Start_2P({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "brag.fast — Auto-generate social images for your launches",
   description:
     "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+  openGraph: {
+    title: "brag.fast — Auto-generate social images for your launches",
+    description:
+      "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+    url: siteUrl,
+    siteName: "brag.fast",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "brag.fast — Auto-generate social images for your launches",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "brag.fast — Auto-generate social images for your launches",
+    description:
+      "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+    images: ["/og-image.png"],
+  },
   icons: {
     icon: [
       { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
