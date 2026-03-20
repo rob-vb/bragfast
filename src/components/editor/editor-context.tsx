@@ -1,8 +1,13 @@
 "use client";
 
 import { createContext, useContext, useReducer, useCallback, useEffect, useRef, type ReactNode } from "react";
-import type { CanvasTemplateConfig, TemplateObject, FormatKey, ObjectType } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, TemplateObject, FormatKey, FormatLayout, ObjectType } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS, uniqueSlug, slugify, migrateConfig } from "@/lib/templates/canvas-types";
+
+/** Editor only uses core formats (never og), so layout is always present */
+function getLayout(config: CanvasTemplateConfig, fmt: FormatKey): FormatLayout {
+  return config.formats[fmt]!;
+}
 
 // --- State ---
 interface EditorState {
@@ -66,12 +71,12 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       if (action.property === "name" && action.allFormats) {
         // Name change → regenerate ID across all formats
         const newName = action.value as string;
-        const existingIds = state.config.formats[state.activeFormat].objects.map((o) => o.id);
+        const existingIds = getLayout(state.config, state.activeFormat).objects.map((o) => o.id);
         const newId = uniqueSlug(newName, existingIds, action.objectId);
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
         for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
           newConfig.formats[fmt] = {
-            objects: newConfig.formats[fmt].objects.map((obj) =>
+            objects: getLayout(newConfig, fmt).objects.map((obj) =>
               obj.id === action.objectId ? { ...obj, name: newName, id: newId } : obj
             ),
           };
@@ -84,7 +89,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
         for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
           newConfig.formats[fmt] = {
-            objects: newConfig.formats[fmt].objects.map((obj) =>
+            objects: getLayout(newConfig, fmt).objects.map((obj) =>
               obj.id === action.objectId ? { ...obj, [action.property]: action.value } : obj
             ),
           };
@@ -99,9 +104,9 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case "ADD_OBJECT": {
       const dims = FORMAT_DIMENSIONS[state.activeFormat];
-      const existingIds = state.config.formats[state.activeFormat].objects.map((o) => o.id);
+      const existingIds = getLayout(state.config, state.activeFormat).objects.map((o) => o.id);
       const newObj: TemplateObject = createDefaultObject(action.objectType, dims.width, dims.height, existingIds);
-      const maxZ = Math.max(0, ...state.config.formats[state.activeFormat].objects.map((o) => o.zIndex));
+      const maxZ = Math.max(0, ...getLayout(state.config, state.activeFormat).objects.map((o) => o.zIndex));
       newObj.zIndex = maxZ + 1;
 
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
@@ -114,7 +119,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         fmtObj.width = Math.round((newObj.width / dims.width) * fmtDims.width);
         fmtObj.height = Math.round((newObj.height / dims.height) * fmtDims.height);
         newConfig.formats[fmt] = {
-          objects: [...newConfig.formats[fmt].objects, fmtObj],
+          objects: [...getLayout(newConfig, fmt).objects, fmtObj],
         };
       }
       return { ...state, config: newConfig, selectedObjectId: newObj.id, isDirty: true };
@@ -124,7 +129,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
       for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
         newConfig.formats[fmt] = {
-          objects: newConfig.formats[fmt].objects.filter((o) => o.id !== action.objectId),
+          objects: getLayout(newConfig, fmt).objects.filter((o) => o.id !== action.objectId),
         };
       }
       return {
@@ -140,7 +145,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
       for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
         newConfig.formats[fmt] = {
-          objects: newConfig.formats[fmt].objects.map((obj) => {
+          objects: getLayout(newConfig, fmt).objects.map((obj) => {
             const idx = action.objectIds.indexOf(obj.id);
             return idx >= 0 ? { ...obj, zIndex: idx } : obj;
           }),
@@ -254,7 +259,7 @@ function updateObjectInActiveFormat(
     formats: {
       ...state.config.formats,
       [fmt]: {
-        objects: state.config.formats[fmt].objects.map((obj) =>
+        objects: getLayout(state.config, fmt).objects.map((obj) =>
           obj.id === objectId ? { ...obj, ...updates } : obj
         ),
       },
@@ -375,7 +380,7 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) && s.selectedObjectId) {
         if ((e.target as HTMLElement).tagName === "INPUT") return;
         e.preventDefault();
-        const obj = s.config.formats[s.activeFormat].objects.find((o) => o.id === s.selectedObjectId);
+        const obj = getLayout(s.config, s.activeFormat).objects.find((o) => o.id === s.selectedObjectId);
         if (!obj) return;
         const dx = e.key === "ArrowLeft" ? -1 : e.key === "ArrowRight" ? 1 : 0;
         const dy = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
@@ -388,7 +393,7 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
   }, [dispatch]);
 
   const state = undoState.current;
-  const activeObjects = state.config.formats[state.activeFormat].objects;
+  const activeObjects = getLayout(state.config, state.activeFormat).objects;
   const selectedObject = activeObjects.find((o) => o.id === state.selectedObjectId) ?? null;
 
   return (
