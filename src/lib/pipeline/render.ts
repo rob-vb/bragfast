@@ -69,6 +69,7 @@ export async function getRelease(
     completed_at: r.completed_at,
     metadata: r.metadata,
     webhook_url: r.webhook_url,
+    socialCopy: r.socialCopy ? JSON.parse(r.socialCopy) : null,
   };
 }
 
@@ -236,9 +237,32 @@ export async function renderReleaseAsync(
       };
     }
 
+    // Generate social copy (non-blocking -- empty copy on failure is fine)
+    let socialCopy: string | undefined;
+    if (request.metadata) {
+      try {
+        const meta = JSON.parse(request.metadata);
+        if (meta.releaseName || meta.releaseBody) {
+          const { generateSocialCopy } = await import("../copy/generate-copy");
+          const copy = await generateSocialCopy({
+            releaseName: meta.releaseName || "",
+            releaseTag: meta.releaseTag || "",
+            releaseBody: meta.releaseBody || "",
+            brandName: request.name,
+          });
+          if (copy.twitter || copy.linkedin) {
+            socialCopy = JSON.stringify(copy);
+          }
+        }
+      } catch {
+        // Copy gen failure is non-critical, skip silently
+      }
+    }
+
     await convex.mutation(api.releases.markCompleted, {
       externalId: releaseId,
       images,
+      socialCopy,
     });
 
     // Credits already reserved by the route handler — no deduction needed here
