@@ -70,7 +70,7 @@ function DownloadButton({ releaseId, status }: { releaseId: string; status: stri
       aria-busy={downloading}
       title={isPending ? "Images still cooking..." : undefined}
     >
-      {downloading ? "Preparing ZIP..." : "Download All"}
+      {downloading ? "Preparing..." : "Download"}
     </PixelButton>
   );
 }
@@ -231,15 +231,13 @@ function ExpandableRow({ release }: { release: Release }) {
         <td className="px-4 py-3 text-xs">
           {new Date(release.created_at).toLocaleDateString()}
         </td>
+        <td className="px-4 py-3">
+          <DownloadButton releaseId={release.externalId} status={release.status} />
+        </td>
       </tr>
       {open && (
         <tr>
-          <td colSpan={5} className="px-4 py-0">
-            {/* Action bar */}
-            <div className="flex justify-end mt-1 mb-2">
-              <DownloadButton releaseId={release.externalId} status={release.status} />
-            </div>
-
+          <td colSpan={6} className="px-4 py-0">
             {/* Social copy */}
             <SocialCopySection release={release} />
 
@@ -274,7 +272,7 @@ function ExpandableRow({ release }: { release: Release }) {
 
 export function HistoryTable({ releases }: { releases: Release[] }) {
   return (
-    <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
+    <PixelTable headers={["ID", "Template", "Status", "Credits", "Date", ""]}>
       {releases.map((r) => (
         <ExpandableRow key={r._id} release={r} />
       ))}
