@@ -7,6 +7,7 @@ import { PixelTable } from "@/components/dashboard/pixel-table";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
 import { PendingReviews } from "@/components/dashboard/pending-reviews";
 import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
+import { FirstCookWizard } from "@/components/dashboard/first-cook-wizard";
 import { PLANS } from "@/lib/plans";
 import Link from "next/link";
 
@@ -118,12 +119,7 @@ export default async function DashboardPage() {
           Recent Releases
         </h2>
         {recent.length === 0 ? (
-          <PixelEmptyState
-            title="Time to cook!"
-            description="Generate your first branded images via the API or connect GitHub."
-            cta={{ label: "Read the Docs", href: "/docs" }}
-            secondaryCta={{ label: "Connect GitHub", href: "/dashboard/account" }}
-          />
+          <FirstCookWizard />
         ) : (
           <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
             {recent.map((r) => (
