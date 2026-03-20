@@ -40,11 +40,11 @@ function buildResponseBody(r: Release) {
 
 function DownloadButton({ releaseId, status }: { releaseId: string; status: string }) {
   const [downloading, setDownloading] = useState(false);
-  const isPending = status === "pending" || status === "pending_review";
+  const isDisabled = status !== "completed";
 
   async function handleDownload(e: React.MouseEvent) {
     e.stopPropagation();
-    if (isPending || downloading) return;
+    if (isDisabled || downloading) return;
     setDownloading(true);
     try {
       const res = await fetch(`/api/v1/cook/${releaseId}/download`);
@@ -64,14 +64,15 @@ function DownloadButton({ releaseId, status }: { releaseId: string; status: stri
   }
 
   return (
-    <PixelButton
+    <button
       onClick={handleDownload}
-      disabled={isPending || downloading}
+      disabled={isDisabled || downloading}
       aria-busy={downloading}
-      title={isPending ? "Images still cooking..." : undefined}
+      title={isDisabled ? "No images to download" : undefined}
+      className="font-[family-name:var(--font-press-start)] text-[8px] px-3 py-1.5 border border-brand bg-gold text-brand shadow-[2px_2px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none transition-all"
     >
-      {downloading ? "Preparing..." : "Download"}
-    </PixelButton>
+      {downloading ? "..." : "Download"}
+    </button>
   );
 }
 
