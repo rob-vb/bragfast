@@ -261,7 +261,7 @@ function ExpandableRow({ release }: { release: Release }) {
                   Copy
                 </button>
               </div>
-              <pre className="overflow-x-auto p-3 font-mono text-xs leading-relaxed text-[var(--color-surface)]/80">
+              <pre className="overflow-x-auto p-3 font-mono text-xs leading-relaxed text-[var(--color-surface)]/80 whitespace-pre-wrap break-all max-w-full">
                 {JSON.stringify(response, null, 2)}
               </pre>
             </div>

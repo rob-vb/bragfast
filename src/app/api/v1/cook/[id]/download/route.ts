@@ -2,6 +2,7 @@ import { authenticate } from "@/lib/auth/authenticate";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { NextRequest } from "next/server";
+import { readFile } from "fs/promises";
 import JSZip from "jszip";
 
 export async function GET(
@@ -48,18 +49,23 @@ export async function GET(
     for (let i = 0; i < data.slides.length; i++) {
       const url = data.slides[i];
       fetchPromises.push(
-        fetch(url)
-          .then((res) => {
-            if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-            return res.arrayBuffer();
-          })
-          .then((buf) => {
+        (async () => {
+          try {
+            let buf: ArrayBuffer;
+            if (url.startsWith("file://")) {
+              const filePath = url.replace("file://", "");
+              buf = (await readFile(filePath)).buffer as ArrayBuffer;
+            } else {
+              const res = await fetch(url);
+              if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+              buf = await res.arrayBuffer();
+            }
             const ext = url.includes(".png") ? "png" : "jpg";
             folder.file(`slide-${i + 1}.${ext}`, buf);
-          })
-          .catch((err) => {
-            console.warn(`Skipping ${format}/slide-${i + 1}: ${err.message}`);
-          })
+          } catch (err) {
+            console.warn(`Skipping ${format}/slide-${i + 1}: ${(err as Error).message}`);
+          }
+        })()
       );
     }
   }
