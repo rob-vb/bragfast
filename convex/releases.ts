@@ -54,6 +54,7 @@ export const markCompleted = mutation({
     externalId: v.string(),
     images: v.optional(v.any()),
     videos: v.optional(v.any()),
+    socialCopy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const r = await ctx.db
@@ -67,6 +68,7 @@ export const markCompleted = mutation({
     };
     if (args.images) patch.images = args.images;
     if (args.videos) patch.videos = args.videos;
+    if (args.socialCopy) patch.socialCopy = args.socialCopy;
     await ctx.db.patch(r._id, patch);
   },
 });
@@ -133,6 +135,23 @@ export const dismiss = mutation({
     if (r.userId !== userId) throw new Error("Not authorized");
     if (r.status !== "pending_review") throw new Error("Release is not pending review");
     await ctx.db.patch(r._id, { status: "dismissed" });
+  },
+});
+
+export const updateSocialCopy = mutation({
+  args: {
+    externalId: v.string(),
+    userId: v.string(),
+    socialCopy: v.string(),
+  },
+  handler: async (ctx, { externalId, userId, socialCopy }) => {
+    const r = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!r) throw new Error("Release not found");
+    if (r.userId !== userId) throw new Error("Not authorized");
+    await ctx.db.patch(r._id, { socialCopy });
   },
 });
 

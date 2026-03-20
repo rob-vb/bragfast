@@ -78,6 +78,7 @@ export interface ReleaseResult {
   completed_at?: string
   metadata?: string
   webhook_url?: string
+  socialCopy?: { twitter: string; linkedin: string } | null
 }
 
 export type TemplateName = 'standard-browser' | 'standard-mobile' | 'split-browser' | 'split-mobile' | 'hero' | (string & {})
@@ -86,6 +87,7 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
   portrait: { width: 1080, height: 1920 },
+  og: { width: 1200, height: 630 },
 }
 
 export type CookOutput = "image" | "video";

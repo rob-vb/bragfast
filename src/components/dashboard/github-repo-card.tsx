@@ -41,7 +41,7 @@ type Props = {
   onSaved: () => void;
 };
 
-const FORMAT_OPTIONS = ["landscape", "square", "portrait"] as const;
+const FORMAT_OPTIONS = ["landscape", "square", "portrait", "og"] as const;
 
 export function RepoConfigCard({ repo, config, installationId, brands, templates, onSaved }: Props) {
   const [enabled, setEnabled] = useState(config?.enabled ?? false);

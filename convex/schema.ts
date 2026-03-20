@@ -85,6 +85,7 @@ export default defineSchema({
     source: v.optional(v.union(v.literal("api"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
     aiContent: v.optional(v.string()),
+    socialCopy: v.optional(v.string()), // JSON string: { twitter: string, linkedin: string }
     pendingConfig: v.optional(v.string()),
     created_at: v.string(),
     completed_at: v.optional(v.string()),
