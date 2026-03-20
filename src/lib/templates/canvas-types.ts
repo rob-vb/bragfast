@@ -47,8 +47,9 @@ function migrateObject(obj: TemplateObject): TemplateObject {
 export function migrateConfig(config: CanvasTemplateConfig): CanvasTemplateConfig {
   const formats = { ...config.formats };
   let changed = false;
-  for (const key of ["landscape", "square", "portrait"] as FormatKey[]) {
+  for (const key of (["landscape", "square", "portrait", "og"] as FormatKey[])) {
     const layout = formats[key];
+    if (!layout) continue;  // og may not exist in older templates
     const migrated = layout.objects.map(migrateObject);
     if (migrated.some((obj, i) => obj !== layout.objects[i])) {
       formats[key] = { objects: migrated };
@@ -63,7 +64,7 @@ export type ImageFrame = "browser" | "mobile" | "none";
 export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
-export type FormatKey = "landscape" | "square" | "portrait";
+export type FormatKey = "landscape" | "square" | "portrait" | "og";
 
 export interface TemplateObject {
   id: string;
@@ -116,7 +117,7 @@ export interface CanvasTemplateConfig {
     primary: string;
   };
   brandId?: string;
-  formats: Record<FormatKey, FormatLayout>;
+  formats: Record<"landscape" | "square" | "portrait", FormatLayout> & Partial<Record<"og", FormatLayout>>;
 }
 
 /** Returns a CSS borderRadius string from an object's radius properties. */
@@ -141,4 +142,5 @@ export const FORMAT_DIMENSIONS: Record<FormatKey, { width: number; height: numbe
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
   portrait: { width: 1080, height: 1920 },
+  og: { width: 1200, height: 630 },
 };
