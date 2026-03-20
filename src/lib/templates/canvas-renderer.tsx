@@ -28,7 +28,7 @@ interface CanvasRendererProps {
 
 export function CanvasRenderer({ config, format, objectData, brand }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
-  const layout = config.formats[format];
+  const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
 

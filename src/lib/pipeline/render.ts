@@ -136,7 +136,9 @@ export async function renderReleaseAsync(
     // Collect all static image src URLs across all formats (fetch once)
     const staticSrcs = new Set<string>();
     for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
-      for (const obj of templateConfig.formats[fKey].objects) {
+      const fLayout = templateConfig.formats[fKey];
+      if (!fLayout) continue;
+      for (const obj of fLayout.objects) {
         if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
       }
     }
@@ -177,7 +179,8 @@ export async function renderReleaseAsync(
       );
 
       // Inject static images for this format
-      for (const obj of templateConfig.formats[format as FormatKey].objects) {
+      const formatLayout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
+      for (const obj of formatLayout.objects) {
         if (obj.type === "image" && obj.src && srcMap[obj.src]) {
           for (const dataMap of slideDataMaps) {
             if (!dataMap[obj.id]?.imageBase64) {
@@ -188,7 +191,7 @@ export async function renderReleaseAsync(
       }
 
       // Font loading
-      let fonts = await loadFontsForObjects(templateConfig.formats[format as FormatKey].objects);
+      let fonts = await loadFontsForObjects(formatLayout.objects);
       if (brand.font_family) {
         const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
