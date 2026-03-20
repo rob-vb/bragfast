@@ -171,12 +171,12 @@ export async function POST(request: Request) {
 
   // Template validation
   if (imageBody.template) {
-    const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
+    const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero", "changelog"];
     const isDefault = validDefaults.includes(imageBody.template);
     const isCustom = typeof imageBody.template === "string" && imageBody.template.startsWith("tmpl_");
     if (!isDefault && !isCustom) {
       return Response.json(
-        { error: "Invalid template. Must be standard-browser, standard-mobile, split-browser, split-mobile, hero, or a template ID (tmpl_...)" },
+        { error: "Invalid template. Must be standard-browser, standard-mobile, split-browser, split-mobile, hero, changelog, or a template ID (tmpl_...)" },
         { status: 400 }
       );
     }
