@@ -69,19 +69,20 @@ export async function POST(
   try {
     const templateConfig = template.config as CanvasTemplateConfig;
 
-    if (!templateConfig.formats[format]) {
+    const formatLayout = templateConfig.formats[format];
+    if (!formatLayout) {
       return Response.json({ error: `Format "${format}" not available for this template` }, { status: 400 });
     }
 
     // Inject static images (src field) into placeholder data
-    for (const obj of templateConfig.formats[format].objects) {
+    for (const obj of formatLayout.objects) {
       if (obj.type === "image" && obj.src && !placeholderObjectData[obj.id]?.imageBase64) {
         const base64 = await fetchImageAsBase64(obj.src);
         placeholderObjectData[obj.id] = { ...placeholderObjectData[obj.id], imageBase64: base64 };
       }
     }
 
-    const fonts = await loadFontsForObjects(templateConfig.formats[format].objects);
+    const fonts = await loadFontsForObjects(formatLayout.objects);
 
     const jsx = CanvasRenderer({
       config: templateConfig,
