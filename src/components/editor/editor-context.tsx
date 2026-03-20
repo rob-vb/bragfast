@@ -4,9 +4,16 @@ import { createContext, useContext, useReducer, useCallback, useEffect, useRef, 
 import type { CanvasTemplateConfig, TemplateObject, FormatKey, FormatLayout, ObjectType } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS, uniqueSlug, slugify, migrateConfig } from "@/lib/templates/canvas-types";
 
-/** Editor only uses core formats (never og), so layout is always present */
+/** Layout is always present for core formats; og may not exist */
 function getLayout(config: CanvasTemplateConfig, fmt: FormatKey): FormatLayout {
   return config.formats[fmt]!;
+}
+
+/** All formats that exist in this config */
+function allFormats(config: CanvasTemplateConfig): FormatKey[] {
+  const fmts: FormatKey[] = ["landscape", "square", "portrait"];
+  if (config.formats.og) fmts.push("og");
+  return fmts;
 }
 
 // --- State ---
@@ -74,7 +81,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         const existingIds = getLayout(state.config, state.activeFormat).objects.map((o) => o.id);
         const newId = uniqueSlug(newName, existingIds, action.objectId);
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
-        for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
+        for (const fmt of allFormats(state.config)) {
           newConfig.formats[fmt] = {
             objects: getLayout(newConfig, fmt).objects.map((obj) =>
               obj.id === action.objectId ? { ...obj, name: newName, id: newId } : obj
@@ -87,7 +94,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       if (action.allFormats) {
         // Style properties apply to all formats
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
-        for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
+        for (const fmt of allFormats(state.config)) {
           newConfig.formats[fmt] = {
             objects: getLayout(newConfig, fmt).objects.map((obj) =>
               obj.id === action.objectId ? { ...obj, [action.property]: action.value } : obj
@@ -110,7 +117,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       newObj.zIndex = maxZ + 1;
 
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
-      for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
+      for (const fmt of allFormats(state.config)) {
         const fmtDims = FORMAT_DIMENSIONS[fmt];
         const fmtObj = { ...newObj };
         // Scale position proportionally to each format
@@ -127,7 +134,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case "REMOVE_OBJECT": {
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
-      for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
+      for (const fmt of allFormats(state.config)) {
         newConfig.formats[fmt] = {
           objects: getLayout(newConfig, fmt).objects.filter((o) => o.id !== action.objectId),
         };
@@ -143,7 +150,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
     case "REORDER_OBJECTS": {
       // zIndex is cross-format — reorder in all formats
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
-      for (const fmt of ["landscape", "square", "portrait"] as FormatKey[]) {
+      for (const fmt of allFormats(state.config)) {
         newConfig.formats[fmt] = {
           objects: getLayout(newConfig, fmt).objects.map((obj) => {
             const idx = action.objectIds.indexOf(obj.id);
@@ -154,8 +161,20 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       return { ...state, config: newConfig, isDirty: true };
     }
 
-    case "SWITCH_FORMAT":
+    case "SWITCH_FORMAT": {
+      if (action.format === "og" && !state.config.formats.og) {
+        const ogObjects = state.config.formats.landscape.objects.map((obj) => {
+          const scale = 630 / 675;
+          return { ...obj, y: Math.round(obj.y * scale), height: Math.round(obj.height * scale) };
+        });
+        const newConfig = {
+          ...state.config,
+          formats: { ...state.config.formats, og: { objects: ogObjects } },
+        };
+        return { ...state, config: newConfig, activeFormat: action.format, selectedObjectId: null, isDirty: true };
+      }
       return { ...state, activeFormat: action.format, selectedObjectId: null };
+    }
 
     case "SET_COLORS":
       return {
