@@ -6,7 +6,7 @@ export const API_REFERENCE: ApiSection[] = [
     title: "Introduction",
     anchor: "introduction",
     description:
-      "brag.fast is an API that auto-generates branded social media images for your product updates. Set up a brand kit, POST your content, and get back images in landscape, square, and portrait — ready to serve. One API call, a full plate of content.",
+      "brag.fast is an API that auto-generates branded social media images for your product updates. Set up a brand kit, POST your content, and get back images in landscape, square, portrait, and OG — ready to serve. One API call, a full plate of content.",
     endpoints: [],
   },
 
@@ -248,7 +248,7 @@ while True:
                 type: "string",
                 required: true,
                 description:
-                  'Format name: "landscape" (1200×675), "square" (1080×1080), or "portrait" (1080×1920).',
+                  'Format name: "landscape" (1200×675), "square" (1080×1080), "portrait" (1080×1920), or "og" (1200×630).',
               },
               {
                 name: "slides",
@@ -1424,7 +1424,7 @@ data = response.json()`,
             type: "string",
             required: false,
             description:
-              'The format to preview: "landscape", "square", or "portrait". Defaults to "landscape".',
+              'The format to preview: "landscape", "square", "portrait", or "og". Defaults to "landscape".',
           },
         ],
         requestExample: {
@@ -1483,7 +1483,7 @@ with open("preview.jpg", "wb") as f:
         },
         responseStatus: 200,
         responseExample: `// Returns a JPEG image (Content-Type: image/jpeg)
-// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1350)`,
+// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1920), og (1200x630)`,
       },
     ],
   },
