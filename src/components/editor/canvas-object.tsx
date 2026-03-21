@@ -37,7 +37,7 @@ function useAutoFitFontSize(
 
     const applyStyle = (size: number) => {
       el.style.fontSize = `${size}px`;
-      el.style.fontFamily = `${deps.fontFamily}, sans-serif`;
+      el.style.fontFamily = `"${deps.fontFamily}", sans-serif`;
       el.style.fontWeight = String(deps.fontWeight);
       el.style.lineHeight = String(deps.lineHeight);
       el.style.letterSpacing = `${deps.letterSpacing}px`;
@@ -316,7 +316,7 @@ function renderObjectPreview(
   onBlur: () => void,
 ) {
   const textStyle: React.CSSProperties = {
-    fontFamily: `${obj.fontFamily || "Plus Jakarta Sans"}, sans-serif`,
+    fontFamily: `"${obj.fontFamily || "Plus Jakarta Sans"}", sans-serif`,
     fontSize: obj.fontSize || 24,
     fontWeight: obj.fontWeight || 400,
     letterSpacing: obj.letterSpacing || 0,
