@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { CommonProperties } from "./common-properties";
 import { TextProperties } from "./text-properties";
 import { ImageProperties } from "./image-properties";
+import { AnimationProperties } from "./animation-properties";
 
 export function EditorRightSidebar() {
   const { selectedObject } = useEditor();
@@ -23,6 +24,8 @@ export function EditorRightSidebar() {
               <Separator />
               <TextProperties />
               <ImageProperties />
+              <Separator />
+              <AnimationProperties />
             </div>
           )}
         </div>
