@@ -152,7 +152,7 @@ export async function POST(request: Request) {
   }));
 
   // Reserve credits
-  const creditsNeeded = calculateCredits({ output: "image", formats });
+  const creditsNeeded = calculateCredits({ formats });
 
   let remaining: number;
   try {
