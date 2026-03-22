@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const create = mutation({
@@ -9,7 +9,7 @@ export const create = mutation({
     credits_used: v.number(),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
-    source: v.optional(v.union(v.literal("api"), v.literal("github"))),
+    source: v.optional(v.union(v.literal("api"), v.literal("github"), v.literal("demo"))),
     sourceMetadata: v.optional(v.string()),
     output: v.optional(v.union(v.literal("image"), v.literal("video"))),
     status: v.optional(v.union(
@@ -53,6 +53,7 @@ export const markCompleted = mutation({
   args: {
     externalId: v.string(),
     images: v.optional(v.any()),
+    previewImages: v.optional(v.any()),
     videos: v.optional(v.any()),
     socialCopy: v.optional(v.string()),
   },
@@ -67,6 +68,7 @@ export const markCompleted = mutation({
       completed_at: new Date().toISOString(),
     };
     if (args.images) patch.images = args.images;
+    if (args.previewImages) patch.previewImages = args.previewImages;
     if (args.videos) patch.videos = args.videos;
     if (args.socialCopy) patch.socialCopy = args.socialCopy;
     await ctx.db.patch(r._id, patch);
@@ -155,6 +157,24 @@ export const updateSocialCopy = mutation({
   },
 });
 
+export const claimDemo = mutation({
+  args: {
+    externalId: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, { externalId, userId }) => {
+    const r = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!r) return null;
+    if (r.source !== "demo") return null;
+    if (r.userId !== "demo_anonymous") return null; // already claimed
+    await ctx.db.patch(r._id, { userId });
+    return r.externalId;
+  },
+});
+
 export const listPendingByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -164,5 +184,24 @@ export const listPendingByUser = query({
       .order("desc")
       .collect();
     return all.filter((r) => r.status === "pending_review");
+  },
+});
+
+/** Delete unclaimed demo releases older than 24h (called by cron). */
+export const cleanupDemoReleases = internalMutation({
+  handler: async (ctx) => {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const demoReleases = await ctx.db
+      .query("releases")
+      .withIndex("by_userId", (q) => q.eq("userId", "demo_anonymous"))
+      .collect();
+    let deleted = 0;
+    for (const r of demoReleases) {
+      if (r.created_at < cutoff) {
+        await ctx.db.delete(r._id);
+        deleted++;
+      }
+    }
+    return { deleted };
   },
 });

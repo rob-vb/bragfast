@@ -6,6 +6,7 @@ import { authenticate } from "@/lib/auth/authenticate";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { analyzeRelease } from "@/lib/github/analyze-release";
+import { fetchGitHubRelease } from "@/lib/github/fetch-release";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { calculateCredits, type FormatEntry, type ReleaseRequest } from "@/lib/types";
 import { getDefaultConfig } from "@/lib/templates/default-configs";
@@ -24,32 +25,6 @@ interface GuidedCookBody {
   logo_url?: string;
   name?: string;
   formats?: string[];
-}
-
-async function fetchGitHubRelease(owner: string, repo: string, tag: string) {
-  const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(tag)}`,
-    {
-      headers: {
-        Accept: "application/vnd.github+json",
-        "User-Agent": "bragfast",
-        ...(process.env.GITHUB_TOKEN
-          ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-          : {}),
-      },
-    }
-  );
-
-  if (res.status === 404) return null;
-  if (res.status === 403) return null;
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  return {
-    name: (data.name as string) || tag,
-    tag_name: data.tag_name as string,
-    body: (data.body as string) || "",
-  };
 }
 
 export async function POST(request: Request) {

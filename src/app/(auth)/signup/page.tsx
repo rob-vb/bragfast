@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const demoCookId = searchParams.get("demo_cook_id") || "";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +18,11 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Build callback URL with demo_cook_id if present
+  const callbackURL = demoCookId
+    ? `/dashboard?demo_cook_id=${demoCookId}`
+    : "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +44,7 @@ export default function SignupPage() {
       name,
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL,
     });
 
     setLoading(false);
@@ -47,7 +54,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push(callbackURL);
   }
 
   return (
@@ -161,5 +168,13 @@ export default function SignupPage() {
         </Link>
       </p>
     </>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }

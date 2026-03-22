@@ -12,6 +12,8 @@ import type * as account from "../account.js";
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
 import type * as brands from "../brands.js";
+import type * as crons from "../crons.js";
+import type * as demoRateLimits from "../demoRateLimits.js";
 import type * as githubInstallations from "../githubInstallations.js";
 import type * as githubRepoConfigs from "../githubRepoConfigs.js";
 import type * as githubSkippedReleases from "../githubSkippedReleases.js";
@@ -35,6 +37,8 @@ declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
   auth: typeof auth;
   brands: typeof brands;
+  crons: typeof crons;
+  demoRateLimits: typeof demoRateLimits;
   githubInstallations: typeof githubInstallations;
   githubRepoConfigs: typeof githubRepoConfigs;
   githubSkippedReleases: typeof githubSkippedReleases;

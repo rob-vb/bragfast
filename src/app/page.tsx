@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
+import { DemoCook } from "@/components/landing/demo-cook";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { PAID_PLANS } from "@/lib/plans";
@@ -19,31 +20,27 @@ export default function Home() {
     <div className="min-h-screen bg-surface text-brand">
       <LandingNav />
 
-      {/* S1: Hero — Split layout */}
+      {/* S1: Hero — Try it now */}
       <section className="pt-16 pb-20 md:pt-24 md:pb-28 bg-white border-b-2 border-brand">
-        <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          {/* Left: text */}
-          <div>
+        <div className="mx-auto max-w-5xl px-4 md:px-8">
+          <div className="text-center mb-10">
             <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6">
               Show what you&apos;ve been cooking
             </h1>
-            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast auto-generates (branded) images. Landscape, square, and portrait, so you can post them to your socials immediately.
-              Feed your audience.
-            </p>
-            <Link
-              href="/signup"
-              className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Get 10 Free Credits
-            </Link>
-            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-3">
-              No credit card required
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-2xl mx-auto leading-relaxed">
+              Paste a GitHub release URL. Get branded social images in seconds. No account needed to try.
             </p>
           </div>
 
-          {/* Right: animated API demo */}
-          <HeroAnimation />
+          {/* Demo cook input */}
+          <div className="max-w-2xl mx-auto mb-12">
+            <DemoCook />
+          </div>
+
+          {/* Animated API demo below */}
+          <div className="max-w-xl mx-auto">
+            <HeroAnimation />
+          </div>
         </div>
       </section>
 

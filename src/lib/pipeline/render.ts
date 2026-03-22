@@ -21,7 +21,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 export async function createRelease(
   request: ReleaseRequest,
   userId: string,
-  sourceInfo?: { source: "api" | "github"; sourceMetadata?: string }
+  sourceInfo?: { source: "api" | "github" | "demo"; sourceMetadata?: string }
 ): Promise<ReleaseResult> {
   const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
   const creditsUsed = calculateCredits({ output: "image", formats: request.formats });
@@ -131,7 +131,9 @@ export async function renderReleaseAsync(
 
     const brand = await resolveBrand(request, templateConfig.colors);
 
+    const isDemo = userId === "demo_anonymous";
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
+    const previewImages: Record<string, { slides: string[]; dimensions: string }> = {};
 
     // Collect all static image src URLs across all formats (fetch once)
     const staticSrcs = new Set<string>();
@@ -154,6 +156,7 @@ export async function renderReleaseAsync(
       const format = formatEntry.name;
       const { width, height } = FORMAT_DIMENSIONS[format];
       const slideUrls: string[] = [];
+      const previewUrls: string[] = [];
 
       // Build slideDataMaps for THIS format's slides
       const slideDataMaps: ObjectDataMap[] = await Promise.all(
@@ -232,17 +235,46 @@ export async function renderReleaseAsync(
           url = await uploadImage(jpg, `releases/${releaseId}/${filename}`);
         }
         slideUrls.push(url);
+
+        // Generate low-res preview for demo cooks
+        if (isDemo) {
+          const previewWidth = 400;
+          const previewHeight = Math.round((height / width) * previewWidth);
+          const preview = await sharp(jpg)
+            .resize(previewWidth, previewHeight)
+            .jpeg({ quality: 40 })
+            .toBuffer();
+          const previewFilename = `preview-${format}-${i + 1}.jpg`;
+          let previewUrl: string;
+          if (OUTPUT_LOCAL) {
+            const dir = path.join(process.cwd(), ".output", releaseId);
+            await mkdir(dir, { recursive: true });
+            const filePath = path.join(dir, previewFilename);
+            await writeFile(filePath, preview);
+            previewUrl = `file://${filePath}`;
+          } else {
+            previewUrl = await uploadImage(preview, `releases/${releaseId}/${previewFilename}`);
+          }
+          previewUrls.push(previewUrl);
+        }
       }
 
       images[format] = {
         slides: slideUrls,
         dimensions: `${width}x${height}`,
       };
+      if (isDemo) {
+        previewImages[format] = {
+          slides: previewUrls,
+          dimensions: `${width}x${height}`,
+        };
+      }
     }
 
     await convex.mutation(api.releases.markCompleted, {
       externalId: releaseId,
       images,
+      ...(isDemo ? { previewImages } : {}),
     });
 
     // Credits already reserved by the route handler — no deduction needed here
@@ -255,12 +287,14 @@ export async function renderReleaseAsync(
     const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
     console.error(`Render failed for ${releaseId}: ${errMsg}`);
 
-    // Refund reserved credits on render failure
-    const amount = calculateCredits({ output: "image", formats: request.formats });
-    try {
-      await convex.mutation(api.userProfiles.refund, { userId, amount });
-    } catch (refundErr) {
-      console.error(`Failed to refund credits:`, refundErr);
+    // Refund reserved credits on render failure (skip for demo cooks)
+    if (userId !== "demo_anonymous") {
+      const amount = calculateCredits({ output: "image", formats: request.formats });
+      try {
+        await convex.mutation(api.userProfiles.refund, { userId, amount });
+      } catch (refundErr) {
+        console.error(`Failed to refund credits:`, refundErr);
+      }
     }
 
     try {

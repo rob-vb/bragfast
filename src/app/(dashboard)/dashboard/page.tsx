@@ -2,11 +2,12 @@ import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelTable } from "@/components/dashboard/pixel-table";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
 import { PendingReviews } from "@/components/dashboard/pending-reviews";
-import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
+import { FirstCookWizard } from "@/components/dashboard/first-cook-wizard";
 
 import { PLANS } from "@/lib/plans";
 import Link from "next/link";
@@ -57,12 +58,32 @@ function CreditMeter({
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo_cook_id?: string }>;
+}) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
   // Ensure trial profile exists (grants 10 credits on first visit)
   await fetchMutation(api.userProfiles.create, { userId: user._id, email: user.email });
+
+  // Claim demo cook if arriving from homepage demo flow
+  const params = await searchParams;
+  let demoCookId = params.demo_cook_id || "";
+  if (!demoCookId) {
+    const cookieStore = await cookies();
+    demoCookId = cookieStore.get("demo_cook_id")?.value || "";
+  }
+  let demoClaimed = false;
+  if (demoCookId) {
+    const claimed = await fetchMutation(api.releases.claimDemo, {
+      externalId: demoCookId,
+      userId: user._id,
+    });
+    demoClaimed = !!claimed;
+  }
 
   const [stats, releases, pendingReleases, brands] = await Promise.all([
     fetchQuery(api.userProfiles.getStats, { userId: user._id }),
@@ -118,13 +139,24 @@ export default async function DashboardPage() {
         <h2 className="mb-4 font-[family-name:var(--font-press-start)] text-sm text-brand">
           Recent Releases
         </h2>
-        {recent.length === 0 ? (
-          <PixelEmptyState
-            title="Time to cook!"
-            description="Generate your first branded images via the API or connect GitHub."
-            cta={{ label: "Read the Docs", href: "/docs" }}
-            secondaryCta={{ label: "Connect GitHub", href: "/dashboard/account" }}
-          />
+        {demoClaimed && demoCookId ? (
+          <div className="border-2 border-gold bg-gold/10 p-5 shadow-[4px_4px_0_var(--color-brand)] mb-6">
+            <p className="font-[family-name:var(--font-press-start)] text-xs text-brand mb-2">
+              Your images are ready!
+            </p>
+            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 mb-3">
+              The images you generated on the homepage are now in your account.
+            </p>
+            <Link
+              href={`/dashboard/history?id=${demoCookId}`}
+              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              View &amp; Download
+            </Link>
+          </div>
+        ) : null}
+        {recent.length === 0 && !demoClaimed ? (
+          <FirstCookWizard />
         ) : (
           <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
             {recent.map((r) => (

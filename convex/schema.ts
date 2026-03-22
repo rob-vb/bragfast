@@ -64,6 +64,12 @@ export default defineSchema({
     requestCount: v.number(),
   }).index("by_userId", ["userId"]),
 
+  demoRateLimits: defineTable({
+    ip: v.string(),
+    windowStart: v.number(),
+    requestCount: v.number(),
+  }).index("by_ip", ["ip"]),
+
   releases: defineTable({
     userId: v.string(),
     externalId: v.string(),
@@ -82,9 +88,10 @@ export default defineSchema({
     transparent: v.optional(v.boolean()),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
-    source: v.optional(v.union(v.literal("api"), v.literal("github"))),
+    source: v.optional(v.union(v.literal("api"), v.literal("github"), v.literal("demo"))),
     sourceMetadata: v.optional(v.string()),
     aiContent: v.optional(v.string()),
+    previewImages: v.optional(v.any()), // low-res previews for demo cooks
     socialCopy: v.optional(v.string()), // JSON string: { twitter: string, linkedin: string }
     pendingConfig: v.optional(v.string()),
     created_at: v.string(),
