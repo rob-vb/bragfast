@@ -5,14 +5,12 @@ import path from "path";
 import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { CanvasRenderer, type ObjectDataMap } from "../templates/canvas-renderer";
-import { migrateConfig } from "../templates/canvas-types";
-import { getDefaultConfig } from "../templates/default-configs";
-import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
+import { CanvasRenderer } from "../templates/canvas-renderer";
+import type { FormatKey } from "../templates/canvas-types";
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
-import { fetchImageAsBase64 } from "../images";
 import { uploadImage } from "../storage/r2";
-import { ReleaseRequest, ReleaseResult, Brand, BrandColors, FORMAT_DIMENSIONS, calculateCredits } from "../types";
+import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
+import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
@@ -24,7 +22,7 @@ export async function createRelease(
   sourceInfo?: { source: "api" | "github"; sourceMetadata?: string }
 ): Promise<ReleaseResult> {
   const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
-  const creditsUsed = calculateCredits({ output: "image", formats: request.formats });
+  const creditsUsed = calculateCredits({ formats: request.formats });
 
   await convex.mutation(api.releases.create, {
     userId,
@@ -73,36 +71,6 @@ export async function getRelease(
   };
 }
 
-async function resolveBrand(request: ReleaseRequest, fallbackColors: BrandColors): Promise<Brand> {
-  if (request.brand_id) {
-    const record = await convex.query(api.brands.getByExternalId, {
-      externalId: request.brand_id,
-    });
-    if (record) {
-      return {
-        name: record.name,
-        logoBase64: record.logo_url
-          ? await fetchImageAsBase64(record.logo_url)
-          : "",
-        website: record.website ?? "",
-        colors: record.colors,
-        font_family: record.font_family,
-      };
-    }
-  }
-
-  // Inline brand from request — falls back to template's manual colors if none provided
-  return {
-    name: request.name ?? "",
-    logoBase64: request.logo_url
-      ? await fetchImageAsBase64(request.logo_url)
-      : "",
-    website: "",
-    colors: request.colors ?? fallbackColors,
-    font_family: request.font_family,
-  };
-}
-
 export async function renderReleaseAsync(
   releaseId: string,
   request: ReleaseRequest,
@@ -111,44 +79,14 @@ export async function renderReleaseAsync(
   try {
     const templateName = request.template || "standard-browser";
 
-    // Resolve template config (v2 CanvasTemplateConfig)
-    let templateConfig: CanvasTemplateConfig;
-    const defaultConfig = getDefaultConfig(templateName);
-    if (defaultConfig) {
-      templateConfig = defaultConfig;
-    } else if (templateName.startsWith("tmpl_")) {
-      const tmpl = await convex.query(api.templates.getByExternalId, { externalId: templateName });
-      if (!tmpl) throw new Error(`Template not found: ${templateName}`);
-      if (!tmpl.isDefault && tmpl.userId !== userId) {
-        throw new Error(`Template not found: ${templateName}`);
-      }
-      templateConfig = tmpl.config as CanvasTemplateConfig;
-    } else {
-      throw new Error(`Invalid template: ${templateName}`);
-    }
+    const templateConfig = await resolveTemplate(templateName, userId, convex);
 
-    templateConfig = migrateConfig(templateConfig);
-
-    const brand = await resolveBrand(request, templateConfig.colors);
+    const brand = await resolveBrand(request, templateConfig.colors, convex);
 
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
     // Collect all static image src URLs across all formats (fetch once)
-    const staticSrcs = new Set<string>();
-    for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
-      const fLayout = templateConfig.formats[fKey];
-      if (!fLayout) continue;
-      for (const obj of fLayout.objects) {
-        if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
-      }
-    }
-    const srcMap: Record<string, string> = {};
-    if (staticSrcs.size > 0) {
-      const srcEntries = await Promise.all(
-        [...staticSrcs].map(async (src) => [src, await fetchImageAsBase64(src)] as const)
-      );
-      Object.assign(srcMap, Object.fromEntries(srcEntries));
-    }
+    const srcMap = await prefetchStaticImages(templateConfig);
 
     for (const formatEntry of request.formats) {
       const format = formatEntry.name;
@@ -156,39 +94,11 @@ export async function renderReleaseAsync(
       const slideUrls: string[] = [];
 
       // Build slideDataMaps for THIS format's slides
-      const slideDataMaps: ObjectDataMap[] = await Promise.all(
-        formatEntry.slides.map(async (s) => {
-          if (s.objects) {
-            const dataMap: ObjectDataMap = {};
-            for (const mod of s.objects) {
-              const entry: ObjectDataMap[string] = {};
-              if (mod.text) entry.text = mod.text;
-              if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
-              if (mod.font_family) entry.fontFamily = mod.font_family;
-              if (mod.color) entry.color = mod.color;
-              if (mod.image_frame) entry.imageFrame = mod.image_frame;
-              if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
-              if (mod.anchor_x) entry.anchorX = mod.anchor_x;
-              if (mod.anchor_y) entry.anchorY = mod.anchor_y;
-              dataMap[mod.id] = entry;
-            }
-            return dataMap;
-          }
-          return {};
-        })
-      );
+      const slideDataMaps = await buildSlideDataMaps(formatEntry.slides);
 
       // Inject static images for this format
       const formatLayout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
-      for (const obj of formatLayout.objects) {
-        if (obj.type === "image" && obj.src && srcMap[obj.src]) {
-          for (const dataMap of slideDataMaps) {
-            if (!dataMap[obj.id]?.imageBase64) {
-              dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };
-            }
-          }
-        }
-      }
+      injectStaticImages(slideDataMaps, formatLayout, srcMap);
 
       // Font loading
       let fonts = await loadFontsForObjects(formatLayout.objects);
@@ -256,7 +166,7 @@ export async function renderReleaseAsync(
     console.error(`Render failed for ${releaseId}: ${errMsg}`);
 
     // Refund reserved credits on render failure
-    const amount = calculateCredits({ output: "image", formats: request.formats });
+    const amount = calculateCredits({ formats: request.formats });
     try {
       await convex.mutation(api.userProfiles.refund, { userId, amount });
     } catch (refundErr) {

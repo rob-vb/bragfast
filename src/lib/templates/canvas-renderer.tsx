@@ -16,6 +16,7 @@ export interface ObjectDataMap {
     imageFrameColor?: string;
     anchorX?: string;
     anchorY?: string;
+    entrance?: string;
   };
 }
 
@@ -64,7 +65,7 @@ export function CanvasRenderer({ config, format, objectData, brand }: CanvasRend
  *  textFit=true: scale up or down to fill the height (binary search for largest fitting size)
  *  textFit=false: only shrink from baseFontSize if text overflows
  */
-function autoFitFontSize(
+export function autoFitFontSize(
   text: string,
   baseFontSize: number,
   containerWidth: number,
@@ -117,7 +118,7 @@ function autoFitFontSize(
   return MIN_SIZE;
 }
 
-function renderObject(
+export function renderObject(
   obj: TemplateObject,
   objectData: ObjectDataMap,
   brand: Brand,
