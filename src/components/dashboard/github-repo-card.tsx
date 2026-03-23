@@ -30,6 +30,8 @@ type RepoConfig = {
   webhookUrl?: string;
   autoApprove?: boolean;
   maxSlides?: number;
+  generateImages?: boolean;
+  generateVideo?: boolean;
 };
 
 type Props = {
@@ -53,6 +55,8 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
   const [webhookUrl, setWebhookUrl] = useState(config?.webhookUrl ?? "");
   const [autoApprove, setAutoApprove] = useState(config?.autoApprove ?? false);
   const [maxSlides, setMaxSlides] = useState(config?.maxSlides ?? 1);
+  const [generateImages, setGenerateImages] = useState(config?.generateImages ?? true);
+  const [generateVideo, setGenerateVideo] = useState(config?.generateVideo ?? false);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(!!config?.enabled);
 
@@ -80,6 +84,8 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
           webhookUrl: webhookUrl || undefined,
           autoApprove,
           maxSlides,
+          generateImages,
+          generateVideo,
         }),
       });
       if (!res.ok) console.error("Save failed:", await res.text());
@@ -148,6 +154,28 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
           </div>
 
           <div className="space-y-1">
+            <Label className="text-xs text-brand/60">Output</Label>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id={`gen-images-${repo.full_name}`}
+                  checked={generateImages}
+                  onCheckedChange={(v) => setGenerateImages(!!v)}
+                />
+                <Label htmlFor={`gen-images-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Generate images</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id={`gen-video-${repo.full_name}`}
+                  checked={generateVideo}
+                  onCheckedChange={(v) => setGenerateVideo(!!v)}
+                />
+                <Label htmlFor={`gen-video-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Generate video</Label>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1">
             <Label className="text-xs text-brand/60">Formats</Label>
             <div className="flex gap-3">
               {FORMAT_OPTIONS.map((f) => (
@@ -205,7 +233,7 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
             />
           </div>
 
-          <PixelButton onClick={handleSave} disabled={saving || formats.length === 0}>
+          <PixelButton onClick={handleSave} disabled={saving || formats.length === 0 || (!generateImages && !generateVideo)}>
             {saving ? "Saving..." : "Save"}
           </PixelButton>
         </div>

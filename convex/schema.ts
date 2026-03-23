@@ -137,6 +137,8 @@ export default defineSchema({
     webhookUrl: v.optional(v.string()),
     autoApprove: v.optional(v.boolean()),
     maxSlides: v.optional(v.number()),
+    generateImages: v.optional(v.boolean()),
+    generateVideo: v.optional(v.boolean()),
     created_at: v.string(),
     updated_at: v.string(),
   })

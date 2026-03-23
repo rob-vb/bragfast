@@ -241,60 +241,138 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
     releaseRequest.webhook_url = repoConfig.webhookUrl;
   }
 
+  const generateImages = repoConfig?.generateImages ?? true;
+  const generateVideo = repoConfig?.generateVideo ?? false;
+  const cookIds: { cook_id: string; output: "image" | "video"; mode: string }[] = [];
+
   if (autoApprove) {
-    // 11a. Auto-approve: reserve credits, create release, render
-    const creditsNeeded = calculateCredits({ formats: releaseRequest.formats });
-    try {
-      await convex.mutation(api.userProfiles.reserve, {
-        userId,
-        amount: creditsNeeded,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("Insufficient credits")) {
-        await convex.mutation(api.githubSkippedReleases.log, {
-          userId,
-          repoFullName,
-          releaseTag,
-          releaseName: payload.release.name ?? undefined,
-          reason: "insufficient_credits",
-        });
-        return Response.json({ ok: true, skipped: "insufficient_credits" });
+    // 11a. Auto-approve: reserve credits, create release(s), render
+
+    // ── Image release ──
+    if (generateImages) {
+      const creditsNeeded = calculateCredits({ formats: releaseRequest.formats });
+      try {
+        await convex.mutation(api.userProfiles.reserve, { userId, amount: creditsNeeded });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("Insufficient credits")) {
+          await convex.mutation(api.githubSkippedReleases.log, {
+            userId, repoFullName, releaseTag,
+            releaseName: payload.release.name ?? undefined,
+            reason: "insufficient_credits",
+          });
+          return Response.json({ ok: true, skipped: "insufficient_credits" });
+        }
+        throw err;
       }
-      throw err;
+
+      const result = await createRelease(releaseRequest, userId, {
+        source: "github",
+        sourceMetadata,
+      });
+      after(() => renderReleaseAsync(result.cook_id, releaseRequest, userId));
+      cookIds.push({ cook_id: result.cook_id, output: "image", mode: "auto" });
     }
 
-    const result = await createRelease(releaseRequest, userId, {
-      source: "github",
-      sourceMetadata,
-    });
+    // ── Video release ──
+    if (generateVideo) {
+      const videoCredits = calculateCredits({ video: true, formats: releaseRequest.formats });
+      let videoReserved = false;
+      try {
+        await convex.mutation(api.userProfiles.reserve, { userId, amount: videoCredits });
+        videoReserved = true;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("Insufficient credits")) {
+          await convex.mutation(api.githubSkippedReleases.log, {
+            userId, repoFullName, releaseTag,
+            releaseName: payload.release.name ?? undefined,
+            reason: "insufficient_credits",
+          });
+          // If images were already queued, skip video but return image results
+          if (cookIds.length === 0) {
+            return Response.json({ ok: true, skipped: "insufficient_credits" });
+          }
+        } else {
+          throw err;
+        }
+      }
 
-    after(() => renderReleaseAsync(result.cook_id, releaseRequest, userId));
-    return Response.json({ ok: true, cook_id: result.cook_id, mode: "auto" });
+      if (videoReserved) {
+        const videoCookId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+        const videoSourceMetadata = sourceMetadata + ":video";
+
+        await convex.mutation(api.releases.create, {
+          userId,
+          externalId: videoCookId,
+          template: releaseRequest.template || "standard-browser",
+          credits_used: videoCredits,
+          output: "video",
+          source: "github",
+          sourceMetadata: videoSourceMetadata,
+          webhook_url: releaseRequest.webhook_url,
+        });
+
+        await convex.mutation(api.releases.scheduleVideoRender, {
+          cookId: videoCookId,
+          userId,
+          request: JSON.stringify({
+            ...releaseRequest,
+            video: true,
+          }),
+        });
+        cookIds.push({ cook_id: videoCookId, output: "video", mode: "auto" });
+      }
+    }
+
+    return Response.json({ ok: true, releases: cookIds, mode: "auto" });
   } else {
     // 11b. Manual approval: store as pending_review, no credits reserved yet
-    const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
 
     // Snapshot render config at webhook time to prevent config drift
-    const pendingConfig = JSON.stringify({
+    const basePendingConfig = {
       template: repoConfig?.template ?? "standard-browser",
       formats: repoConfig?.formats ?? ["landscape"],
       brandId: repoConfig?.brandId,
       webhookUrl: repoConfig?.webhookUrl,
-    });
+    };
 
-    await convex.mutation(api.releases.create, {
-      userId,
-      externalId: releaseId,
-      template: releaseRequest.template || "standard-browser",
-      credits_used: 0, // updated to actual amount on approval
-      source: "github",
-      sourceMetadata,
-      status: "pending_review",
-      aiContent: aiContentJson,
-      pendingConfig,
-    });
+    // ── Image pending_review ──
+    if (generateImages) {
+      const imageReleaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+      await convex.mutation(api.releases.create, {
+        userId,
+        externalId: imageReleaseId,
+        template: releaseRequest.template || "standard-browser",
+        credits_used: 0,
+        source: "github",
+        sourceMetadata,
+        status: "pending_review",
+        aiContent: aiContentJson,
+        pendingConfig: JSON.stringify({ ...basePendingConfig, output: "image" }),
+      });
+      cookIds.push({ cook_id: imageReleaseId, output: "image", mode: "pending_review" });
+    }
 
-    return Response.json({ ok: true, cook_id: releaseId, mode: "pending_review" });
+    // ── Video pending_review ──
+    if (generateVideo) {
+      const videoReleaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+      const videoSourceMetadata = sourceMetadata + ":video";
+      await convex.mutation(api.releases.create, {
+        userId,
+        externalId: videoReleaseId,
+        template: releaseRequest.template || "standard-browser",
+        credits_used: 0,
+        source: "github",
+        sourceMetadata: videoSourceMetadata,
+        status: "pending_review",
+        output: "video",
+        aiContent: aiContentJson,
+        pendingConfig: JSON.stringify({ ...basePendingConfig, output: "video" }),
+      });
+      cookIds.push({ cook_id: videoReleaseId, output: "video", mode: "pending_review" });
+    }
+
+    return Response.json({ ok: true, releases: cookIds, mode: "pending_review" });
   }
 }
