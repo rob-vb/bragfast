@@ -27,6 +27,7 @@ export interface BrandRecord {
 }
 
 export type TextAlign = 'left' | 'center' | 'right'
+export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'none'
 
 export interface ObjectModification {
   id: string
@@ -40,6 +41,8 @@ export interface ObjectModification {
   image_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
+  // Video animation
+  entrance?: EntranceType
 }
 
 export interface FormatEntry {
@@ -48,6 +51,8 @@ export interface FormatEntry {
     objects?: ObjectModification[]
   }>
 }
+
+export type VideoField = true | { duration?: number }
 
 export interface ReleaseRequest {
   brand_id?: string
@@ -62,6 +67,7 @@ export interface ReleaseRequest {
   font_family?: string
   template?: TemplateName
   formats: FormatEntry[]
+  video?: VideoField
   metadata?: string
   webhook_url?: string
 }
@@ -90,14 +96,12 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   og: { width: 1200, height: 630 },
 }
 
-export type CookOutput = "image" | "video";
-
 export type CookCreditsInput =
-  | { output?: "image"; formats: FormatEntry[] }
-  | { output: "video"; formats: { name: string; scenes: unknown[] }[] };
+  | { video?: false | undefined; formats: FormatEntry[] }
+  | { video: VideoField; formats: { name: string }[] };
 
 export function calculateCredits(input: CookCreditsInput): number {
-  if (input.output === "video") {
+  if (input.video) {
     return input.formats.length * 5;
   }
   return (input as { formats: FormatEntry[] }).formats.reduce(
@@ -105,3 +109,5 @@ export function calculateCredits(input: CookCreditsInput): number {
     0
   );
 }
+
+export const VALID_ENTRANCE_TYPES: EntranceType[] = ['fade-in', 'slide-up', 'bounce', 'none']

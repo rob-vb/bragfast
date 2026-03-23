@@ -74,7 +74,7 @@ export async function POST(
   };
 
   // 4. Reserve credits
-  const creditsNeeded = calculateCredits({ output: "image", formats });
+  const creditsNeeded = calculateCredits({ formats });
   try {
     await fetchMutation(api.userProfiles.reserve, {
       userId: user._id,

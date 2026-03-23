@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Every image costs 1 credit. Total per cook = sum of slides across all format entries (e.g. 1 landscape slide + 2 square slides = 3 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
+      "Images: 1 credit per slide (e.g. 1 landscape slide + 2 square slides = 3 credits). Videos: 5 credits per format, regardless of slide count or duration. Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
     endpoints: [],
   },
 
@@ -151,31 +151,43 @@ while True:
 }`,
   },
 
-  // ─── Images ────────────────────────────────────────────────────────
+  // ─── Cook ─────────────────────────────────────────────────────────
   {
-    title: "Images",
-    anchor: "images",
+    title: "Cook",
+    anchor: "cook",
     description:
-      "Images are the main course. You send in format entries, each with its own slides containing text and optional screenshots. brag.fast generates branded images for each format using its slides and the chosen template.",
-    sampleObject: `{
+      "One endpoint for images and videos. Send format entries with slides containing text and screenshots — brag.fast generates branded output using the chosen template. Add video: true to get an animated MP4 instead of static images. Same template, same objects, same endpoint.",
+    sampleObject: `// Image cook (default)
+{
   "cook_id": "cook_abc123",
-  "status": "pending",
+  "status": "completed",
+  "images": {
+    "landscape": { "slides": ["https://cdn.brag.fast/..."], "dimensions": "1200x675" }
+  },
+  "videos": null,
+  "credits_used": 2,
+  "credits_remaining": 28
+}
+
+// Video cook (video: true)
+{
+  "cook_id": "cook_def456",
+  "status": "completed",
   "images": null,
-  "credits_used": 3,
-  "credits_remaining": 21,
-  "created_at": "2026-03-09T12:00:00.000Z",
-  "completed_at": null,
-  "metadata": null,
-  "webhook_url": null
+  "videos": {
+    "landscape": { "url": "https://r2.brag.fast/.../landscape.mp4", "dimensions": "1200x675", "duration": 5 }
+  },
+  "credits_used": 5,
+  "credits_remaining": 23
 }`,
     endpoints: [
       {
         method: "POST",
         path: "/api/v1/cook",
-        anchor: "cook-images",
-        title: "Cook images",
+        anchor: "create-cook",
+        title: "Create a cook",
         description:
-          "Queues image generation and returns 202 immediately — your images are cooking in the background. Poll the GET endpoint or use a webhook to know when they're served.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
+          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (5 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 5, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, you can set per-object entrance animations via the entrance field: fade-in, slide-up, bounce, or none. Defaults: text → fade-in, image → fade-in, logo → bounce.",
         params: [
           {
             name: "brand_id",
@@ -334,6 +346,14 @@ while True:
                         description:
                           'Vertical anchor point for the image when cropped by object-fit cover. One of "top", "center", "bottom". Defaults to template setting (usually "top").',
                       },
+                      {
+                        name: "entrance",
+                        type: "string",
+                        required: false,
+                        group: "video",
+                        description:
+                          'Entrance animation for this object in video mode. One of "fade-in", "slide-up", "bounce", "none". Defaults: text → fade-in, image → fade-in, logo → bounce. Ignored for image output.',
+                      },
                     ],
                   },
                 ],
@@ -346,6 +366,13 @@ while True:
             required: false,
             description:
               "Anything you want to store with the cook, e.g. a record ID from your database.",
+          },
+          {
+            name: "video",
+            type: "true | { duration: number }",
+            required: false,
+            description:
+              'Set to true to generate a video instead of images. Each format costs 5 credits. Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
           },
           {
             name: "webhook_url",
@@ -362,6 +389,7 @@ while True:
   -d '{
     "brand_id": "brand_abc123",
     "template": "standard-browser",
+    "video": true,
     "formats": [
       {
         "name": "landscape",
@@ -374,21 +402,12 @@ while True:
             ]
           }
         ]
-      },
-      {
-        "name": "square",
-        "slides": [
-          {
-            "objects": [
-              { "id": "title", "text": "Launched dark mode" },
-              { "id": "description", "text": "Your app, your vibe." },
-              { "id": "image", "image_url": "https://example.com/screenshot.png" }
-            ]
-          }
-        ]
       }
     ]
-  }'`,
+  }'
+
+# For images only, omit the "video" field.
+# For custom duration: "video": { "duration": 8 }`,
           javascript: `const response = await fetch("https://brag.fast/api/v1/cook", {
   method: "POST",
   headers: {
@@ -398,6 +417,9 @@ while True:
   body: JSON.stringify({
     brand_id: "brand_abc123",
     template: "standard-browser",
+    // video: true,              — add for video output (5 credits/format)
+    // video: { duration: 8 },   — custom per-slide duration (3-30s)
+    // omit video for images     — default (1 credit/slide)
     formats: [
       {
         name: "landscape",
@@ -411,30 +433,22 @@ while True:
           },
         ],
       },
-      {
-        name: "square",
-        slides: [
-          {
-            objects: [
-              { id: "title", text: "Launched dark mode" },
-              { id: "description", text: "Your app, your vibe." },
-              { id: "image", image_url: "https://example.com/screenshot.png" },
-            ],
-          },
-        ],
-      },
     ],
   }),
-})
-const data = await response.json()`,
+});
+const cook = await response.json();
+// Poll cook.cook_id until status === "completed"`,
           python: `import requests
 
-response = requests.post(
+cook = requests.post(
     "https://brag.fast/api/v1/cook",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
         "template": "standard-browser",
+        # "video": True,             — add for video output (5 credits/format)
+        # "video": {"duration": 8},  — custom per-slide duration (3-30s)
+        # omit video for images      — default (1 credit/slide)
         "formats": [
             {
                 "name": "landscape",
@@ -447,34 +461,29 @@ response = requests.post(
                         ]
                     }
                 ],
-            },
-            {
-                "name": "square",
-                "slides": [
-                    {
-                        "objects": [
-                            {"id": "title", "text": "Launched dark mode"},
-                            {"id": "description", "text": "Your app, your vibe."},
-                            {"id": "image", "image_url": "https://example.com/screenshot.png"},
-                        ]
-                    }
-                ],
-            },
+            }
         ],
     },
-)
-data = response.json()`,
+).json()`,
         },
         responseStatus: 202,
-        responseExample: `{
+        responseExample: `// Image cook (default — no video field)
+{
   "cook_id": "cook_abc123",
   "status": "pending",
   "images": null,
-  "credits_used": 2,
-  "credits_remaining": 28,
-  "created_at": "2026-03-09T12:00:00.000Z",
-  "metadata": null,
-  "webhook_url": null
+  "credits_used": 1,
+  "credits_remaining": 29
+}
+
+// Video cook (video: true)
+{
+  "cook_id": "cook_def456",
+  "output": "video",
+  "status": "pending",
+  "videos": null,
+  "credits_used": 5,
+  "credits_remaining": 95
 }`,
       },
       {
@@ -513,41 +522,37 @@ response = requests.get(
 data = response.json()`,
         },
         responseStatus: 200,
-        responseExample: `{
+        responseExample: `// Image cook — completed
+{
   "cook_id": "cook_abc123",
   "status": "completed",
   "images": {
     "landscape": {
-      "slides": [
-        "https://cdn.brag.fast/cook_abc123/landscape/slide-1.jpg"
-      ],
+      "slides": ["https://cdn.brag.fast/cook_abc123/landscape/slide-1.jpg"],
       "dimensions": "1200x675"
-    },
-    "square": {
-      "slides": [
-        "https://cdn.brag.fast/cook_abc123/square/slide-1.jpg"
-      ],
-      "dimensions": "1080x1080"
     }
   },
-  "credits_used": 2,
-  "credits_remaining": 28,
-  "created_at": "2026-03-09T12:00:00.000Z",
-  "completed_at": "2026-03-09T12:00:05.000Z",
-  "metadata": null,
-  "webhook_url": null
+  "credits_used": 1,
+  "credits_remaining": 29
+}
+
+// Video cook — completed
+{
+  "cook_id": "cook_def456",
+  "output": "video",
+  "status": "completed",
+  "videos": {
+    "landscape": {
+      "url": "https://r2.brag.fast/cook_def456/landscape.mp4",
+      "dimensions": "1200x675",
+      "duration": 5
+    }
+  },
+  "credits_used": 5,
+  "credits_remaining": 95
 }`,
       },
     ],
-  },
-
-  // ─── Videos ────────────────────────────────────────────────────────
-  {
-    title: "Videos",
-    anchor: "videos",
-    description:
-      "Same endpoint, moving pictures. Video support is coming soon — you'll use the same POST /api/v1/cook endpoint with a video-specific template. Stay tuned.",
-    endpoints: [],
   },
 
   // ─── Brands ────────────────────────────────────────────────────────

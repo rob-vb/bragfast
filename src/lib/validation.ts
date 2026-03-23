@@ -1,5 +1,5 @@
-import { FORMAT_DIMENSIONS } from './types'
-import { isDefaultVideoTemplate } from './video/defaults'
+import { FORMAT_DIMENSIONS, VALID_ENTRANCE_TYPES } from './types'
+import type { VideoField } from './types'
 
 const VALID_FORMATS = Object.keys(FORMAT_DIMENSIONS)
 const VALID_ANCHOR_X = ['left', 'center', 'right']
@@ -51,6 +51,9 @@ export function validateFormats(formats: unknown): string | null {
           if (mod.anchor_y && !VALID_ANCHOR_Y.includes(mod.anchor_y)) {
             return 'anchor_y must be "top", "center", or "bottom"'
           }
+          if (mod.entrance && !VALID_ENTRANCE_TYPES.includes(mod.entrance)) {
+            return `entrance must be one of: ${VALID_ENTRANCE_TYPES.join(', ')}`
+          }
         }
       }
     }
@@ -59,34 +62,28 @@ export function validateFormats(formats: unknown): string | null {
   return null
 }
 
-export function validateVideoFormats(
-  formats: { name: string; scenes: unknown[] }[]
-): string | null {
-  if (!Array.isArray(formats) || formats.length === 0) {
-    return "formats must be a non-empty array";
+export function validateVideoField(video: unknown, slideCount: number): string | null {
+  if (video === undefined || video === false) return null
+  if (video === true) {
+    // Default 5s per slide, check total cap
+    if (slideCount * 5 > 60) {
+      return `Total video duration exceeds 60s (${slideCount} slides × 5s = ${slideCount * 5}s)`
+    }
+    return null
   }
-  const validNames = ["landscape", "square", "portrait"];
-  const seen = new Set<string>();
-  for (const format of formats) {
-    if (!validNames.includes(format.name)) {
-      return `Invalid format name: ${format.name}`;
+  if (typeof video === 'object' && video !== null) {
+    const v = video as Record<string, unknown>
+    if (v.duration !== undefined) {
+      if (typeof v.duration !== 'number' || v.duration < 3 || v.duration > 30) {
+        return 'video.duration must be between 3 and 30 seconds'
+      }
+      if (slideCount * v.duration > 60) {
+        return `Total video duration exceeds 60s (${slideCount} slides × ${v.duration}s = ${slideCount * v.duration}s)`
+      }
     }
-    if (seen.has(format.name)) {
-      return `Duplicate format: ${format.name}`;
-    }
-    seen.add(format.name);
-    if (!Array.isArray(format.scenes) || format.scenes.length === 0) {
-      return `${format.name}: scenes must be a non-empty array`;
-    }
+    return null
   }
-  return null;
-}
-
-export function validateVideoTemplate(template: string | undefined): string | null {
-  if (!template) return null;
-  if (isDefaultVideoTemplate(template)) return null;
-  if (template.startsWith("vtmpl_")) return null;
-  return `Invalid video template. Must be a default name (e.g. "product-update") or a template ID (vtmpl_...)`;
+  return 'video must be true or { duration: number }'
 }
 
 export function validateReleaseColors(body: Record<string, unknown>): string | null {
