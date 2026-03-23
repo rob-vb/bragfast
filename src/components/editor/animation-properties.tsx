@@ -2,6 +2,7 @@
 import { useEditor } from "./editor-context";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const DEFAULT_ENTRANCE: Record<string, string> = {
   text: "fade-in",
@@ -15,12 +16,23 @@ export function AnimationProperties() {
   if (!selectedObject) return null;
 
   const entrance = selectedObject.entrance ?? DEFAULT_ENTRANCE[selectedObject.type] ?? "fade-in";
+  const kenBurns = selectedObject.kenBurns ?? false;
 
-  function update(value: string) {
+  function updateEntrance(value: string) {
     dispatch({
       type: "UPDATE_PROPERTY",
       objectId: selectedObject!.id,
       property: "entrance",
+      value,
+      allFormats: true,
+    });
+  }
+
+  function updateKenBurns(value: boolean) {
+    dispatch({
+      type: "UPDATE_PROPERTY",
+      objectId: selectedObject!.id,
+      property: "kenBurns",
       value,
       allFormats: true,
     });
@@ -32,7 +44,7 @@ export function AnimationProperties() {
 
       <div className="space-y-1">
         <Label className="text-xs text-zinc-500">Entrance</Label>
-        <Select value={entrance} onValueChange={update}>
+        <Select value={entrance} onValueChange={updateEntrance}>
           <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
@@ -45,6 +57,16 @@ export function AnimationProperties() {
         </Select>
         <p className="text-[10px] text-zinc-400">Controls how this object enters in video mode</p>
       </div>
+
+      {selectedObject.type === "image" && (
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-xs text-zinc-500">Ken Burns</Label>
+            <p className="text-[10px] text-zinc-400">Slow zoom &amp; pan effect</p>
+          </div>
+          <Switch checked={kenBurns} onCheckedChange={updateKenBurns} />
+        </div>
+      )}
     </div>
   );
 }

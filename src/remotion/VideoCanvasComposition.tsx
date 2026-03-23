@@ -150,8 +150,9 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         const entranceStyle = computeEntranceStyle(entrance, localFrame, fps);
 
         // Compute image-specific effects (Ken Burns + 3D rotation)
+        const kenBurnsEnabled = obj.kenBurns ?? false;
         const imageEffectStyle =
-          obj.type === "image"
+          obj.type === "image" && kenBurnsEnabled
             ? computeImageEffects(frame, slideDurationFrames)
             : {};
 
