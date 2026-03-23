@@ -59,7 +59,7 @@ export const render = internalAction({
       if (defaultConfig) {
         templateConfig = migrateConfig(defaultConfig);
       } else if (templateName.startsWith("tmpl_")) {
-        const tmpl = await ctx.runQuery(internal.videoRender.getTemplate, {
+        const tmpl = await ctx.runQuery(internal.videoRenderHelpers.getTemplate, {
           externalId: templateName,
         });
         if (!tmpl) throw new Error(`Template not found: ${templateName}`);
@@ -74,7 +74,7 @@ export const render = internalAction({
       // Resolve brand (inline — replaces ConvexHttpClient call)
       let brand: Brand;
       if (request.brand_id) {
-        const record = await ctx.runQuery(internal.videoRender.getBrand, {
+        const record = await ctx.runQuery(internal.videoRenderHelpers.getBrand, {
           externalId: request.brand_id,
         });
         if (record) {
@@ -200,7 +200,7 @@ export const render = internalAction({
           `[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`
         );
         await ctx
-          .runMutation(internal.videoRender.refundCredits, {
+          .runMutation(internal.videoRenderHelpers.refundCredits, {
             userId,
             amount: refundAmount,
           })
@@ -209,14 +209,14 @@ export const render = internalAction({
           );
       }
 
-      await ctx.runMutation(internal.videoRender.markReleaseCompleted, {
+      await ctx.runMutation(internal.videoRenderHelpers.markReleaseCompleted, {
         externalId: cookId,
         videos,
       });
 
       // Webhook
       if (request.webhook_url) {
-        const result = await ctx.runQuery(internal.videoRender.getRelease, {
+        const result = await ctx.runQuery(internal.videoRenderHelpers.getRelease, {
           externalId: cookId,
         });
         fetch(request.webhook_url, {
@@ -231,7 +231,7 @@ export const render = internalAction({
       console.error(`Video render failed for ${cookId}:`, error);
 
       try {
-        await ctx.runMutation(internal.videoRender.markReleaseFailed, {
+        await ctx.runMutation(internal.videoRenderHelpers.markReleaseFailed, {
           externalId: cookId,
         });
       } catch (markErr) {
@@ -242,7 +242,7 @@ export const render = internalAction({
       try {
         const refundAmount = (request.formats.length - partialRefundCount) * 5;
         if (refundAmount > 0) {
-          await ctx.runMutation(internal.videoRender.refundCredits, {
+          await ctx.runMutation(internal.videoRenderHelpers.refundCredits, {
             userId,
             amount: refundAmount,
           });
@@ -254,79 +254,3 @@ export const render = internalAction({
   },
 });
 
-// Internal queries/mutations used by the render action
-// These wrap existing public functions to make them callable via ctx.runQuery/runMutation
-
-import { internalQuery, internalMutation } from "./_generated/server";
-
-export const getTemplate = internalQuery({
-  args: { externalId: v.string() },
-  handler: async (ctx, { externalId }) =>
-    ctx.db
-      .query("templates")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first(),
-});
-
-export const getBrand = internalQuery({
-  args: { externalId: v.string() },
-  handler: async (ctx, { externalId }) =>
-    ctx.db
-      .query("brands")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first(),
-});
-
-export const markReleaseCompleted = internalMutation({
-  args: { externalId: v.string(), videos: v.any() },
-  handler: async (ctx, { externalId, videos }) => {
-    const r = await ctx.db
-      .query("releases")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first();
-    if (!r) throw new Error("Release not found");
-    await ctx.db.patch(r._id, {
-      status: "completed",
-      completed_at: new Date().toISOString(),
-      videos,
-    });
-  },
-});
-
-export const markReleaseFailed = internalMutation({
-  args: { externalId: v.string() },
-  handler: async (ctx, { externalId }) => {
-    const r = await ctx.db
-      .query("releases")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first();
-    if (!r) throw new Error("Release not found");
-    await ctx.db.patch(r._id, {
-      status: "failed",
-      completed_at: new Date().toISOString(),
-    });
-  },
-});
-
-export const refundCredits = internalMutation({
-  args: { userId: v.string(), amount: v.number() },
-  handler: async (ctx, { userId, amount }) => {
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .first();
-    if (!profile) throw new Error("User profile not found");
-    await ctx.db.patch(profile._id, {
-      creditsRemaining: profile.creditsRemaining + amount,
-    });
-  },
-});
-
-export const getRelease = internalQuery({
-  args: { externalId: v.string() },
-  handler: async (ctx, { externalId }) =>
-    ctx.db
-      .query("releases")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first(),
-});

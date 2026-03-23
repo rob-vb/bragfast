@@ -22,6 +22,8 @@ import type * as stripe from "../stripe.js";
 import type * as templates from "../templates.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as verifyKey from "../verifyKey.js";
+import type * as videoRender from "../videoRender.js";
+import type * as videoRenderHelpers from "../videoRenderHelpers.js";
 import type * as videoTemplates from "../videoTemplates.js";
 
 import type {
@@ -45,6 +47,8 @@ declare const fullApi: ApiFromModules<{
   templates: typeof templates;
   userProfiles: typeof userProfiles;
   verifyKey: typeof verifyKey;
+  videoRender: typeof videoRender;
+  videoRenderHelpers: typeof videoRenderHelpers;
   videoTemplates: typeof videoTemplates;
 }>;
 
