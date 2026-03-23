@@ -6,13 +6,10 @@ import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats, validateVideoField } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
-import { ReleaseRequest, calculateCredits } from "@/lib/types";
+import { ReleaseRequest, ReleaseResult, calculateCredits } from "@/lib/types";
+import crypto from "crypto";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
-
-// Lazy-loaded to avoid pulling Remotion's heavy native deps into every request
-const loadVideoModules = () =>
-  import("@/lib/pipeline/render-video").then((m) => m);
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
@@ -124,10 +121,18 @@ export async function POST(request: Request) {
   // ── Video branch ──────────────────────────────────────────────
 
   if (isVideo) {
-    const { createVideoRelease, renderVideoAsync } = await loadVideoModules();
-
     try {
-      const { cookId, result } = createVideoRelease(creditsNeeded);
+      const cookId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+      const result: ReleaseResult = {
+        cook_id: cookId,
+        output: "video",
+        status: "pending",
+        images: null,
+        videos: null,
+        credits_used: creditsNeeded,
+        credits_remaining: 0,
+        created_at: new Date().toISOString(),
+      };
 
       await fetchMutation(api.releases.create, {
         userId: auth.userId,
@@ -144,11 +149,11 @@ export async function POST(request: Request) {
       result.metadata = body.metadata;
       result.webhook_url = body.webhook_url;
 
-      after(() => {
-        console.log(`[VIDEO] Starting async render for ${cookId}`);
-        renderVideoAsync(cookId, auth.userId, body)
-          .then(() => console.log(`[VIDEO] Render complete for ${cookId}`))
-          .catch((err) => console.error(`[VIDEO] Render failed for ${cookId}:`, err));
+      // Schedule video render as a Convex action (runs outside Vercel's 60s limit)
+      await fetchMutation(api.releases.scheduleVideoRender, {
+        cookId,
+        userId: auth.userId,
+        request: JSON.stringify(body),
       });
 
       return Response.json(result, { status: 202 });
