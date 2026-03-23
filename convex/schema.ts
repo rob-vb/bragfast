@@ -87,6 +87,7 @@ export default defineSchema({
     aiContent: v.optional(v.string()),
     socialCopy: v.optional(v.string()), // JSON string: { twitter: string, linkedin: string }
     pendingConfig: v.optional(v.string()),
+    previewImages: v.optional(v.any()),
     created_at: v.string(),
     completed_at: v.optional(v.string()),
   })
