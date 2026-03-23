@@ -1,8 +1,8 @@
 import {
   renderMediaOnLambda,
   getRenderProgress,
-} from "@remotion/lambda";
-import type { RenderProgress } from "@remotion/lambda";
+} from "@remotion/lambda-client";
+import type { RenderProgress } from "@remotion/lambda-client";
 
 const REGION = (process.env.REMOTION_AWS_REGION ?? "us-east-1") as "us-east-1";
 const FUNCTION_NAME = process.env.REMOTION_FUNCTION_NAME;
