@@ -101,6 +101,10 @@ export interface TemplateObject {
   borderRadiusBR?: number;
   borderRadiusBL?: number;
 
+  // Video animation
+  entrance?: "fade-in" | "slide-up" | "bounce" | "none";
+  kenBurns?: boolean; // Slow zoom+pan effect for images in video mode
+
   // Editor-only
   previewText?: string;
 }

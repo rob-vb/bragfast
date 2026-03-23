@@ -1,15 +1,22 @@
 import crypto from "crypto";
+import path from "path";
+import { mkdir } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { renderVideo } from "../video/lambda";
-import { getDefaultVideoTemplate } from "../video/defaults";
-import { fetchImageAsBase64 } from "../images";
-import { calculateVideoDuration, VIDEO_DIMENSIONS } from "../video/types";
 import { uploadImage } from "../storage/r2";
-import type { VideoFormatEntry, VideoTemplateConfig } from "../video/types";
-import type { ReleaseResult } from "../types";
+import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
+import type { FormatKey } from "../templates/canvas-types";
+import type { ReleaseResult, FormatEntry, VideoField } from "../types";
+import { calculateCredits } from "../types";
 
+const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+const DEFAULT_SLIDE_DURATION = 5;
+const TRANSITION_DURATION = 0.5;
+const FPS = 30;
 
 type VideoRenderRequest = {
   brand_id?: string;
@@ -18,10 +25,21 @@ type VideoRenderRequest = {
   logo_url?: string;
   font_family?: string;
   template?: string;
-  formats: VideoFormatEntry[];
+  formats: FormatEntry[];
+  video: VideoField;
   webhook_url?: string;
   metadata?: string;
 };
+
+function getSlideDuration(video: VideoField): number {
+  if (video === true) return DEFAULT_SLIDE_DURATION;
+  return video.duration ?? DEFAULT_SLIDE_DURATION;
+}
+
+function calculateVideoDuration(slideCount: number, slideDuration: number): number {
+  if (slideCount <= 1) return slideDuration;
+  return slideDuration * slideCount - (slideCount - 1) * TRANSITION_DURATION;
+}
 
 export function createVideoRelease(
   creditsUsed: number
@@ -47,63 +65,120 @@ export async function renderVideoAsync(
   userId: string,
   request: VideoRenderRequest
 ) {
+  let partialRefundCount = 0; // formats already refunded (for partial failure)
+  let successCount = 0;       // formats that rendered successfully
   try {
-    // 1. Resolve brand
-    const brand = await resolveBrand(request);
+    const templateName = request.template || "standard-browser";
+    const templateConfig = await resolveTemplate(templateName, userId, convex);
+    const brand = await resolveBrand(request, templateConfig.colors, convex);
+    const slideDuration = getSlideDuration(request.video);
+    const srcMap = await prefetchStaticImages(templateConfig);
 
-    // 2. Resolve video template
-    const template = await resolveVideoTemplate(request.template, userId);
+    // Render all formats in parallel
+    const formatResults = await Promise.allSettled(
+      request.formats.map(async (format) => {
+        const formatKey = format.name as FormatKey;
+        const dims = FORMAT_DIMENSIONS[formatKey];
+        if (!dims) throw new Error(`Unknown format: ${format.name}`);
 
-    // 3. Prefetch all images from scenes
-    const imageMap = await prefetchSceneImages(request.formats);
+        // Build ObjectDataMaps for each slide
+        const slideDataMaps = await buildSlideDataMaps(format.slides);
+        const formatLayout = templateConfig.formats[formatKey] ?? templateConfig.formats.landscape;
+        injectStaticImages(slideDataMaps, formatLayout, srcMap);
 
-    // 4. Render each format
+        // Fail if any slide has a missing image that should have been provided
+        for (const dataMap of slideDataMaps) {
+          for (const [objId, data] of Object.entries(dataMap)) {
+            const obj = formatLayout.objects.find(o => o.id === objId);
+            if (obj?.type === "image" && !obj.src && !data.imageBase64) {
+              throw new Error(`Missing image for object "${objId}" in format "${format.name}"`);
+            }
+          }
+        }
+
+        const inputProps = {
+          config: templateConfig,
+          format: formatKey,
+          slides: slideDataMaps,
+          brand: {
+            name: brand.name,
+            logoBase64: brand.logoBase64 ?? "",
+            website: brand.website ?? "",
+            colors: brand.colors,
+            font_family: brand.font_family ?? "Plus Jakarta Sans",
+          },
+          slideDuration,
+        };
+
+        const duration = calculateVideoDuration(slideDataMaps.length, slideDuration);
+        const filename = `${format.name}.mp4`;
+        let url: string;
+
+        if (OUTPUT_LOCAL) {
+          const dir = path.join(process.cwd(), ".output", cookId);
+          await mkdir(dir, { recursive: true });
+          const outputPath = path.join(dir, filename);
+          await renderVideoLocal(formatKey, inputProps, outputPath);
+          url = `file://${outputPath}`;
+        } else {
+          const mp4Url = await renderVideo({
+            compositionId: formatKey,
+            inputProps,
+          });
+          const mp4Response = await fetch(mp4Url);
+          const mp4Buffer = Buffer.from(await mp4Response.arrayBuffer());
+          url = await uploadImage(
+            mp4Buffer,
+            `releases/${cookId}/${filename}`,
+            "video/mp4"
+          );
+        }
+
+        return {
+          name: format.name,
+          data: {
+            url,
+            duration,
+            dimensions: `${dims.width}x${dims.height}`,
+          },
+        };
+      })
+    );
+
+    // Collect results and handle partial completion
     const videos: Record<string, { url: string; duration: number; dimensions: string }> = {};
+    const failures: string[] = [];
 
-    for (const format of request.formats) {
-      const dims = VIDEO_DIMENSIONS[format.name];
-      const inputProps = {
-        template,
-        scenes: format.scenes,
-        brand: {
-          name: brand.name,
-          logoBase64: brand.logoBase64 ?? "",
-          colors: brand.colors,
-          fontFamily: brand.fontFamily ?? "Plus Jakarta Sans",
-        },
-        imageMap,
-      };
-
-      const mp4Url = await renderVideo({
-        compositionId: format.name,
-        inputProps,
-      });
-
-      // Download from Lambda S3 and upload to R2
-      const mp4Response = await fetch(mp4Url);
-      const mp4Buffer = Buffer.from(await mp4Response.arrayBuffer());
-      const filename = `${format.name}.mp4`;
-      const r2Url = await uploadImage(
-        mp4Buffer,
-        `releases/${cookId}/${filename}`,
-        "video/mp4"
-      );
-
-      const duration = calculateVideoDuration(template);
-      videos[format.name] = {
-        url: r2Url,
-        duration,
-        dimensions: `${dims.width}x${dims.height}`,
-      };
+    for (const result of formatResults) {
+      if (result.status === "fulfilled") {
+        videos[result.value.name] = result.value.data;
+      } else {
+        failures.push(result.reason?.message ?? "Unknown error");
+      }
     }
 
-    // 5. Mark completed
+    if (Object.keys(videos).length === 0) {
+      throw new Error(`All formats failed: ${failures.join("; ")}`);
+    }
+
+    // Refund credits for failed formats only
+    successCount = Object.keys(videos).length;
+    if (failures.length > 0) {
+      partialRefundCount = failures.length;
+      const refundAmount = failures.length * 5;
+      console.warn(`[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`);
+      await convex.mutation(api.userProfiles.refund, {
+        userId,
+        amount: refundAmount,
+      }).catch((err: Error) => console.error(`Failed to refund partial credits:`, err));
+    }
+
     await convex.mutation(api.releases.markCompleted, {
       externalId: cookId,
       videos,
     });
 
-    // 6. Webhook
+    // Webhook
     if (request.webhook_url) {
       const result = await convex.query(api.releases.getByExternalId, {
         externalId: cookId,
@@ -123,86 +198,49 @@ export async function renderVideoAsync(
       console.error(`Failed to mark release as failed:`, markErr);
     }
 
+    // Only refund formats not already refunded by partial-refund above
     try {
-      await convex.mutation(api.userProfiles.refund, {
-        userId,
-        amount: request.formats.length * 5,
-      });
+      const refundAmount = (request.formats.length - partialRefundCount) * 5;
+      if (refundAmount > 0) {
+        await convex.mutation(api.userProfiles.refund, {
+          userId,
+          amount: refundAmount,
+        });
+      }
     } catch (refundErr) {
       console.error(`Failed to refund credits:`, refundErr);
     }
   }
 }
 
-async function resolveBrand(request: VideoRenderRequest) {
-  if (request.brand_id) {
-    const brand = await convex.query(api.brands.getByExternalId, {
-      externalId: request.brand_id,
-    });
-    if (!brand) throw new Error(`Brand not found: ${request.brand_id}`);
-    let logoBase64 = "";
-    if (brand.logo_url) {
-      logoBase64 = await fetchImageAsBase64(brand.logo_url);
-    }
-    return {
-      name: brand.name,
-      logoBase64,
-      colors: brand.colors,
-      fontFamily: brand.font_family ?? "Plus Jakarta Sans",
-    };
-  }
+async function renderVideoLocal(
+  compositionId: string,
+  inputProps: Record<string, unknown>,
+  outputPath: string
+) {
+  const { bundle } = await import("@remotion/bundler");
+  const { renderMedia, selectComposition } = await import("@remotion/renderer");
 
-  let logoBase64 = "";
-  if (request.logo_url) {
-    logoBase64 = await fetchImageAsBase64(request.logo_url);
-  }
-  return {
-    name: request.name ?? "Brand",
-    logoBase64,
-    colors: request.colors ?? {
-      background: "#1a1a2e",
-      text: "#ffffff",
-      primary: "#e94560",
-    },
-    fontFamily: request.font_family ?? "Plus Jakarta Sans",
-  };
-}
+  const entryPoint = path.join(process.cwd(), "src/remotion/index.ts");
 
-async function resolveVideoTemplate(
-  templateName: string | undefined,
-  userId: string
-): Promise<VideoTemplateConfig> {
-  const name = templateName ?? "product-update";
+  console.log(`[LOCAL] Bundling Remotion project...`);
+  const bundleLocation = await bundle({ entryPoint });
 
-  const defaultTmpl = getDefaultVideoTemplate(name);
-  if (defaultTmpl) return defaultTmpl;
+  console.log(`[LOCAL] Selecting composition: ${compositionId}`);
+  const composition = await selectComposition({
+    serveUrl: bundleLocation,
+    id: compositionId,
+    inputProps,
+  });
 
-  if (name.startsWith("vtmpl_")) {
-    const custom = await convex.query(api.videoTemplates.getByExternalId, {
-      externalId: name,
-    });
-    if (!custom) throw new Error(`Video template not found: ${name}`);
-    return custom.config as VideoTemplateConfig;
-  }
+  console.log(`[LOCAL] Rendering ${compositionId} → ${outputPath}`);
+  await renderMedia({
+    composition,
+    serveUrl: bundleLocation,
+    codec: "h264",
+    outputLocation: outputPath,
+    inputProps,
+  });
 
-  throw new Error(`Unknown video template: ${name}`);
-}
-
-async function prefetchSceneImages(
-  formats: VideoFormatEntry[]
-): Promise<Record<string, string>> {
-  const urls = new Set<string>();
-  for (const format of formats) {
-    for (const scene of format.scenes) {
-      if (scene.image_url) urls.add(scene.image_url);
-    }
-  }
-
-  const imageMap: Record<string, string> = {};
-  await Promise.all(
-    Array.from(urls).map(async (url) => {
-      imageMap[url] = await fetchImageAsBase64(url);
-    })
-  );
-  return imageMap;
+  console.log(`[LOCAL] Render complete: ${outputPath}`);
 }

@@ -7,8 +7,10 @@ import { Suspense, useEffect } from "react";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+const enabled =
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "production" && key && host;
 
-if (typeof window !== "undefined" && key && host) {
+if (typeof window !== "undefined" && enabled) {
   posthog.init(key, {
     api_host: host,
     persistence: "memory",
@@ -23,7 +25,7 @@ function PageviewTracker() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!key || !host) return;
+    if (!enabled) return;
     const url = searchParams.toString()
       ? `${pathname}?${searchParams.toString()}`
       : pathname;
@@ -34,7 +36,7 @@ function PageviewTracker() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  if (!key || !host) return <>{children}</>;
+  if (!enabled) return <>{children}</>;
 
   return (
     <PHProvider client={posthog}>

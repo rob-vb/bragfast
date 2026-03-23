@@ -1,62 +1,50 @@
 import React from "react";
 import { Composition } from "remotion";
 import type { CalculateMetadataFunction } from "remotion";
-import { VideoComposition } from "./VideoComposition";
-import type { VideoCompositionProps } from "./VideoComposition";
+import { VideoCanvasComposition } from "./VideoCanvasComposition";
+import type { VideoCanvasCompositionProps } from "./VideoCanvasComposition";
+import { FORMAT_DIMENSIONS } from "../lib/templates/canvas-types";
+import { getDefaultConfig } from "../lib/templates/default-configs";
 
-// Inline VIDEO_DIMENSIONS to avoid cross-directory import issues in Lambda bundle
-const VIDEO_DIMENSIONS = {
-  landscape: { width: 1920, height: 1080 },
-  square: { width: 1080, height: 1080 },
-  portrait: { width: 1080, height: 1920 },
-} as const;
+const FPS = 30;
+const TRANSITION_DURATION = 0.5;
 
-// Inline duration calculation
-function calculateVideoDuration(template: VideoCompositionProps["template"]): number {
-  const grossDuration = template.scenes.reduce((sum, s) => sum + s.duration, 0);
-  let overlapCount = 0;
-  for (let i = 1; i < template.scenes.length; i++) {
-    const transType = template.scenes[i].transition ?? template.transition;
-    if (transType !== "none") overlapCount++;
-  }
-  return grossDuration - overlapCount * template.transition_duration;
+function calculateVideoDuration(
+  slideCount: number,
+  slideDuration: number,
+): number {
+  if (slideCount <= 1) return slideDuration;
+  return slideDuration * slideCount - (slideCount - 1) * TRANSITION_DURATION;
 }
 
-const calculateMetadata: CalculateMetadataFunction<VideoCompositionProps> = ({
-  props,
-}) => {
-  // Guard against partial props during Remotion's prop merging
-  if (!props.template?.scenes?.length) {
-    return { durationInFrames: 300 }; // fallback
-  }
-  const netDuration = calculateVideoDuration(props.template);
-  return { durationInFrames: Math.ceil(netDuration * (props.template.fps || 30)) };
+const calculateMetadata: CalculateMetadataFunction<
+  VideoCanvasCompositionProps
+> = ({ props }) => {
+  const slideCount = props.slides?.length || 1;
+  const slideDuration = props.slideDuration || 5;
+  const netDuration = calculateVideoDuration(slideCount, slideDuration);
+  return { durationInFrames: Math.ceil(netDuration * FPS) };
 };
 
-const defaultProps: VideoCompositionProps = {
-  template: {
-    fps: 30,
-    transition: "fade",
-    transition_duration: 0.5,
-    scenes: [
-      { type: "intro", duration: 3 },
-      { type: "feature", duration: 4, device: "browser" },
-      { type: "feature", duration: 4, device: "browser", transition: "slide-from-left" },
-      { type: "cta", duration: 3 },
-    ],
-  },
-  scenes: [
-    { title: "Product Update" },
-    { title: "New Feature", description: "Check it out", image_url: "https://placehold.co/1200x800" },
-    { title: "Feature 2", description: "Another one", image_url: "https://placehold.co/1200x800" },
-    { title: "Try it now" },
+const defaultConfig = getDefaultConfig("standard-browser")!;
+
+const defaultProps: VideoCanvasCompositionProps = {
+  config: defaultConfig,
+  format: "landscape",
+  slides: [
+    {
+      title: { text: "Product Update" },
+      description: { text: "Check out our latest feature" },
+    },
   ],
   brand: {
     name: "Acme Inc",
+    logoBase64: "",
+    website: "",
     colors: { background: "#0F0F0F", text: "#FFFFFF", primary: "#6366F1" },
-    fontFamily: "Plus Jakarta Sans",
+    font_family: "Plus Jakarta Sans",
   },
-  imageMap: {},
+  slideDuration: 5,
 };
 
 export const RemotionRoot: React.FC = () => {
@@ -66,12 +54,12 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           key={format}
           id={format}
-          component={VideoComposition}
-          fps={30}
-          width={VIDEO_DIMENSIONS[format].width}
-          height={VIDEO_DIMENSIONS[format].height}
-          durationInFrames={300}
-          defaultProps={defaultProps}
+          component={VideoCanvasComposition}
+          fps={FPS}
+          width={FORMAT_DIMENSIONS[format].width}
+          height={FORMAT_DIMENSIONS[format].height}
+          durationInFrames={Math.ceil(5 * FPS)}
+          defaultProps={{ ...defaultProps, format }}
           calculateMetadata={calculateMetadata}
         />
       ))}

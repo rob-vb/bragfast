@@ -243,7 +243,7 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
 
   if (autoApprove) {
     // 11a. Auto-approve: reserve credits, create release, render
-    const creditsNeeded = calculateCredits({ output: "image", formats: releaseRequest.formats });
+    const creditsNeeded = calculateCredits({ formats: releaseRequest.formats });
     try {
       await convex.mutation(api.userProfiles.reserve, {
         userId,

@@ -4,18 +4,15 @@ export const maxDuration = 60;
 
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
-import { validateReleaseColors, validateFormats, validateVideoFormats, validateVideoTemplate } from "@/lib/validation";
+import { validateReleaseColors, validateFormats, validateVideoField } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import { ReleaseRequest, calculateCredits } from "@/lib/types";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
 // Lazy-loaded to avoid pulling Remotion's heavy native deps into every request
-const loadVideoModules = () => Promise.all([
-  import("@/lib/video/validation"),
-  import("@/lib/video/defaults"),
-  import("@/lib/pipeline/render-video"),
-] as const);
+const loadVideoModules = () =>
+  import("@/lib/pipeline/render-video").then((m) => m);
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
@@ -34,15 +31,15 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const isVideo = body.output === "video";
+  const isVideo = !!body.video;
 
-  // Validate brand_id OR inline colors (shared for both image and video)
+  // ── Shared validation ──────────────────────────────────────────
+
   const colorError = validateReleaseColors(body as Record<string, unknown>);
   if (colorError) {
     return Response.json({ error: colorError }, { status: 400 });
   }
 
-  // Verify brand exists when brand_id is provided (shared)
   if (body.brand_id) {
     const brand = await fetchQuery(api.brands.getByExternalId, {
       externalId: body.brand_id,
@@ -52,74 +49,82 @@ export async function POST(request: Request) {
     }
   }
 
-  // ── Video branch ──────────────────────────────────────────────
+  const formatError = validateFormats(body.formats);
+  if (formatError) {
+    return Response.json({ error: formatError }, { status: 400 });
+  }
+
+  // Video: reject og format
   if (isVideo) {
-    const [{ validateVideoScenes }, { getDefaultVideoTemplate }, { createVideoRelease, renderVideoAsync }] = await loadVideoModules();
-
-    const videoFormatError = validateVideoFormats(body.formats);
-    if (videoFormatError) {
-      return Response.json({ error: videoFormatError }, { status: 400 });
-    }
-
-    const videoTemplateError = validateVideoTemplate(body.template);
-    if (videoTemplateError) {
-      return Response.json({ error: videoTemplateError }, { status: 400 });
-    }
-
-    // Resolve template config for scene validation
-    const templateName = body.template ?? "product-update";
-    let templateConfig = getDefaultVideoTemplate(templateName);
-
-    // For custom templates, fetch from DB
-    if (!templateConfig && templateName.startsWith("vtmpl_")) {
-      const customTmpl = await fetchQuery(api.videoTemplates.getByExternalId, {
-        externalId: templateName,
-      });
-      if (!customTmpl || customTmpl.userId !== auth.userId) {
-        return Response.json({ error: "Video template not found" }, { status: 404 });
-      }
-      templateConfig = customTmpl.config;
-    }
-
-    if (!templateConfig) {
-      return Response.json({ error: `Unknown video template: ${templateName}` }, { status: 400 });
-    }
-
-    // Validate scenes against template
     for (const format of body.formats) {
-      const sceneError = validateVideoScenes(format.scenes, templateConfig.scenes);
-      if (sceneError) {
-        return Response.json({ error: `${format.name}: ${sceneError}` }, { status: 400 });
-      }
-    }
-
-    const creditsNeeded = calculateCredits({ output: "video", formats: body.formats });
-
-    let remaining: number;
-    try {
-      remaining = await fetchMutation(api.userProfiles.reserve, {
-        userId: auth.userId,
-        amount: creditsNeeded,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("Insufficient credits")) {
+      if (format.name === "og") {
         return Response.json(
-          {
-            error: "Your plate is empty. Pick a plan to keep serving.",
-            credits_needed: creditsNeeded,
-          },
-          { status: 429 }
+          { error: 'Video does not support "og" format. Use landscape, square, or portrait.' },
+          { status: 400 }
         );
       }
-      if (msg.includes("User profile not found")) {
-        return Response.json(
-          { error: "No user profile found. Create an API key first to initialize your account." },
-          { status: 403 }
-        );
-      }
-      throw err;
     }
+  }
+
+  // Video field validation
+  if (isVideo) {
+    const maxSlides = Math.max(...body.formats.map((f: { slides: unknown[] }) => f.slides?.length ?? 0));
+    const videoError = validateVideoField(body.video, maxSlides);
+    if (videoError) {
+      return Response.json({ error: videoError }, { status: 400 });
+    }
+  }
+
+  // Template validation (image and video both use templates now)
+  if (body.template) {
+    const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
+    const isDefault = validDefaults.includes(body.template);
+    const isCustom = typeof body.template === "string" && body.template.startsWith("tmpl_");
+    if (!isDefault && !isCustom) {
+      return Response.json(
+        { error: "Invalid template. Must be standard-browser, standard-mobile, split-browser, split-mobile, hero, or a template ID (tmpl_...)" },
+        { status: 400 }
+      );
+    }
+  }
+
+  // ── Credit reservation (shared) ────────────────────────────────
+
+  const creditsNeeded = calculateCredits({
+    video: isVideo ? body.video : undefined,
+    formats: body.formats,
+  });
+
+  let remaining: number;
+  try {
+    remaining = await fetchMutation(api.userProfiles.reserve, {
+      userId: auth.userId,
+      amount: creditsNeeded,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("Insufficient credits")) {
+      return Response.json(
+        {
+          error: "Your plate is empty. Pick a plan to keep serving.",
+          credits_needed: creditsNeeded,
+        },
+        { status: 429 }
+      );
+    }
+    if (msg.includes("User profile not found")) {
+      return Response.json(
+        { error: "No user profile found. Create an API key first to initialize your account." },
+        { status: 403 }
+      );
+    }
+    throw err;
+  }
+
+  // ── Video branch ──────────────────────────────────────────────
+
+  if (isVideo) {
+    const { createVideoRelease, renderVideoAsync } = await loadVideoModules();
 
     try {
       const { cookId, result } = createVideoRelease(creditsNeeded);
@@ -127,7 +132,7 @@ export async function POST(request: Request) {
       await fetchMutation(api.releases.create, {
         userId: auth.userId,
         externalId: cookId,
-        template: body.template ?? "product-update",
+        template: body.template || "standard-browser",
         credits_used: creditsNeeded,
         output: "video",
         metadata: body.metadata,
@@ -160,68 +165,19 @@ export async function POST(request: Request) {
     }
   }
 
-  // ── Image branch (existing) ───────────────────────────────────
+  // ── Image branch ──────────────────────────────────────────────
+
   const imageBody = body as ReleaseRequest;
-
-  // Format & slide validation
-  const formatError = validateFormats(imageBody.formats);
-  if (formatError) {
-    return Response.json({ error: formatError }, { status: 400 });
-  }
-
-  // Template validation
-  if (imageBody.template) {
-    const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
-    const isDefault = validDefaults.includes(imageBody.template);
-    const isCustom = typeof imageBody.template === "string" && imageBody.template.startsWith("tmpl_");
-    if (!isDefault && !isCustom) {
-      return Response.json(
-        { error: "Invalid template. Must be standard-browser, standard-mobile, split-browser, split-mobile, hero, or a template ID (tmpl_...)" },
-        { status: 400 }
-      );
-    }
-  }
-
-  // Atomically reserve credits BEFORE render (prevents race conditions)
-  const creditsNeeded = calculateCredits({ output: "image", formats: imageBody.formats });
-
-  let remaining: number;
-  try {
-    remaining = await fetchMutation(api.userProfiles.reserve, {
-      userId: auth.userId,
-      amount: creditsNeeded,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "";
-    if (msg.includes("Insufficient credits")) {
-      return Response.json(
-        {
-          error: "Your plate is empty. Pick a plan to keep serving.",
-          credits_needed: creditsNeeded,
-        },
-        { status: 429 }
-      );
-    }
-    if (msg.includes("User profile not found")) {
-      return Response.json(
-        { error: "No user profile found. Create an API key first to initialize your account." },
-        { status: 403 }
-      );
-    }
-    throw err;
-  }
 
   try {
     const result = await createRelease(imageBody, auth.userId, { source: "api" });
     result.credits_remaining = remaining;
-    // Credits already reserved — render refunds on failure
     after(() => renderReleaseAsync(result.cook_id, imageBody, auth.userId));
     return Response.json(result, { status: 202 });
   } catch (err) {
-    // Refund on release creation failure
     await fetchMutation(api.userProfiles.refund, {
       userId: auth.userId,
-      amount: calculateCredits({ output: "image", formats: imageBody.formats }),
+      amount: creditsNeeded,
     }).catch(console.error);
     console.error("Failed to create release:", err);
     return Response.json(
