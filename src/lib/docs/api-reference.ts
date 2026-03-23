@@ -568,6 +568,7 @@ data = response.json()`,
         path: "/api/v1/cook",
         anchor: "cook-video",
         title: "Cook a video",
+        responseStatus: 202,
         description:
           "Same as cooking images, but with video: true. The response includes a videos object with URLs for each format instead of images.",
         requestExample: {
@@ -621,6 +622,43 @@ data = response.json()`,
 });
 const cook = await response.json();
 // Poll cook.cook_id until status === "completed", then grab cook.videos.landscape.url`,
+          python: `import requests
+import time
+
+cook = requests.post(
+    "https://brag.fast/api/v1/cook",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+    json={
+        "brand_id": "brand_abc123",
+        "template": "standard-browser",
+        "video": True,  # or {"duration": 8} for 8s per slide
+        "formats": [
+            {
+                "name": "landscape",
+                "slides": [
+                    {
+                        "objects": [
+                            {"id": "title", "text": "Launched dark mode"},
+                            {"id": "description", "text": "Your app, your vibe."},
+                            {"id": "image", "image_url": "https://example.com/screenshot.png"},
+                        ]
+                    }
+                ],
+            }
+        ],
+    },
+).json()
+
+# Poll until complete
+while True:
+    time.sleep(2)
+    result = requests.get(
+        f"https://brag.fast/api/v1/cook/{cook['cook_id']}",
+        headers={"Authorization": "Bearer bf_your_api_key"},
+    ).json()
+    if result["status"] == "completed":
+        print(result["videos"]["landscape"]["url"])
+        break`,
         },
         responseExample: `{
   "cook_id": "cook_abc123",
