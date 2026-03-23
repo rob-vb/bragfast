@@ -10,7 +10,9 @@ type Release = {
   externalId: string;
   template: string;
   status: "completed" | "pending" | "pending_review" | "failed" | "dismissed";
+  output?: "image" | "video";
   images?: unknown;
+  videos?: unknown;
   socialCopy?: string;
   credits_used: number;
   metadata?: string;
@@ -24,8 +26,10 @@ type Release = {
 function buildResponseBody(r: Release) {
   return {
     cook_id: r.externalId,
+    output: r.output ?? "image",
     status: r.status,
     images: r.images ?? null,
+    videos: r.videos ?? null,
     credits_used: r.credits_used,
     created_at: r.created_at,
     ...(r.completed_at ? { completed_at: r.completed_at } : {}),
