@@ -177,7 +177,7 @@ export async function POST(request: Request) {
   } catch (err) {
     await fetchMutation(api.userProfiles.refund, {
       userId: auth.userId,
-      amount: calculateCredits({ formats: imageBody.formats }),
+      amount: creditsNeeded,
     }).catch(console.error);
     console.error("Failed to create release:", err);
     return Response.json(

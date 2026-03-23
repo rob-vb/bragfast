@@ -165,7 +165,6 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
               width: obj.width,
               height: obj.height,
               zIndex: obj.zIndex,
-              opacity: obj.opacity,
               display: "flex",
               flexDirection: "column",
               justifyContent:
@@ -175,6 +174,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
                     ? "flex-end"
                     : "flex-start",
               ...entranceStyle,
+              opacity: (obj.opacity ?? 1) * (typeof entranceStyle.opacity === "number" ? entranceStyle.opacity : 1),
             }}
           >
             <div
