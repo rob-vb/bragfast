@@ -17,7 +17,7 @@ type Release = {
   webhook_url?: string;
   created_at: string;
   completed_at?: string;
-  source?: "api" | "github";
+  source?: "api" | "github" | "demo";
   sourceMetadata?: string;
 };
 
