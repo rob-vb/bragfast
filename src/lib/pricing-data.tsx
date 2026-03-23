@@ -7,6 +7,8 @@ export const FEATURES: {
   scale: string | boolean;
 }[] = [
   { name: "API credits / month", starter: "800", pro: "8,000", scale: "40,000" },
+  { name: "Image credits", starter: "1 / slide", pro: "1 / slide", scale: "1 / slide" },
+  { name: "Video credits", starter: "5 / slide", pro: "5 / slide", scale: "5 / slide" },
   { name: "Templates", starter: "All", pro: "All", scale: "All" },
   { name: "Custom templates", starter: true, pro: true, scale: true },
   { name: "Brand kits", starter: "3", pro: "10", scale: "Unlimited" },

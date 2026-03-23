@@ -62,9 +62,10 @@ export default function TermsPage() {
                   the Service with a monthly credit allocation.
                 </li>
                 <li>
-                  <strong>Credits</strong> — units of usage. 1 credit = 1 slide
-                  rendered in 1 format. For example, a release with 2 slides in
-                  3 formats consumes 6 credits.
+                  <strong>Credits</strong> — units of usage. Images cost 1 credit
+                  per slide per format. Videos cost 5 credits per slide per
+                  format. For example, a release with 2 slides in 3 formats
+                  consumes 6 image credits or 30 video credits.
                 </li>
                 <li>
                   <strong>API Key</strong> — a secret token used to authenticate
@@ -94,8 +95,9 @@ export default function TermsPage() {
             <Section title="4. Credits and Usage">
               <p>
                 Each subscription plan includes a monthly credit allocation.
-                Credits are consumed when images are generated through the API
-                at a rate of 1 credit per slide per format. Unused credits do
+                Credits are consumed when images or videos are generated through
+                the API at a rate of 1 credit per slide per format for images
+                and 5 credits per slide per format for videos. Unused credits do
                 not roll over to the next billing cycle.
               </p>
               <p>

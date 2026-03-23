@@ -63,8 +63,9 @@ export async function renderVideoAsync(
   userId: string,
   request: VideoRenderRequest
 ) {
-  let partialRefundCount = 0; // formats already refunded (for partial failure)
-  let successCount = 0;       // formats that rendered successfully
+  let partialRefundCredits = 0; // credits already refunded (for partial failure)
+  let successCount = 0;         // formats that rendered successfully
+  const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 5;
   try {
     const templateName = request.template || "standard-browser";
     const templateConfig = await resolveTemplate(templateName, userId, convex);
@@ -162,8 +163,8 @@ export async function renderVideoAsync(
     // Refund credits for failed formats only
     successCount = Object.keys(videos).length;
     if (failures.length > 0) {
-      partialRefundCount = failures.length;
-      const refundAmount = failures.length * 5;
+      const refundAmount = failures.length * creditsPerFormat;
+      partialRefundCredits = refundAmount;
       console.warn(`[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`);
       await convex.mutation(api.userProfiles.refund, {
         userId,
@@ -198,7 +199,8 @@ export async function renderVideoAsync(
 
     // Only refund formats not already refunded by partial-refund above
     try {
-      const refundAmount = (request.formats.length - partialRefundCount) * 5;
+      const totalCredits = request.formats.length * creditsPerFormat;
+      const refundAmount = totalCredits - partialRefundCredits;
       if (refundAmount > 0) {
         await convex.mutation(api.userProfiles.refund, {
           userId,

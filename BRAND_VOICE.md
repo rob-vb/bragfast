@@ -53,7 +53,7 @@ Everything maps to cooking:
 | Cook | A render job -- generating images from a release |
 | Brand kit | Logo + colors + fonts configuration |
 | Slide | One image within a release |
-| Credit | 1 image in 1 format |
+| Credit | 1 image slide in 1 format (videos: 5 credits per slide per format) |
 | Menu | Pricing/plan structure |
 
 ## Emotional Territory
