@@ -179,25 +179,28 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
               transform: combinedTransform || undefined,
             }}
           >
+            {Object.keys(imageEffectStyle).length > 0 ? (
             <div
               style={{
                 width: "100%",
                 height: "100%",
-                ...(Object.keys(imageEffectStyle).length > 0
-                  ? { perspective: "3000px", perspectiveOrigin: "center center" }
-                  : {}),
+                perspective: "3000px",
+                perspectiveOrigin: "center center",
               }}
             >
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                ...imageEffectStyle,
-              }}
-            >
-              {renderObject(obj, objectData, brand, colors)}
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  ...imageEffectStyle,
+                }}
+              >
+                {renderObject(obj, objectData, brand, colors)}
+              </div>
             </div>
-            </div>
+          ) : (
+            renderObject(obj, objectData, brand, colors)
+          )}
           </div>
         );
       })}
