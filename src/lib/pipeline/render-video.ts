@@ -15,7 +15,6 @@ const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 const DEFAULT_SLIDE_DURATION = 5;
-const TRANSITION_DURATION = 0.5;
 const FPS = 30;
 
 type VideoRenderRequest = {
@@ -37,8 +36,7 @@ function getSlideDuration(video: VideoField): number {
 }
 
 function calculateVideoDuration(slideCount: number, slideDuration: number): number {
-  if (slideCount <= 1) return slideDuration;
-  return slideDuration * slideCount - (slideCount - 1) * TRANSITION_DURATION;
+  return slideDuration * slideCount;
 }
 
 export function createVideoRelease(

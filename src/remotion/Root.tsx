@@ -7,14 +7,12 @@ import { FORMAT_DIMENSIONS } from "../lib/templates/canvas-types";
 import { getDefaultConfig } from "../lib/templates/default-configs";
 
 const FPS = 30;
-const TRANSITION_DURATION = 0.5;
 
 function calculateVideoDuration(
   slideCount: number,
   slideDuration: number,
 ): number {
-  if (slideCount <= 1) return slideDuration;
-  return slideDuration * slideCount - (slideCount - 1) * TRANSITION_DURATION;
+  return slideDuration * slideCount;
 }
 
 const calculateMetadata: CalculateMetadataFunction<
@@ -26,7 +24,7 @@ const calculateMetadata: CalculateMetadataFunction<
   return { durationInFrames: Math.ceil(netDuration * FPS) };
 };
 
-const defaultConfig = getDefaultConfig("standard-browser")!;
+const defaultConfig = getDefaultConfig("split-mobile")!;
 
 const defaultProps: VideoCanvasCompositionProps = {
   config: defaultConfig,
@@ -36,6 +34,14 @@ const defaultProps: VideoCanvasCompositionProps = {
       title: { text: "Product Update" },
       description: { text: "Check out our latest feature" },
     },
+    {
+      title: { text: "Real-Time Collaboration" },
+      description: { text: "Work together seamlessly\nwith live cursors and comments" },
+    },
+    {
+      title: { text: "Lightning Fast" },
+      description: { text: "Built for speed from the ground up" },
+    },
   ],
   brand: {
     name: "Acme Inc",
@@ -44,7 +50,7 @@ const defaultProps: VideoCanvasCompositionProps = {
     colors: { background: "#0F0F0F", text: "#FFFFFF", primary: "#6366F1" },
     font_family: "Plus Jakarta Sans",
   },
-  slideDuration: 5,
+  slideDuration: 3,
 };
 
 export const RemotionRoot: React.FC = () => {
