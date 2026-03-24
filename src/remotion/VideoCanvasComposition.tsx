@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   AbsoluteFill,
+  Series,
   useCurrentFrame,
   useVideoConfig,
   interpolate,
@@ -8,8 +9,6 @@ import {
   delayRender,
   continueRender,
 } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
 import { loadBrandFont } from "./fonts";
 import type {
   CanvasTemplateConfig,
@@ -58,44 +57,21 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
   if (!fontLoaded) return null;
 
   const slideFrames = Math.round(slideDuration * fps);
-  const transitionFrames = Math.round(0.5 * fps);
-
-  if (slides.length <= 1) {
-    return (
-      <AbsoluteFill>
-        <SlideRenderer
-          config={config}
-          format={format}
-          objectData={slides[0] ?? {}}
-          brand={brand}
-          slideDurationFrames={slideFrames}
-        />
-      </AbsoluteFill>
-    );
-  }
 
   return (
-    <TransitionSeries>
+    <Series>
       {slides.map((slideData, i) => (
-        <React.Fragment key={i}>
-          <TransitionSeries.Sequence durationInFrames={slideFrames}>
-            <SlideRenderer
-              config={config}
-              format={format}
-              objectData={slideData}
-              brand={brand}
-              slideDurationFrames={slideFrames}
-            />
-          </TransitionSeries.Sequence>
-          {i < slides.length - 1 && (
-            <TransitionSeries.Transition
-              presentation={fade()}
-              timing={linearTiming({ durationInFrames: transitionFrames })}
-            />
-          )}
-        </React.Fragment>
+        <Series.Sequence key={i} durationInFrames={slideFrames}>
+          <SlideRenderer
+            config={config}
+            format={format}
+            objectData={slideData}
+            brand={brand}
+            slideDurationFrames={slideFrames}
+          />
+        </Series.Sequence>
       ))}
-    </TransitionSeries>
+    </Series>
   );
 };
 
@@ -125,6 +101,22 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
 
+  // Exit animation: fade out all content near the end of the slide
+  const exitDuration = Math.round(fps * 0.4);
+  const exitStart = slideDurationFrames - exitDuration;
+  const exitOpacity = interpolate(
+    frame,
+    [exitStart, slideDurationFrames],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+  const exitTranslateY = interpolate(
+    frame,
+    [exitStart, slideDurationFrames],
+    [0, -16],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+
   return (
     <AbsoluteFill
       style={{
@@ -149,12 +141,21 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         // Compute entrance animation style
         const entranceStyle = computeEntranceStyle(entrance, localFrame, fps);
 
-        // Compute image-specific effects (Ken Burns + 3D rotation)
+        // Compute image-specific effects (3D rotation)
         const kenBurnsEnabled = obj.kenBurns ?? false;
         const imageEffectStyle =
           obj.type === "image" && kenBurnsEnabled
             ? computeImageEffects(frame, slideDurationFrames)
             : {};
+
+        // Combine entrance opacity with exit opacity
+        const entranceOpacity = typeof entranceStyle.opacity === "number" ? entranceStyle.opacity : 1;
+        const combinedOpacity = (obj.opacity ?? 1) * entranceOpacity * exitOpacity;
+
+        // Combine entrance transform with exit transform
+        const entranceTransform = entranceStyle.transform || "";
+        const exitTransform = frame >= exitStart ? `translateY(${exitTranslateY}px)` : "";
+        const combinedTransform = [entranceTransform, exitTransform].filter(Boolean).join(" ");
 
         return (
           <div
@@ -174,19 +175,32 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
                   : obj.verticalAlign === "bottom"
                     ? "flex-end"
                     : "flex-start",
-              ...entranceStyle,
-              opacity: (obj.opacity ?? 1) * (typeof entranceStyle.opacity === "number" ? entranceStyle.opacity : 1),
+              opacity: combinedOpacity,
+              transform: combinedTransform || undefined,
             }}
           >
+            {Object.keys(imageEffectStyle).length > 0 ? (
             <div
               style={{
                 width: "100%",
                 height: "100%",
-                ...imageEffectStyle,
+                perspective: "3000px",
+                perspectiveOrigin: "center center",
               }}
             >
-              {renderObject(obj, objectData, brand, colors)}
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  ...imageEffectStyle,
+                }}
+              >
+                {renderObject(obj, objectData, brand, colors)}
+              </div>
             </div>
+          ) : (
+            renderObject(obj, objectData, brand, colors)
+          )}
           </div>
         );
       })}
@@ -221,7 +235,7 @@ function computeEntranceStyle(
       return {};
 
     case "fade-in": {
-      const duration = Math.round(fps * 0.4);
+      const duration = Math.round(fps * 0.8);
       const opacity = interpolate(localFrame, [0, duration], [0, 1], {
         extrapolateRight: "clamp",
       });
@@ -274,29 +288,18 @@ function computeImageEffects(
   frame: number,
   totalFrames: number,
 ): React.CSSProperties {
-  // Ken Burns: scale 1.0 -> 1.12 over slide duration
-  const scale = interpolate(frame, [0, totalFrames], [1.0, 1.12], {
-    extrapolateRight: "clamp",
-  });
-
-  // Slow pan: translate from center to slight offset
-  const translateX = interpolate(frame, [0, totalFrames], [0, -15], {
-    extrapolateRight: "clamp",
-  });
-  const translateY = interpolate(frame, [0, totalFrames], [0, -8], {
-    extrapolateRight: "clamp",
-  });
-
-  // 3D rotateY arc: 0deg -> 6deg -> 0deg over slide duration
+  // Walking past a TV: rotateY sweeps from 20 to -20
   const rotateY = interpolate(
     frame,
-    [0, totalFrames / 2, totalFrames],
-    [0, 6, 0],
+    [0, totalFrames],
+    [20, -20],
     { extrapolateRight: "clamp" },
   );
 
   return {
-    transform: `perspective(1200px) scale(${scale}) translate(${translateX}px, ${translateY}px) rotateY(${rotateY}deg)`,
+    transform: `rotateY(${rotateY}deg) translateZ(0px)`,
+    transformStyle: "preserve-3d" as const,
+    transformOrigin: "center center",
   };
 }
 

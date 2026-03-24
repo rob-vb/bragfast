@@ -96,18 +96,20 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   og: { width: 1200, height: 630 },
 }
 
-export type CookCreditsInput =
-  | { video?: false | undefined; formats: FormatEntry[] }
-  | { video: VideoField; formats: { name: string }[] };
+export type CookCreditsInput = {
+  video?: VideoField | false;
+  formats: FormatEntry[];
+};
 
 export function calculateCredits(input: CookCreditsInput): number {
-  if (input.video) {
-    return input.formats.length * 5;
-  }
-  return (input as { formats: FormatEntry[] }).formats.reduce(
+  const totalSlides = input.formats.reduce(
     (sum, f) => sum + f.slides.length,
     0
   );
+  if (input.video) {
+    return totalSlides * 5;
+  }
+  return totalSlides;
 }
 
 export const VALID_ENTRANCE_TYPES: EntranceType[] = ['fade-in', 'slide-up', 'bounce', 'none']

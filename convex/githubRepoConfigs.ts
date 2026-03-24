@@ -13,6 +13,8 @@ export const upsert = mutation({
     webhookUrl: v.optional(v.string()),
     autoApprove: v.optional(v.boolean()),
     maxSlides: v.optional(v.number()),
+    generateImages: v.optional(v.boolean()),
+    generateVideo: v.optional(v.boolean()),
     enabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -34,6 +36,8 @@ export const upsert = mutation({
       if (args.webhookUrl !== undefined) updates.webhookUrl = args.webhookUrl;
       if (args.autoApprove !== undefined) updates.autoApprove = args.autoApprove;
       if (args.maxSlides !== undefined) updates.maxSlides = args.maxSlides;
+      if (args.generateImages !== undefined) updates.generateImages = args.generateImages;
+      if (args.generateVideo !== undefined) updates.generateVideo = args.generateVideo;
       if (args.enabled !== undefined) updates.enabled = args.enabled;
       await ctx.db.patch(existing._id, updates);
     } else {
@@ -49,6 +53,8 @@ export const upsert = mutation({
         webhookUrl: args.webhookUrl,
         autoApprove: args.autoApprove,
         maxSlides: args.maxSlides,
+        generateImages: args.generateImages,
+        generateVideo: args.generateVideo,
         created_at: now,
         updated_at: now,
       });

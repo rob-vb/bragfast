@@ -184,7 +184,7 @@ export default function Home() {
                 brag.fast menu
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
-                Images and videos, one endpoint
+                Images: 1 credit/slide. Videos: 5 credits/slide.
               </p>
             </div>
 

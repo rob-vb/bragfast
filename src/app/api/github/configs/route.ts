@@ -47,6 +47,8 @@ export async function PUT(request: Request) {
     webhookUrl: body.webhookUrl || undefined,
     autoApprove: body.autoApprove,
     maxSlides: body.maxSlides,
+    generateImages: body.generateImages,
+    generateVideo: body.generateVideo,
   });
 
   return Response.json({ success: true });

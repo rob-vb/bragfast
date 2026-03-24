@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Images: 1 credit per slide (e.g. 1 landscape slide + 2 square slides = 3 credits). Videos: 5 credits per format, regardless of slide count or duration. Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
+      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 5 credits per slide per format (e.g. 2 slides in 3 formats = 30 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
     endpoints: [],
   },
 
@@ -253,7 +253,7 @@ while True:
             name: "formats",
             type: "array",
             required: true,
-            description: "Array of format entries. Each entry specifies a format and its slides. Total credits = sum of slides across all entries.",
+            description: "Array of format entries. Each entry specifies a format and its slides. Image credits = sum of slides across all entries. Video credits = sum of slides × 5.",
             children: [
               {
                 name: "name",
@@ -372,7 +372,7 @@ while True:
             type: "true | { duration: number }",
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each format costs 5 credits. Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
+              'Set to true to generate a video instead of images. Each slide costs 5 credits per format (e.g. 3 slides in 2 formats = 30 credits). Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
           },
           {
             name: "webhook_url",
@@ -417,9 +417,9 @@ while True:
   body: JSON.stringify({
     brand_id: "brand_abc123",
     template: "standard-browser",
-    // video: true,              — add for video output (5 credits/format)
+    // video: true,              — add for video output (5 credits/slide/format)
     // video: { duration: 8 },   — custom per-slide duration (3-30s)
-    // omit video for images     — default (1 credit/slide)
+    // omit video for images     — default (1 credit/slide/format)
     formats: [
       {
         name: "landscape",
@@ -446,9 +446,9 @@ cook = requests.post(
     json={
         "brand_id": "brand_abc123",
         "template": "standard-browser",
-        # "video": True,             — add for video output (5 credits/format)
+        # "video": True,             — add for video output (5 credits/slide/format)
         # "video": {"duration": 8},  — custom per-slide duration (3-30s)
-        # omit video for images      — default (1 credit/slide)
+        # omit video for images      — default (1 credit/slide/format)
         "formats": [
             {
                 "name": "landscape",
