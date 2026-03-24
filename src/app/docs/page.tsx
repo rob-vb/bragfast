@@ -2,6 +2,7 @@ import { API_REFERENCE } from "@/lib/docs/api-reference"
 import { DocsSidebar } from "@/components/docs/docs-sidebar"
 import { DocsSidebarMobile } from "@/components/docs/docs-sidebar-mobile"
 import { DocsSection } from "@/components/docs/docs-section"
+import { CopyForLlmButton } from "@/components/docs/copy-for-llm-button"
 
 export default function DocsPage() {
   return (
@@ -27,6 +28,16 @@ export default function DocsPage() {
                 product releases. Design a brand kit, POST your release details,
                 and receive images in multiple aspect ratios.
               </p>
+              <div className="flex items-center gap-3 mt-4">
+                <CopyForLlmButton />
+                <a
+                  href="/docs.md"
+                  target="_blank"
+                  className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 border border-zinc-200 rounded-md transition-colors"
+                >
+                  View as Markdown
+                </a>
+              </div>
             </div>
             <div className="flex flex-col gap-3">
               <div className="rounded-lg bg-[#24292e] px-4 sm:px-5 py-3 sm:py-4">
