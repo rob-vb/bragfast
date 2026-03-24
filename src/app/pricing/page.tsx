@@ -8,7 +8,7 @@ import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 export const metadata: Metadata = {
   title: "Pricing — brag.fast",
   description:
-    "Simple, predictable pricing. 1 credit = 1 image in 1 format. Start free, scale as you grow.",
+    "Simple, predictable pricing. Images and videos from one endpoint. Start free, scale as you grow.",
   alternates: { canonical: "/pricing" },
 };
 
@@ -59,7 +59,7 @@ export default function PricingPage() {
             Start showing what you&apos;ve been cooking.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
-            Auto-generate branded social images from your releases — via API or GitHub.
+            Auto-generate branded images and videos from your releases — via API or GitHub.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
             1 credit = 1 image in 1 format. Sign up and get{" "}

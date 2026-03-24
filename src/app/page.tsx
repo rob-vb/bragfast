@@ -10,7 +10,7 @@ import { PAID_PLANS } from "@/lib/plans";
 export const metadata: Metadata = {
   title: "brag.fast — Auto-generate social images for your launches",
   description:
-    "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+    "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
   alternates: { canonical: "/" },
 };
 
@@ -28,7 +28,7 @@ export default function Home() {
               Show what you&apos;ve been cooking
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast auto-generates (branded) images. Landscape, square, and portrait, so you can post them to your socials immediately.
+              brag.fast auto-generates branded images and videos. Landscape, square, and portrait — ready to post to your socials immediately.
               Feed your audience.
             </p>
             <Link
@@ -61,7 +61,7 @@ export default function Home() {
                 Developers, POST and receive
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                Set up an API call and get polished release images back, ready to post. Multiple formats, multiple templates, zero design tools.
+                One API call, polished images or animated videos back. Multiple formats, multiple templates, zero design tools.
               </p>
               <Link
                 href="/docs"
@@ -184,7 +184,7 @@ export default function Home() {
                 brag.fast menu
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
-                1 credit = 1 image in 1 format
+                Images and videos, one endpoint
               </p>
             </div>
 
