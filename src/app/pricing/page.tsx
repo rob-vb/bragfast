@@ -59,7 +59,7 @@ export default function PricingPage() {
             Start showing what you&apos;ve been cooking.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
-            Auto-generate branded social images from your releases — via API or GitHub.
+            Auto-generate branded images and videos from your releases — via API or GitHub.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
             Images: 1 credit per slide. Videos: 5 credits per slide. Sign up and get{" "}

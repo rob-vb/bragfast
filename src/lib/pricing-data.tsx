@@ -12,7 +12,7 @@ export const FEATURES: {
   { name: "Templates", starter: "All", pro: "All", scale: "All" },
   { name: "Custom templates", starter: true, pro: true, scale: true },
   { name: "Brand kits", starter: "3", pro: "10", scale: "Unlimited" },
-  { name: "Output formats", starter: "All 3", pro: "All 3", scale: "All 3" },
+  { name: "Video generation", starter: true, pro: true, scale: true },
   { name: "GitHub integration", starter: true, pro: true, scale: true },
   { name: "AI analysis", starter: true, pro: true, scale: true },
   { name: "Webhooks", starter: true, pro: true, scale: true },

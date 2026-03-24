@@ -31,27 +31,18 @@ export const metadata: Metadata = {
     "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "brag.fast — Auto-generate social images for your launches",
+    title: "brag.fast — Auto-generate social images and videos for your launches",
     description:
-      "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+      "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
     url: siteUrl,
     siteName: "brag.fast",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "brag.fast — Auto-generate social images for your launches",
-      },
-    ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "brag.fast — Auto-generate social images for your launches",
+    title: "brag.fast — Auto-generate social images and videos for your launches",
     description:
-      "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
-    images: ["/og-image.png"],
+      "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
   },
   icons: {
     icon: [
