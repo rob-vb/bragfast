@@ -37,12 +37,21 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: "brag.fast",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "brag.fast — Auto-generate social images and videos for your launches",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "brag.fast — Auto-generate social images and videos for your launches",
     description:
       "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
+    images: ["/twitter-image"],
   },
   icons: {
     icon: [
