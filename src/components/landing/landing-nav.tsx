@@ -45,12 +45,6 @@ export function LandingNav() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-4">
             <Link
-              href="/#features"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
-            >
-              Features
-            </Link>
-            <Link
               href="/docs"
               className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
             >
@@ -132,13 +126,6 @@ export function LandingNav() {
           </button>
         </div>
         <nav className="flex flex-col gap-2 p-4">
-          <Link
-            href="/#features"
-            onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
-          >
-            Features
-          </Link>
           <Link
             href="/docs"
             onClick={() => setOpen(false)}
