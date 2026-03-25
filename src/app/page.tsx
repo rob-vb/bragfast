@@ -48,18 +48,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S2: Bridging intro */}
-      <section className="py-8 md:py-12 bg-surface">
-        <div className="mx-auto max-w-5xl px-4 md:px-8 text-center">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-3">
-            Three ways to cook
-          </h2>
-          <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/80">
-            Whether you use AI, GitHub, or our API — same branded output, every time.
-          </p>
-        </div>
-      </section>
-
       {/* S3: AI / Skills Users */}
       <section
         id="ai"
@@ -76,12 +64,14 @@ export default function Home() {
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
               Tell your AI agent to generate release images. Claude Code, Cursor, or any MCP client — describe what you shipped, brag.fast handles the rest.
             </p>
-            <Link
-              href="/docs"
+            <a
+              href="https://github.com/rob-vb/bragfast-skills"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              View the Docs
-            </Link>
+              Get the Skill
+            </a>
           </div>
           <SkillCommandMock />
         </div>
@@ -103,7 +93,7 @@ export default function Home() {
           </div>
           <div className="order-1 md:order-2">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
-              For GitHub teams
+              For GitHub
             </span>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
               Ship a release, we plate it
