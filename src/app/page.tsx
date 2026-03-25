@@ -9,9 +9,9 @@ import { SkillCommandMock } from "@/components/landing/skill-command-mock";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "brag.fast — Auto-generate social images for your launches",
+  title: "brag.fast | Stop building in silence",
   description:
-    "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
+    "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
   alternates: { canonical: "/" },
 };
 
@@ -26,11 +26,10 @@ export default function Home() {
           {/* Left: text */}
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6">
-              Show what you&apos;ve been cooking
+              Stop building in silence
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast auto-generates branded images and videos. Landscape, square, and portrait — ready to post to your socials immediately.
-              Feed your audience.
+              brag.fast auto-generates branded social images and videos. Every release gets the announcement it deserves.
             </p>
             <Link
               href="/signup"
@@ -181,43 +180,44 @@ export default function Home() {
       {/* S6: Shared Features — Template Editor + Brand Kits */}
       <section className="py-16 md:py-24 bg-surface">
         <div className="mx-auto max-w-5xl px-4 md:px-8">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg text-center mb-12 md:mb-16">
-            Every workflow, one kitchen
-          </h2>
-          <div className="space-y-16 md:space-y-24">
-            {/* Template Editor — visual left, text right */}
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-              <div className="order-2 md:order-1">
-                <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-                  <LazyVideo
-                    src="/demo/template_editor_compressed.mp4"
-                    className="w-full rounded-sm border border-brand"
-                  />
-                </div>
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16">
+            {/* Template Editor */}
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  Templates
+                </span>
               </div>
-              <div className="order-1 md:order-2">
-                <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                  Cook up your own templates
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                  No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
-                </p>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg">
+                Cook up your own templates
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
+              </p>
+              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
+                <LazyVideo
+                  src="/demo/template_editor_compressed.mp4"
+                  className="w-full rounded-sm border border-brand"
+                />
               </div>
             </div>
 
-            {/* Brand Kits — visual left, text right */}
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-              <div className="order-2 md:order-1">
-                <BrandKitMockup />
+            {/* Brand Kits */}
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  Branding
+                </span>
               </div>
-              <div className="order-1 md:order-2">
-                <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                  Season everything to taste
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                  Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
-                </p>
-              </div>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg">
+                Season everything to taste
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
+              </p>
+              <BrandKitMockup />
             </div>
           </div>
         </div>
@@ -297,15 +297,9 @@ export default function Home() {
             See the kitchen in action
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8">
-            Pick a template, tweak the ingredients, hit generate.
+            Sign up free and start generating in seconds.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/demo"
-              className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-surface border-2 border-brand bg-brand shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Try the Demo
-            </Link>
             <Link
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
