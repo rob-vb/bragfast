@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Demo — brag.fast",
+  title: "Demo | brag.fast",
   description:
-    "Try the brag.fast template editor. Pick templates, fonts, and formats — preview branded social images live.",
+    "Try the brag.fast template editor. Pick templates, fonts, and formats. Preview branded social images live.",
   alternates: { canonical: "/demo" },
 };
 

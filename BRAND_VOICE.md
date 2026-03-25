@@ -2,6 +2,10 @@
 
 **Personality in one line:** A cheeky breakfast diner for developers who ship fast but hate making social graphics.
 
+## Vision
+
+**Stop building in silence.** Builders know how to build, but they don't tell anyone about it. brag.fast exists to close that gap. Every release deserves an announcement.
+
 ## Core Metaphor: Breakfast/Restaurant
 
 Everything maps to cooking:
@@ -38,6 +42,7 @@ Everything maps to cooking:
 4. **Retro-playful visual language.** NES arrows (&#9656;), pixel fonts, gold/charcoal/cream palette
 5. **Remove friction verbally.** "No credit card required" repeated 5+ times. "Zero design tools." "Hands-free."
 6. **Food puns: yes. Forced puns: no.** The metaphor should feel natural, not labored.
+7. **No em dashes.** Never use " -- " in copy. It reads as AI-generated. Use periods, commas, or break into two sentences instead.
 
 ## Vocabulary
 
@@ -66,7 +71,7 @@ Everything maps to cooking:
 
 | Context | Tone | Example |
 |---------|------|---------|
-| Headlines | Punchy metaphor | "Show what you've been cooking" |
+| Headlines | Punchy metaphor | "Stop building in silence" |
 | Features | Metaphor + benefit | "Season everything to taste" |
 | CTAs | Direct, low-friction | "Get 10 Free Credits" |
 | Onboarding | Warm, encouraging | "Here's how to get cooking:" |

@@ -26,14 +26,14 @@ const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "brag.fast — Auto-generate social images for your launches",
+  title: "brag.fast | Stop building in silence",
   description:
-    "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+    "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "brag.fast — Auto-generate social images and videos for your launches",
+    title: "brag.fast | Stop building in silence",
     description:
-      "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
+      "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
     url: siteUrl,
     siteName: "brag.fast",
     type: "website",
@@ -42,15 +42,15 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "brag.fast — Auto-generate social images and videos for your launches",
+        alt: "brag.fast | Stop building in silence",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "brag.fast — Auto-generate social images and videos for your launches",
+    title: "brag.fast | Stop building in silence",
     description:
-      "Generate branded social images and videos from your releases. One API call or GitHub integration — images and animated MP4s in seconds.",
+      "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
     images: ["/twitter-image"],
   },
   icons: {
