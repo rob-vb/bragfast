@@ -15,14 +15,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "logo", type: "logo", name: "logo", x: 395, y: 24, width: 411, height: 64, opacity: 1, zIndex: 4, objectFit: "contain", entrance: "none" },
           ],
         },
-        og: {
-          objects: [
-            { id: "title", type: "text", name: "title", x: 64, y: 95, width: 1072, height: 83, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 90, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here", textFit: false },
-            { id: "description", type: "text", name: "description", x: 64, y: 178, width: 1072, height: 56, opacity: 0.8, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "center", verticalAlign: "top", textFit: false },
-            { id: "image", type: "image", name: "image", x: 64, y: 282, width: 1072, height: 367, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "contain", anchorY: "top", kenBurns: true },
-            { id: "logo", type: "logo", name: "logo", x: 395, y: 22, width: 411, height: 60, opacity: 1, zIndex: 4, objectFit: "contain", entrance: "none" },
-          ],
-        },
         square: {
           objects: [
             { id: "title", type: "text", name: "title", x: 64, y: 142, width: 952, height: 120, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 90, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here", textFit: false },
@@ -54,14 +46,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "description", type: "text", name: "description", x: 64, y: 198, width: 1072, height: 60, opacity: 0.8, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "center", verticalAlign: "top" },
             { id: "image", type: "image", name: "image", x: 429, y: 319, width: 343, height: 525, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "contain", anchorY: "top", kenBurns: true },
             { id: "logo", type: "logo", name: "logo", x: 395, y: 24, width: 411, height: 64, opacity: 1, zIndex: 4, objectFit: "contain", entrance: "none" },
-          ],
-        },
-        og: {
-          objects: [
-            { id: "title", type: "text", name: "title", x: 64, y: 102, width: 1072, height: 83, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 90, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "bottom", color: "#F8AF3C" },
-            { id: "description", type: "text", name: "description", x: 64, y: 185, width: 1072, height: 56, opacity: 0.8, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "center", verticalAlign: "top" },
-            { id: "image", type: "image", name: "image", x: 429, y: 298, width: 343, height: 490, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "contain", anchorY: "top", kenBurns: true },
-            { id: "logo", type: "logo", name: "logo", x: 395, y: 22, width: 411, height: 60, opacity: 1, zIndex: 4, objectFit: "contain", entrance: "none" },
           ],
         },
         square: {
@@ -97,14 +81,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "logo", type: "logo", name: "logo", x: 64, y: 64, width: 418, height: 64, opacity: 1, zIndex: 4, objectFit: "contain", anchorX: "left", entrance: "none" },
           ],
         },
-        og: {
-          objects: [
-            { id: "title", type: "text", name: "title", x: 64, y: 161, width: 502, height: 147, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here" },
-            { id: "image", type: "image", name: "image", x: 630, y: 60, width: 643, height: 511, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "cover", anchorX: "left", anchorY: "top", kenBurns: true },
-            { id: "description", type: "text", name: "description", x: 64, y: 308, width: 502, height: 255, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "logo", type: "logo", name: "logo", x: 64, y: 60, width: 418, height: 60, opacity: 1, zIndex: 4, objectFit: "contain", anchorX: "left", entrance: "none" },
-          ],
-        },
         square: {
           objects: [
             { id: "title", type: "text", name: "title", x: 55, y: 224, width: 433, height: 340, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here" },
@@ -136,14 +112,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "image", type: "image", name: "image", x: 730, y: 48, width: 390, height: 700, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover", kenBurns: true },
             { id: "description", type: "text", name: "description", x: 64, y: 338, width: 586, height: 283, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 48, width: 418, height: 64, opacity: 1, zIndex: 4, objectFit: "contain", anchorX: "left", entrance: "none" },
-          ],
-        },
-        og: {
-          objects: [
-            { id: "title", type: "text", name: "title", x: 64, y: 140, width: 586, height: 168, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C" },
-            { id: "image", type: "image", name: "image", x: 730, y: 45, width: 390, height: 653, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover", kenBurns: true },
-            { id: "description", type: "text", name: "description", x: 64, y: 315, width: 586, height: 264, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "logo", type: "logo", name: "logo", x: 64, y: 45, width: 418, height: 60, opacity: 1, zIndex: 4, objectFit: "contain", anchorX: "left", entrance: "none" },
           ],
         },
         square: {
@@ -179,14 +147,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "logo", type: "logo", name: "logo", x: 367, y: 309, width: 466, height: 64, opacity: 1, zIndex: 4, objectFit: "contain", entrance: "none" },
           ],
         },
-        og: {
-          objects: [
-            { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1200, height: 630, opacity: 0.6, zIndex: 0, imageFrame: "none", objectFit: "cover" },
-            { id: "title", type: "text", name: "title", x: 64, y: 367, width: 1072, height: 112, opacity: 1, zIndex: 2, fontFamily: "Plus Jakarta Sans", fontSize: 80, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "bottom", color: "#F8AF3C", textFit: true },
-            { id: "description", type: "text", name: "description", x: 200, y: 495, width: 800, height: 75, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "center", verticalAlign: "top" },
-            { id: "logo", type: "logo", name: "logo", x: 367, y: 288, width: 466, height: 60, opacity: 1, zIndex: 4, objectFit: "contain", entrance: "none" },
-          ],
-        },
         square: {
           objects: [
             { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1080, opacity: 0.6, zIndex: 0, imageFrame: "none", objectFit: "cover" },
@@ -219,15 +179,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
             { id: "features", type: "text", name: "features", x: 80, y: 196, width: 1040, height: 200, opacity: 1, zIndex: 3, fontFamily: "Geist", fontSize: 36, fontWeight: 600, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
             { id: "fixes", type: "text", name: "fixes", x: 80, y: 416, width: 1040, height: 180, opacity: 0.7, zIndex: 3, fontFamily: "Geist", fontSize: 30, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
             { id: "branding", type: "text", name: "branding", x: 80, y: 631, width: 1040, height: 28, opacity: 0.5, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 16, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "right", verticalAlign: "top" },
-          ],
-        },
-        og: {
-          objects: [
-            { id: "logo", type: "logo", name: "logo", x: 80, y: 20, width: 260, height: 44, opacity: 1, zIndex: 4, objectFit: "contain" },
-            { id: "version", type: "text", name: "version", x: 80, y: 100, width: 1040, height: 52, opacity: 1, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 28, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", color: "#F8AF3C" },
-            { id: "features", type: "text", name: "features", x: 80, y: 180, width: 1040, height: 200, opacity: 1, zIndex: 3, fontFamily: "Geist", fontSize: 32, fontWeight: 600, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "fixes", type: "text", name: "fixes", x: 80, y: 396, width: 1040, height: 172, opacity: 0.7, zIndex: 3, fontFamily: "Geist", fontSize: 26, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "branding", type: "text", name: "branding", x: 80, y: 594, width: 1040, height: 28, opacity: 0.5, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 14, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "right", verticalAlign: "top" },
           ],
         },
         square: {

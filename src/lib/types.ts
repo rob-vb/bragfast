@@ -93,7 +93,6 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
   portrait: { width: 1080, height: 1920 },
-  og: { width: 1200, height: 630 },
 }
 
 export type CookCreditsInput = {

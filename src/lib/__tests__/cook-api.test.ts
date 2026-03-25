@@ -252,16 +252,6 @@ describe.sequential("Format validation", () => {
 // ── 6. Video Validation ──────────────────────────────────────────
 
 describe.sequential("Video validation", () => {
-  test("video + og format → 400", async () => {
-    const res = await cookPost({
-      video: true,
-      formats: [{ name: "og", slides: [{}] }],
-    });
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data.error).toContain("Video does not support");
-  });
-
   test("video: true with too many slides exceeds 60s → 400", async () => {
     // 5 slides per format × 5s default = 25s per format, but maxSlides = 5
     // Use duration 15 with 5 slides = 75s > 60s
@@ -564,18 +554,17 @@ describe.sequential("Edge cases", () => {
     expect(res.status).toBe(202);
   });
 
-  test("all 4 formats, 1 slide each → 202, credits: 4", async () => {
+  test("all 3 formats, 1 slide each → 202, credits: 3", async () => {
     const res = await cookPost({
       formats: [
         { name: "landscape", slides: [{}] },
         { name: "square", slides: [{}] },
         { name: "portrait", slides: [{}] },
-        { name: "og", slides: [{}] },
       ],
     });
     expect(res.status).toBe(202);
     const data = await res.json();
-    expect(data.credits_used).toBe(4);
+    expect(data.credits_used).toBe(3);
   });
 });
 

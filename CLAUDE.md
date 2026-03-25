@@ -58,7 +58,7 @@ npm run remotion:studio  # Remotion preview
 
 ### Image Dimensions
 
-- Landscape: 1200×675, Square: 1080×1080, Portrait: 1080×1350, OG: 1200×630
+- Landscape: 1200×675, Square: 1080×1080, Portrait: 1080×1350
 - Video: Same as image dimensions (renders at template resolution)
 
 ### GitHub App Integration

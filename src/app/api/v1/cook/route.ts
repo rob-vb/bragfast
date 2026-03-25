@@ -51,18 +51,6 @@ export async function POST(request: Request) {
     return Response.json({ error: formatError }, { status: 400 });
   }
 
-  // Video: reject og format
-  if (isVideo) {
-    for (const format of body.formats) {
-      if (format.name === "og") {
-        return Response.json(
-          { error: 'Video does not support "og" format. Use landscape, square, or portrait.' },
-          { status: 400 }
-        );
-      }
-    }
-  }
-
   // Video field validation
   if (isVideo) {
     const maxSlides = Math.max(...body.formats.map((f: { slides: unknown[] }) => f.slides?.length ?? 0));

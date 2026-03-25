@@ -19,7 +19,7 @@ export function validateFormats(formats: unknown): string | null {
   const seen = new Set<string>()
   for (const entry of formats) {
     if (!entry.name || !VALID_FORMATS.includes(entry.name)) {
-      return `Invalid format: ${entry.name}. Must be landscape, square, portrait, or og`
+      return `Invalid format: ${entry.name}. Must be landscape, square, or portrait`
     }
     if (seen.has(entry.name)) {
       return `Duplicate format: ${entry.name}`
