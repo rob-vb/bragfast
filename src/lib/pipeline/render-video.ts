@@ -64,7 +64,6 @@ export async function renderVideoAsync(
   request: VideoRenderRequest
 ) {
   let partialRefundCredits = 0; // credits already refunded (for partial failure)
-  let successCount = 0;         // formats that rendered successfully
   const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 5;
   try {
     const templateName = request.template || "standard-browser";
@@ -73,9 +72,12 @@ export async function renderVideoAsync(
     const slideDuration = getSlideDuration(request.video);
     const srcMap = await prefetchStaticImages(templateConfig);
 
-    // Render all formats in parallel
-    const formatResults = await Promise.allSettled(
-      request.formats.map(async (format) => {
+    // Render formats sequentially to avoid Lambda concurrency limits
+    const videos: Record<string, { url: string; duration: number; dimensions: string }> = {};
+    const failures: string[] = [];
+
+    for (const format of request.formats) {
+      try {
         const formatKey = format.name as FormatKey;
         const dims = FORMAT_DIMENSIONS[formatKey];
         if (!dims) throw new Error(`Unknown format: ${format.name}`);
@@ -133,26 +135,9 @@ export async function renderVideoAsync(
           );
         }
 
-        return {
-          name: format.name,
-          data: {
-            url,
-            duration,
-            dimensions: `${dims.width}x${dims.height}`,
-          },
-        };
-      })
-    );
-
-    // Collect results and handle partial completion
-    const videos: Record<string, { url: string; duration: number; dimensions: string }> = {};
-    const failures: string[] = [];
-
-    for (const result of formatResults) {
-      if (result.status === "fulfilled") {
-        videos[result.value.name] = result.value.data;
-      } else {
-        failures.push(result.reason?.message ?? "Unknown error");
+        videos[format.name] = { url, duration, dimensions: `${dims.width}x${dims.height}` };
+      } catch (err: unknown) {
+        failures.push(err instanceof Error ? err.message : "Unknown error");
       }
     }
 
@@ -161,7 +146,6 @@ export async function renderVideoAsync(
     }
 
     // Refund credits for failed formats only
-    successCount = Object.keys(videos).length;
     if (failures.length > 0) {
       const refundAmount = failures.length * creditsPerFormat;
       partialRefundCredits = refundAmount;

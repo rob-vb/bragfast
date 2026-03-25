@@ -111,9 +111,15 @@ export const render = internalAction({
       const slideDuration = getSlideDuration(request.video);
       const srcMap = await prefetchStaticImages(templateConfig);
 
-      // Render all formats in parallel
-      const formatResults = await Promise.allSettled(
-        request.formats.map(async (format) => {
+      // Render formats sequentially to avoid Lambda concurrency limits
+      const videos: Record<
+        string,
+        { url: string; duration: number; dimensions: string }
+      > = {};
+      const failures: string[] = [];
+
+      for (const format of request.formats) {
+        try {
           const formatKey = format.name as FormatKey;
           const dims = FORMAT_DIMENSIONS[formatKey];
           if (!dims) throw new Error(`Unknown format: ${format.name}`);
@@ -164,29 +170,9 @@ export const render = internalAction({
             "video/mp4"
           );
 
-          return {
-            name: format.name,
-            data: {
-              url,
-              duration,
-              dimensions: `${dims.width}x${dims.height}`,
-            },
-          };
-        })
-      );
-
-      // Collect results and handle partial completion
-      const videos: Record<
-        string,
-        { url: string; duration: number; dimensions: string }
-      > = {};
-      const failures: string[] = [];
-
-      for (const result of formatResults) {
-        if (result.status === "fulfilled") {
-          videos[result.value.name] = result.value.data;
-        } else {
-          failures.push(result.reason?.message ?? "Unknown error");
+          videos[format.name] = { url, duration, dimensions: `${dims.width}x${dims.height}` };
+        } catch (err: unknown) {
+          failures.push(err instanceof Error ? err.message : "Unknown error");
         }
       }
 
@@ -197,7 +183,8 @@ export const render = internalAction({
       // Refund credits for failed formats only
       if (failures.length > 0) {
         partialRefundCount = failures.length;
-        const refundAmount = failures.length * 5;
+        const slidesPerFormat = request.formats[0]?.slides.length ?? 1;
+        const refundAmount = failures.length * slidesPerFormat * 5;
         console.warn(
           `[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`
         );
@@ -242,7 +229,8 @@ export const render = internalAction({
 
       // Only refund formats not already refunded by partial-refund above
       try {
-        const refundAmount = (request.formats.length - partialRefundCount) * 5;
+        const slidesPerFormat = request.formats[0]?.slides.length ?? 1;
+        const refundAmount = (request.formats.length - partialRefundCount) * slidesPerFormat * 5;
         if (refundAmount > 0) {
           await ctx.runMutation(internal.videoRenderHelpers.refundCredits, {
             userId,
