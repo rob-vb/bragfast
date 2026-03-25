@@ -5,6 +5,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 import { HeroAnimation } from "@/components/landing/hero-animation";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
+import { SkillCommandMock } from "@/components/landing/skill-command-mock";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -47,37 +48,100 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S2: How it works — Developer + No-Code */}
+      {/* S3: AI / Skills Users */}
       <section
-        id="features"
-        className="scroll-mt-16 py-16 md:py-24"
+        id="ai"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
       >
-        <div className="mx-auto max-w-5xl px-4 md:px-8 space-y-16 md:space-y-24">
+        <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div>
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
+              For AI users
+            </span>
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+              Let your AI do the cooking
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
+              Tell your AI agent to generate release images. Claude Code, Cursor, or any MCP client — describe what you shipped, brag.fast handles the rest.
+            </p>
+            <a
+              href="https://github.com/rob-vb/bragfast-skills"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Get the Skill
+            </a>
+          </div>
+          <SkillCommandMock />
+        </div>
+      </section>
 
-          {/* Row 1: Developers — text left, code right */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                Developers, POST and receive
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                One API call, polished images or animated videos back. Multiple formats, multiple templates, zero design tools.
-              </p>
-              <Link
-                href="/docs"
-                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Read the Docs
-              </Link>
+      {/* S4: GitHub Releases Users */}
+      <section
+        id="github"
+        className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
+      >
+        <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="order-2 md:order-1">
+            <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
+              <LazyVideo
+                src="/demo/github_release_demo_compressed.mp4"
+                className="w-full rounded-sm border border-brand"
+              />
             </div>
-            <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
-              <div className="border-b-2 border-surface/20 px-3 py-1.5 flex items-center gap-1.5">
-                <span className="block h-2 w-2 border border-surface/30 bg-gold" />
-                <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
-                <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
-              </div>
-              <pre className="p-4 overflow-x-auto">
-                <code className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm text-surface/90 leading-relaxed">
+          </div>
+          <div className="order-1 md:order-2">
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
+              For GitHub
+            </span>
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+              Ship a release, we plate it
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
+              Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
+            </p>
+            <Link
+              href="/docs"
+              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Connect GitHub
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* S5: Developers / API */}
+      <section
+        id="api"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
+      >
+        <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div>
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
+              For developers
+            </span>
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+              Developers, POST and receive
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
+              One API call, polished images or animated videos back. Multiple formats, multiple templates, zero design tools.
+            </p>
+            <Link
+              href="/docs"
+              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Read the Docs
+            </Link>
+          </div>
+          <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
+            <div className="border-b-2 border-surface/20 px-3 py-1.5 flex items-center gap-1.5">
+              <span className="block h-2 w-2 border border-surface/30 bg-gold" />
+              <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
+              <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
+            </div>
+            <pre className="p-4 overflow-x-auto">
+              <code className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm text-surface/90 leading-relaxed">
 {`curl -X POST \\
   brag.fast/api/v1/cook \\
   -H "Authorization: Bearer bf_key" \\
@@ -95,81 +159,67 @@ export default function Home() {
       }]
     }]
   }'`}
-                </code>
-              </pre>
-              <div className="flex items-center gap-2 px-4 pb-3 pt-1">
-                <span className="font-[family-name:var(--font-geist-mono)] text-[8px] text-surface/40">
-                  Output:
+              </code>
+            </pre>
+            <div className="flex items-center gap-2 px-4 pb-3 pt-1">
+              <span className="font-[family-name:var(--font-geist-mono)] text-[8px] text-surface/40">
+                Output:
+              </span>
+              {["16:9", "1:1", "4:5"].map((fmt) => (
+                <span
+                  key={fmt}
+                  className="font-[family-name:var(--font-press-start)] text-[6px] text-surface/60 border border-surface/20 px-1.5 py-0.5"
+                >
+                  {fmt}
                 </span>
-                {["16:9", "1:1", "4:5"].map((fmt) => (
-                  <span
-                    key={fmt}
-                    className="font-[family-name:var(--font-press-start)] text-[6px] text-surface/60 border border-surface/20 px-1.5 py-0.5"
-                  >
-                    {fmt}
-                  </span>
-                ))}
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* S6: Shared Features — Template Editor + Brand Kits */}
+      <section className="py-16 md:py-24 bg-surface">
+        <div className="mx-auto max-w-5xl px-4 md:px-8">
+          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg text-center mb-12 md:mb-16">
+            Every workflow, one kitchen
+          </h2>
+          <div className="space-y-16 md:space-y-24">
+            {/* Template Editor — visual left, text right */}
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div className="order-2 md:order-1">
+                <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
+                  <LazyVideo
+                    src="/demo/template_editor_compressed.mp4"
+                    className="w-full rounded-sm border border-brand"
+                  />
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+                  Cook up your own templates
+                </h3>
+                <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                  No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
+                </p>
+              </div>
+            </div>
+
+            {/* Brand Kits — visual left, text right */}
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+              <div className="order-2 md:order-1">
+                <BrandKitMockup />
+              </div>
+              <div className="order-1 md:order-2">
+                <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+                  Season everything to taste
+                </h3>
+                <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                  Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Row 2: Template Editor — visual left, text right */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="order-2 md:order-1">
-              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-                <LazyVideo
-                  src="/demo/template_editor_compressed.mp4"
-                  className="w-full rounded-sm border border-brand"
-                />
-              </div>
-            </div>
-            <div className="order-1 md:order-2">
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                Cook up your own templates
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
-              </p>
-            </div>
-          </div>
-
-          {/* Row 3: GitHub Integration — text left, visual right */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                Ship a release, we plate it
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-                Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
-              </p>
-
-            </div>
-            <div>
-              {/* Demo video */}
-              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-                <LazyVideo
-                  src="/demo/github_release_demo_compressed.mp4"
-                  className="w-full rounded-sm border border-brand"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 4: Brand Kits — visual left, text right */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="order-2 md:order-1">
-              <BrandKitMockup />
-            </div>
-            <div className="order-1 md:order-2">
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-                Season everything to taste
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
-              </p>
-            </div>
-          </div>
-
         </div>
       </section>
 
