@@ -2,16 +2,17 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
-import { HeroAnimation } from "@/components/landing/hero-animation";
+import { BeforeAfter } from "@/components/landing/before-after";
+import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { SkillCommandMock } from "@/components/landing/skill-command-mock";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Stop building in silence",
+  title: "brag.fast | Ship features. Post like a pro.",
   description:
-    "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
+    "Turn your releases into branded social images and videos. One API call, AI skill, or GitHub integration. Announce every feature in seconds, not hours.",
   alternates: { canonical: "/" },
 };
 
@@ -20,16 +21,18 @@ export default function Home() {
     <div className="min-h-screen bg-surface text-brand">
       <LandingNav />
 
-      {/* S1: Hero — Split layout */}
-      <section className="pt-16 pb-20 md:pt-24 md:pb-28 bg-white border-b-2 border-brand">
+      {/* S1: Hero */}
+      <section className="pt-16 pb-20 md:pt-24 md:pb-28 bg-white border-b-2 border-brand overflow-hidden">
         <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-          {/* Left: text */}
+          {/* Left: copy + CTA */}
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6">
-              Stop building in silence
+              Ship features. Post like a pro.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast auto-generates branded social images and videos. Every release gets the announcement it deserves.
+              brag.fast turns your releases into branded social images and
+              videos. The same polished announcements you see from top
+              companies, generated in seconds.
             </p>
             <Link
               href="/signup"
@@ -42,89 +45,102 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Right: animated API demo */}
-          <HeroAnimation />
+          {/* Right: stacked social cards — X front, LinkedIn middle, Instagram back */}
+          <div className="animate-[fade-in-up_0.6s_ease-out_both]">
+            <HeroSocialStack />
+          </div>
         </div>
       </section>
 
-      {/* S3: AI / Skills Users */}
+      {/* S2: Before/After */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-5xl px-4 md:px-8">
+          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-10 text-center">
+            Which post is better?
+          </h2>
+          <BeforeAfter />
+        </div>
+      </section>
+
+      {/* S4: Automate It — AI + GitHub */}
       <section
         id="ai"
         className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
       >
-        <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-          <div>
-            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
-              For AI users
-            </span>
-            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-              Let your AI do the cooking
-            </h2>
-            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-              Tell your AI agent to generate release images. Claude Code, Cursor, or any MCP client. Describe what you shipped, brag.fast handles the rest.
-            </p>
-            <a
-              href="https://github.com/rob-vb/bragfast-skills"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Get the Skill
-            </a>
+        <div className="mx-auto max-w-5xl px-4 md:px-8">
+          <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
+            Automate it
+          </span>
+          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
+            Set it and forget it
+          </h2>
+          <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-10 max-w-2xl">
+            Tell your AI to generate images with a single command. Or connect
+            GitHub and every release gets branded images automatically.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+            {/* AI card */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  AI / MCP
+                </span>
+              </div>
+              <SkillCommandMock />
+              <a
+                href="https://github.com/rob-vb/bragfast-skills"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Get the Skill
+              </a>
+            </div>
+
+            {/* GitHub card */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  GitHub
+                </span>
+              </div>
+              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
+                <LazyVideo
+                  src="/demo/github_release_demo_compressed.mp4"
+                  className="w-full rounded-sm border border-brand"
+                />
+              </div>
+              <Link
+                href="/dashboard/account"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Connect GitHub
+              </Link>
+            </div>
           </div>
-          <SkillCommandMock />
         </div>
       </section>
 
-      {/* S4: GitHub Releases Users */}
+      {/* S5: Build With It — API */}
       <section
-        id="github"
+        id="api"
         className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
       >
         <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-          <div className="order-2 md:order-1">
-            <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-              <LazyVideo
-                src="/demo/github_release_demo_compressed.mp4"
-                className="w-full rounded-sm border border-brand"
-              />
-            </div>
-          </div>
-          <div className="order-1 md:order-2">
-            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
-              For GitHub
-            </span>
-            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-              Ship a release, we plate it
-            </h2>
-            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-              Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images. Approve them yourself or let it run hands-free.
-            </p>
-            <Link
-              href="/dashboard/account"
-              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Connect GitHub
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* S5: Developers / API */}
-      <section
-        id="api"
-        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
-      >
-        <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
-              For developers
+              Full control
             </span>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-              Developers, POST and receive
+              One API call. Polished visuals back.
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-              One API call, polished images or animated videos back. Multiple formats, multiple templates, zero design tools.
+              POST your release details, get branded images and videos in
+              multiple formats. Build it into your CI/CD, your bot, your
+              workflow.
             </p>
             <Link
               href="/docs"
@@ -133,14 +149,14 @@ export default function Home() {
               Read the Docs
             </Link>
           </div>
-          <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
+          <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)] min-w-0">
             <div className="border-b-2 border-surface/20 px-3 py-1.5 flex items-center gap-1.5">
               <span className="block h-2 w-2 border border-surface/30 bg-gold" />
               <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
               <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
             </div>
-            <pre className="p-4 overflow-x-auto">
-              <code className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm text-surface/90 leading-relaxed">
+            <pre className="p-4 overflow-x-hidden whitespace-pre-wrap break-words">
+              <code className="font-[family-name:var(--font-geist-mono)] text-[10px] md:text-sm text-surface/90 leading-relaxed">
 {`curl -X POST \\
   brag.fast/api/v1/cook \\
   -H "Authorization: Bearer bf_key" \\
@@ -177,8 +193,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S6: Shared Features — Template Editor + Brand Kits */}
-      <section className="py-16 md:py-24 bg-surface">
+      {/* S6: Features — Template Editor + Brand Kits */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16">
             {/* Template Editor */}
@@ -190,10 +206,11 @@ export default function Home() {
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg">
-                Cook up your own templates
+                Design your own recipe
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                No design skills needed. Drag objects, set colors, preview live. Every render uses your recipe automatically.
+                No design skills needed. Drag objects, set colors, preview live.
+                Every render uses your recipe automatically.
               </p>
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
                 <LazyVideo
@@ -212,10 +229,11 @@ export default function Home() {
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg">
-                Season everything to taste
+                On-brand, every time
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Upload your logo, set your colors and fonts. Every image comes out on-brand, every time. No more off-brand release graphics cobbled together in Figma.
+                Upload your logo, set your colors and fonts. Every image comes
+                out on-brand, every time.
               </p>
               <BrandKitMockup />
             </div>
@@ -223,12 +241,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S3: Pricing — Retro Menu Board */}
-      <section className="py-16 md:py-20 bg-white border-y-2 border-brand">
+      {/* S8: Pricing — Retro Menu Board */}
+      <section className="py-16 md:py-20 bg-surface border-y-2 border-brand">
         <div className="mx-auto max-w-2xl px-4 md:px-8">
-          {/* Menu board card */}
           <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
-            {/* Menu header bar */}
             <div className="bg-brand text-gold px-5 py-4 text-center">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
                 brag.fast menu
@@ -238,7 +254,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Menu items */}
             <div className="divide-y-2 divide-brand/10">
               {PAID_PLANS.map((plan) => (
                 <div
@@ -259,7 +274,8 @@ export default function Home() {
                       )}
                     </div>
                     <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-0.5">
-                      {plan.label} &middot; {plan.credits.toLocaleString()} credits/mo
+                      {plan.label} &middot; {plan.credits.toLocaleString()}{" "}
+                      credits/mo
                     </p>
                   </div>
                   <div className="text-right shrink-0">
@@ -274,7 +290,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Menu footer */}
             <div className="bg-surface px-5 py-4 text-center border-t-2 border-brand">
               <Link
                 href="/signup"
@@ -290,14 +305,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S4: Demo + Final CTA */}
+      {/* S9: Final CTA */}
       <section className="py-16 md:py-24 bg-gold border-y-2 border-brand">
         <div className="mx-auto max-w-5xl px-4 md:px-8 text-center">
           <h2 className="font-[family-name:var(--font-press-start)] text-lg md:text-2xl mb-4">
-            See the kitchen in action
+            Start showing off. Like a pro.
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8">
-            Sign up free and start generating in seconds.
+            10 free credits. No credit card. See results in seconds.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -332,7 +347,7 @@ export default function Home() {
         }}
       />
 
-      {/* S8: Footer */}
+      {/* S10: Footer */}
       <footer className="py-8 border-t-2 border-brand bg-surface">
         <div className="mx-auto max-w-5xl px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">

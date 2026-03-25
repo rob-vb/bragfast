@@ -1,15 +1,16 @@
 export function SkillCommandMock() {
   return (
-    <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
+    <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)] min-w-0">
       <div className="border-b-2 border-surface/20 px-3 py-1.5 flex items-center gap-1.5">
         <span className="block h-2 w-2 border border-surface/30 bg-gold" />
         <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
         <span className="block h-2 w-2 border border-surface/30 bg-surface/20" />
       </div>
-      <pre className="p-4 overflow-x-auto">
-        <code className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm text-surface/90 leading-relaxed">
+      <pre className="p-4 overflow-x-hidden whitespace-pre-wrap break-words">
+        <code className="font-[family-name:var(--font-geist-mono)] text-[10px] md:text-sm text-surface/90 leading-relaxed">
 {`> /bragfast
-  Generate release images for "Dark mode is here"
+  Generate release images for
+  "Dark mode is here"
   --template standard-browser
 
   Generating 3 formats...
