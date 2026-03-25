@@ -194,14 +194,14 @@ while True:
             type: "string",
             required: false,
             description:
-              "ID of a saved brand kit (e.g. \"brand_abc123\"). If omitted, uses inline colors or defaults to dark theme (#1a1a2e, #ffffff, #e94560).",
+              "ID of a saved brand kit (e.g. \"brand_abc123\"). Uses the brand's colors and logo. Without a brand_id, falls back to inline colors or the dark theme (#1a1a2e, #ffffff, #e94560).",
           },
           {
             name: "colors",
             type: "object",
             required: false,
             description:
-              "Inline brand colors. Optional — defaults to dark theme if omitted.",
+              "Inline brand colors. Optional — ignored when brand_id is set, otherwise defaults to dark theme.",
             children: [
               {
                 name: "background",
@@ -222,12 +222,6 @@ while True:
                 description: 'Accent hex color, e.g. "#e94560".',
               },
             ],
-          },
-          {
-            name: "name",
-            type: "string",
-            required: false,
-            description: "Brand name shown on images. Used with inline colors.",
           },
           {
             name: "logo_url",
@@ -352,7 +346,15 @@ while True:
                         required: false,
                         group: "video",
                         description:
-                          'Entrance animation for this object in video mode. One of "fade-in", "slide-up", "bounce", "none". Defaults: text → fade-in, image → fade-in, logo → bounce. Ignored for image output.',
+                          'Entrance animation for this object in video mode. One of "fade-in", "slide-up", "bounce", "none". Defaults: text → fade-in, image → fade-in, logo → none. Ignored for image output.',
+                      },
+                      {
+                        name: "exit",
+                        type: "string",
+                        required: false,
+                        group: "video",
+                        description:
+                          'Exit animation for this object in video mode. One of "fade-out", "slide-down", "bounce", "none". Defaults: text → fade-out, image → fade-out, logo → none. Ignored for image output.',
                       },
                     ],
                   },

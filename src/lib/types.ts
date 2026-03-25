@@ -28,6 +28,7 @@ export interface BrandRecord {
 
 export type TextAlign = 'left' | 'center' | 'right'
 export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'none'
+export type ExitType = 'fade-out' | 'slide-down' | 'bounce' | 'none'
 
 export interface ObjectModification {
   id: string
@@ -43,6 +44,7 @@ export interface ObjectModification {
   anchor_y?: 'top' | 'center' | 'bottom'
   // Video animation
   entrance?: EntranceType
+  exit?: ExitType
 }
 
 export interface FormatEntry {

@@ -17,6 +17,7 @@ export interface ObjectDataMap {
     anchorX?: string;
     anchorY?: string;
     entrance?: string;
+    exit?: string;
   };
 }
 

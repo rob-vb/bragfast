@@ -20,6 +20,7 @@ import type { ObjectDataMap } from "../lib/templates/canvas-renderer";
 import type { Brand } from "../lib/types";
 
 type EntranceType = "fade-in" | "slide-up" | "bounce" | "none";
+type ExitType = "fade-out" | "slide-down" | "bounce" | "none";
 
 export type VideoCanvasCompositionProps = {
   config: CanvasTemplateConfig;
@@ -101,22 +102,6 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
 
-  // Exit animation: fade out all content near the end of the slide
-  const exitDuration = Math.round(fps * 0.4);
-  const exitStart = slideDurationFrames - exitDuration;
-  const exitOpacity = interpolate(
-    frame,
-    [exitStart, slideDurationFrames],
-    [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-  const exitTranslateY = interpolate(
-    frame,
-    [exitStart, slideDurationFrames],
-    [0, -16],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
-
   return (
     <AbsoluteFill
       style={{
@@ -135,11 +120,20 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
           obj.entrance ??
           getDefaultEntrance(obj.type);
 
+        // Determine exit type: API override > template default > type-based default
+        const exit: ExitType =
+          (data?.exit as ExitType | undefined) ??
+          obj.exit ??
+          getDefaultExit(obj.type);
+
         const staggerDelay = sortIndex * Math.round(fps * 0.15);
         const localFrame = Math.max(0, frame - staggerDelay);
 
         // Compute entrance animation style
         const entranceStyle = computeEntranceStyle(entrance, localFrame, fps);
+
+        // Compute exit animation style
+        const exitStyle = computeExitStyle(exit, frame, fps, slideDurationFrames);
 
         // Compute image-specific effects (3D rotation)
         const kenBurnsEnabled = obj.kenBurns ?? false;
@@ -150,11 +144,12 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
 
         // Combine entrance opacity with exit opacity
         const entranceOpacity = typeof entranceStyle.opacity === "number" ? entranceStyle.opacity : 1;
+        const exitOpacity = typeof exitStyle.opacity === "number" ? exitStyle.opacity : 1;
         const combinedOpacity = (obj.opacity ?? 1) * entranceOpacity * exitOpacity;
 
         // Combine entrance transform with exit transform
         const entranceTransform = entranceStyle.transform || "";
-        const exitTransform = frame >= exitStart ? `translateY(${exitTranslateY}px)` : "";
+        const exitTransform = exitStyle.transform || "";
         const combinedTransform = [entranceTransform, exitTransform].filter(Boolean).join(" ");
 
         return (
@@ -219,9 +214,22 @@ function getDefaultEntrance(type: string): EntranceType {
     case "image":
       return "fade-in";
     case "logo":
-      return "bounce";
+      return "none";
     default:
       return "fade-in";
+  }
+}
+
+function getDefaultExit(type: string): ExitType {
+  switch (type) {
+    case "text":
+      return "fade-out";
+    case "image":
+      return "fade-out";
+    case "logo":
+      return "none";
+    default:
+      return "fade-out";
   }
 }
 
@@ -275,6 +283,80 @@ function computeEntranceStyle(
         config: { damping: 8, stiffness: 150 },
       });
       return {
+        transform: `scale(${scale})`,
+      };
+    }
+
+    default:
+      return {};
+  }
+}
+
+function computeExitStyle(
+  exit: ExitType,
+  frame: number,
+  fps: number,
+  slideDurationFrames: number,
+): React.CSSProperties {
+  switch (exit) {
+    case "none":
+      return {};
+
+    case "fade-out": {
+      const duration = Math.round(fps * 0.4);
+      const exitStart = slideDurationFrames - duration;
+      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      const translateY = interpolate(frame, [exitStart, slideDurationFrames], [0, -16], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      return {
+        opacity,
+        transform: `translateY(${translateY}px)`,
+      };
+    }
+
+    case "slide-down": {
+      const duration = Math.round(fps * 0.3);
+      const exitStart = slideDurationFrames - duration;
+      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      const framesFromEnd = Math.max(0, frame - exitStart);
+      const translateY = spring({
+        frame: framesFromEnd,
+        fps,
+        from: 0,
+        to: 60,
+        config: { damping: 12, stiffness: 100 },
+      });
+      return {
+        opacity,
+        transform: `translateY(${translateY}px)`,
+      };
+    }
+
+    case "bounce": {
+      const duration = Math.round(fps * 0.4);
+      const exitStart = slideDurationFrames - duration;
+      const framesFromEnd = Math.max(0, frame - exitStart);
+      const scale = spring({
+        frame: framesFromEnd,
+        fps,
+        from: 1.0,
+        to: 0.8,
+        config: { damping: 8, stiffness: 150 },
+      });
+      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      return {
+        opacity,
         transform: `scale(${scale})`,
       };
     }
