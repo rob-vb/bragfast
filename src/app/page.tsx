@@ -102,7 +102,7 @@ export default function Home() {
               Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
             </p>
             <Link
-              href="/docs"
+              href="/dashboard/account"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
               Connect GitHub
