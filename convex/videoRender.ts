@@ -6,6 +6,7 @@ import { v } from "convex/values";
 import { renderVideo } from "../src/lib/video/lambda";
 import { uploadImage } from "../src/lib/storage/r2";
 import { buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "../src/lib/pipeline/shared";
+import { collectUploadKeys, cleanupUploads } from "../src/lib/pipeline/cleanup";
 import { fetchImageAsBase64 } from "../src/lib/images";
 import { getDefaultConfig } from "../src/lib/templates/default-configs";
 import { migrateConfig } from "../src/lib/templates/canvas-types";
@@ -49,6 +50,7 @@ export const render = internalAction({
   handler: async (ctx, { cookId, userId, request: requestJson }) => {
     const request: VideoRenderRequest = JSON.parse(requestJson);
     let partialRefundCount = 0;
+    const uploadKeys = collectUploadKeys(request.formats);
 
     try {
       // Resolve template (inline — replaces ConvexHttpClient call)
@@ -250,6 +252,10 @@ export const render = internalAction({
       } catch (refundErr) {
         console.error(`Failed to refund credits:`, refundErr);
       }
+    } finally {
+      cleanupUploads(uploadKeys).catch((err) =>
+        console.error(`Upload cleanup error for ${cookId}:`, err)
+      );
     }
   },
 });

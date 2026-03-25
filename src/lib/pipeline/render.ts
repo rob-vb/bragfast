@@ -11,6 +11,7 @@ import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { uploadImage } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
 import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { collectUploadKeys, cleanupUploads } from "./cleanup";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
@@ -76,6 +77,7 @@ export async function renderReleaseAsync(
   request: ReleaseRequest,
   userId: string
 ): Promise<void> {
+  const uploadKeys = collectUploadKeys(request.formats);
   try {
     const templateName = request.template || "standard-browser";
 
@@ -185,6 +187,10 @@ export async function renderReleaseAsync(
       const result = await getRelease(releaseId);
       if (result) await callWebhook(request.webhook_url, result);
     }
+  } finally {
+    cleanupUploads(uploadKeys).catch((err) =>
+      console.error(`Upload cleanup error for ${releaseId}:`, err)
+    );
   }
 }
 
