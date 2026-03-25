@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PixelBadge } from "@/components/dashboard/pixel-badge";
 import { PixelTable } from "@/components/dashboard/pixel-table";
 import { PixelButton } from "@/components/dashboard/pixel-button";
@@ -207,13 +207,21 @@ function SocialCopySection({ release }: { release: Release }) {
   );
 }
 
-function ExpandableRow({ release }: { release: Release }) {
-  const [open, setOpen] = useState(false);
+function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  const rowRef = useRef<HTMLTableRowElement>(null);
   const response = buildResponseBody(release);
+
+  useEffect(() => {
+    if (defaultOpen && rowRef.current) {
+      rowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [defaultOpen]);
 
   return (
     <>
       <tr
+        ref={rowRef}
         className="hover:bg-gold/5 cursor-pointer"
         onClick={() => setOpen(!open)}
       >
@@ -275,11 +283,11 @@ function ExpandableRow({ release }: { release: Release }) {
   );
 }
 
-export function HistoryTable({ releases }: { releases: Release[] }) {
+export function HistoryTable({ releases, highlightId }: { releases: Release[]; highlightId?: string }) {
   return (
     <PixelTable headers={["ID", "Template", "Status", "Credits", "Date", ""]}>
       {releases.map((r) => (
-        <ExpandableRow key={r._id} release={r} />
+        <ExpandableRow key={r._id} release={r} defaultOpen={r.externalId === highlightId} />
       ))}
     </PixelTable>
   );

@@ -9,12 +9,12 @@ import { HistoryTable } from "@/components/dashboard/history-table";
 export default async function HistoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; id?: string }>;
 }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
-  const { status } = await searchParams;
+  const { status, id } = await searchParams;
   const allReleases = await fetchQuery(api.releases.listByUser, { userId: user._id });
 
   const releases = status && status !== "all"
@@ -37,7 +37,7 @@ export default async function HistoryPage({
           cta={{ label: "Get Started", href: "/docs" }}
         />
       ) : (
-        <HistoryTable releases={releases} />
+        <HistoryTable releases={releases} highlightId={id} />
       )}
     </div>
   );
