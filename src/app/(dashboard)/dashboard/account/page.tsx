@@ -156,7 +156,7 @@ export default async function AccountPage() {
         </h2>
         <p className="text-sm text-red-700/70 mb-4">
           Permanently delete your account and all associated data. This action
-          cannot be undone — all releases, templates, brands, and API keys will
+          cannot be undone. All releases, templates, brands, and API keys will
           be destroyed.
         </p>
         <DeleteAccountDialog userEmail={user.email} />

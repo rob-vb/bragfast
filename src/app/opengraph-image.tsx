@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "fs/promises";
 import path from "path";
 
-export const alt = "brag.fast — Auto-generate social images and videos for your launches";
+export const alt = "brag.fast | Stop building in silence";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

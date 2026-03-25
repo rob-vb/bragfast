@@ -61,7 +61,7 @@ export default function Home() {
               Let your AI do the cooking
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-              Tell your AI agent to generate release images. Claude Code, Cursor, or any MCP client — describe what you shipped, brag.fast handles the rest.
+              Tell your AI agent to generate release images. Claude Code, Cursor, or any MCP client. Describe what you shipped, brag.fast handles the rest.
             </p>
             <a
               href="https://github.com/rob-vb/bragfast-skills"
@@ -98,7 +98,7 @@ export default function Home() {
               Ship a release, we plate it
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-6">
-              Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images — approve them yourself or let it run hands-free.
+              Connect our GitHub App to your repos. Every time you tag a release, AI reads your changelog and generates branded images. Approve them yourself or let it run hands-free.
             </p>
             <Link
               href="/dashboard/account"

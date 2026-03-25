@@ -7,7 +7,7 @@ export default function UpgradeCancelPage() {
         Checkout cancelled
       </h1>
       <p className="text-sm text-brand/70 text-center max-w-md">
-        No worries — you can upgrade anytime from your account page.
+        No worries. You can upgrade anytime from your account page.
       </p>
       <Link
         href="/dashboard/account/upgrade"
