@@ -180,15 +180,7 @@ export function renderObject(
 
     case "image": {
       const imgSrc = data?.imageBase64;
-      if (!imgSrc) {
-        return (
-          <div style={{
-            width: "100%", height: "100%",
-            background: "#e0e0e0",
-            borderRadius: getObjectBorderRadius(obj) || 8,
-          }} />
-        );
-      }
+      if (!imgSrc) return null;
       const frame = data?.imageFrame || obj.imageFrame || "none";
       const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
       const anchorX = data?.anchorX || obj.anchorX || "center";
