@@ -1,5 +1,5 @@
 import React from "react";
-import { Composition } from "remotion";
+import { Composition, staticFile } from "remotion";
 import type { CalculateMetadataFunction } from "remotion";
 import { VideoCanvasComposition } from "./VideoCanvasComposition";
 import type { VideoCanvasCompositionProps } from "./VideoCanvasComposition";
@@ -24,7 +24,7 @@ const calculateMetadata: CalculateMetadataFunction<
   return { durationInFrames: Math.ceil(netDuration * FPS) };
 };
 
-const defaultConfig = getDefaultConfig("split-mobile")!;
+const defaultConfig = getDefaultConfig("split-browser")!;
 
 const defaultProps: VideoCanvasCompositionProps = {
   config: defaultConfig,
@@ -33,14 +33,7 @@ const defaultProps: VideoCanvasCompositionProps = {
     {
       title: { text: "Product Update" },
       description: { text: "Check out our latest feature" },
-    },
-    {
-      title: { text: "Real-Time Collaboration" },
-      description: { text: "Work together seamlessly\nwith live cursors and comments" },
-    },
-    {
-      title: { text: "Lightning Fast" },
-      description: { text: "Built for speed from the ground up" },
+      image: { imageBase64: staticFile("demo/browserdemo.jpg") },
     },
   ],
   brand: {
@@ -50,7 +43,7 @@ const defaultProps: VideoCanvasCompositionProps = {
     colors: { background: "#0F0F0F", text: "#FFFFFF", primary: "#6366F1" },
     font_family: "Plus Jakarta Sans",
   },
-  slideDuration: 3,
+  slideDuration: 10,
 };
 
 export const RemotionRoot: React.FC = () => {

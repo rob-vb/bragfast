@@ -5,6 +5,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
   interpolate,
+  Easing,
   spring,
   delayRender,
   continueRender,
@@ -179,7 +180,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
               style={{
                 width: "100%",
                 height: "100%",
-                perspective: "3000px",
+                perspective: "1200px",
                 perspectiveOrigin: "center center",
               }}
             >
@@ -370,16 +371,30 @@ function computeImageEffects(
   frame: number,
   totalFrames: number,
 ): React.CSSProperties {
-  // Walking past a TV: rotateY sweeps from 20 to -20
+  // 3D tilt effect — cinematic product showcase
+  // Slow pan on Y axis while maintaining a subtle forward tilt
   const rotateY = interpolate(
     frame,
     [0, totalFrames],
-    [20, -20],
-    { extrapolateRight: "clamp" },
+    [-15, 15],
+    { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
+  );
+  const rotateX = interpolate(
+    frame,
+    [0, totalFrames],
+    [8, 3],
+    { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
+  );
+  // Slow zoom out for depth
+  const scale = interpolate(
+    frame,
+    [0, totalFrames],
+    [1.12, 1.0],
+    { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
   );
 
   return {
-    transform: `rotateY(${rotateY}deg) translateZ(0px)`,
+    transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
     transformStyle: "preserve-3d" as const,
     transformOrigin: "center center",
   };
