@@ -60,6 +60,11 @@ export async function renderVideo({
         composition: compositionId,
         inputProps,
         codec: "h264",
+        crf: 28,
+        x264Preset: "medium",
+        encodingMaxRate: "5M",
+        encodingBufferSize: "10M",
+        muted: true,
         timeoutInMilliseconds: 240000,
         // ~2-3 chunks for a typical 12s video. Parallelizes rendering
         // across multiple Lambdas for faster wall-clock time (~15-20s vs ~70s).

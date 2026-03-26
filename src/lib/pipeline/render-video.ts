@@ -222,6 +222,11 @@ async function renderVideoLocal(
     composition,
     serveUrl: bundleLocation,
     codec: "h264",
+    crf: 28,
+    x264Preset: "slow",
+    encodingMaxRate: "5M",
+    encodingBufferSize: "10M",
+    muted: true,
     outputLocation: outputPath,
     inputProps,
   });
