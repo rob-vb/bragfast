@@ -194,11 +194,14 @@ export const clone = mutation({
     const now = new Date().toISOString();
     const cloneName = name ?? `${source.name} (Copy)`;
 
+    // Strip animation_preset — presets only work on built-in templates
+    const { animation_preset: _, ...clonedConfig } = source.config as Record<string, unknown>;
+
     await ctx.db.insert("templates", {
       userId,
       externalId,
       name: cloneName,
-      config: source.config,
+      config: clonedConfig,
       isDefault: false,
       created_at: now,
       updated_at: now,
@@ -208,7 +211,7 @@ export const clone = mutation({
       id: externalId,
       name: cloneName,
       isDefault: false,
-      config: source.config,
+      config: clonedConfig,
       created_at: now,
       updated_at: now,
     };

@@ -69,6 +69,8 @@ export function AnimationProperties() {
             <SelectItem value="fade-in">Fade In</SelectItem>
             <SelectItem value="slide-up">Slide Up</SelectItem>
             <SelectItem value="bounce">Bounce</SelectItem>
+            <SelectItem value="showcase-rise">Showcase Rise</SelectItem>
+            <SelectItem value="showcase-reveal">Showcase Reveal</SelectItem>
             <SelectItem value="none">None</SelectItem>
           </SelectContent>
         </Select>

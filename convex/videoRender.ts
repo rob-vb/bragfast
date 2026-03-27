@@ -109,6 +109,12 @@ export const render = internalAction({
       }
 
       const slideDuration = getSlideDuration(request.video);
+
+      // Apply API-level animation preset override
+      if (request.video && typeof request.video === 'object' && request.video.preset) {
+        templateConfig = { ...templateConfig, animation_preset: request.video.preset };
+      }
+
       const srcMap = await prefetchStaticImages(templateConfig);
 
       // Render formats sequentially to avoid Lambda concurrency limits

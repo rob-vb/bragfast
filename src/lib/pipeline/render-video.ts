@@ -67,9 +67,15 @@ export async function renderVideoAsync(
   const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 5;
   try {
     const templateName = request.template || "standard-browser";
-    const templateConfig = await resolveTemplate(templateName, userId, convex);
+    let templateConfig = await resolveTemplate(templateName, userId, convex);
     const brand = await resolveBrand(request, templateConfig.colors, convex);
     const slideDuration = getSlideDuration(request.video);
+
+    // Apply API-level animation preset override
+    if (request.video && typeof request.video === 'object' && request.video.preset) {
+      templateConfig = { ...templateConfig, animation_preset: request.video.preset };
+    }
+
     const srcMap = await prefetchStaticImages(templateConfig);
 
     // Render formats sequentially to avoid Lambda concurrency limits

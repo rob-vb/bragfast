@@ -60,6 +60,14 @@ export async function POST(request: Request) {
     }
   }
 
+  // Reject video.preset on custom templates
+  if (isVideo && typeof body.video === "object" && body.video?.preset && body.template?.startsWith("tmpl_")) {
+    return Response.json(
+      { error: "video.preset is only supported on built-in templates. Use per-object entrance/exit for custom templates." },
+      { status: 400 },
+    );
+  }
+
   // Template validation (image and video both use templates now)
   if (body.template) {
     const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
