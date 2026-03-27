@@ -1,4 +1,4 @@
-import { FORMAT_DIMENSIONS, VALID_ENTRANCE_TYPES } from './types'
+import { FORMAT_DIMENSIONS, VALID_ENTRANCE_TYPES, VALID_ANIMATION_PRESETS } from './types'
 import type { VideoField } from './types'
 
 const VALID_FORMATS = Object.keys(FORMAT_DIMENSIONS)
@@ -79,6 +79,11 @@ export function validateVideoField(video: unknown, slideCount: number): string |
       }
       if (slideCount * v.duration > 60) {
         return `Total video duration exceeds 60s (${slideCount} slides × ${v.duration}s = ${slideCount * v.duration}s)`
+      }
+    }
+    if (v.preset !== undefined) {
+      if (typeof v.preset !== 'string' || !VALID_ANIMATION_PRESETS.includes(v.preset as typeof VALID_ANIMATION_PRESETS[number])) {
+        return `video.preset must be one of: ${VALID_ANIMATION_PRESETS.join(', ')}`
       }
     }
     return null

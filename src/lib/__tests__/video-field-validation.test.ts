@@ -47,6 +47,19 @@ describe("validateVideoField", () => {
     const error = validateVideoField("yes", 1);
     expect(error).toContain("must be true or");
   });
+
+  it("accepts valid preset", () => {
+    expect(validateVideoField({ preset: "showcase" }, 3)).toBeNull();
+  });
+
+  it("accepts preset with duration", () => {
+    expect(validateVideoField({ preset: "showcase", duration: 10 }, 3)).toBeNull();
+  });
+
+  it("rejects invalid preset", () => {
+    const error = validateVideoField({ preset: "invalid" }, 1);
+    expect(error).toContain("video.preset must be one of");
+  });
 });
 
 describe("validateFormats entrance field", () => {
@@ -68,6 +81,26 @@ describe("validateFormats entrance field", () => {
       }],
     }]);
     expect(error).toContain("entrance");
+  });
+
+  it("accepts showcase-rise entrance type", () => {
+    const error = validateFormats([{
+      name: "landscape",
+      slides: [{
+        objects: [{ id: "image", entrance: "showcase-rise" }],
+      }],
+    }]);
+    expect(error).toBeNull();
+  });
+
+  it("accepts showcase-reveal entrance type", () => {
+    const error = validateFormats([{
+      name: "landscape",
+      slides: [{
+        objects: [{ id: "title", entrance: "showcase-reveal" }],
+      }],
+    }]);
+    expect(error).toBeNull();
   });
 
   it("accepts objects without entrance (optional)", () => {

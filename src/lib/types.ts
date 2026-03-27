@@ -27,8 +27,9 @@ export interface BrandRecord {
 }
 
 export type TextAlign = 'left' | 'center' | 'right'
-export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'none'
+export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'showcase-rise' | 'showcase-reveal' | 'none'
 export type ExitType = 'fade-out' | 'slide-down' | 'bounce' | 'none'
+export type AnimationPreset = 'showcase'
 
 export interface ObjectModification {
   id: string
@@ -54,7 +55,7 @@ export interface FormatEntry {
   }>
 }
 
-export type VideoField = true | { duration?: number }
+export type VideoField = true | { duration?: number; preset?: AnimationPreset }
 
 export interface ReleaseRequest {
   brand_id?: string
@@ -113,4 +114,5 @@ export function calculateCredits(input: CookCreditsInput): number {
   return totalSlides;
 }
 
-export const VALID_ENTRANCE_TYPES: EntranceType[] = ['fade-in', 'slide-up', 'bounce', 'none']
+export const VALID_ENTRANCE_TYPES: EntranceType[] = ['fade-in', 'slide-up', 'bounce', 'showcase-rise', 'showcase-reveal', 'none']
+export const VALID_ANIMATION_PRESETS: AnimationPreset[] = ['showcase']

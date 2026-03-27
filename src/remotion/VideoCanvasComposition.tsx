@@ -18,10 +18,7 @@ import type {
 import { FORMAT_DIMENSIONS } from "../lib/templates/canvas-types";
 import { renderObject } from "../lib/templates/canvas-renderer";
 import type { ObjectDataMap } from "../lib/templates/canvas-renderer";
-import type { Brand } from "../lib/types";
-
-type EntranceType = "fade-in" | "slide-up" | "bounce" | "none";
-type ExitType = "fade-out" | "slide-down" | "bounce" | "none";
+import type { Brand, EntranceType, ExitType, AnimationPreset } from "../lib/types";
 
 export type VideoCanvasCompositionProps = {
   config: CanvasTemplateConfig;
@@ -115,23 +112,28 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
       {sortedObjects.map((obj, sortIndex) => {
         const data = objectData[obj.id];
 
-        // Determine entrance type: API override > template default > type-based default
+        // Resolve preset-based animation for this object type
+        const presetAnim = resolvePreset(config.animation_preset, obj.type);
+
+        // Determine entrance type: API override > template per-object > preset > type default
         const entrance: EntranceType =
           (data?.entrance as EntranceType | undefined) ??
           obj.entrance ??
+          presetAnim.entrance ??
           getDefaultEntrance(obj.type);
 
-        // Determine exit type: API override > template default > type-based default
+        // Determine exit type: API override > template per-object > preset > type default
         const exit: ExitType =
           (data?.exit as ExitType | undefined) ??
           obj.exit ??
+          presetAnim.exit ??
           getDefaultExit(obj.type);
 
         const staggerDelay = sortIndex * Math.round(fps * 0.15);
         const localFrame = Math.max(0, frame - staggerDelay);
 
         // Compute entrance animation style
-        const entranceStyle = computeEntranceStyle(entrance, localFrame, fps);
+        const entranceStyle = computeEntranceStyle(entrance, localFrame, fps, slideDurationFrames, height);
 
         // Compute exit animation style
         const exitStyle = computeExitStyle(exit, frame, fps, slideDurationFrames);
@@ -139,7 +141,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         // Compute image-specific effects (3D rotation)
         const kenBurnsEnabled = obj.kenBurns ?? false;
         const imageEffectStyle =
-          obj.type === "image" && kenBurnsEnabled
+          obj.type === "image" && kenBurnsEnabled && entrance !== "showcase-rise"
             ? computeImageEffects(frame, slideDurationFrames)
             : {};
 
@@ -234,10 +236,24 @@ function getDefaultExit(type: string): ExitType {
   }
 }
 
+export function resolvePreset(
+  preset: AnimationPreset | undefined,
+  objectType: string,
+): { entrance?: EntranceType; exit?: ExitType } {
+  if (!preset) return {};
+  if (preset === "showcase") {
+    if (objectType === "image") return { entrance: "showcase-rise", exit: "none" };
+    return { entrance: "showcase-reveal", exit: "none" };
+  }
+  return {};
+}
+
 function computeEntranceStyle(
   entrance: EntranceType,
   localFrame: number,
   fps: number,
+  slideDurationFrames?: number,
+  containerHeight?: number,
 ): React.CSSProperties {
   switch (entrance) {
     case "none":
@@ -285,6 +301,115 @@ function computeEntranceStyle(
       });
       return {
         transform: `scale(${scale})`,
+      };
+    }
+
+    case "showcase-rise": {
+      // Image rises from below frame, overshoots past template position, settles back.
+      // 0 → 2s: fly up from below to above template (-150px overshoot)
+      // 2 → 4s: ease back down to template position (0)
+      const riseMid = Math.round(fps * 2);
+      const riseEnd = Math.round(fps * 4);
+      const riseDistance = containerHeight ?? 600;
+      const overshoot = -350;
+
+      let translateY: number;
+      if (localFrame <= riseMid) {
+        translateY = interpolate(localFrame, [0, riseMid], [riseDistance, overshoot], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.out(Easing.quad),
+        });
+      } else {
+        translateY = interpolate(localFrame, [riseMid, riseEnd], [overshoot, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+      }
+
+      // Zoom: overshoots past template size, then settles back
+      // 0 → 4.5s: 1.4 → 0.85 (zoom past target)
+      // 4.5 → 7s: 0.85 → 1.0 (settle to template size)
+      const zoomOutEnd = Math.round(fps * 4.5);
+      const zoomSettleEnd = Math.round(fps * 7);
+
+      let scale: number;
+      if (localFrame <= zoomOutEnd) {
+        scale = interpolate(localFrame, [0, zoomOutEnd], [1.4, 0.85], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+      } else {
+        scale = interpolate(localFrame, [zoomOutEnd, zoomSettleEnd], [0.85, 1.0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+      }
+
+      // 3D tilt — view the product from different angles
+      // Phase 1 (0 → 3.5s): pan from left-tilted to right-tilted
+      // Phase 2 (3.5 → 7s): settle to flat (neutral)
+      const tiltMid = Math.round(fps * 3.5);
+      const tiltEnd = Math.round(fps * 7);
+
+      let rotateY: number;
+      let rotateX: number;
+      if (localFrame <= tiltMid) {
+        rotateY = interpolate(localFrame, [0, tiltMid], [-15, 12], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+        rotateX = interpolate(localFrame, [0, tiltMid], [8, 3], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+      } else {
+        rotateY = interpolate(localFrame, [tiltMid, tiltEnd], [12, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+        rotateX = interpolate(localFrame, [tiltMid, tiltEnd], [3, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        });
+      }
+
+      return {
+        opacity: 1,
+        transform: `perspective(1200px) translateY(${translateY}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
+      };
+    }
+
+    case "showcase-reveal": {
+      // Late reveal — appears after the image has settled into position.
+      // Stagger from object sort order provides natural sequencing.
+      const totalFrames = slideDurationFrames ?? Math.round(fps * 10);
+      const revealStart = Math.round(totalFrames * 0.7);
+      const revealDuration = Math.round(fps * 0.6);
+
+      if (localFrame < revealStart) {
+        return { opacity: 0 };
+      }
+
+      const progress = localFrame - revealStart;
+      const opacity = interpolate(progress, [0, revealDuration], [0, 1], {
+        extrapolateRight: "clamp",
+      });
+      const slideY = interpolate(progress, [0, revealDuration], [16, 0], {
+        extrapolateRight: "clamp",
+        easing: Easing.out(Easing.quad),
+      });
+
+      return {
+        opacity,
+        transform: `translateY(${slideY}px)`,
       };
     }
 
@@ -385,11 +510,11 @@ function computeImageEffects(
     [8, 3],
     { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
   );
-  // Slow zoom out for depth
+  // Slow zoom out for depth — starts zoomed in enough to cover edges during 3D tilt
   const scale = interpolate(
     frame,
     [0, totalFrames],
-    [1.12, 1.0],
+    [1.35, 1.15],
     { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
   );
 

@@ -1,3 +1,5 @@
+import type { EntranceType, ExitType, AnimationPreset } from "../types";
+
 export type ObjectType = "text" | "image" | "logo";
 
 // Legacy types still in DB — migrated at read time
@@ -102,8 +104,8 @@ export interface TemplateObject {
   borderRadiusBL?: number;
 
   // Video animation
-  entrance?: "fade-in" | "slide-up" | "bounce" | "none";
-  exit?: "fade-out" | "slide-down" | "bounce" | "none";
+  entrance?: EntranceType;
+  exit?: ExitType;
   kenBurns?: boolean; // Slow zoom+pan effect for images in video mode
 
   // Editor-only
@@ -122,6 +124,7 @@ export interface CanvasTemplateConfig {
     primary: string;
   };
   brandId?: string;
+  animation_preset?: AnimationPreset;
   formats: Record<"landscape" | "square" | "portrait", FormatLayout>;
 }
 
