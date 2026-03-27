@@ -46,6 +46,32 @@ const defaultProps: VideoCanvasCompositionProps = {
   slideDuration: 10,
 };
 
+// Showcase compositions — one per built-in template.
+// Each template has animation_preset: "showcase" baked in,
+// so the preset resolves entrance types automatically.
+const showcaseBrand = {
+  name: "brag.fast",
+  logoBase64: staticFile("demo/bragfastlogo.png"),
+  website: "https://bragfast.com",
+  colors: { background: "#F5F5F5", text: "#1A1A1A", primary: "#F8AF3C" },
+  font_family: "Plus Jakarta Sans",
+};
+
+const showcaseSlide = {
+  image: { imageBase64: staticFile("demo/browserdemo.jpg") },
+  title: { text: "Product Update" },
+  description: { text: "Check out our latest feature" },
+  logo: {},
+};
+
+const SHOWCASE_TEMPLATES = [
+  "standard-browser",
+  "standard-mobile",
+  "split-browser",
+  "split-mobile",
+  "hero",
+] as const;
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -62,6 +88,28 @@ export const RemotionRoot: React.FC = () => {
           calculateMetadata={calculateMetadata}
         />
       ))}
+      {SHOWCASE_TEMPLATES.flatMap((tmpl) => {
+        const duration = tmpl === "hero" ? 5 : 10;
+        return (["landscape", "square", "portrait"] as const).map((fmt) => (
+        <Composition
+          key={`showcase-${tmpl}-${fmt}`}
+          id={`showcase-${tmpl}-${fmt}`}
+          component={VideoCanvasComposition}
+          fps={FPS}
+          width={FORMAT_DIMENSIONS[fmt].width}
+          height={FORMAT_DIMENSIONS[fmt].height}
+          durationInFrames={Math.ceil(duration * FPS)}
+          defaultProps={{
+            config: getDefaultConfig(tmpl)!,
+            format: fmt,
+            slides: [showcaseSlide],
+            brand: showcaseBrand,
+            slideDuration: duration,
+          }}
+          calculateMetadata={calculateMetadata}
+        />
+        ));
+      })}
     </>
   );
 };
