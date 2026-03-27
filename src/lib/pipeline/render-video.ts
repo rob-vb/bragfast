@@ -14,7 +14,7 @@ import { calculateCredits } from "../types";
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const DEFAULT_SLIDE_DURATION = 5;
+const DEFAULT_SLIDE_DURATION = 8;
 const FPS = 30;
 
 type VideoRenderRequest = {

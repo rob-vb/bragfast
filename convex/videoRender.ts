@@ -15,7 +15,7 @@ import type { FormatKey } from "../src/lib/templates/canvas-types";
 import type { CanvasTemplateConfig } from "../src/lib/templates/canvas-types";
 import type { Brand, BrandColors, FormatEntry, VideoField } from "../src/lib/types";
 
-const DEFAULT_SLIDE_DURATION = 5;
+const DEFAULT_SLIDE_DURATION = 8;
 const TRANSITION_DURATION = 0.5;
 
 function getSlideDuration(video: VideoField): number {

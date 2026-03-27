@@ -19,7 +19,7 @@ const calculateMetadata: CalculateMetadataFunction<
   VideoCanvasCompositionProps
 > = ({ props }) => {
   const slideCount = props.slides?.length || 1;
-  const slideDuration = props.slideDuration || 5;
+  const slideDuration = props.slideDuration || 8;
   const netDuration = calculateVideoDuration(slideCount, slideDuration);
   return { durationInFrames: Math.ceil(netDuration * FPS) };
 };
