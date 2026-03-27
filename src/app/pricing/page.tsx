@@ -8,14 +8,14 @@ import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 export const metadata: Metadata = {
   title: "Pricing | brag.fast",
   description:
-    "Simple, predictable pricing. Images: 1 credit per slide. Videos: 5 credits per slide. Start free, scale as you grow.",
+    "Simple, predictable pricing. Images: 1 credit per slide. Videos: 15 credits per slide. Start free, scale as you grow.",
   alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
   {
     q: "How do credits work?",
-    a: "Images cost 1 credit per slide per format. Videos cost 5 credits per slide per format. Example: 2 slides in 3 formats = 6 image credits or 30 video credits.",
+    a: "Images cost 1 credit per slide per format. Videos cost 15 credits per slide per format. Example: 2 slides in 3 formats = 6 image credits or 90 video credits.",
   },
   {
     q: "Do unused credits roll over?",
@@ -62,7 +62,7 @@ export default function PricingPage() {
             Auto-generate branded images and videos from your releases. Via API or GitHub.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
-            Images: 1 credit per slide. Videos: 5 credits per slide. Sign up and get{" "}
+            Images: 1 credit per slide. Videos: 15 credits per slide. Sign up and get{" "}
             <strong className="text-brand">10 free credits</strong> to
             try it out.{" "}
             <strong className="text-brand">no credit card required</strong>.

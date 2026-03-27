@@ -64,7 +64,7 @@ export async function renderVideoAsync(
   request: VideoRenderRequest
 ) {
   let partialRefundCredits = 0; // credits already refunded (for partial failure)
-  const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 5;
+  const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 15;
   try {
     const templateName = request.template || "standard-browser";
     let templateConfig = await resolveTemplate(templateName, userId, convex);

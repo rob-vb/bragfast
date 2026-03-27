@@ -15,21 +15,21 @@ describe('calculateCredits', () => {
     expect(calculateCredits({ formats: [] })).toBe(0)
   })
 
-  it('charges 5 credits per slide per format for video: true', () => {
+  it('charges 15 credits per slide per format for video: true', () => {
     expect(calculateCredits({
       video: true,
       formats: [
         { name: 'landscape', slides: [{}] },
         { name: 'square', slides: [{}] },
       ],
-    })).toBe(10)
+    })).toBe(30)
   })
 
-  it('charges 5 credits per slide per format for video: { duration }', () => {
+  it('charges 15 credits per slide per format for video: { duration }', () => {
     expect(calculateCredits({
       video: { duration: 10 },
       formats: [{ name: 'landscape', slides: [{}] }],
-    })).toBe(5)
+    })).toBe(15)
   })
 
   it('scales video credits with slide count', () => {
@@ -39,13 +39,13 @@ describe('calculateCredits', () => {
         { name: 'landscape', slides: [{}, {}, {}] },
         { name: 'square', slides: [{}, {}, {}] },
       ],
-    })).toBe(30) // 3 slides × 2 formats × 5 = 30
+    })).toBe(90) // 3 slides × 2 formats × 15 = 90
   })
 
-  it('charges 5 credits for single-slide single-format video', () => {
+  it('charges 15 credits for single-slide single-format video', () => {
     expect(calculateCredits({
       video: true,
       formats: [{ name: 'landscape', slides: [{}] }],
-    })).toBe(5)
+    })).toBe(15)
   })
 })
