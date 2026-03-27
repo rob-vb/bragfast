@@ -305,13 +305,16 @@ function computeEntranceStyle(
     }
 
     case "showcase-rise": {
-      // Image rises from below frame, overshoots past template position, settles back.
-      // 0 → 2s: fly up from below to above template (-150px overshoot)
-      // 2 → 4s: ease back down to template position (0)
-      const riseMid = Math.round(fps * 2);
-      const riseEnd = Math.round(fps * 4);
+      // All timings are proportional to slide duration so they scale
+      // with any duration (5s, 10s, etc.).
+      // First 60% = motion (rise, zoom, tilt), last 40% = settled & readable.
+      const total = slideDurationFrames ?? Math.round(fps * 5);
+
+      // Rise: 0→20% fly up with overshoot, 20→50% settle to position
+      const riseMid = Math.round(total * 0.2);
+      const riseEnd = Math.round(total * 0.5);
       const riseDistance = containerHeight ?? 600;
-      const overshoot = -350;
+      const overshoot = -250;
 
       let translateY: number;
       if (localFrame <= riseMid) {
@@ -328,53 +331,49 @@ function computeEntranceStyle(
         });
       }
 
-      // Zoom: overshoots past template size, then settles back
-      // 0 → 4.5s: 1.4 → 0.85 (zoom past target)
-      // 4.5 → 7s: 0.85 → 1.0 (settle to template size)
-      const zoomOutEnd = Math.round(fps * 4.5);
-      const zoomSettleEnd = Math.round(fps * 7);
+      // Zoom: 0→40% overshoot small, 40→60% settle to 1.0
+      const zoomOutEnd = Math.round(total * 0.4);
+      const zoomSettleEnd = Math.round(total * 0.6);
 
       let scale: number;
       if (localFrame <= zoomOutEnd) {
-        scale = interpolate(localFrame, [0, zoomOutEnd], [1.4, 0.85], {
+        scale = interpolate(localFrame, [0, zoomOutEnd], [1.3, 0.9], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.quad),
         });
       } else {
-        scale = interpolate(localFrame, [zoomOutEnd, zoomSettleEnd], [0.85, 1.0], {
+        scale = interpolate(localFrame, [zoomOutEnd, zoomSettleEnd], [0.9, 1.0], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.quad),
         });
       }
 
-      // 3D tilt — view the product from different angles
-      // Phase 1 (0 → 3.5s): pan from left-tilted to right-tilted
-      // Phase 2 (3.5 → 7s): settle to flat (neutral)
-      const tiltMid = Math.round(fps * 3.5);
-      const tiltEnd = Math.round(fps * 7);
+      // 3D tilt: 0→30% pan across, 30→60% settle to neutral
+      const tiltMid = Math.round(total * 0.3);
+      const tiltEnd = Math.round(total * 0.6);
 
       let rotateY: number;
       let rotateX: number;
       if (localFrame <= tiltMid) {
-        rotateY = interpolate(localFrame, [0, tiltMid], [-15, 12], {
+        rotateY = interpolate(localFrame, [0, tiltMid], [-12, 10], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.quad),
         });
-        rotateX = interpolate(localFrame, [0, tiltMid], [8, 3], {
+        rotateX = interpolate(localFrame, [0, tiltMid], [6, 2], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.quad),
         });
       } else {
-        rotateY = interpolate(localFrame, [tiltMid, tiltEnd], [12, 0], {
+        rotateY = interpolate(localFrame, [tiltMid, tiltEnd], [10, 0], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.quad),
         });
-        rotateX = interpolate(localFrame, [tiltMid, tiltEnd], [3, 0], {
+        rotateX = interpolate(localFrame, [tiltMid, tiltEnd], [2, 0], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.inOut(Easing.quad),
@@ -388,10 +387,10 @@ function computeEntranceStyle(
     }
 
     case "showcase-reveal": {
-      // Late reveal — appears after the image has settled into position.
-      // Stagger from object sort order provides natural sequencing.
+      // Reveal after the image has settled into position.
+      // Starts at 40% so text is readable for ~2.5s on a 5s slide.
       const totalFrames = slideDurationFrames ?? Math.round(fps * 10);
-      const revealStart = Math.round(totalFrames * 0.7);
+      const revealStart = Math.round(totalFrames * 0.4);
       const revealDuration = Math.round(fps * 0.6);
 
       if (localFrame < revealStart) {
