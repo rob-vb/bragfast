@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 15 credits per slide per format (e.g. 2 slides in 3 formats = 90 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
+      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 10 credits per slide per format (e.g. 2 slides in 3 formats = 60 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
     endpoints: [],
   },
 
@@ -187,7 +187,7 @@ while True:
         anchor: "create-cook",
         title: "Create a cook",
         description:
-          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (15 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 5, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, you can set per-object entrance animations via the entrance field: fade-in, slide-up, bounce, or none. Defaults: text → fade-in, image → fade-in, logo → bounce.",
+          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (10 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 5, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, you can set per-object entrance animations via the entrance field: fade-in, slide-up, bounce, or none. Defaults: text → fade-in, image → fade-in, logo → bounce.",
         params: [
           {
             name: "brand_id",
@@ -247,7 +247,7 @@ while True:
             name: "formats",
             type: "array",
             required: true,
-            description: "Array of format entries. Each entry specifies a format and its slides. Image credits = sum of slides across all entries. Video credits = sum of slides × 15.",
+            description: "Array of format entries. Each entry specifies a format and its slides. Image credits = sum of slides across all entries. Video credits = sum of slides × 10.",
             children: [
               {
                 name: "name",
@@ -374,7 +374,7 @@ while True:
             type: "true | { duration: number }",
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each slide costs 15 credits per format (e.g. 3 slides in 2 formats = 90 credits). Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
+              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
           },
           {
             name: "webhook_url",
@@ -419,7 +419,7 @@ while True:
   body: JSON.stringify({
     brand_id: "brand_abc123",
     template: "standard-browser",
-    // video: true,              — add for video output (15 credits/slide/format)
+    // video: true,              — add for video output (10 credits/slide/format)
     // video: { duration: 8 },   — custom per-slide duration (3-30s)
     // omit video for images     — default (1 credit/slide/format)
     formats: [
@@ -448,7 +448,7 @@ cook = requests.post(
     json={
         "brand_id": "brand_abc123",
         "template": "standard-browser",
-        # "video": True,             — add for video output (15 credits/slide/format)
+        # "video": True,             — add for video output (10 credits/slide/format)
         # "video": {"duration": 8},  — custom per-slide duration (3-30s)
         # omit video for images      — default (1 credit/slide/format)
         "formats": [

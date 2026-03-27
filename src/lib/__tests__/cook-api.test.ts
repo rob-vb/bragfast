@@ -458,7 +458,7 @@ describe.sequential("Image happy path", () => {
 // ── 9. Video Happy Path ─────────────────────────────────────────
 
 describe.sequential("Video happy path", () => {
-  test("video: true, 1 format, 1 slide → 202, output: video, credits: 15", async () => {
+  test("video: true, 1 format, 1 slide → 202, output: video, credits: 10", async () => {
     const res = await cookPost({
       video: true,
       formats: [{ name: "landscape", slides: [{}] }],
@@ -468,10 +468,10 @@ describe.sequential("Video happy path", () => {
     expect(data.cook_id).toMatch(/^cook_/);
     expect(data.output).toBe("video");
     expect(data.status).toBe("pending");
-    expect(data.credits_used).toBe(15);
+    expect(data.credits_used).toBe(10);
   });
 
-  test("video with custom duration → 202, credits: 15", async () => {
+  test("video with custom duration → 202, credits: 10", async () => {
     const res = await cookPost({
       video: { duration: 3 },
       formats: [{ name: "landscape", slides: [{}] }],
@@ -479,10 +479,10 @@ describe.sequential("Video happy path", () => {
     expect(res.status).toBe(202);
     const data = await res.json();
     expect(data.output).toBe("video");
-    expect(data.credits_used).toBe(15);
+    expect(data.credits_used).toBe(10);
   });
 
-  test("video with split-mobile template, 3 slides → 202, credits = 45", async () => {
+  test("video with split-mobile template, 3 slides → 202, credits = 30", async () => {
     const res = await cookPost({
       video: { duration: 4 },
       template: "split-mobile",
@@ -500,10 +500,10 @@ describe.sequential("Video happy path", () => {
     expect(res.status).toBe(202);
     const data = await res.json();
     expect(data.output).toBe("video");
-    expect(data.credits_used).toBe(45);
+    expect(data.credits_used).toBe(30);
   });
 
-  test("video with 2 formats, multiple slides → 202, credits = 75", async () => {
+  test("video with 2 formats, multiple slides → 202, credits = 50", async () => {
     const res = await cookPost({
       video: true,
       template: "hero",
@@ -514,7 +514,7 @@ describe.sequential("Video happy path", () => {
     });
     expect(res.status).toBe(202);
     const data = await res.json();
-    expect(data.credits_used).toBe(75);
+    expect(data.credits_used).toBe(50);
   });
 });
 
