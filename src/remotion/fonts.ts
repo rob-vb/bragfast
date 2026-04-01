@@ -21,28 +21,22 @@ export async function loadBrandFont(family: string): Promise<string> {
     return family;
   }
 
-  // Google Fonts — fetch CSS to get actual .woff2 URLs
+  // Google Fonts — fetch 400 and 700 separately; fall back to 400 if 700 unavailable
   if (!fontCache.has(family)) {
     const encodedFamily = encodeURIComponent(family);
-    const cssUrl = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@400;700&display=swap`;
-    const cssResponse = await fetch(cssUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    const css = await cssResponse.text();
-    const urlMatches = css.matchAll(/src:\s*url\(([^)]+\.woff2[^)]*)\)/g);
-    const weightMatches = css.matchAll(/font-weight:\s*(\d+)/g);
-    const urls = Array.from(urlMatches).map((m) => m[1]);
-    const weights = Array.from(weightMatches).map((m) => m[1]);
-    await Promise.all(
-      urls.map((url, i) =>
-        loadFont({
-          family,
-          url,
-          weight: (weights[i] ?? "400") as "400" | "700",
-          format: "woff2",
-        })
-      )
-    );
+
+    async function fetchWoff2Url(weight: number): Promise<string | null> {
+      const cssUrl = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@${weight}&display=swap`;
+      const css = await fetch(cssUrl, { headers: { "User-Agent": "Mozilla/5.0" } }).then((r) => r.text());
+      const match = css.match(/src:\s*url\(([^)]+\.woff2[^)]*)\)/);
+      return match ? match[1] : null;
+    }
+
+    const [url400, url700] = await Promise.all([fetchWoff2Url(400), fetchWoff2Url(700)]);
+    if (url400) {
+      await loadFont({ family, url: url400, weight: "400", format: "woff2" });
+      await loadFont({ family, url: url700 ?? url400, weight: "700", format: "woff2" });
+    }
     fontCache.set(family, true);
   }
   return family;
