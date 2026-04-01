@@ -40,8 +40,15 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
   const [handle] = useState(() => delayRender("Loading brand font"));
 
   useEffect(() => {
-    const fontFamily = brand.font_family || "Plus Jakarta Sans";
-    loadBrandFont(fontFamily)
+    // Collect all unique font families: brand font + per-object fonts from the template
+    const layout = config.formats[format] ?? config.formats.landscape;
+    const families = new Set<string>();
+    families.add(brand.font_family || "Plus Jakarta Sans");
+    for (const obj of layout.objects) {
+      if (obj.fontFamily) families.add(obj.fontFamily);
+    }
+
+    Promise.all([...families].map((f) => loadBrandFont(f)))
       .then(() => {
         setFontLoaded(true);
         continueRender(handle);
@@ -51,7 +58,7 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
         setFontLoaded(true);
         continueRender(handle);
       });
-  }, [brand.font_family, handle]);
+  }, [brand.font_family, config, format, handle]);
 
   if (!fontLoaded) return null;
 
