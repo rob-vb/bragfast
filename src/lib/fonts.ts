@@ -101,11 +101,14 @@ export async function loadFontsForObjects(objects: TemplateObject[]): Promise<Fo
   const fetches: Promise<void>[] = [];
 
   for (const [family, weights] of needed) {
+    // Pre-fetch weight 400 as fallback for fonts that don't support all weights (e.g. Instrument Serif)
+    const fallbackBufPromise = fetchGoogleFontBuffer(family, 400);
     for (const weight of weights) {
       fetches.push(
-        fetchGoogleFontBuffer(family, weight).then((buf) => {
-          if (buf) {
-            allFonts.push({ name: family, data: buf, weight: weight as Weight, style: "normal" });
+        (weight === 400 ? fallbackBufPromise : fetchGoogleFontBuffer(family, weight)).then(async (buf) => {
+          const data = buf ?? (weight !== 400 ? await fallbackBufPromise : null);
+          if (data) {
+            allFonts.push({ name: family, data, weight: weight as Weight, style: "normal" });
           }
         })
       );
