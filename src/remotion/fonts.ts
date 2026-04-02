@@ -32,9 +32,15 @@ export async function loadBrandFont(family: string, weights?: Set<number>): Prom
     const encodedFamily = encodeURIComponent(family);
     const cssChunks = await Promise.all(
       [...allWeights].map(async (w) => {
-        const url = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@${w}&display=swap`;
-        const res = await fetch(url);
-        return res.ok ? res.text() : null;
+        try {
+          const url = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@${w}&display=swap`;
+          const res = await fetch(url);
+          return res.ok ? res.text() : null;
+        } catch {
+          // Google's 400 error pages lack CORS headers, causing fetch to throw
+          // instead of returning a non-ok response. Silently skip this weight.
+          return null;
+        }
       })
     );
     const css = cssChunks.filter(Boolean).join("\n");
