@@ -188,12 +188,27 @@ export function renderObject(
       const anchorY = data?.anchorY || obj.anchorY || "top";
       const objectPosition = `${anchorX} ${anchorY}`;
       if (frame === "none") {
+        const fitContain = obj.objectFit === "contain";
+        const alignMap = { top: 'flex-start', center: 'center', bottom: 'flex-end' } as const;
+        if (fitContain) {
+          return (
+            <div style={{
+              width: "100%", height: "100%",
+              display: "flex", flexDirection: "column",
+              overflow: "hidden",
+              justifyContent: alignMap[anchorY as keyof typeof alignMap] || "flex-start",
+              borderRadius: getObjectBorderRadius(obj) || 8,
+            }}>
+              <img src={imgSrc} style={{ width: "100%", borderRadius: getObjectBorderRadius(obj) || 8 }} />
+            </div>
+          );
+        }
         return (
           <img
             src={imgSrc}
             style={{
               width: "100%", height: "100%",
-              objectFit: obj.objectFit || "cover",
+              objectFit: "cover",
               objectPosition,
               borderRadius: getObjectBorderRadius(obj) || 8,
             }}
@@ -210,6 +225,7 @@ export function renderObject(
             color={frameColor}
             objectPosition={objectPosition}
             objectFit={obj.objectFit || "cover"}
+            anchorY={anchorY as 'top' | 'center' | 'bottom'}
           />
         );
       }
@@ -222,6 +238,7 @@ export function renderObject(
           color={frameColor}
           objectPosition={objectPosition}
           objectFit={obj.objectFit || "cover"}
+          anchorY={anchorY as 'top' | 'center' | 'bottom'}
         />
       );
     }

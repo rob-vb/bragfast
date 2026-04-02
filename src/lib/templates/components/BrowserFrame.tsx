@@ -9,12 +9,16 @@ interface BrowserFrameProps {
   color?: string  // hex color for frame chrome
   objectPosition?: string  // CSS object-position for the screenshot
   objectFit?: 'cover' | 'contain'  // CSS object-fit for the screenshot
+  anchorY?: 'top' | 'center' | 'bottom'
 }
 
-export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#E8E8E8', objectPosition = 'center top', objectFit = 'cover' }: BrowserFrameProps) {
+export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#E8E8E8', objectPosition = 'center top', objectFit = 'cover', anchorY = 'top' }: BrowserFrameProps) {
   const dotSize = 10
   const titleBarHeight = 32
   const imageHeight = maxHeight ? maxHeight - titleBarHeight : undefined
+  const isContain = objectFit === 'contain'
+
+  const alignMap = { top: 'flex-start', center: 'center', bottom: 'flex-end' } as const
 
   return (
     <div
@@ -46,17 +50,34 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
         <div style={{ display: 'flex', width: dotSize, height: dotSize, borderRadius: '50%', backgroundColor: '#27C93F' }} />
       </div>
       {/* Screenshot */}
-      <img
-        src={imageBase64}
-        width={width}
-        style={{
+      {isContain ? (
+        <div style={{
           display: 'flex',
+          flexDirection: 'column',
           width: `${width}px`,
           height: imageHeight ? `${imageHeight}px` : undefined,
-          objectFit,
-          objectPosition,
-        }}
-      />
+          overflow: 'hidden',
+          justifyContent: alignMap[anchorY],
+        }}>
+          <img
+            src={imageBase64}
+            width={width}
+            style={{ display: 'flex', width: `${width}px` }}
+          />
+        </div>
+      ) : (
+        <img
+          src={imageBase64}
+          width={width}
+          style={{
+            display: 'flex',
+            width: `${width}px`,
+            height: imageHeight ? `${imageHeight}px` : undefined,
+            objectFit: 'cover',
+            objectPosition,
+          }}
+        />
+      )}
     </div>
   )
 }
