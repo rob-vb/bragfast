@@ -88,7 +88,7 @@ export async function renderReleaseAsync(
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
     // Collect all static image src URLs across all formats (fetch once)
-    const srcMap = await prefetchStaticImages(templateConfig);
+    const { srcMap, backgroundImageBase64 } = await prefetchStaticImages(templateConfig);
 
     for (const formatEntry of request.formats) {
       const format = formatEntry.name;
@@ -129,6 +129,7 @@ export async function renderReleaseAsync(
           format: format as FormatKey,
           objectData: slideDataMaps[i],
           brand,
+          backgroundImageBase64,
         });
         const svg = await satori(jsx, { width, height, fonts });
         const jpg = await sharp(Buffer.from(svg))

@@ -76,7 +76,7 @@ export async function renderVideoAsync(
       templateConfig = { ...templateConfig, animation_preset: request.video.preset };
     }
 
-    const srcMap = await prefetchStaticImages(templateConfig);
+    const { srcMap } = await prefetchStaticImages(templateConfig);
 
     // Render formats sequentially to avoid Lambda concurrency limits
     const videos: Record<string, { url: string; duration: number; dimensions: string }> = {};

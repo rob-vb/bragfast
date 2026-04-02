@@ -19,6 +19,7 @@ import type {
 import { FORMAT_DIMENSIONS } from "../lib/templates/canvas-types";
 import { renderObject } from "../lib/templates/canvas-renderer";
 import type { ObjectDataMap } from "../lib/templates/canvas-renderer";
+import { resolveBackground } from "../lib/templates/mesh-gradient";
 import type { Brand, EntranceType, ExitType, AnimationPreset } from "../lib/types";
 
 export type VideoCanvasCompositionProps = {
@@ -115,6 +116,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
+  const bg = resolveBackground(config, colors);
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
   const heroId = findHeroImageId(sortedObjects);
 
@@ -123,10 +125,24 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
       style={{
         width,
         height,
-        backgroundColor: colors.background,
+        background: bg.css || undefined,
         overflow: "hidden",
       }}
     >
+      {bg.imageUrl && (
+        <img
+          src={bg.imageUrl}
+          alt=""
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      )}
       {sortedObjects.map((obj, sortIndex) => {
         const data = objectData[obj.id];
 

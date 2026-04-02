@@ -117,6 +117,13 @@ export interface FormatLayout {
   objects: TemplateObject[];
 }
 
+export type BackgroundMode = "color" | "image" | "mesh_gradient";
+
+export type BackgroundConfig =
+  | { mode: "color" }
+  | { mode: "image"; imageUrl: string }
+  | { mode: "mesh_gradient"; colors: [string, string, string]; positions: { x: number; y: number }[] };
+
 export interface CanvasTemplateConfig {
   version: 2;
   colors: {
@@ -126,6 +133,7 @@ export interface CanvasTemplateConfig {
   };
   brandId?: string;
   animation_preset?: AnimationPreset;
+  background?: BackgroundConfig;
   formats: Record<"landscape" | "square" | "portrait", FormatLayout>;
 }
 
