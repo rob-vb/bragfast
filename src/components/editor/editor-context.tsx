@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useReducer, useCallback, useEffect, useRef, type ReactNode } from "react";
-import type { CanvasTemplateConfig, TemplateObject, FormatKey, FormatLayout, ObjectType } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, TemplateObject, FormatKey, FormatLayout, ObjectType, BackgroundConfig, BackgroundMode } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS, uniqueSlug, slugify, migrateConfig } from "@/lib/templates/canvas-types";
+import { randomizeMeshPositions } from "@/lib/templates/mesh-gradient";
 
 function getLayout(config: CanvasTemplateConfig, fmt: FormatKey): FormatLayout {
   return config.formats[fmt];
@@ -20,6 +21,7 @@ interface EditorState {
   activeFormat: FormatKey;
   selectedObjectId: string | null;
   isDirty: boolean;
+  backgroundStash: Partial<Record<BackgroundMode, BackgroundConfig>>;
 }
 
 // --- Actions ---
@@ -36,6 +38,9 @@ type EditorAction =
   | { type: "SET_BRAND"; brandId: string | undefined; previewColors?: { background: string; text: string; primary: string } }
   | { type: "SET_NAME"; name: string }
   | { type: "SET_ANIMATION_PRESET"; preset: string | undefined }
+  | { type: "SET_BACKGROUND"; background: BackgroundConfig | undefined }
+  | { type: "SET_BACKGROUND_IMAGE"; imageUrl: string }
+  | { type: "RANDOMIZE_MESH" }
   | { type: "COMMIT_MOVE" }
   | { type: "UNDO" }
   | { type: "REDO" }
@@ -188,6 +193,52 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         config: { ...state.config, animation_preset: action.preset as CanvasTemplateConfig["animation_preset"] },
         isDirty: true,
       };
+
+    case "SET_BACKGROUND": {
+      const currentBg = state.config.background;
+      const currentMode: BackgroundMode = currentBg?.mode ?? "color";
+      const targetMode: BackgroundMode = action.background?.mode ?? "color";
+      if (currentMode === targetMode) return state;
+      const newStash = { ...state.backgroundStash, [currentMode]: currentBg ?? { mode: "color" as const } };
+      let newBg: BackgroundConfig | undefined;
+      if (newStash[targetMode]) {
+        newBg = newStash[targetMode];
+      } else if (targetMode === "mesh_gradient") {
+        newBg = {
+          mode: "mesh_gradient",
+          colors: [state.config.colors.background, state.config.colors.text, state.config.colors.primary],
+          positions: randomizeMeshPositions(),
+        };
+      } else if (targetMode === "image") {
+        newBg = { mode: "image", imageUrl: "" };
+      }
+      return {
+        ...state,
+        config: { ...state.config, background: targetMode === "color" ? undefined : newBg },
+        backgroundStash: newStash,
+        isDirty: true,
+      };
+    }
+
+    case "SET_BACKGROUND_IMAGE": {
+      const bg = state.config.background;
+      if (!bg || bg.mode !== "image") return state;
+      return {
+        ...state,
+        config: { ...state.config, background: { ...bg, imageUrl: action.imageUrl } },
+        isDirty: true,
+      };
+    }
+
+    case "RANDOMIZE_MESH": {
+      const bg = state.config.background;
+      if (!bg || bg.mode !== "mesh_gradient") return state;
+      return {
+        ...state,
+        config: { ...state.config, background: { ...bg, positions: randomizeMeshPositions() } },
+        isDirty: true,
+      };
+    }
 
     case "COMMIT_MOVE":
       // No-op on state — exists only to create an undo snapshot after drag/resize
@@ -345,6 +396,7 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
     activeFormat: "landscape",
     selectedObjectId: null,
     isDirty: false,
+    backgroundStash: {},
   };
 
   const [undoState, rawDispatch] = useReducer(undoableReducer, {
