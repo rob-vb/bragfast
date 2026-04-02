@@ -1,8 +1,9 @@
 "use client";
 
-import { useReducer, useEffect, useRef } from "react";
-import { KitchenScene } from "@/components/kitchen/kitchen-scene";
+import { useReducer, useEffect, useRef, useCallback, useState } from "react";
+import { KitchenScene3D } from "@/components/kitchen/kitchen-scene-3d";
 import { CookSection } from "@/components/kitchen/cook-section";
+import type { CookStep } from "@/components/kitchen/kitchen-animation-state";
 import { RecipeStep, type TemplateItem } from "@/components/kitchen/recipe-step";
 import { SeasoningStep } from "@/components/kitchen/seasoning-step";
 import { IngredientsStep } from "@/components/kitchen/ingredients-step";
@@ -52,6 +53,7 @@ type CookAction =
   | { type: "TOGGLE_FORMAT"; format: FormatKey }
   | { type: "SET_OUTPUT_TYPE"; outputType: "image" | "video" }
   | { type: "SET_ANIMATION_PRESET"; preset: AnimationPreset | undefined }
+  | { type: "SET_PREVIEWING"; previewing: boolean }
   | { type: "START_COOK"; cookId: string }
   | { type: "COOK_DONE"; results: ReleaseResult }
   | { type: "COOK_ERROR"; error: string }
@@ -108,6 +110,9 @@ function cookReducer(state: CookState, action: CookAction): CookState {
 
     case "SET_ANIMATION_PRESET":
       return { ...state, animationPreset: action.preset };
+
+    case "SET_PREVIEWING":
+      return { ...state, status: action.previewing ? "previewing" : "idle" };
 
     case "START_COOK":
       return { ...state, status: "cooking", cookId: action.cookId, results: undefined, error: undefined };
@@ -252,24 +257,29 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
     }
   }
 
+  // ── Accordion step tracking ──────────────────────────────────────────────
+  const [activeStep, setActiveStep] = useState<CookStep | null>("recipe");
+
+  const handleStepToggle = useCallback(
+    (step: CookStep) => (open: boolean) => {
+      setActiveStep(open ? step : null);
+    },
+    [],
+  );
+
   // ── Render ────────────────────────────────────────────────────────────────
-  const sceneStatus =
-    state.status === "cooking" ? "cooking" :
-    state.status === "done" ? "done" :
-    state.status === "error" ? "error" :
-    "idle";
+  const sceneStatus = state.status;
 
-  return (
-    <div className="space-y-0">
-      {/* Kitchen banner */}
-      <div className="mb-6">
-        <KitchenScene status={sceneStatus} />
-      </div>
-
-      {/* Steps */}
+  const stepsContent = (
+    <>
+      {/* Steps (accordion — only one open at a time) */}
       <div className="space-y-0">
         {/* 1. Recipe — Template selection */}
-        <CookSection title="1. Recipe" defaultOpen={true}>
+        <CookSection
+          title="1. Recipe"
+          isOpen={activeStep === "recipe"}
+          onToggle={handleStepToggle("recipe")}
+        >
           <RecipeStep
             templates={templates}
             selectedId={state.templateId}
@@ -280,7 +290,12 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         </CookSection>
 
         {/* 2. Seasoning — Brand / colors */}
-        <CookSection title="2. Seasoning" locked={!hasTemplate} defaultOpen={false}>
+        <CookSection
+          title="2. Seasoning"
+          locked={!hasTemplate}
+          isOpen={activeStep === "seasoning"}
+          onToggle={handleStepToggle("seasoning")}
+        >
           <SeasoningStep
             brandId={state.brandId}
             colors={state.colors}
@@ -292,7 +307,12 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         </CookSection>
 
         {/* 3. Ingredients — Object content */}
-        <CookSection title="3. Ingredients" locked={!hasContent} defaultOpen={false}>
+        <CookSection
+          title="3. Ingredients"
+          locked={!hasContent}
+          isOpen={activeStep === "ingredients"}
+          onToggle={handleStepToggle("ingredients")}
+        >
           {state.templateConfig ? (
             <IngredientsStep
               templateConfig={state.templateConfig}
@@ -309,7 +329,12 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         </CookSection>
 
         {/* 4. Plating — Formats, output type, credits */}
-        <CookSection title="4. Plating" locked={!hasPlating} defaultOpen={false}>
+        <CookSection
+          title="4. Plating"
+          locked={!hasPlating}
+          isOpen={activeStep === "plating"}
+          onToggle={handleStepToggle("plating")}
+        >
           <PlatingStep
             formats={state.formats}
             outputType={state.outputType}
@@ -324,11 +349,19 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         </CookSection>
 
         {/* 5. Preview */}
-        <CookSection title="5. Preview" locked={!hasTemplate} defaultOpen={false}>
+        <CookSection
+          title="5. Preview"
+          locked={!hasTemplate}
+          isOpen={activeStep === "preview"}
+          onToggle={handleStepToggle("preview")}
+        >
           {state.templateId ? (
             <PreviewStep
               templateId={state.templateId}
               selectedFormats={state.formats}
+              onLoadingChange={(loading) =>
+                dispatch({ type: "SET_PREVIEWING", previewing: loading })
+              }
             />
           ) : (
             <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/50">
@@ -371,6 +404,22 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
           />
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="lg:grid lg:grid-cols-[1fr_420px] lg:gap-6">
+      {/* Left column: steps */}
+      <div className="space-y-0">
+        {stepsContent}
+      </div>
+
+      {/* Right column: 3D kitchen scene (desktop only, sticky) */}
+      <div className="hidden lg:block">
+        <div className="sticky top-20">
+          <KitchenScene3D activeStep={activeStep} status={sceneStatus} />
+        </div>
+      </div>
     </div>
   );
 }

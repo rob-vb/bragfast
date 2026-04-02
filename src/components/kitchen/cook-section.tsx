@@ -6,6 +6,10 @@ interface CookSectionProps {
   title: string;
   locked?: boolean;
   defaultOpen?: boolean;
+  /** Controlled open state (for accordion mode) */
+  isOpen?: boolean;
+  /** Called when the section is toggled */
+  onToggle?: (open: boolean) => void;
   children: React.ReactNode;
 }
 
@@ -13,12 +17,18 @@ export function CookSection({
   title,
   locked = false,
   defaultOpen = false,
+  isOpen: controlledOpen,
+  onToggle,
   children,
 }: CookSectionProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
 
   function toggle() {
-    if (!locked) setOpen((v) => !v);
+    if (locked) return;
+    const next = !open;
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onToggle?.(next);
   }
 
   return (

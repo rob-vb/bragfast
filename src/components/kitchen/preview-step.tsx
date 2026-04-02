@@ -10,16 +10,22 @@ const FORMAT_TABS: FormatKey[] = ["landscape", "square", "portrait"];
 interface PreviewStepProps {
   templateId: string;
   selectedFormats: FormatKey[];
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export function PreviewStep({ templateId, selectedFormats }: PreviewStepProps) {
+export function PreviewStep({ templateId, selectedFormats, onLoadingChange }: PreviewStepProps) {
   const [activeFormat, setActiveFormat] = useState<FormatKey>("landscape");
   const [previewUrls, setPreviewUrls] = useState<Partial<Record<FormatKey, string>>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function setLoadingState(value: boolean) {
+    setLoading(value);
+    onLoadingChange?.(value);
+  }
+
   async function fetchPreview(format: FormatKey) {
-    setLoading(true);
+    setLoadingState(true);
     setError(null);
     try {
       const res = await fetch(`/api/v1/templates/${templateId}/preview`, {
@@ -34,13 +40,13 @@ export function PreviewStep({ templateId, selectedFormats }: PreviewStepProps) {
     } catch {
       setError("Preview unavailable. You can still cook!");
     } finally {
-      setLoading(false);
+      setLoadingState(false);
     }
   }
 
   async function handlePreviewAll() {
     const formats = selectedFormats.length > 0 ? selectedFormats : ["landscape" as FormatKey];
-    setLoading(true);
+    setLoadingState(true);
     setError(null);
     setPreviewUrls({});
     try {
@@ -60,7 +66,7 @@ export function PreviewStep({ templateId, selectedFormats }: PreviewStepProps) {
     } catch {
       setError("Preview unavailable. You can still cook!");
     } finally {
-      setLoading(false);
+      setLoadingState(false);
     }
   }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
-import { PixelSkeleton } from "@/components/dashboard/pixel-skeleton";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 export interface TemplateItem {
@@ -59,7 +58,11 @@ export function RecipeStep({ templates, selectedId, onSelect }: RecipeStepProps)
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <PixelSkeleton className="w-full h-full" />
+                <div className="w-full h-full border-2 border-dashed border-brand/20 flex items-center justify-center">
+                  <span className="font-[family-name:var(--font-press-start)] text-[7px] text-brand/30">
+                    No preview
+                  </span>
+                </div>
               )}
             </div>
 
