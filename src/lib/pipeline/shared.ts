@@ -86,10 +86,22 @@ export async function buildSlideDataMaps(
   );
 }
 
+export interface PrefetchResult {
+  srcMap: Record<string, string>;
+  backgroundImageBase64?: string;
+}
+
 export async function prefetchStaticImages(
   templateConfig: CanvasTemplateConfig
-): Promise<Record<string, string>> {
+): Promise<PrefetchResult> {
   const staticSrcs = new Set<string>();
+
+  // Background image (template-level, not per-format)
+  const bgImageUrl = templateConfig.background?.mode === "image"
+    ? templateConfig.background.imageUrl
+    : undefined;
+  if (bgImageUrl) staticSrcs.add(bgImageUrl);
+
   for (const fKey of Object.keys(templateConfig.formats) as FormatKey[]) {
     const fLayout = templateConfig.formats[fKey];
     if (!fLayout) continue;
@@ -104,7 +116,10 @@ export async function prefetchStaticImages(
     );
     Object.assign(srcMap, Object.fromEntries(srcEntries));
   }
-  return srcMap;
+  return {
+    srcMap,
+    backgroundImageBase64: bgImageUrl ? srcMap[bgImageUrl] : undefined,
+  };
 }
 
 export function injectStaticImages(
