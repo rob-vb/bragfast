@@ -72,6 +72,31 @@ const SHOWCASE_TEMPLATES = [
   "hero",
 ] as const;
 
+// Test composition: custom font + font_weight override
+const fontTestProps: VideoCanvasCompositionProps = {
+  config: getDefaultConfig("split-mobile")!,
+  format: "landscape",
+  slides: [
+    {
+      title: { text: "Font Weight Test", fontFamily: "Instrument Serif", fontWeight: 400 },
+      description: { text: "This should render in Corben 400", fontFamily: "Corben" },
+      image: { imageBase64: staticFile("demo/browserdemo.jpg") },
+    },
+    {
+      title: { text: "Bold Weight", fontFamily: "Corben", fontWeight: 700 },
+      description: { text: "Instrument Serif (no 700)", fontFamily: "Instrument Serif", fontWeight: 400 },
+      image: { imageBase64: staticFile("demo/browserdemo.jpg") },
+    },
+  ],
+  brand: {
+    name: "Font Test",
+    logoBase64: "",
+    website: "",
+    colors: { background: "#0e0c09", text: "#f5ede0", primary: "#e8a030" },
+  },
+  slideDuration: 5,
+};
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -88,6 +113,16 @@ export const RemotionRoot: React.FC = () => {
           calculateMetadata={calculateMetadata}
         />
       ))}
+      <Composition
+        id="font-test"
+        component={VideoCanvasComposition}
+        fps={FPS}
+        width={FORMAT_DIMENSIONS.landscape.width}
+        height={FORMAT_DIMENSIONS.landscape.height}
+        durationInFrames={Math.ceil(10 * FPS)}
+        defaultProps={fontTestProps}
+        calculateMetadata={calculateMetadata}
+      />
       {SHOWCASE_TEMPLATES.flatMap((tmpl) => {
         const duration = tmpl === "hero" ? 5 : 10;
         return (["landscape", "square", "portrait"] as const).map((fmt) => (
