@@ -51,6 +51,9 @@ export function validateFormats(formats: unknown): string | null {
           if (mod.anchor_y && !VALID_ANCHOR_Y.includes(mod.anchor_y)) {
             return 'anchor_y must be "top", "center", or "bottom"'
           }
+          if (mod.background !== undefined && typeof mod.background !== 'boolean') {
+            return 'background must be a boolean'
+          }
         }
       }
     }
