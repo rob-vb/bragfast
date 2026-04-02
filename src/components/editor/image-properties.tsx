@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 function RadiusInput({
   value,
@@ -155,31 +156,6 @@ export function ImageProperties() {
   return (
     <div className="space-y-3">
       <Label className="text-xs font-medium text-zinc-500 uppercase">Image</Label>
-
-      {isImage && (
-        <div className="space-y-1">
-          <Label className="text-xs text-zinc-500">Background</Label>
-          <div className="flex gap-1">
-            {([
-              { value: false, label: "Off" },
-              { value: true, label: "On" },
-            ] as const).map((opt) => (
-              <button
-                key={String(opt.value)}
-                onClick={() => update("background", opt.value)}
-                className={`flex-1 py-1 text-xs rounded border ${
-                  (selectedObject.background ?? false) === opt.value
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "border-zinc-200 hover:bg-zinc-50"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-[10px] text-zinc-400">Background images appear immediately without animation</p>
-        </div>
-      )}
 
       {isImage && (
         <div className="space-y-1">
@@ -336,6 +312,19 @@ export function ImageProperties() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {isImage && (
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-xs text-zinc-500">Background</Label>
+            <p className="text-[10px] text-zinc-400">No animation in video</p>
+          </div>
+          <Switch
+            checked={selectedObject.background ?? false}
+            onCheckedChange={(checked) => update("background", checked)}
+          />
         </div>
       )}
 
