@@ -55,7 +55,7 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
           display: 'flex',
           flexDirection: 'column',
           width: `${width}px`,
-          height: imageHeight ? `${imageHeight}px` : undefined,
+          ...(imageHeight ? { height: `${imageHeight}px` } : {}),
           overflow: 'hidden',
           justifyContent: alignMap[anchorY],
         }}>
@@ -72,7 +72,7 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
           style={{
             display: 'flex',
             width: `${width}px`,
-            height: imageHeight ? `${imageHeight}px` : undefined,
+            ...(imageHeight ? { height: `${imageHeight}px` } : {}),
             objectFit: 'cover',
             objectPosition,
           }}
