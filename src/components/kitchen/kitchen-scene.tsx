@@ -1,239 +1,252 @@
 "use client";
 
 /**
- * KitchenScene — Animated NES pixel art kitchen banner.
+ * KitchenScene — NES-style pixel art kitchen banner.
  *
- * Built entirely in CSS (no image assets). Box-shadow pixel art technique:
- * a 1×1px div casts coloured box-shadows to "paint" each pixel block.
+ * Full-width diner kitchen rendered with CSS grid pixel art.
+ * Each cell in the grid is a colored square — no images needed.
  *
  * States:
- *   idle    — kitchen at rest, no flames
- *   cooking — stove flames flicker, steam rises
- *   done    — steam burst + "ORDER UP!" text
- *   error   — flames out, red X on stove
+ *   idle    — kitchen at rest
+ *   cooking — stove flames flicker, steam rises, pan sizzles
+ *   done    — "ORDER UP!" ticket drops from rail
+ *   error   — flames out, red X
  */
 
 export interface KitchenSceneProps {
   status: "idle" | "cooking" | "done" | "error";
 }
 
-// ─── Color palette ─────────────────────────────────────────────────────────
-
-const C = {
+// 8-bit palette tuned to brag.fast brand
+const P = {
+  // Brand
   brand: "#4A3326",
   gold: "#F8AF3C",
-  surface: "#FFF8F0",
-  wallCream: "#FFF0D0",
-  stoveDark: "#4A4A4A",
-  stoveMid: "#7A7A7A",
-  stoveLight: "#AAAAAA",
-  counterTop: "#A07850",
-  counterFace: "#7A5830",
-  counterBase: "#4A3326",
-  shelfBrown: "#7A5028",
-  potBody: "#8A8A8A",
-  potDark: "#5A5A5A",
-  knob: "#1A1A1A",
-  flameRed: "#DD2200",
-  flameOrange: "#FF6600",
-  flameYellow: "#FFD000",
-  steam: "#DDDDCC",
-  windowSky: "#88BBDD",
-  windowFrame: "#7A5028",
-  windowGlass: "#AADDFF",
+  cream: "#FFF8F0",
+  // Kitchen
+  wall: "#F5E6C8",
+  wallTile: "#EDD9B5",
+  wallLine: "#D4C4A0",
+  // Counter
+  counterTop: "#B8956A",
+  counterTopLight: "#CBAA82",
+  counterFace: "#8B6B42",
+  counterShadow: "#6A4E2E",
+  // Stove
+  stoveBody: "#5C5C5C",
+  stoveTop: "#787878",
+  stoveHighlight: "#9A9A9A",
+  stoveDark: "#3A3A3A",
+  burnerRing: "#444444",
+  knob: "#222222",
+  // Oven
+  ovenDoor: "#4A4A4A",
+  ovenGlass: "#2A2A2A",
+  ovenHandle: "#888888",
+  // Flames
+  flameCore: "#FFE040",
+  flameMid: "#FF8C00",
+  flameOuter: "#E03000",
+  // Fridge
+  fridgeBody: "#D8D0C0",
+  fridgeLight: "#E8E0D4",
+  fridgeDark: "#B0A890",
+  fridgeHandle: "#888888",
+  // Shelf / rail
+  shelfWood: "#8B6B42",
+  shelfShadow: "#6A4E2E",
+  rail: "#888888",
+  railDark: "#666666",
+  // Utensils (hanging)
+  panBody: "#6A6A6A",
+  panDark: "#4A4A4A",
+  panHandle: "#8B6B42",
+  ladle: "#7A7A7A",
+  // Pot on stove
+  potBody: "#7A7A7A",
+  potDark: "#555555",
+  potRim: "#999999",
+  // Ticket
+  ticketWhite: "#FFFFFF",
+  ticketShadow: "#E0D8CC",
+  // Floor
+  floorA: "#C4A472",
+  floorB: "#B89462",
+  // Steam
+  steamLight: "rgba(255,255,255,0.7)",
+  steamFade: "rgba(255,255,255,0.3)",
+  // Error
   errorRed: "#CC1100",
+  errorDark: "#880000",
 } as const;
 
-// ─── Box-shadow pixel builder ───────────────────────────────────────────────
-// Creates a CSS box-shadow string where each "pixel" is a S×S block.
-// The originating div must be 1×1px. boxShadow offsets start at col*S, row*S.
+// Grid dimensions: 80 cols × 20 rows — renders at 5px/cell = 400×100 base
+const COLS = 80;
+const ROWS = 20;
+const CELL = 5;
 
-type Pixel = [col: number, row: number, color: string];
+// Build a 2D grid (row-major), initialized to transparent
+type Grid = (string | null)[][];
 
-function buildShadow(pixels: Pixel[], S: number): string {
-  return pixels
-    .map(([c, r, color]) => `${c * S}px ${r * S}px 0 ${S - 1}px ${color}`)
-    .join(", ");
+function createGrid(): Grid {
+  return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 }
 
-// ─── Pixel art definitions (at S=1, position in "pixel" units) ────────────
+function rect(g: Grid, x: number, y: number, w: number, h: number, c: string) {
+  for (let r = y; r < y + h && r < ROWS; r++)
+    for (let col = x; col < x + w && col < COLS; col++)
+      if (r >= 0 && col >= 0) g[r][col] = c;
+}
 
-/** Stove: 8 col × 7 row */
-function stovePixels(): Pixel[] {
-  const out: Pixel[] = [];
-  // Body fill
-  for (let r = 0; r < 7; r++) {
-    for (let c = 0; c < 8; c++) {
-      const isEdge = c === 0 || c === 7 || r === 0 || r === 6;
-      out.push([c, r, isEdge ? C.stoveDark : C.stoveMid]);
-    }
+function dot(g: Grid, x: number, y: number, c: string) {
+  if (y >= 0 && y < ROWS && x >= 0 && x < COLS) g[y][x] = c;
+}
+
+function buildScene(): Grid {
+  const g = createGrid();
+
+  // ── Back wall ──
+  rect(g, 0, 0, COLS, 14, P.wall);
+  // Tile pattern on wall (horizontal lines every 4 rows)
+  for (let r = 3; r < 14; r += 4)
+    for (let c = 0; c < COLS; c++) dot(g, c, r, P.wallLine);
+  // Vertical tile lines offset per row
+  for (let r = 0; r < 14; r++)
+    for (let c = (r % 2 === 0 ? 0 : 5); c < COLS; c += 10)
+      dot(g, c, r, P.wallTile);
+
+  // ── Floor ──
+  for (let r = 16; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      g[r][c] = (c + r) % 2 === 0 ? P.floorA : P.floorB;
+
+  // ── Counter runs full width ──
+  rect(g, 0, 14, COLS, 1, P.counterTopLight);
+  rect(g, 0, 15, COLS, 1, P.counterTop);
+  rect(g, 0, 16, COLS, 1, P.counterFace);
+  // Counter edge shadow
+  for (let c = 0; c < COLS; c++) dot(g, c, 14, P.counterTopLight);
+
+  // ── Fridge (far left) ──
+  rect(g, 1, 4, 8, 10, P.fridgeBody);
+  rect(g, 1, 4, 8, 1, P.fridgeLight); // top edge
+  rect(g, 1, 4, 1, 10, P.fridgeLight); // left edge
+  rect(g, 8, 4, 1, 10, P.fridgeDark); // right edge
+  // Fridge handle
+  rect(g, 7, 7, 1, 3, P.fridgeHandle);
+  // Fridge line (door split)
+  for (let r = 4; r < 14; r++) dot(g, 5, r, P.fridgeDark);
+
+  // ── Stove (center-left) ──
+  const sx = 14;
+  // Stove body
+  rect(g, sx, 6, 12, 8, P.stoveBody);
+  rect(g, sx, 6, 12, 1, P.stoveHighlight); // top surface
+  rect(g, sx, 6, 1, 8, P.stoveHighlight); // left edge
+  rect(g, sx + 11, 6, 1, 8, P.stoveDark); // right edge
+  rect(g, sx, 13, 12, 1, P.stoveDark); // bottom edge
+  // Burner rings on stovetop (row 6)
+  for (const bx of [sx + 2, sx + 7]) {
+    dot(g, bx, 6, P.burnerRing);
+    dot(g, bx + 1, 6, P.burnerRing);
+    dot(g, bx + 2, 6, P.burnerRing);
   }
-  // Top highlight strip
-  for (let c = 1; c < 7; c++) out.push([c, 0, C.stoveLight]);
-  // Left burner (cols 1-3, rows 1-3)
-  out.push([1, 2, C.stoveDark], [2, 1, C.stoveDark], [3, 1, C.stoveDark]);
-  out.push([2, 2, C.knob], [3, 2, C.stoveDark]);
-  out.push([1, 3, C.stoveDark], [2, 3, C.stoveDark], [3, 3, C.stoveDark]);
-  // Right burner (cols 4-6, rows 1-3)
-  out.push([4, 2, C.stoveDark], [5, 1, C.stoveDark], [6, 1, C.stoveDark]);
-  out.push([5, 2, C.knob], [6, 2, C.stoveDark]);
-  out.push([4, 3, C.stoveDark], [5, 3, C.stoveDark], [6, 3, C.stoveDark]);
-  // Knobs (row 5)
-  out.push([1, 5, C.knob], [3, 5, C.knob], [5, 5, C.knob]);
-  return out;
-}
-
-/** Counter: W col × 3 row */
-function counterPixels(w: number): Pixel[] {
-  const out: Pixel[] = [];
-  for (let c = 0; c < w; c++) {
-    out.push([c, 0, C.counterTop]);
-    out.push([c, 1, C.counterFace]);
-    out.push([c, 2, C.counterBase]);
+  // Oven door
+  rect(g, sx + 2, 9, 8, 4, P.ovenDoor);
+  rect(g, sx + 3, 10, 6, 2, P.ovenGlass);
+  // Oven handle
+  rect(g, sx + 3, 9, 6, 1, P.ovenHandle);
+  // Knobs row
+  for (const kx of [sx + 2, sx + 4, sx + 6, sx + 8]) {
+    dot(g, kx, 7, P.knob);
   }
-  return out;
-}
 
-/** Shelf: W col × 2 row */
-function shelfPixels(w: number): Pixel[] {
-  const out: Pixel[] = [];
-  for (let c = 0; c < w; c++) {
-    out.push([c, 0, C.shelfBrown]);
-    out.push([c, 1, C.counterBase]);
+  // ── Pot on stove ──
+  const px = sx + 2;
+  rect(g, px, 4, 4, 1, P.potRim);
+  rect(g, px, 5, 4, 1, P.potBody);
+  dot(g, px, 4, P.potDark);
+  dot(g, px + 3, 4, P.potDark);
+  dot(g, px, 5, P.potDark);
+  dot(g, px + 3, 5, P.potDark);
+
+  // ── Hanging utensil rail ──
+  rect(g, 30, 1, 18, 1, P.rail);
+  // Rail brackets
+  for (const bx of [31, 39, 47]) {
+    dot(g, bx, 0, P.railDark);
+    dot(g, bx, 1, P.railDark);
   }
-  return out;
-}
+  // Hanging pan
+  dot(g, 33, 2, P.panHandle);
+  dot(g, 33, 3, P.panHandle);
+  rect(g, 32, 4, 3, 1, P.panBody);
+  rect(g, 31, 5, 5, 2, P.panBody);
+  dot(g, 31, 5, P.panDark);
+  dot(g, 35, 5, P.panDark);
+  // Hanging ladle
+  dot(g, 37, 2, P.ladle);
+  dot(g, 37, 3, P.ladle);
+  dot(g, 37, 4, P.ladle);
+  dot(g, 36, 5, P.ladle);
+  dot(g, 37, 5, P.ladle);
+  dot(g, 38, 5, P.ladle);
+  // Hanging spatula
+  dot(g, 41, 2, P.panHandle);
+  dot(g, 41, 3, P.panHandle);
+  dot(g, 41, 4, P.panHandle);
+  dot(g, 40, 5, P.stoveHighlight);
+  dot(g, 41, 5, P.stoveHighlight);
+  dot(g, 42, 5, P.stoveHighlight);
 
-/** Pot: 4 col × 4 row */
-function potPixels(): Pixel[] {
-  return [
-    // Handle
-    [1, 0, C.potDark], [2, 0, C.potDark],
-    // Body
-    [0, 1, C.potDark], [1, 1, C.potBody], [2, 1, C.potBody], [3, 1, C.potDark],
-    [0, 2, C.potDark], [1, 2, C.potBody], [2, 2, C.potBody], [3, 2, C.potDark],
-    // Base
-    [0, 3, C.potDark], [1, 3, C.potDark], [2, 3, C.potDark], [3, 3, C.potDark],
-  ];
-}
+  // ── Shelf (right side) with items ──
+  rect(g, 54, 5, 14, 1, P.shelfWood);
+  rect(g, 54, 6, 14, 1, P.shelfShadow);
+  // Jar on shelf
+  rect(g, 56, 2, 3, 3, P.gold);
+  dot(g, 57, 2, P.cream); // label
+  // Bottle on shelf
+  rect(g, 61, 1, 2, 4, P.fridgeBody);
+  dot(g, 61, 1, P.fridgeLight);
+  dot(g, 62, 1, P.fridgeDark);
+  // Small container
+  rect(g, 65, 3, 2, 2, P.counterFace);
+  dot(g, 65, 3, P.counterTop);
 
-/** Window: 6 col × 6 row */
-function windowPixels(): Pixel[] {
-  const out: Pixel[] = [];
-  for (let r = 0; r < 6; r++) {
-    for (let c = 0; c < 6; c++) {
-      const isFrame = c === 0 || c === 5 || r === 0 || r === 5;
-      const isCross = c === 2 || r === 2;
-      out.push([
-        c, r,
-        isFrame || isCross ? C.windowFrame : C.windowGlass,
-      ]);
-    }
+  // ── Second shelf (lower) ──
+  rect(g, 54, 10, 14, 1, P.shelfWood);
+  rect(g, 54, 11, 14, 1, P.shelfShadow);
+  // Plates on lower shelf
+  rect(g, 55, 8, 4, 2, P.cream);
+  dot(g, 55, 8, P.wallLine);
+  dot(g, 58, 8, P.wallLine);
+  // Cup
+  rect(g, 62, 8, 2, 2, P.cream);
+  dot(g, 61, 9, P.shelfWood); // handle
+
+  // ── Ticket rail (order window vibe) ──
+  rect(g, 30, 8, 18, 1, P.railDark);
+  // Hanging tickets (little white rectangles)
+  for (const tx of [32, 36, 40, 44]) {
+    rect(g, tx, 9, 2, 3, P.ticketWhite);
+    dot(g, tx, 9, P.ticketShadow);
   }
-  return out;
+
+  // ── Window (far right) ──
+  rect(g, 72, 2, 7, 8, P.shelfWood); // frame
+  rect(g, 73, 3, 5, 6, "#88BBDD"); // sky
+  // Window cross
+  for (let r = 3; r < 9; r++) dot(g, 75, r, P.shelfWood);
+  for (let c = 73; c < 78; c++) dot(g, c, 6, P.shelfWood);
+  // Curtain hints
+  dot(g, 73, 3, P.cream);
+  dot(g, 77, 3, P.cream);
+
+  return g;
 }
 
-/** Flame set A — tall (left + right burner) */
-function flameAPixels(): Pixel[] {
-  return [
-    // Left burner flame
-    [0, 2, C.flameRed],
-    [0, 1, C.flameOrange],
-    [0, 0, C.flameYellow],
-    [1, 1, C.flameOrange],
-    [1, 0, C.flameYellow],
-    // Right burner flame (offset by 3)
-    [3, 2, C.flameRed],
-    [3, 1, C.flameOrange],
-    [3, 0, C.flameYellow],
-    [4, 1, C.flameOrange],
-    [4, 0, C.flameYellow],
-  ];
-}
-
-/** Flame set B — short (alternates with A) */
-function flameBPixels(): Pixel[] {
-  return [
-    [0, 2, C.flameRed],
-    [0, 1, C.flameOrange],
-    [1, 2, C.flameOrange],
-    [1, 1, C.flameYellow],
-    [3, 2, C.flameRed],
-    [3, 1, C.flameOrange],
-    [4, 2, C.flameOrange],
-    [4, 1, C.flameYellow],
-  ];
-}
-
-/** Steam wisp: small rising dots */
-function steamPixels(): Pixel[] {
-  return [
-    [0, 3, C.steam],
-    [0, 1, C.steam],
-    [1, 2, C.steam],
-    [1, 0, C.steam],
-  ];
-}
-
-/** Error X: 3 col × 3 row */
-function errorXPixels(): Pixel[] {
-  return [
-    [0, 0, C.errorRed], [2, 0, C.errorRed],
-    [1, 1, C.errorRed],
-    [0, 2, C.errorRed], [2, 2, C.errorRed],
-  ];
-}
-
-// ─── The pixel block size to use ───────────────────────────────────────────
-// Scene is designed at S=6 (6px per pixel block).
-// Media queries scale the scene wrapper via transform: scale().
-
-const S = 6; // base pixel size
-
-// ─── Scene layout in "pixel" units (at S=6) ────────────────────────────────
-// Scene canvas: 60 cols × 18 rows = 360px × 108px (comfortably within 120px)
-
-const SCENE_COLS = 60;
-const SCENE_ROWS = 18;
-
-// Stove: top-left, 8×7, starts at col 2, row (SCENE_ROWS - 7 - 3) = 8
-const STOVE_COL = 2;
-const STOVE_ROW = SCENE_ROWS - 7 - 3; // row 8
-
-// Counter spans full width at bottom 3 rows
-const COUNTER_COL = 0;
-const COUNTER_ROW = SCENE_ROWS - 3;
-
-// Flame origin: just above stove top, same col offset as burner
-const FLAME_COL = STOVE_COL + 1;  // over left burner
-const FLAME_ROW = STOVE_ROW - 3;  // 3 rows above stove
-
-// Steam origin: above stove
-const STEAM_COL = STOVE_COL + 1;
-const STEAM_ROW = STOVE_ROW - 4;  // starts above flame
-
-// Error X: above stove center
-const ERR_COL = STOVE_COL + 2;
-const ERR_ROW = STOVE_ROW - 4;
-
-// Shelves: right side
-const SHELF1_COL = 18;
-const SHELF1_ROW = 3;
-const SHELF2_COL = 18;
-const SHELF2_ROW = 9;
-
-// Pots on shelves — pot is 4 rows tall, base at row 3.
-// To sit ON the shelf, pot origin row = SHELF_ROW - 3 (base touches shelf top).
-const POT1_COL = SHELF1_COL + 1;
-const POT1_ROW = SHELF1_ROW - 3;   // base row aligns with shelf top
-const POT2_COL = SHELF2_COL + 2;
-const POT2_ROW = SHELF2_ROW - 3;
-
-// Window: far right
-const WIN_COL = 38;
-const WIN_ROW = 3;
-
-// ─── Component ──────────────────────────────────────────────────────────────
+// Pre-compute the base scene once at module level
+const BASE_SCENE = buildScene();
 
 export function KitchenScene({ status }: KitchenSceneProps) {
   const showFlames = status === "cooking" || status === "done";
@@ -241,127 +254,140 @@ export function KitchenScene({ status }: KitchenSceneProps) {
   const showDone = status === "done";
   const showError = status === "error";
 
-  // Pre-compute shadows
-  const stoveShadow = buildShadow(stovePixels(), S);
-  const counterShadow = buildShadow(counterPixels(SCENE_COLS), S);
-  const shelf1Shadow = buildShadow(shelfPixels(10), S);
-  const shelf2Shadow = buildShadow(shelfPixels(10), S);
-  const pot1Shadow = buildShadow(potPixels(), S);
-  const pot2Shadow = buildShadow(potPixels(), S);
-  const windowShadow = buildShadow(windowPixels(), S);
-  const flameAShadow = buildShadow(flameAPixels(), S);
-  const flameBShadow = buildShadow(flameBPixels(), S);
-  const steamShadow = buildShadow(steamPixels(), S);
-  const errorXShadow = buildShadow(errorXPixels(), S);
-
-  const sceneW = SCENE_COLS * S;  // 360px
-  const sceneH = SCENE_ROWS * S;  // 108px
+  const w = COLS * CELL;
+  const h = ROWS * CELL;
 
   return (
     <>
       <style>{`
-        @keyframes ks-flicker-a {
-          0%, 49% { opacity: 1; }
+        .ks-wrap {
+          overflow: hidden;
+          border-bottom: 2px solid var(--color-brand, #4A3326);
+          background: ${P.wall};
+        }
+        .ks-viewport {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          min-width: 100%;
+          padding: 8px 0;
+        }
+        .ks-scene {
+          position: relative;
+          width: ${w}px;
+          height: ${h}px;
+          transform-origin: bottom center;
+          image-rendering: pixelated;
+        }
+        @media (max-width: 767px) {
+          .ks-scene { transform: scale(0.8); }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .ks-scene { transform: scale(0.9); }
+        }
+        @media (min-width: 1024px) {
+          .ks-scene { transform: scale(1); }
+        }
+        @media (min-width: 1280px) {
+          .ks-scene { transform: scale(1.15); }
+        }
+        /* Flame flicker: two frames alternate */
+        @keyframes ks-flame-a {
+          0%, 49.9% { opacity: 1; }
           50%, 100% { opacity: 0; }
         }
-        @keyframes ks-flicker-b {
-          0%, 49% { opacity: 0; }
+        @keyframes ks-flame-b {
+          0%, 49.9% { opacity: 0; }
           50%, 100% { opacity: 1; }
         }
-        @keyframes ks-steam-1 {
+        /* Steam rise */
+        @keyframes ks-rise {
           0%   { opacity: 0; transform: translateY(0); }
-          15%  { opacity: 0.85; }
-          80%  { opacity: 0.3; }
-          100% { opacity: 0; transform: translateY(-${4 * S}px); }
+          10%  { opacity: 0.8; }
+          70%  { opacity: 0.3; }
+          100% { opacity: 0; transform: translateY(-${6 * CELL}px); }
         }
-        @keyframes ks-steam-2 {
-          0%   { opacity: 0; transform: translateY(0); }
-          15%  { opacity: 0.7; }
-          80%  { opacity: 0.2; }
-          100% { opacity: 0; transform: translateY(-${3 * S}px); }
+        /* Order up ticket drop */
+        @keyframes ks-ticket-drop {
+          0%   { opacity: 0; transform: translateY(-${3 * CELL}px); }
+          15%  { opacity: 1; transform: translateY(${1 * CELL}px); }
+          25%  { transform: translateY(0); }
+          80%  { opacity: 1; }
+          100% { opacity: 0; }
         }
-        @keyframes ks-order-up {
-          0%   { opacity: 0; transform: translate(-50%, -40%) scale(0.85); }
-          12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
-          20%  { transform: translate(-50%, -50%) scale(1); }
-          75%  { opacity: 1; }
-          100% { opacity: 0; transform: translate(-50%, -52%); }
+        /* Error pulse */
+        @keyframes ks-err-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .ks-anim { animation: none !important; opacity: 1 !important; }
+          .ks-anim { animation: none !important; }
         }
       `}</style>
 
-      <div
-        aria-hidden="true"
-        className="w-full overflow-hidden border-b-2 border-brand select-none"
-        style={{
-          background: C.wallCream,
-          height: "clamp(80px, 10.5vw, 120px)",
-        }}
-      >
-        {/* Outer wrapper: centres the scene and scales for breakpoints */}
-        <div
-          className="flex items-end justify-center h-full"
-          style={{ paddingBottom: 0 }}
-        >
-          {/*
-            Scale the 360px scene down to fit smaller viewports.
-            At 768px viewport, scale = 0.67 → scene appears 241px wide.
-            At 1024px+, scale = 1.0.
-          */}
-          <style>{`
-            .ks-scene-wrap {
-              transform-origin: bottom center;
-              transform: scale(1);
-            }
-            @media (max-width: 767px) {
-              .ks-scene-wrap { transform: scale(0.67); }
-            }
-            @media (min-width: 768px) and (max-width: 1023px) {
-              .ks-scene-wrap { transform: scale(0.83); }
-            }
-          `}</style>
-
-          <div
-            className="ks-scene-wrap relative"
-            style={{ width: sceneW, height: sceneH }}
-          >
-            {/* ── Wall background ── */}
+      <div className="ks-wrap select-none" aria-hidden="true">
+        <div className="ks-viewport">
+          <div className="ks-scene">
+            {/* Base scene: CSS grid of colored cells */}
             <div
-              className="absolute inset-0"
-              style={{ background: C.wallCream }}
-            />
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`,
+                gridTemplateRows: `repeat(${ROWS}, ${CELL}px)`,
+                width: w,
+                height: h,
+                position: "absolute",
+                inset: 0,
+              }}
+            >
+              {BASE_SCENE.flat().map((color, i) => (
+                <div
+                  key={i}
+                  style={color ? { backgroundColor: color } : undefined}
+                />
+              ))}
+            </div>
 
-            {/* ── Counter (bottom strip) ── */}
-            <Dot
-              col={COUNTER_COL}
-              row={COUNTER_ROW}
-              shadow={counterShadow}
-              S={S}
-            />
-
-            {/* ── Stove body ── */}
-            <Dot col={STOVE_COL} row={STOVE_ROW} shadow={stoveShadow} S={S} />
-
-            {/* ── Flames ── */}
+            {/* ── Flames (two alternating frames) ── */}
             {showFlames && (
               <>
-                <Dot
-                  col={FLAME_COL}
-                  row={FLAME_ROW}
-                  shadow={flameAShadow}
-                  S={S}
-                  className="ks-anim"
-                  style={{ animation: "ks-flicker-a 0.35s steps(1) infinite" }}
+                <FlameLayer
+                  frame="a"
+                  offsets={[
+                    // Left burner (above pot)
+                    [16 * CELL, 3 * CELL],
+                    [17 * CELL, 2 * CELL],
+                    [18 * CELL, 3 * CELL],
+                  ]}
+                  colors={[P.flameOuter, P.flameCore, P.flameMid]}
                 />
-                <Dot
-                  col={FLAME_COL}
-                  row={FLAME_ROW}
-                  shadow={flameBShadow}
-                  S={S}
-                  className="ks-anim"
-                  style={{ animation: "ks-flicker-b 0.35s steps(1) infinite" }}
+                <FlameLayer
+                  frame="b"
+                  offsets={[
+                    [16 * CELL, 2 * CELL],
+                    [17 * CELL, 3 * CELL],
+                    [18 * CELL, 2 * CELL],
+                  ]}
+                  colors={[P.flameMid, P.flameOuter, P.flameCore]}
+                />
+                {/* Right burner flames */}
+                <FlameLayer
+                  frame="a"
+                  offsets={[
+                    [21 * CELL, 3 * CELL],
+                    [22 * CELL, 2 * CELL],
+                    [23 * CELL, 3 * CELL],
+                  ]}
+                  colors={[P.flameMid, P.flameCore, P.flameOuter]}
+                />
+                <FlameLayer
+                  frame="b"
+                  offsets={[
+                    [21 * CELL, 2 * CELL],
+                    [22 * CELL, 3 * CELL],
+                    [23 * CELL, 2 * CELL],
+                  ]}
+                  colors={[P.flameCore, P.flameMid, P.flameOuter]}
                 />
               </>
             )}
@@ -369,80 +395,83 @@ export function KitchenScene({ status }: KitchenSceneProps) {
             {/* ── Steam wisps ── */}
             {showSteam && (
               <>
-                <Dot
-                  col={STEAM_COL}
-                  row={STEAM_ROW}
-                  shadow={steamShadow}
-                  S={S}
-                  className="ks-anim"
-                  style={{ animation: "ks-steam-1 1.8s ease-out infinite" }}
-                />
-                <Dot
-                  col={STEAM_COL + 3}
-                  row={STEAM_ROW}
-                  shadow={steamShadow}
-                  S={S}
-                  className="ks-anim"
-                  style={{
-                    animation: "ks-steam-2 1.8s ease-out 0.7s infinite",
-                  }}
-                />
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="ks-anim"
+                    style={{
+                      position: "absolute",
+                      left: (17 + i * 2) * CELL,
+                      top: 0,
+                      width: CELL,
+                      height: CELL,
+                      borderRadius: "50%",
+                      backgroundColor: P.steamLight,
+                      animation: `ks-rise 2s ease-out ${i * 0.5}s infinite`,
+                    }}
+                  />
+                ))}
               </>
+            )}
+
+            {/* ── ORDER UP! ── */}
+            {showDone && (
+              <div
+                className="ks-anim"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "20%",
+                  transform: "translateX(-50%)",
+                  fontFamily:
+                    "var(--font-press-start, 'Press Start 2P', monospace)",
+                  fontSize: 10,
+                  color: P.gold,
+                  background: P.brand,
+                  border: `2px solid ${P.gold}`,
+                  padding: "4px 10px",
+                  whiteSpace: "nowrap",
+                  letterSpacing: "0.05em",
+                  zIndex: 20,
+                  animation: "ks-ticket-drop 3s ease-out forwards",
+                  boxShadow: `3px 3px 0 ${P.brand}`,
+                }}
+              >
+                ORDER UP!
+              </div>
             )}
 
             {/* ── Error X ── */}
             {showError && (
-              <Dot
-                col={ERR_COL}
-                row={ERR_ROW}
-                shadow={errorXShadow}
-                S={S}
-              />
-            )}
-
-            {/* ── Shelf 1 ── */}
-            <Dot
-              col={SHELF1_COL}
-              row={SHELF1_ROW}
-              shadow={shelf1Shadow}
-              S={S}
-            />
-            {/* ── Pot on shelf 1 ── */}
-            <Dot col={POT1_COL} row={POT1_ROW} shadow={pot1Shadow} S={S} />
-
-            {/* ── Shelf 2 ── */}
-            <Dot
-              col={SHELF2_COL}
-              row={SHELF2_ROW}
-              shadow={shelf2Shadow}
-              S={S}
-            />
-            {/* ── Pot on shelf 2 ── */}
-            <Dot col={POT2_COL} row={POT2_ROW} shadow={pot2Shadow} S={S} />
-
-            {/* ── Window ── */}
-            <Dot col={WIN_COL} row={WIN_ROW} shadow={windowShadow} S={S} />
-
-            {/* ── ORDER UP! overlay ── */}
-            {showDone && (
               <div
-                className="ks-anim absolute"
+                className="ks-anim"
                 style={{
-                  top: "45%",
-                  left: "50%",
+                  position: "absolute",
+                  left: 18 * CELL,
+                  top: 1 * CELL,
+                  width: 5 * CELL,
+                  height: 5 * CELL,
                   zIndex: 20,
-                  fontFamily: "var(--font-press-start, 'Courier New', monospace)",
-                  fontSize: 10,
-                  color: C.gold,
-                  background: C.brand,
-                  border: `2px solid ${C.gold}`,
-                  padding: "4px 8px",
-                  whiteSpace: "nowrap",
-                  letterSpacing: "0.05em",
-                  animation: "ks-order-up 2.8s ease-out forwards",
+                  animation: "ks-err-pulse 1s ease-in-out infinite",
                 }}
               >
-                ORDER UP!
+                {/* Pixel X using positioned cells */}
+                {[
+                  [0, 0], [1, 1], [2, 2], [3, 3], [4, 4],
+                  [4, 0], [3, 1], [1, 3], [0, 4],
+                ].map(([x, y], i) => (
+                  <div
+                    key={i}
+                    style={{
+                      position: "absolute",
+                      left: x * CELL,
+                      top: y * CELL,
+                      width: CELL,
+                      height: CELL,
+                      backgroundColor: i < 5 ? P.errorRed : P.errorDark,
+                    }}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -452,30 +481,40 @@ export function KitchenScene({ status }: KitchenSceneProps) {
   );
 }
 
-// ─── Dot: a 1×1 div that paints pixels via box-shadow ──────────────────────
+// ── Flame layer helper ──
 
-interface DotProps {
-  col: number;
-  row: number;
-  shadow: string;
-  S: number;
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-function Dot({ col, row, shadow, S, className = "", style }: DotProps) {
+function FlameLayer({
+  frame,
+  offsets,
+  colors,
+}: {
+  frame: "a" | "b";
+  offsets: [number, number][];
+  colors: string[];
+}) {
   return (
     <div
-      className={className}
+      className="ks-anim"
       style={{
         position: "absolute",
-        top: row * S,
-        left: col * S,
-        width: 1,
-        height: 1,
-        boxShadow: shadow,
-        ...style,
+        inset: 0,
+        animation: `ks-flame-${frame} 0.3s steps(1) infinite`,
+        zIndex: 10,
       }}
-    />
+    >
+      {offsets.map(([x, y], i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            left: x,
+            top: y,
+            width: CELL,
+            height: CELL * 2,
+            backgroundColor: colors[i % colors.length],
+          }}
+        />
+      ))}
+    </div>
   );
 }
