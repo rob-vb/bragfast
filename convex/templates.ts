@@ -61,6 +61,7 @@ const canvasConfigValidator = v.object({
     primary: v.string(),
   }),
   brandId: v.optional(v.string()),
+  background: v.optional(v.any()),
   formats: v.object({
     landscape: formatLayoutValidator,
     square: formatLayoutValidator,
