@@ -28,7 +28,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
           objects: [
             { id: "title", type: "text", name: "title", x: 64, y: 100, width: 952, height: 100, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 90, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here", textFit: false },
             { id: "description", type: "text", name: "description", x: 64, y: 216, width: 952, height: 200, opacity: 0.8, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", textFit: false },
-            { id: "image", type: "image", name: "image", x: 64, y: 460, width: 952, height: 842, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "contain", anchorY: "top" },
+            { id: "image", type: "image", name: "image", x: 64, y: 473, width: 952, height: 915, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "contain", anchorY: "top" },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 36, width: 731, height: 54, opacity: 1, zIndex: 2, objectFit: "contain", anchorX: "left" },
           ],
         },
@@ -62,7 +62,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
           objects: [
             { id: "title", type: "text", name: "title", x: 64, y: 100, width: 952, height: 100, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 90, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C" },
             { id: "description", type: "text", name: "description", x: 64, y: 216, width: 952, height: 240, opacity: 0.8, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "image", type: "image", name: "image", x: 215, y: 500, width: 650, height: 810, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "contain", anchorY: "top" },
+            { id: "image", type: "image", name: "image", x: 288, y: 539, width: 505, height: 1050, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "contain", anchorY: "top" },
             { id: "logo", type: "logo", name: "logo", x: 64, y: 36, width: 731, height: 54, opacity: 1, zIndex: 2, objectFit: "contain", anchorX: "left" },
           ],
         },
@@ -94,8 +94,8 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 478, y: 64, width: 950, height: 1222, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "cover", anchorX: "left", anchorY: "top" },
-            { id: "title", type: "text", name: "title", x: 48, y: 228, width: 400, height: 420, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here" },
+            { id: "image", type: "image", name: "image", x: 589, y: 64, width: 1041, height: 1222, opacity: 1, zIndex: 1, imageFrame: "browser", imageFrameColor: "#E8E8E8", objectFit: "cover", anchorX: "left", anchorY: "top" },
+            { id: "title", type: "text", name: "title", x: 48, y: 228, width: 474, height: 420, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C", previewText: "Text goes here" },
             { id: "description", type: "text", name: "description", x: 48, y: 664, width: 400, height: 630, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
             { id: "logo", type: "logo", name: "logo", x: 48, y: 64, width: 400, height: 54, opacity: 1, zIndex: 2, objectFit: "contain", anchorX: "left" },
           ],
@@ -128,8 +128,8 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 478, y: 140, width: 550, height: 1070, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover", anchorX: "left", anchorY: "top" },
-            { id: "title", type: "text", name: "title", x: 48, y: 278, width: 400, height: 370, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C" },
+            { id: "image", type: "image", name: "image", x: 707, y: 140, width: 550, height: 1070, opacity: 1, zIndex: 1, imageFrame: "mobile", imageFrameColor: "#1A1A1A", objectFit: "cover", anchorX: "left", anchorY: "top" },
+            { id: "title", type: "text", name: "title", x: 48, y: 278, width: 553, height: 370, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 72, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "bottom", color: "#F8AF3C" },
             { id: "description", type: "text", name: "description", x: 48, y: 664, width: 400, height: 630, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
             { id: "logo", type: "logo", name: "logo", x: 48, y: 140, width: 400, height: 54, opacity: 1, zIndex: 2, objectFit: "contain", anchorX: "left" },
           ],
