@@ -28,8 +28,9 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
       style={{
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
         width: `${width}px`,
+        paddingLeft: `${bezel}px`,
+        paddingRight: `${bezel}px`,
         borderRadius: flush
           ? `${cornerRadius}px ${cornerRadius}px 0 0`
           : `${cornerRadius}px`,
@@ -39,7 +40,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
       }}
     >
       {/* Top bezel */}
-      <div style={{ display: 'flex', width: '100%', height: bezel, flexShrink: 0 }} />
+      <div style={{ display: 'flex', height: `${bezel}px`, flexShrink: 0 }} />
 
       {/* Screen */}
       <div
@@ -82,7 +83,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
 
       {/* Bottom bezel */}
       {!flush && (
-        <div style={{ display: 'flex', width: '100%', height: bezel, flexShrink: 0 }} />
+        <div style={{ display: 'flex', height: `${bezel}px`, flexShrink: 0 }} />
       )}
     </div>
   )
