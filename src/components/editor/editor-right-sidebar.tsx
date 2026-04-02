@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BackgroundSection } from "./background-section";
 import { BrandColorSection } from "./brand-color-section";
 import { CommonProperties } from "./common-properties";
 import { TextProperties } from "./text-properties";
@@ -20,6 +21,8 @@ export function EditorRightSidebar() {
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Template</h3>
               <BrandColorSection />
+              <Separator />
+              <BackgroundSection />
               <Separator />
               <div className="space-y-1">
                 <Label className="text-xs font-medium text-zinc-500 uppercase">Video Preset</Label>

@@ -4,6 +4,7 @@ import type { Brand } from "../types";
 import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
+import { resolveBackground } from "./mesh-gradient";
 
 // Object data keyed by object ID — values are resolved (URLs already fetched to base64)
 export interface ObjectDataMap {
@@ -25,22 +26,38 @@ interface CanvasRendererProps {
   format: FormatKey;
   objectData: ObjectDataMap;
   brand: Brand;
+  backgroundImageBase64?: string;
 }
 
-export function CanvasRenderer({ config, format, objectData, brand }: CanvasRendererProps) {
+export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64 }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
+  const bg = resolveBackground(config, colors);
+  const bgImgSrc = backgroundImageBase64 ?? bg.imageUrl;
 
   return (
     <div style={{
       width, height,
-      background: colors.background,
+      background: bg.css ?? "white",
       position: "relative",
       overflow: "hidden",
       display: "flex",
     }}>
+      {bgImgSrc && (
+        <img
+          src={bgImgSrc}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      )}
       {sortedObjects.map((obj) => (
         <div key={obj.id} style={{
           position: "absolute",

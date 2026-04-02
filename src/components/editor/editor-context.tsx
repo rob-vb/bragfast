@@ -198,7 +198,14 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       const currentBg = state.config.background;
       const currentMode: BackgroundMode = currentBg?.mode ?? "color";
       const targetMode: BackgroundMode = action.background?.mode ?? "color";
-      if (currentMode === targetMode) return state;
+      if (currentMode === targetMode) {
+        if (targetMode === "color") return state;
+        return {
+          ...state,
+          config: { ...state.config, background: action.background },
+          isDirty: true,
+        };
+      }
       const newStash = { ...state.backgroundStash, [currentMode]: currentBg ?? { mode: "color" as const } };
       let newBg: BackgroundConfig | undefined;
       if (newStash[targetMode]) {
