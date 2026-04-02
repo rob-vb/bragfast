@@ -73,7 +73,7 @@ export async function buildSlideDataMaps(
         if (mod.text) entry.text = mod.text;
         if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
         if (mod.font_family) entry.fontFamily = mod.font_family;
-        if (mod.font_weight) entry.fontWeight = mod.font_weight;
+        if (mod.font_weight) entry.fontWeight = Number(mod.font_weight);
         if (mod.color) entry.color = mod.color;
         if (mod.image_frame) entry.imageFrame = mod.image_frame;
         if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
