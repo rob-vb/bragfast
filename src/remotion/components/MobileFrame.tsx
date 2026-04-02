@@ -6,6 +6,7 @@ type MobileFrameProps = {
   width: number;
   height: number;
   frameColor?: string;
+  objectFit?: "cover" | "contain";
 };
 
 export const MobileFrame: React.FC<MobileFrameProps> = ({
@@ -13,6 +14,7 @@ export const MobileFrame: React.FC<MobileFrameProps> = ({
   width,
   height,
   frameColor = "#1A1A1A",
+  objectFit = "cover",
 }) => {
   const bezel = width * 0.025;
   const cornerRadius = width * 0.12;
@@ -37,7 +39,7 @@ export const MobileFrame: React.FC<MobileFrameProps> = ({
           width: "100%",
           height: "100%",
           borderRadius: innerRadius,
-          objectFit: "cover",
+          objectFit,
         }}
       />
     </div>

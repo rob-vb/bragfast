@@ -8,9 +8,10 @@ interface MobileFrameProps {
   flush?: boolean
   color?: string  // hex color for frame chrome
   objectPosition?: string  // CSS object-position for the screenshot
+  objectFit?: 'cover' | 'contain'  // CSS object-fit for the screenshot
 }
 
-export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#1A1A1A', objectPosition = 'center top' }: MobileFrameProps) {
+export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#1A1A1A', objectPosition = 'center top', objectFit = 'cover' }: MobileFrameProps) {
   const bezel = Math.round(width * 0.025)
   const cornerRadius = Math.round(width * 0.12)
   const innerRadius = Math.max(0, cornerRadius - bezel)
@@ -56,7 +57,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
             display: 'flex',
             width: `${screenWidth}px`,
             height: imageHeight ? `${imageHeight}px` : undefined,
-            objectFit: 'cover',
+            objectFit,
             objectPosition,
             borderRadius: flush
               ? `${innerRadius}px ${innerRadius}px 0 0`

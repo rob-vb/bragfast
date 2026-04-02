@@ -8,9 +8,10 @@ interface BrowserFrameProps {
   flush?: boolean
   color?: string  // hex color for frame chrome
   objectPosition?: string  // CSS object-position for the screenshot
+  objectFit?: 'cover' | 'contain'  // CSS object-fit for the screenshot
 }
 
-export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#E8E8E8', objectPosition = 'center top' }: BrowserFrameProps) {
+export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#E8E8E8', objectPosition = 'center top', objectFit = 'cover' }: BrowserFrameProps) {
   const dotSize = 10
   const titleBarHeight = 32
   const imageHeight = maxHeight ? maxHeight - titleBarHeight : undefined
@@ -52,7 +53,7 @@ export function BrowserFrame({ imageBase64, primaryColor, width, maxHeight, flus
           display: 'flex',
           width: `${width}px`,
           height: imageHeight ? `${imageHeight}px` : undefined,
-          objectFit: 'cover',
+          objectFit,
           objectPosition,
         }}
       />

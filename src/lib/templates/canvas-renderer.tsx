@@ -209,6 +209,7 @@ export function renderObject(
             maxHeight={obj.height}
             color={frameColor}
             objectPosition={objectPosition}
+            objectFit={obj.objectFit || "cover"}
           />
         );
       }
@@ -220,6 +221,7 @@ export function renderObject(
           maxHeight={obj.height}
           color={frameColor}
           objectPosition={objectPosition}
+          objectFit={obj.objectFit || "cover"}
         />
       );
     }
