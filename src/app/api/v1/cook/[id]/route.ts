@@ -1,4 +1,4 @@
-import { validateApiKey } from "@/lib/auth/validate-api-key";
+import { authenticate } from "@/lib/auth/authenticate";
 import { getRelease } from "@/lib/pipeline/render";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
@@ -8,7 +8,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await validateApiKey(request);
+  const auth = await authenticate(request);
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }

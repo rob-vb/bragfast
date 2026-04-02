@@ -2,7 +2,7 @@ import { after } from "next/server";
 
 export const maxDuration = 60;
 
-import { validateApiKey } from "@/lib/auth/validate-api-key";
+import { authenticate } from "@/lib/auth/authenticate";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats, validateVideoField } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
@@ -12,7 +12,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
 export async function POST(request: Request) {
-  const auth = await validateApiKey(request);
+  const auth = await authenticate(request);
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }

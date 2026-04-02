@@ -10,7 +10,7 @@ export const create = mutation({
     credits_used: v.number(),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
-    source: v.optional(v.union(v.literal("api"), v.literal("github"))),
+    source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
     output: v.optional(v.union(v.literal("image"), v.literal("video"))),
     status: v.optional(v.union(
