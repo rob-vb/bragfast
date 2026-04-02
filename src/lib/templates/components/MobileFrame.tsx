@@ -77,9 +77,6 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
               height: imageHeight ? `${imageHeight}px` : undefined,
               objectFit: 'cover',
               objectPosition,
-              borderRadius: flush
-                ? `${innerRadius}px ${innerRadius}px 0 0`
-                : `${innerRadius}px`,
             }}
           />
         )}
