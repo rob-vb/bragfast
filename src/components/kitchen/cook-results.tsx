@@ -7,7 +7,7 @@ import type { ReleaseResult } from "@/lib/types";
 const FORMAT_DIMS: Record<string, string> = {
   landscape: "1200×675",
   square: "1080×1080",
-  portrait: "1080×1920",
+  portrait: "1080×1350",
 };
 
 interface CookResultsProps {

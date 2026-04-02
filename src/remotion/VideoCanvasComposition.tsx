@@ -143,7 +143,12 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
           }}
         />
       )}
-      {sortedObjects.map((obj, sortIndex) => {
+      {sortedObjects.filter((obj) => {
+        // Skip text/image objects with no user-provided data
+        if (obj.type === "logo") return true;
+        if (obj.type === "image" && obj.src) return true;
+        return !!objectData[obj.id];
+      }).map((obj, sortIndex) => {
         const data = objectData[obj.id];
 
         // Background images: static, no animation

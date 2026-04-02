@@ -130,6 +130,7 @@ export async function renderReleaseAsync(
           objectData: slideDataMaps[i],
           brand,
           backgroundImageBase64,
+          skipEmpty: true,
         });
         const svg = await satori(jsx, { width, height, fonts });
         const jpg = await sharp(Buffer.from(svg))

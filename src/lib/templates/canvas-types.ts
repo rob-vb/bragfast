@@ -158,5 +158,5 @@ export function getObjectBorderRadius(obj: {
 export const FORMAT_DIMENSIONS: Record<FormatKey, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
-  portrait: { width: 1080, height: 1920 },
+  portrait: { width: 1080, height: 1350 },
 };

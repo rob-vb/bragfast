@@ -95,7 +95,7 @@ export type TemplateName = 'standard-browser' | 'standard-mobile' | 'split-brows
 export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
-  portrait: { width: 1080, height: 1920 },
+  portrait: { width: 1080, height: 1350 },
 }
 
 export type CookCreditsInput = {

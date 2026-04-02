@@ -8,7 +8,6 @@ import { RecipeStep, type TemplateItem } from "@/components/kitchen/recipe-step"
 import { SeasoningStep } from "@/components/kitchen/seasoning-step";
 import { IngredientsStep } from "@/components/kitchen/ingredients-step";
 import { PlatingStep } from "@/components/kitchen/plating-step";
-import { PreviewStep } from "@/components/kitchen/preview-step";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { CookResults } from "@/components/kitchen/cook-results";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
@@ -25,7 +24,7 @@ interface CookState {
   formats: FormatKey[];
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
-  status: "idle" | "previewing" | "cooking" | "done" | "error";
+  status: "idle" | "cooking" | "done" | "error";
   cookId?: string;
   results?: ReleaseResult;
   error?: string;
@@ -53,7 +52,6 @@ type CookAction =
   | { type: "TOGGLE_FORMAT"; format: FormatKey }
   | { type: "SET_OUTPUT_TYPE"; outputType: "image" | "video" }
   | { type: "SET_ANIMATION_PRESET"; preset: AnimationPreset | undefined }
-  | { type: "SET_PREVIEWING"; previewing: boolean }
   | { type: "START_COOK"; cookId: string }
   | { type: "COOK_DONE"; results: ReleaseResult }
   | { type: "COOK_ERROR"; error: string }
@@ -110,9 +108,6 @@ function cookReducer(state: CookState, action: CookAction): CookState {
 
     case "SET_ANIMATION_PRESET":
       return { ...state, animationPreset: action.preset };
-
-    case "SET_PREVIEWING":
-      return { ...state, status: action.previewing ? "previewing" : "idle" };
 
     case "START_COOK":
       return { ...state, status: "cooking", cookId: action.cookId, results: undefined, error: undefined };
@@ -348,27 +343,6 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
           />
         </CookSection>
 
-        {/* 5. Preview */}
-        <CookSection
-          title="5. Preview"
-          locked={!hasTemplate}
-          isOpen={activeStep === "preview"}
-          onToggle={handleStepToggle("preview")}
-        >
-          {state.templateId ? (
-            <PreviewStep
-              templateId={state.templateId}
-              selectedFormats={state.formats}
-              onLoadingChange={(loading) =>
-                dispatch({ type: "SET_PREVIEWING", previewing: loading })
-              }
-            />
-          ) : (
-            <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/50">
-              Select a template first.
-            </p>
-          )}
-        </CookSection>
       </div>
 
       {/* Error message */}

@@ -14,7 +14,7 @@ interface CookState {
   formats: FormatKey[];
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
-  status: "idle" | "previewing" | "cooking" | "done" | "error";
+  status: "idle" | "cooking" | "done" | "error";
   cookId?: string;
   results?: ReleaseResult;
   error?: string;

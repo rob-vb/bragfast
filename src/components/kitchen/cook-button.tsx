@@ -2,7 +2,7 @@
 
 import { PixelButton } from "@/components/dashboard/pixel-button";
 
-type CookButtonStatus = "idle" | "previewing" | "cooking" | "done" | "error";
+type CookButtonStatus = "idle" | "cooking" | "done" | "error";
 
 interface CookButtonProps {
   status: CookButtonStatus;
@@ -12,7 +12,6 @@ interface CookButtonProps {
 
 const LABELS: Record<CookButtonStatus, string> = {
   idle: "COOK IT!",
-  previewing: "COOK IT!",
   cooking: "COOKING...",
   done: "COOK AGAIN",
   error: "TRY AGAIN",

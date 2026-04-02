@@ -30,7 +30,7 @@ const FORMATS = ["landscape", "square", "portrait"] as const;
 const FORMAT_LABELS: Record<string, string> = {
   landscape: "1200 x 675",
   square: "1080 x 1080",
-  portrait: "1080 x 1920",
+  portrait: "1080 x 1350",
 };
 
 // Map internal font value to API font_family value
@@ -220,7 +220,7 @@ export default function DemoPage() {
                           ? 675
                           : format === "square"
                             ? 1080
-                            : 1920
+                            : 1350
                       }
                       className="w-full h-auto"
                       unoptimized
@@ -232,7 +232,7 @@ export default function DemoPage() {
                           ? "aspect-[1200/675]"
                           : format === "square"
                             ? "aspect-square"
-                            : "aspect-[1080/1920]"
+                            : "aspect-[1080/1350]"
                       }`}
                     >
                       <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/20">

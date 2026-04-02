@@ -1,7 +1,7 @@
 /** Maps cook-page state → animation phase for the 3D kitchen scene. */
 
-export type CookStep = "recipe" | "seasoning" | "ingredients" | "plating" | "preview";
-export type CookStatus = "idle" | "previewing" | "cooking" | "done" | "error";
+export type CookStep = "recipe" | "seasoning" | "ingredients" | "plating";
+export type CookStatus = "idle" | "cooking" | "done" | "error";
 
 export type CookAnim = "idle" | "walk" | "action";
 
@@ -34,17 +34,6 @@ export function deriveAnimPhase(
   status: CookStatus,
 ): AnimPhase {
   // Status overrides step-based positioning
-  if (status === "previewing") {
-    return {
-      targetX: POS.OVEN,
-      cookAnim: "action",
-      showFlames: true,
-      showSteam: false,
-      showDone: false,
-      showError: false,
-    };
-  }
-
   if (status === "cooking") {
     return {
       targetX: POS.CENTER,
@@ -96,8 +85,6 @@ export function deriveAnimPhase(
     case "ingredients":
       return { ...base, targetX: POS.FRIDGE, cookAnim: "action" };
     case "plating":
-      return { ...base, targetX: POS.OVEN };
-    case "preview":
       return { ...base, targetX: POS.OVEN };
     default:
       return base;

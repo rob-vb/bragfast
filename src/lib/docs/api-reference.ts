@@ -254,7 +254,7 @@ while True:
                 type: "string",
                 required: true,
                 description:
-                  'Format name: "landscape" (1200×675), "square" (1080×1080), or "portrait" (1080×1920).',
+                  'Format name: "landscape" (1200×675), "square" (1080×1080), or "portrait" (1080×1350).',
               },
               {
                 name: "slides",
@@ -1482,7 +1482,7 @@ with open("preview.jpg", "wb") as f:
         },
         responseStatus: 200,
         responseExample: `// Returns a JPEG image (Content-Type: image/jpeg)
-// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1920)`,
+// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1350)`,
       },
     ],
   },

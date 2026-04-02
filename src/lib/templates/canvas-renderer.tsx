@@ -27,15 +27,27 @@ interface CanvasRendererProps {
   objectData: ObjectDataMap;
   brand: Brand;
   backgroundImageBase64?: string;
+  /** When true, skip text/image objects that have no data in objectData */
+  skipEmpty?: boolean;
 }
 
-export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64 }: CanvasRendererProps) {
+export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64, skipEmpty }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
   const bg = resolveBackground(config, colors);
   const bgImgSrc = backgroundImageBase64 ?? bg.imageUrl;
+
+  // When skipEmpty is set, filter out text/image objects with no user-provided data
+  const visibleObjects = skipEmpty
+    ? sortedObjects.filter((obj) => {
+        if (obj.type === "logo") return true;
+        // Image objects with a static src are always shown
+        if (obj.type === "image" && obj.src) return true;
+        return !!objectData[obj.id];
+      })
+    : sortedObjects;
 
   return (
     <div style={{
@@ -58,7 +70,7 @@ export function CanvasRenderer({ config, format, objectData, brand, backgroundIm
           }}
         />
       )}
-      {sortedObjects.map((obj) => (
+      {visibleObjects.map((obj) => (
         <div key={obj.id} style={{
           position: "absolute",
           left: obj.x,
