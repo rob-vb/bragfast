@@ -47,12 +47,8 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
           display: 'flex',
           flexDirection: 'column',
           width: `${screenWidth}px`,
-          height: imageHeight ? `${imageHeight}px` : undefined,
-          borderRadius: flush
-            ? `${innerRadius}px ${innerRadius}px 0 0`
-            : `${innerRadius}px`,
-          overflow: 'hidden',
-          justifyContent: isContain ? alignMap[anchorY] : undefined,
+          ...(imageHeight ? { height: `${imageHeight}px` } : {}),
+          ...(isContain ? { justifyContent: alignMap[anchorY] } : {}),
         }}
       >
         {isContain ? (
@@ -74,7 +70,7 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
             style={{
               display: 'flex',
               width: `${screenWidth}px`,
-              height: imageHeight ? `${imageHeight}px` : undefined,
+              ...(imageHeight ? { height: `${imageHeight}px` } : {}),
               objectFit: 'cover',
               objectPosition,
             }}
