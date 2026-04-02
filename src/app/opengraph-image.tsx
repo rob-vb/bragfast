@@ -21,7 +21,7 @@ export default async function OGImage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#F8AF3C",
+          backgroundColor: "#fff8f0",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
