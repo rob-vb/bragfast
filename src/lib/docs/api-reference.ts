@@ -293,6 +293,14 @@ while True:
                           "Override the font for this specific text object. Takes precedence over the top-level font_family.",
                       },
                       {
+                        name: "font_weight",
+                        type: "number",
+                        required: false,
+                        group: "text",
+                        description:
+                          "Override the font weight for this text object (100–900). Defaults to the template object's weight.",
+                      },
+                      {
                         name: "color",
                         type: "string",
                         required: false,
