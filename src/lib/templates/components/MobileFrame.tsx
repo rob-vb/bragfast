@@ -47,6 +47,8 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
           display: 'flex',
           flexDirection: 'column',
           width: `${screenWidth}px`,
+          borderRadius: flush ? `${innerRadius}px ${innerRadius}px 0 0` : `${innerRadius}px`,
+          overflow: 'hidden',
           ...(imageHeight ? { height: `${imageHeight}px` } : {}),
           ...(isContain ? { justifyContent: alignMap[anchorY] } : {}),
         }}
