@@ -6,9 +6,11 @@ import { PixelCard } from "@/components/dashboard/pixel-card";
 import { PixelButton } from "@/components/dashboard/pixel-button";
 import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
 import { CopyButton } from "@/components/dashboard/copy-button";
+import { CookPage } from "@/components/kitchen/cook-page";
+import type { TemplateItem } from "@/components/kitchen/recipe-step";
 import Link from "next/link";
 
-interface TemplateItem {
+interface TemplateListItem {
   id: string;
   displayId?: string;
   name: string;
@@ -26,22 +28,26 @@ interface BrandItem {
 }
 
 interface KitchenClientProps {
-  defaults: TemplateItem[];
-  userTemplates: TemplateItem[];
+  defaults: TemplateListItem[];
+  userTemplates: TemplateListItem[];
   brands: BrandItem[];
+  cookTemplates: TemplateItem[];
+  creditBalance?: number;
 }
 
-const tabs = ["templates", "brands"] as const;
+const tabs = ["cook", "templates", "brands"] as const;
 type Tab = (typeof tabs)[number];
 
 export function KitchenClient({
   defaults,
   userTemplates,
   brands,
+  cookTemplates,
+  creditBalance,
 }: KitchenClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const activeTab = (searchParams.get("tab") as Tab) || "templates";
+  const activeTab = (searchParams.get("tab") as Tab) || "cook";
 
   function setTab(tab: Tab) {
     router.replace(`/dashboard/kitchen?tab=${tab}`, { scroll: false });
@@ -81,6 +87,10 @@ export function KitchenClient({
       </div>
 
       {/* Tab content */}
+      {activeTab === "cook" && (
+        <CookPage templates={cookTemplates} creditBalance={creditBalance} />
+      )}
+
       {activeTab === "templates" && (
         <TemplateListClient defaults={defaults} userTemplates={userTemplates} />
       )}
