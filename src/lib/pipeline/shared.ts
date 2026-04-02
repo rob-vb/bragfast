@@ -79,8 +79,6 @@ export async function buildSlideDataMaps(
         if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
         if (mod.anchor_x) entry.anchorX = mod.anchor_x;
         if (mod.anchor_y) entry.anchorY = mod.anchor_y;
-        if (mod.entrance) entry.entrance = mod.entrance;
-        if (mod.exit) entry.exit = mod.exit;
         dataMap[mod.id] = entry;
       }
       return dataMap;

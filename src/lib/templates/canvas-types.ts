@@ -1,4 +1,4 @@
-import type { EntranceType, ExitType, AnimationPreset } from "../types";
+import type { AnimationPreset } from "../types";
 
 export type ObjectType = "text" | "image" | "logo";
 
@@ -30,8 +30,13 @@ function migrateObject(obj: TemplateObject): TemplateObject {
     ? { ...obj, type: "text" as ObjectType }
     : { ...obj };
 
-  // Migrate device → imageFrame
+  // Strip legacy per-object animation fields (now preset-only)
   const raw = migrated as Record<string, unknown>;
+  delete raw.entrance;
+  delete raw.exit;
+  delete raw.kenBurns;
+
+  // Migrate device → imageFrame
   if ("device" in raw && !("imageFrame" in raw)) {
     migrated.imageFrame = raw.device as ImageFrame;
     delete raw.device;
@@ -102,11 +107,6 @@ export interface TemplateObject {
   borderRadiusTR?: number;
   borderRadiusBR?: number;
   borderRadiusBL?: number;
-
-  // Video animation
-  entrance?: EntranceType;
-  exit?: ExitType;
-  kenBurns?: boolean; // Slow zoom+pan effect for images in video mode
 
   // Editor-only
   previewText?: string;

@@ -44,9 +44,7 @@ export interface ObjectModification {
   image_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
-  // Video animation
-  entrance?: EntranceType
-  exit?: ExitType
+
 }
 
 export interface FormatEntry {
@@ -115,5 +113,4 @@ export function calculateCredits(input: CookCreditsInput): number {
   return totalSlides;
 }
 
-export const VALID_ENTRANCE_TYPES: EntranceType[] = ['fade-in', 'slide-up', 'bounce', 'showcase-rise', 'showcase-reveal', 'none']
 export const VALID_ANIMATION_PRESETS: AnimationPreset[] = ['showcase']

@@ -128,22 +128,10 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
       {sortedObjects.map((obj, sortIndex) => {
         const data = objectData[obj.id];
 
-        // Resolve preset-based animation for this object type
+        // Resolve animation from preset (or fall back to type defaults)
         const presetAnim = resolvePreset(config.animation_preset, obj.type);
-
-        // Determine entrance type: API override > template per-object > preset > type default
-        const entrance: EntranceType =
-          (data?.entrance as EntranceType | undefined) ??
-          obj.entrance ??
-          presetAnim.entrance ??
-          getDefaultEntrance(obj.type);
-
-        // Determine exit type: API override > template per-object > preset > type default
-        const exit: ExitType =
-          (data?.exit as ExitType | undefined) ??
-          obj.exit ??
-          presetAnim.exit ??
-          getDefaultExit(obj.type);
+        const entrance: EntranceType = presetAnim.entrance ?? getDefaultEntrance(obj.type);
+        const exit: ExitType = presetAnim.exit ?? getDefaultExit(obj.type);
 
         const staggerDelay = sortIndex * Math.round(fps * 0.15);
         const localFrame = Math.max(0, frame - staggerDelay);
@@ -154,8 +142,8 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         // Compute exit animation style
         const exitStyle = computeExitStyle(exit, frame, fps, slideDurationFrames);
 
-        // Compute image-specific effects (3D rotation)
-        const kenBurnsEnabled = obj.kenBurns ?? false;
+        // Compute image-specific effects (Ken Burns from preset)
+        const kenBurnsEnabled = presetAnim.kenBurns ?? false;
         const imageEffectStyle =
           obj.type === "image" && kenBurnsEnabled && entrance !== "showcase-rise"
             ? computeImageEffects(frame, slideDurationFrames)
@@ -255,10 +243,10 @@ function getDefaultExit(type: string): ExitType {
 export function resolvePreset(
   preset: AnimationPreset | undefined,
   objectType: string,
-): { entrance?: EntranceType; exit?: ExitType } {
+): { entrance?: EntranceType; exit?: ExitType; kenBurns?: boolean } {
   if (!preset) return {};
   if (preset === "showcase") {
-    if (objectType === "image") return { entrance: "showcase-rise", exit: "none" };
+    if (objectType === "image") return { entrance: "showcase-rise", exit: "none", kenBurns: true };
     return { entrance: "showcase-reveal", exit: "none" };
   }
   return {};

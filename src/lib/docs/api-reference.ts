@@ -348,22 +348,6 @@ while True:
                         description:
                           'Vertical anchor point for the image when cropped by object-fit cover. One of "top", "center", "bottom". Defaults to template setting (usually "top").',
                       },
-                      {
-                        name: "entrance",
-                        type: "string",
-                        required: false,
-                        group: "video",
-                        description:
-                          'Entrance animation for this object in video mode. One of "fade-in", "slide-up", "bounce", "none". Defaults: text → fade-in, image → fade-in, logo → none. Ignored for image output.',
-                      },
-                      {
-                        name: "exit",
-                        type: "string",
-                        required: false,
-                        group: "video",
-                        description:
-                          'Exit animation for this object in video mode. One of "fade-out", "slide-down", "bounce", "none". Defaults: text → fade-out, image → fade-out, logo → none. Ignored for image output.',
-                      },
                     ],
                   },
                 ],
@@ -382,7 +366,7 @@ while True:
             type: "true | { duration: number }",
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
+              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. Pass { preset: "showcase" } to use the showcase animation preset. Animations are controlled by the video preset — not per-object.',
           },
           {
             name: "webhook_url",

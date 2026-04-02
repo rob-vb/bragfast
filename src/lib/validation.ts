@@ -1,4 +1,4 @@
-import { FORMAT_DIMENSIONS, VALID_ENTRANCE_TYPES, VALID_ANIMATION_PRESETS } from './types'
+import { FORMAT_DIMENSIONS, VALID_ANIMATION_PRESETS } from './types'
 import type { VideoField } from './types'
 
 const VALID_FORMATS = Object.keys(FORMAT_DIMENSIONS)
@@ -50,9 +50,6 @@ export function validateFormats(formats: unknown): string | null {
           }
           if (mod.anchor_y && !VALID_ANCHOR_Y.includes(mod.anchor_y)) {
             return 'anchor_y must be "top", "center", or "bottom"'
-          }
-          if (mod.entrance && !VALID_ENTRANCE_TYPES.includes(mod.entrance)) {
-            return `entrance must be one of: ${VALID_ENTRANCE_TYPES.join(', ')}`
           }
         }
       }

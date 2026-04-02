@@ -35,6 +35,7 @@ type EditorAction =
   | { type: "SET_COLORS"; colors: { background: string; text: string; primary: string } }
   | { type: "SET_BRAND"; brandId: string | undefined; previewColors?: { background: string; text: string; primary: string } }
   | { type: "SET_NAME"; name: string }
+  | { type: "SET_ANIMATION_PRESET"; preset: string | undefined }
   | { type: "COMMIT_MOVE" }
   | { type: "UNDO" }
   | { type: "REDO" }
@@ -180,6 +181,13 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case "SET_NAME":
       return { ...state, name: action.name, isDirty: true };
+
+    case "SET_ANIMATION_PRESET":
+      return {
+        ...state,
+        config: { ...state.config, animation_preset: action.preset as CanvasTemplateConfig["animation_preset"] },
+        isDirty: true,
+      };
 
     case "COMMIT_MOVE":
       // No-op on state — exists only to create an undo snapshot after drag/resize

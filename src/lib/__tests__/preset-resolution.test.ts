@@ -2,10 +2,11 @@ import { describe, it, expect } from "vitest";
 import { resolvePreset } from "../../remotion/VideoCanvasComposition";
 
 describe("resolvePreset", () => {
-  it("showcase preset maps image to showcase-rise", () => {
+  it("showcase preset maps image to showcase-rise with kenBurns", () => {
     expect(resolvePreset("showcase", "image")).toEqual({
       entrance: "showcase-rise",
       exit: "none",
+      kenBurns: true,
     });
   });
 
