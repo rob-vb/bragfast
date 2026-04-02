@@ -363,10 +363,10 @@ while True:
           },
           {
             name: "video",
-            type: "true | { duration: number }",
+            type: 'true | { duration?: number, preset?: "showcase" }',
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. Pass { preset: "showcase" } to use the showcase animation preset. Animations are controlled by the video preset — not per-object.',
+              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Options: duration (3-30 seconds, default 5, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
           },
           {
             name: "webhook_url",

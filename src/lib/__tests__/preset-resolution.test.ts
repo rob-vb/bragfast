@@ -24,7 +24,11 @@ describe("resolvePreset", () => {
     });
   });
 
-  it("undefined preset returns empty (no preset)", () => {
-    expect(resolvePreset(undefined, "image")).toEqual({});
+  it("undefined preset defaults to showcase", () => {
+    expect(resolvePreset(undefined, "image")).toEqual({
+      entrance: "showcase-rise",
+      exit: "none",
+      kenBurns: true,
+    });
   });
 });

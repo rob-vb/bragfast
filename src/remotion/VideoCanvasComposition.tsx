@@ -244,7 +244,7 @@ export function resolvePreset(
   preset: AnimationPreset | undefined,
   objectType: string,
 ): { entrance?: EntranceType; exit?: ExitType; kenBurns?: boolean } {
-  if (!preset) return {};
+  if (!preset) preset = "showcase";
   if (preset === "showcase") {
     if (objectType === "image") return { entrance: "showcase-rise", exit: "none", kenBurns: true };
     return { entrance: "showcase-reveal", exit: "none" };
