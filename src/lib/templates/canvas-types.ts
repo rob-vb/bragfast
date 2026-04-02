@@ -96,6 +96,7 @@ export interface TemplateObject {
   textFit?: boolean;
 
   // Image-only
+  background?: boolean;
   src?: string; // Static image URL — baked into template, not overridable by API
   imageFrame?: ImageFrame;
   imageFrameColor?: string;

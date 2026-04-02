@@ -14,6 +14,7 @@ import { loadBrandFont } from "./fonts";
 import type {
   CanvasTemplateConfig,
   FormatKey,
+  TemplateObject,
 } from "../lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "../lib/templates/canvas-types";
 import { renderObject } from "../lib/templates/canvas-renderer";
@@ -115,6 +116,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
+  const heroId = findHeroImageId(sortedObjects);
 
   return (
     <AbsoluteFill
@@ -128,8 +130,14 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
       {sortedObjects.map((obj, sortIndex) => {
         const data = objectData[obj.id];
 
+        // Background images: static, no animation
+        const isBg = obj.type === "image" && obj.background === true;
+        const isHero = obj.type === "image" ? obj.id === heroId : undefined;
+
         // Resolve animation from preset (or fall back to type defaults)
-        const presetAnim = resolvePreset(config.animation_preset, obj.type);
+        const presetAnim = isBg
+          ? { entrance: "none" as EntranceType, exit: "none" as ExitType, kenBurns: false }
+          : resolvePreset(config.animation_preset, obj.type, isHero);
         const entrance: EntranceType = presetAnim.entrance ?? getDefaultEntrance(obj.type);
         const exit: ExitType = presetAnim.exit ?? getDefaultExit(obj.type);
 
@@ -240,13 +248,30 @@ function getDefaultExit(type: string): ExitType {
   }
 }
 
+export function findHeroImageId(objects: TemplateObject[]): string | null {
+  const candidates = objects.filter(
+    (o) => o.type === "image" && !o.background,
+  );
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => {
+    if (b.zIndex !== a.zIndex) return b.zIndex - a.zIndex;
+    if ((b.opacity ?? 1) !== (a.opacity ?? 1)) return (b.opacity ?? 1) - (a.opacity ?? 1);
+    return a.id.localeCompare(b.id);
+  });
+  return candidates[0].id;
+}
+
 export function resolvePreset(
   preset: AnimationPreset | undefined,
   objectType: string,
+  isHero?: boolean,
 ): { entrance?: EntranceType; exit?: ExitType; kenBurns?: boolean } {
   if (!preset) preset = "showcase";
   if (preset === "showcase") {
-    if (objectType === "image") return { entrance: "showcase-rise", exit: "none", kenBurns: true };
+    if (objectType === "image") {
+      if (isHero === false) return { entrance: "fade-in", exit: "none", kenBurns: false };
+      return { entrance: "showcase-rise", exit: "none", kenBurns: true };
+    }
     return { entrance: "showcase-reveal", exit: "none" };
   }
   return {};

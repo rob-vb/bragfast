@@ -31,4 +31,41 @@ describe("resolvePreset", () => {
       kenBurns: true,
     });
   });
+
+  // Role-based classification tests
+
+  it("hero image gets showcase-rise with kenBurns", () => {
+    expect(resolvePreset("showcase", "image", true)).toEqual({
+      entrance: "showcase-rise",
+      exit: "none",
+      kenBurns: true,
+    });
+  });
+
+  it("non-hero image gets fade-in without kenBurns", () => {
+    expect(resolvePreset("showcase", "image", false)).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("isHero undefined preserves backward compat (showcase-rise)", () => {
+    expect(resolvePreset("showcase", "image", undefined)).toEqual({
+      entrance: "showcase-rise",
+      exit: "none",
+      kenBurns: true,
+    });
+  });
+
+  it("isHero has no effect on text objects", () => {
+    expect(resolvePreset("showcase", "text", true)).toEqual({
+      entrance: "showcase-reveal",
+      exit: "none",
+    });
+    expect(resolvePreset("showcase", "text", false)).toEqual({
+      entrance: "showcase-reveal",
+      exit: "none",
+    });
+  });
 });

@@ -44,6 +44,7 @@ export interface ObjectModification {
   image_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
+  background?: boolean
 
 }
 

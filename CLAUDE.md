@@ -55,6 +55,7 @@ npm run remotion:studio  # Remotion preview
 | `convex/videoRender.ts` | Convex node action for video rendering (`"use node"`) |
 | `src/remotion/VideoCanvasComposition.tsx` | Remotion composition for video output |
 | `convex/schema.ts` | 11 tables: userProfiles, brands, templates, videoTemplates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, githubSkippedReleases |
+| `docs/solutions/` | Documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) |
 
 ### Image Dimensions
 
