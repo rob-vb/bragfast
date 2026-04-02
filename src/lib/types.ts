@@ -36,6 +36,7 @@ export interface ObjectModification {
   // Text objects
   text?: string
   font_family?: string
+  font_weight?: number
   color?: string
   // Image objects
   image_url?: string

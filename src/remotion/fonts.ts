@@ -3,7 +3,7 @@ import { staticFile } from "remotion";
 
 const fontCache = new Map<string, boolean>();
 
-export async function loadBrandFont(family: string): Promise<string> {
+export async function loadBrandFont(family: string, weights?: Set<number>): Promise<string> {
   if (family === "Plus Jakarta Sans") {
     if (!fontCache.has(family)) {
       await loadFont({
@@ -21,23 +21,26 @@ export async function loadBrandFont(family: string): Promise<string> {
     return family;
   }
 
-  // Google Fonts — fetch 400 and 700 separately; fall back to 400 if 700 unavailable
-  if (!fontCache.has(family)) {
+  // Google Fonts — inject CSS directly so the browser handles unicode-range
+  // subsetting natively. We can't use the curl User-Agent trick here because
+  // this runs in headless Chrome where User-Agent is a forbidden fetch header.
+  const cacheKey = weights ? `${family}:${[...weights].sort().join(",")}` : family;
+  if (!fontCache.has(cacheKey)) {
+    const allWeights = new Set([400, 700, ...(weights ?? [])]);
     const encodedFamily = encodeURIComponent(family);
+    const weightList = [...allWeights].sort((a, b) => a - b).join(";");
+    const cssUrl = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@${weightList}&display=swap`;
+    const css = await fetch(cssUrl).then((r) => r.text());
 
-    async function fetchFontUrl(weight: number): Promise<string | null> {
-      const cssUrl = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@${weight}&display=swap`;
-      const css = await fetch(cssUrl, { headers: { "User-Agent": "curl/7.85.0" } }).then((r) => r.text());
-      const match = css.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+\.(?:ttf|otf|woff2?))\)/);
-      return match ? match[1] : null;
-    }
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.appendChild(style);
 
-    const [url400, url700] = await Promise.all([fetchFontUrl(400), fetchFontUrl(700)]);
-    if (url400) {
-      await loadFont({ family, url: url400, weight: "400" });
-      await loadFont({ family, url: url700 ?? url400, weight: "700" });
-    }
-    fontCache.set(family, true);
+    await Promise.all(
+      [...allWeights].map((w) => document.fonts.load(`${w} 16px "${family}"`))
+    ).catch(() => {});
+
+    fontCache.set(cacheKey, true);
   }
   return family;
 }

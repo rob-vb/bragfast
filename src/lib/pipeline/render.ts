@@ -108,15 +108,18 @@ export async function renderReleaseAsync(
         const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
       }
-      const overrideFamilies = new Set<string>();
+      const overrideFonts = new Map<string, Set<number>>();
       for (const dataMap of slideDataMaps) {
         for (const entry of Object.values(dataMap)) {
-          if (entry.fontFamily) overrideFamilies.add(entry.fontFamily);
+          if (entry.fontFamily) {
+            if (!overrideFonts.has(entry.fontFamily)) overrideFonts.set(entry.fontFamily, new Set());
+            if (entry.fontWeight) overrideFonts.get(entry.fontFamily)!.add(entry.fontWeight);
+          }
         }
       }
-      for (const family of overrideFamilies) {
-        const overrideFonts = await loadFontsForFamily(family);
-        fonts = [...fonts, ...overrideFonts];
+      for (const [family, weights] of overrideFonts) {
+        const loaded = await loadFontsForFamily(family, weights);
+        fonts = [...fonts, ...loaded];
       }
 
       // Render slides

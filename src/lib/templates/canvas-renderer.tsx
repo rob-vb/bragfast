@@ -11,6 +11,7 @@ export interface ObjectDataMap {
     text?: string;
     imageBase64?: string;
     fontFamily?: string;
+    fontWeight?: number;
     color?: string;
     imageFrame?: string;
     imageFrameColor?: string;
@@ -132,10 +133,11 @@ export function renderObject(
     case "text": {
       const text = data?.text || obj.previewText || "Text";
       const resolvedFont = data?.fontFamily || fontFamily;
+      const resolvedWeight = data?.fontWeight || obj.fontWeight || 400;
       const resolvedColor = data?.color || obj.color || colors.text;
       const fontSize = autoFitFontSize(
         text, obj.fontSize || 24, obj.width, obj.height,
-        obj.fontWeight || 400, obj.lineHeight || 1.2, obj.letterSpacing || 0,
+        resolvedWeight, obj.lineHeight || 1.2, obj.letterSpacing || 0,
         obj.textFit ?? false,
       );
       const lines = text.split("\n");
@@ -143,7 +145,7 @@ export function renderObject(
         <div style={{
           fontFamily: resolvedFont,
           fontSize,
-          fontWeight: obj.fontWeight || 400,
+          fontWeight: resolvedWeight,
           letterSpacing: obj.letterSpacing || 0,
           lineHeight: obj.lineHeight || 1.2,
           textAlign: obj.textAlign || "left",

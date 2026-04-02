@@ -40,20 +40,24 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
   const [handle] = useState(() => delayRender("Loading brand font"));
 
   useEffect(() => {
-    // Collect all unique font families: brand font + per-object fonts + slide data overrides
+    // Collect all unique font families + weights: brand font + per-object fonts + slide data overrides
     const layout = config.formats[format] ?? config.formats.landscape;
-    const families = new Set<string>();
-    families.add(brand.font_family || "Plus Jakarta Sans");
+    const familyWeights = new Map<string, Set<number>>();
+    const addFamily = (f: string, w?: number) => {
+      if (!familyWeights.has(f)) familyWeights.set(f, new Set());
+      if (w) familyWeights.get(f)!.add(w);
+    };
+    addFamily(brand.font_family || "Plus Jakarta Sans");
     for (const obj of layout.objects) {
-      if (obj.fontFamily) families.add(obj.fontFamily);
+      if (obj.fontFamily) addFamily(obj.fontFamily, obj.fontWeight);
     }
     for (const slideData of slides) {
       for (const entry of Object.values(slideData)) {
-        if (entry.fontFamily) families.add(entry.fontFamily);
+        if (entry.fontFamily) addFamily(entry.fontFamily, entry.fontWeight);
       }
     }
 
-    Promise.all([...families].map((f) => loadBrandFont(f)))
+    Promise.all([...familyWeights].map(([f, w]) => loadBrandFont(f, w.size > 0 ? w : undefined)))
       .then(() => {
         setFontLoaded(true);
         continueRender(handle);
