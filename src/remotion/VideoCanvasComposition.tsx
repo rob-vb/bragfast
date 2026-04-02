@@ -116,6 +116,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
+  const heroId = findHeroImageId(sortedObjects);
 
   return (
     <AbsoluteFill
@@ -126,9 +127,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         overflow: "hidden",
       }}
     >
-      {(() => {
-        const heroId = findHeroImageId(sortedObjects);
-        return sortedObjects.map((obj, sortIndex) => {
+      {sortedObjects.map((obj, sortIndex) => {
         const data = objectData[obj.id];
 
         // Background images: static, no animation
@@ -214,8 +213,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
           )}
           </div>
         );
-      });
-      })()}
+      })}
     </AbsoluteFill>
   );
 };
