@@ -128,11 +128,11 @@ export async function renderVideoAsync(
           await renderVideoLocal(formatKey, inputProps, outputPath);
           url = `file://${outputPath}`;
         } else {
-          const mp4Url = await renderVideo({
+          const { outputUrl } = await renderVideo({
             compositionId: formatKey,
             inputProps,
           });
-          const mp4Response = await fetch(mp4Url);
+          const mp4Response = await fetch(outputUrl);
           const mp4Buffer = Buffer.from(await mp4Response.arrayBuffer());
           url = await uploadImage(
             mp4Buffer,
