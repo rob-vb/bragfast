@@ -1,6 +1,7 @@
 import {
   renderMediaOnLambda,
   getRenderProgress,
+  deleteRender,
 } from "@remotion/lambda-client";
 import type { RenderProgress } from "@remotion/lambda-client";
 
@@ -41,10 +42,29 @@ async function withRetry<T>(
   throw new Error("Unreachable");
 }
 
+export type RenderVideoResult = {
+  outputUrl: string;
+  renderId: string;
+  bucketName: string;
+};
+
+export async function cleanupRender(renderId: string, bucketName: string): Promise<void> {
+  try {
+    await deleteRender({
+      renderId,
+      bucketName,
+      region: REGION,
+    });
+    console.log(`[LAMBDA] Cleaned up render ${renderId}`);
+  } catch (err) {
+    console.warn(`[LAMBDA] Failed to clean up render ${renderId}:`, err);
+  }
+}
+
 export async function renderVideo({
   compositionId,
   inputProps,
-}: RenderVideoParams): Promise<string> {
+}: RenderVideoParams): Promise<RenderVideoResult> {
   if (!FUNCTION_NAME || !SERVE_URL) {
     throw new Error("REMOTION_FUNCTION_NAME and REMOTION_SERVE_URL must be set");
   }
@@ -105,5 +125,5 @@ export async function renderVideo({
   }
 
   console.log(`[LAMBDA] Render complete: ${progress.outputFile}`);
-  return progress.outputFile;
+  return { outputUrl: progress.outputFile, renderId, bucketName };
 }

@@ -187,7 +187,7 @@ while True:
         anchor: "create-cook",
         title: "Create a cook",
         description:
-          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (10 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 5, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, you can set per-object entrance animations via the entrance field: fade-in, slide-up, bounce, or none. Defaults: text → fade-in, image → fade-in, logo → bounce.",
+          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (10 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 8, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
         params: [
           {
             name: "brand_id",
@@ -366,7 +366,7 @@ while True:
             type: 'true | { duration?: number, preset?: "showcase" }',
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Options: duration (3-30 seconds, default 5, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
+              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
           },
           {
             name: "webhook_url",

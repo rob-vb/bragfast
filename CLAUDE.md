@@ -28,7 +28,7 @@ npm run remotion:studio  # Remotion preview
 5. `CanvasRenderer` JSX → Satori → SVG → Sharp → JPEG → upload to R2 (or local if `OUTPUT_LOCAL=true`)
 6. On failure: refund credits, mark `failed`, fire webhook
 
-**Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): Same request via `POST /api/v1/cook` with `video` field → Convex `internalAction` (marked `"use node"`) renders via Remotion Lambda (`@remotion/lambda-client`). Composition: `src/remotion/VideoCanvasComposition.tsx`. Slide duration default 5s, transitions 0.5s, 30fps.
+**Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): Same request via `POST /api/v1/cook` with `video` field → Convex `internalAction` (marked `"use node"`) renders via Remotion Lambda (`@remotion/lambda-client`). Composition: `src/remotion/VideoCanvasComposition.tsx`. Slide duration default 8s, transitions 0.5s, 30fps.
 
 ### Template System (v2, canvas-based)
 

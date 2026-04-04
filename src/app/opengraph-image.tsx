@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "fs/promises";
 import path from "path";
 
-export const alt = "brag.fast | Stop building in silence";
+export const alt = "brag.fast | Ship features. Post like a pro.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

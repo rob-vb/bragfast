@@ -3,7 +3,7 @@
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { renderVideo } from "../src/lib/video/lambda";
+import { renderVideo, cleanupRender } from "../src/lib/video/lambda";
 import { uploadImage } from "../src/lib/storage/r2";
 import { buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "../src/lib/pipeline/shared";
 import { collectUploadKeys, cleanupUploads } from "../src/lib/pipeline/cleanup";
@@ -164,11 +164,11 @@ export const render = internalAction({
           const duration = calculateVideoDuration(slideDataMaps.length, slideDuration);
           const filename = `${format.name}.mp4`;
 
-          const mp4Url = await renderVideo({
+          const { outputUrl, renderId, bucketName } = await renderVideo({
             compositionId: formatKey,
             inputProps,
           });
-          const mp4Response = await fetch(mp4Url);
+          const mp4Response = await fetch(outputUrl);
           const mp4Buffer = Buffer.from(await mp4Response.arrayBuffer());
           const url = await uploadImage(
             mp4Buffer,
@@ -177,6 +177,9 @@ export const render = internalAction({
           );
 
           videos[format.name] = { url, duration, dimensions: `${dims.width}x${dims.height}` };
+
+          // Clean up Remotion Lambda render artifacts from S3
+          cleanupRender(renderId, bucketName).catch(() => {});
         } catch (err: unknown) {
           failures.push(err instanceof Error ? err.message : "Unknown error");
         }

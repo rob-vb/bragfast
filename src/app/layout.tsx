@@ -26,12 +26,12 @@ const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "brag.fast | Stop building in silence",
+  title: "brag.fast | Ship features. Post like a pro.",
   description:
     "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "brag.fast | Stop building in silence",
+    title: "brag.fast | Ship features. Post like a pro.",
     description:
       "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
     url: siteUrl,
@@ -42,13 +42,13 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "brag.fast | Stop building in silence",
+        alt: "brag.fast | Ship features. Post like a pro.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "brag.fast | Stop building in silence",
+    title: "brag.fast | Ship features. Post like a pro.",
     description:
       "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
     images: ["/twitter-image"],

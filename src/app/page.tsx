@@ -62,10 +62,44 @@ export default function Home() {
         </div>
       </section>
 
+      {/* S3: Cook Demo */}
+      <section
+        id="kitchen"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
+      >
+        <div className="mx-auto max-w-5xl px-4 md:px-8">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="flex flex-col gap-4">
+              <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block">
+                The Kitchen
+              </span>
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg">
+                Cook it yourself. In seconds.
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Drop in your screenshots, pick a template, hit Cook. Branded images for every format — ready to post.
+              </p>
+              <Link
+                href="/signup"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Start Cooking
+              </Link>
+            </div>
+            <div className="border-2 border-brand bg-white p-4 md:p-6 shadow-[4px_4px_0_var(--color-brand)]">
+              <LazyVideo
+                src="/demo/bragfast_cook_demo.mp4"
+                className="w-full rounded-sm border border-brand"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* S4: Automate It — AI + GitHub */}
       <section
         id="ai"
-        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
+        className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
       >
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
@@ -127,7 +161,7 @@ export default function Home() {
       {/* S5: Build With It — API */}
       <section
         id="api"
-        className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
       >
         <div className="mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
