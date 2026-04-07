@@ -70,7 +70,7 @@ export default async function AccountPage() {
               </h2>
               {isTrial ? (
                 <p className="mt-1 text-xs text-brand/60">
-                  10 free credits to try it out
+                  30 free credits to try it out
                 </p>
               ) : (
                 <p className="mt-1 text-xs text-brand/60">

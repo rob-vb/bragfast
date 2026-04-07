@@ -482,7 +482,7 @@ describe.sequential("Video happy path", () => {
     expect(data.credits_used).toBe(10);
   });
 
-  test("video with split-mobile template, 3 slides → 202, credits = 30", async () => {
+  test("video with split-mobile template, 3 slides → 202, credits = 15", async () => {
     const res = await cookPost({
       video: { duration: 4 },
       template: "split-mobile",
@@ -500,10 +500,10 @@ describe.sequential("Video happy path", () => {
     expect(res.status).toBe(202);
     const data = await res.json();
     expect(data.output).toBe("video");
-    expect(data.credits_used).toBe(30);
+    expect(data.credits_used).toBe(15);
   });
 
-  test("video with 2 formats, multiple slides → 202, credits = 50", async () => {
+  test("video with 2 formats, multiple slides → 202, credits = 25", async () => {
     const res = await cookPost({
       video: true,
       template: "hero",
@@ -514,7 +514,7 @@ describe.sequential("Video happy path", () => {
     });
     expect(res.status).toBe(202);
     const data = await res.json();
-    expect(data.credits_used).toBe(50);
+    expect(data.credits_used).toBe(25);
   });
 });
 

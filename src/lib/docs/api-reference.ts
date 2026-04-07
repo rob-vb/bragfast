@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 10 credits per slide per format (e.g. 2 slides in 3 formats = 60 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
+      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 5 credits per slide per format (e.g. 2 slides in 3 formats = 30 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
     endpoints: [],
   },
 
@@ -247,7 +247,7 @@ while True:
             name: "formats",
             type: "array",
             required: true,
-            description: "Array of format entries. Each entry specifies a format and its slides. Image credits = sum of slides across all entries. Video credits = sum of slides × 10.",
+            description: "Array of format entries. Each entry specifies a format and its slides. Image credits = sum of slides across all entries. Video credits = sum of slides × 5.",
             children: [
               {
                 name: "name",
@@ -366,7 +366,7 @@ while True:
             type: 'true | { duration?: number, preset?: "showcase" }',
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each slide costs 10 credits per format (e.g. 3 slides in 2 formats = 60 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
+              'Set to true to generate a video instead of images. Each slide costs 5 credits per format (e.g. 3 slides in 2 formats = 30 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
           },
           {
             name: "webhook_url",

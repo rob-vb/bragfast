@@ -109,7 +109,7 @@ export function calculateCredits(input: CookCreditsInput): number {
     0
   );
   if (input.video) {
-    return totalSlides * 10;
+    return totalSlides * 5;
   }
   return totalSlides;
 }

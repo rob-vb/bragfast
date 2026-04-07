@@ -8,14 +8,14 @@ import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 export const metadata: Metadata = {
   title: "Pricing | brag.fast",
   description:
-    "Simple, predictable pricing. Images: 1 credit per slide. Videos: 10 credits per slide. Start free, scale as you grow.",
+    "Simple, predictable pricing. Images: 1 credit per slide. Videos: 5 credits per slide. Start free, scale as you grow.",
   alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
   {
     q: "How do credits work?",
-    a: "Images cost 1 credit per slide per format. Videos cost 10 credits per slide per format. Example: 2 slides in 3 formats = 6 image credits or 60 video credits.",
+    a: "Images cost 1 credit per slide per format. Videos cost 5 credits per slide per format. Example: 2 slides in 3 formats = 6 image credits or 30 video credits.",
   },
   {
     q: "Do unused credits roll over?",
@@ -62,8 +62,8 @@ export default function PricingPage() {
             Auto-generate branded images and videos from your releases. Via API or GitHub.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
-            Images: 1 credit per slide. Videos: 10 credits per slide. Sign up and get{" "}
-            <strong className="text-brand">10 free credits</strong> to
+            Images: 1 credit per slide. Videos: 5 credits per slide. Sign up and get{" "}
+            <strong className="text-brand">30 free credits</strong> to
             try it out.{" "}
             <strong className="text-brand">no credit card required</strong>.
           </p>
@@ -131,7 +131,7 @@ export default function PricingPage() {
                 href="/signup"
                 className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start with 10 Free Credits
+                Start with 30 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
                 No credit card required
@@ -281,13 +281,13 @@ export default function PricingPage() {
             Start free. Upgrade when you&apos;re ready.
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/80 leading-relaxed mb-8">
-            10 free credits. No credit card required.
+            30 free credits. No credit card required.
           </p>
           <Link
             href="/signup"
             className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-surface border-2 border-brand bg-brand shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
           >
-            Get 10 Free Credits
+            Get 30 Free Credits
           </Link>
         </div>
       </section>

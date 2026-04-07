@@ -13,8 +13,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     id: "trial",
     name: "On the House",
     price: 0,
-    credits: 10,
-    label: "10 free credits",
+    credits: 30,
+    label: "30 free credits",
   },
   starter: {
     id: "starter",

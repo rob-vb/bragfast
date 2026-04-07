@@ -35,31 +35,31 @@ describe("cook credit calculation — image", () => {
 });
 
 describe("cook credit calculation — video", () => {
-  it("3 formats × video = 30 credits", () => {
+  it("3 formats × video = 15 credits", () => {
     expect(
       calculateCredits({
         video: true,
         formats: singleSlideFormats(["landscape", "square", "portrait"]),
       })
-    ).toBe(30);
+    ).toBe(15);
   });
 
-  it("1 format × video = 10 credits", () => {
+  it("1 format × video = 5 credits", () => {
     expect(
       calculateCredits({
         video: true,
         formats: singleSlideFormats(["landscape"]),
       })
-    ).toBe(10);
+    ).toBe(5);
   });
 
-  it("2 formats × video = 20 credits", () => {
+  it("2 formats × video = 10 credits", () => {
     expect(
       calculateCredits({
         video: true,
         formats: singleSlideFormats(["square", "portrait"]),
       })
-    ).toBe(20);
+    ).toBe(10);
   });
 
   it("video with preset object counts the same as video: true", () => {
@@ -68,7 +68,7 @@ describe("cook credit calculation — video", () => {
         video: { preset: "showcase" },
         formats: singleSlideFormats(["landscape", "square", "portrait"]),
       })
-    ).toBe(30);
+    ).toBe(15);
   });
 });
 

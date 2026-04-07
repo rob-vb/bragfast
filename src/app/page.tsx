@@ -38,7 +38,7 @@ export default function Home() {
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Get 10 Free Credits
+              Get 30 Free Credits
             </Link>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-3">
               No credit card required
@@ -284,7 +284,7 @@ export default function Home() {
                 brag.fast menu
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
-                Images: 1 credit/slide. Videos: 10 credits/slide.
+                Images: 1 credit/slide. Videos: 5 credits/slide.
               </p>
             </div>
 
@@ -329,7 +329,7 @@ export default function Home() {
                 href="/signup"
                 className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start with 10 Free Credits
+                Start with 30 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
                 No credit card required
@@ -346,14 +346,14 @@ export default function Home() {
             Start showing off. Like a pro.
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8">
-            10 free credits. No credit card. See results in seconds.
+            30 free credits. No credit card. See results in seconds.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Get 10 Free Credits
+              Get 30 Free Credits
             </Link>
           </div>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60 mt-4">

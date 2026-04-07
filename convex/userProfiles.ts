@@ -30,7 +30,7 @@ export const create = mutation({
     return ctx.db.insert("userProfiles", {
       userId,
       email,
-      creditsRemaining: previous ? 0 : 10,
+      creditsRemaining: previous ? 0 : 30,
       plan: "trial",
     });
   },

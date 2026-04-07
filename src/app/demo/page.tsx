@@ -271,7 +271,7 @@ export default function DemoPage() {
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] md:text-xs px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Get 10 Free Credits
+              Get 30 Free Credits
             </a>
           </div>
         </div>

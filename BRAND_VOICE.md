@@ -73,7 +73,7 @@ Everything maps to cooking:
 |---------|------|---------|
 | Headlines | Punchy metaphor | "Stop building in silence" |
 | Features | Metaphor + benefit | "Season everything to taste" |
-| CTAs | Direct, low-friction | "Get 10 Free Credits" |
+| CTAs | Direct, low-friction | "Get 30 Free Credits" |
 | Onboarding | Warm, encouraging | "Here's how to get cooking:" |
 | Empty states | Encouraging nudge | "Time to cook!" |
 | Errors | Neutral, minimal | "Something went wrong" -> "Try Again" |

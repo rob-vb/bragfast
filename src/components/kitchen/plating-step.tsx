@@ -34,7 +34,7 @@ export function PlatingStep({
   onOutputTypeChange,
   onAnimationPresetChange,
 }: PlatingStepProps) {
-  const creditCost = formats.length * (outputType === "video" ? 10 : 1);
+  const creditCost = formats.length * (outputType === "video" ? 5 : 1);
 
   return (
     <div className="space-y-5">

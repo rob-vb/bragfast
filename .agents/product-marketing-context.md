@@ -8,7 +8,7 @@
 **Product category:** Developer marketing tools / release announcement automation
 **Product type:** SaaS (API-first)
 **Business model:** Usage-based credits with monthly subscriptions. Credits: 1 per image slide per format, 5 per video slide per format. Plans:
-- **On the House (Free):** 10 credits, no card required
+- **On the House (Free):** 30 credits, no card required
 - **Toast (Starter):** $29/mo, 800 credits, 3 brand kits, 30 req/min
 - **Full Plate (Pro):** $109/mo, 8,000 credits, 10 brand kits, 60 req/min, priority support
 - **Buffet (Scale):** $219/mo, 40,000 credits, unlimited brand kits, 120 req/min, priority support
@@ -70,7 +70,7 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 |-----------|----------|
 | "I can just use Canva" | You can — but will you do it for every release? brag.fast runs automatically. |
 | "The images won't match my brand" | Custom templates, brand colors, logos, and fonts ensure brand consistency. |
-| "I don't release often enough to justify it" | Start with 10 free credits. If you release monthly, even Starter covers you. |
+| "I don't release often enough to justify it" | Start with 30 free credits. If you release monthly, even Starter covers you. |
 | "Video is too expensive in credits" | 5 credits per video slide per format. A 3-slide release in one format = 15 credits. Starter gives you 800/mo. |
 
 **Anti-persona:** Non-technical marketers who want a drag-and-drop design tool. Teams that don't publish software releases. Companies that already have a dedicated design team producing release content.
@@ -119,5 +119,5 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 
 ## Goals
 **Business goal:** Grow paid subscriptions by converting free trial users
-**Conversion action:** "Get 10 Free Credits" (free trial signup, no card required)
+**Conversion action:** "Get 30 Free Credits" (free trial signup, no card required)
 **Current metrics:** (to be added)
