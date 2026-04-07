@@ -132,10 +132,15 @@ export function McpInstallInstructions() {
             {/* Body */}
             <div className="p-4 font-[family-name:var(--font-geist-mono)] text-sm leading-relaxed">
               <p className="text-surface/40 mb-3"># Add the brag.fast MCP server</p>
-              <div className="bg-surface/10 px-3 py-2 -mx-1">
+              <div className="bg-surface/10 px-3 py-2 -mx-1 mb-4">
                 <span className="text-surface/60">$ </span>
                 <span className="text-gold">{`claude mcp add bragfast --transport http ${MCP_URL}`}</span>
               </div>
+              <p className="text-surface/40 mb-2"># Then authenticate</p>
+              <div><span className="text-surface/60">$ </span><span className="text-surface/90">claude</span></div>
+              <div className="text-gold">/mcp</div>
+              <div className="text-emerald-400">&gt; select bragfast</div>
+              <div className="text-emerald-400">&gt; Authenticate</div>
             </div>
           </div>
         </div>
