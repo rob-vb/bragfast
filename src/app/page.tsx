@@ -6,7 +6,7 @@ import { BeforeAfter } from "@/components/landing/before-after";
 import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
-import { SkillCommandMock } from "@/components/landing/skill-command-mock";
+import { McpInstallInstructions } from "@/components/landing/mcp-install-instructions";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -96,65 +96,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S4: Automate It — AI + GitHub */}
+      {/* S4: AI / MCP */}
       <section
         id="ai"
         className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
       >
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
-          <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 mb-3 block">
-            Automate it
-          </span>
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-            Set it and forget it
-          </h2>
-          <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-10 max-w-2xl">
-            Tell your AI to generate images with a single command. Or connect
-            GitHub and every release gets branded images automatically.
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-            {/* AI card */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  AI / MCP
-                </span>
-              </div>
-              <SkillCommandMock />
-              <a
-                href="https://github.com/rob-vb/bragfast-skills"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Get the Skill
-              </a>
-            </div>
-
-            {/* GitHub card */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  GitHub
-                </span>
-              </div>
-              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-                <LazyVideo
-                  src="/demo/github_release_demo_compressed.mp4"
-                  className="w-full rounded-sm border border-brand"
-                />
-              </div>
-              <Link
-                href="/dashboard/account"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Connect GitHub
-              </Link>
-            </div>
+        <div className="mx-auto max-w-2xl px-4 md:px-8 flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block">
+              AI / MCP
+            </span>
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg">
+              Your AI handles the bragging.
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+              You&apos;re already in Claude. Connect the MCP once and just ask
+              — it reads your release, picks your brand, and cooks the images.
+              You never leave the conversation.
+            </p>
           </div>
+          <McpInstallInstructions />
         </div>
       </section>
 
