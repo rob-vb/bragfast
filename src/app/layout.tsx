@@ -26,14 +26,14 @@ const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "brag.fast | Ship features. Post like a pro.",
+  title: "brag.fast | Your features deserve better than a text post.",
   description:
-    "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
+    "Auto-generate branded social images and videos from your releases. One API call or AI skill. Show off every feature in seconds, not hours.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "brag.fast | Ship features. Post like a pro.",
+    title: "brag.fast | Your features deserve better than a text post.",
     description:
-      "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
+      "Auto-generate branded social images and videos from your releases. One API call or AI skill. Show off every feature in seconds, not hours.",
     url: siteUrl,
     siteName: "brag.fast",
     type: "website",
@@ -48,9 +48,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "brag.fast | Ship features. Post like a pro.",
+    title: "brag.fast | Your features deserve better than a text post.",
     description:
-      "Auto-generate branded social images and videos from your releases. One API call or GitHub integration. Announce every feature in seconds, not hours.",
+      "Auto-generate branded social images and videos from your releases. One API call or AI skill. Show off every feature in seconds, not hours.",
     images: ["/twitter-image"],
   },
   icons: {

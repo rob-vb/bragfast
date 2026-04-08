@@ -121,9 +121,9 @@ export default async function DashboardPage() {
         {recent.length === 0 ? (
           <PixelEmptyState
             title="Time to cook!"
-            description="Generate your first branded images via the API or connect GitHub."
+            description="Generate your first branded images via the API or MCP."
             cta={{ label: "Read the Docs", href: "/docs" }}
-            secondaryCta={{ label: "Connect GitHub", href: "/dashboard/account" }}
+            secondaryCta={{ label: "Set up the MCP", href: "/docs#mcp" }}
           />
         ) : (
           <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>

@@ -10,9 +10,9 @@ import { McpInstallInstructions } from "@/components/landing/mcp-install-instruc
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Ship features. Post like a pro.",
+  title: "brag.fast | Your features deserve better than a text post.",
   description:
-    "Turn your releases into branded social images and videos. One API call, AI skill, or GitHub integration. Announce every feature in seconds, not hours.",
+    "Turn your releases into branded social images and videos. One API call or AI skill. Show off every feature in seconds, not hours.",
   alternates: { canonical: "/" },
 };
 
@@ -27,12 +27,12 @@ export default function Home() {
           {/* Left: copy + CTA */}
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-relaxed mb-6">
-              Ship features. Post like a pro.
+              Your features deserve better than a text post.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast turns your releases into branded social images and
-              videos. The same polished announcements you see from top
-              companies, generated in seconds.
+              Releases deserve more than a changelog link. brag.fast
+              turns them into branded social images and videos in seconds.
+              Looking polished shouldn&apos;t take hours.
             </p>
             <Link
               href="/signup"
@@ -77,7 +77,7 @@ export default function Home() {
                 Cook it yourself. In seconds.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Drop in your screenshots, pick a template, hit Cook. Branded images for every format — ready to post.
+                Drop in your screenshots, pick a template, hit Cook. Branded images for every format, ready to post.
               </p>
               <Link
                 href="/signup"
@@ -110,8 +110,8 @@ export default function Home() {
               Your AI handles the bragging.
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-              You&apos;re already in Claude. Connect the MCP once and just ask
-              — it reads your release, picks your brand, and cooks the images.
+              You&apos;re already in Claude. Connect the MCP once and just ask.
+              It reads your release, picks your brand, and cooks the images.
               You never leave the conversation.
             </p>
           </div>

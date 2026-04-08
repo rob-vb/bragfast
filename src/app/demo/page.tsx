@@ -213,7 +213,7 @@ export default function DemoPage() {
                   {generated ? (
                     <Image
                       src={imagePath(template, font, format)}
-                      alt={`${template} ${font} — ${format}`}
+                      alt={`${template} ${font} ${format}`}
                       width={format === "landscape" ? 1200 : 1080}
                       height={
                         format === "landscape"

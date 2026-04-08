@@ -34,16 +34,20 @@ const FAQS = [
     a: "Images are hosted on our global CDN indefinitely. Hotlink them directly in your posts, blog, or app.",
   },
   {
-    q: "How does the GitHub integration work?",
-    a: "Install the brag.fast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
+    q: "How does the MCP / AI integration work?",
+    a: "Add the brag.fast MCP to Claude and ask it to generate images from your release. It reads your notes, picks your brand, and cooks the visuals. You never leave the conversation.",
   },
   {
     q: "What does AI analysis do?",
-    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on all paid plans.",
+    a: "Our AI reads your changelog, categorizes changes into features, fixes, and breaking changes, and writes a summary for your images. Works with any release source. Available on all paid plans.",
   },
   {
     q: "Do you offer refunds?",
     a: "No. All plans are prepaid and non-refundable. You can cancel or downgrade anytime. Changes take effect at the end of your billing cycle.",
+  },
+  {
+    q: "How does the GitHub integration work?",
+    a: "Install the brag.fast GitHub App on your repos. Every time you publish a release, we generate branded images. Review first or let it run on autopilot.",
   },
 ];
 
@@ -56,10 +60,10 @@ export default function PricingPage() {
       <section className="px-4 pt-16 pb-12 md:pt-24 md:pb-16 md:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-[family-name:var(--font-press-start)] text-lg md:text-2xl leading-relaxed mb-4">
-            Start showing what you&apos;ve been cooking.
+            Your features look good. Make them look even better.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
-            Auto-generate branded images and videos from your releases. Via API or GitHub.
+            Auto-generate branded images and videos from your releases. Via API, MCP, or dashboard.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
             Images: 1 credit per slide. Videos: 5 credits per slide. Sign up and get{" "}
