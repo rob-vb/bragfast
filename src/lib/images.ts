@@ -17,17 +17,18 @@ export async function fetchImageAsBase64(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: {
       "User-Agent": "BragFast/1.0",
-      "Accept": "image/*",
+      "Accept": "image/png, image/jpeg, image/svg+xml",
     },
   })
   if (!response.ok) {
     throw new Error(`Failed to fetch image: ${url} (${response.status})`)
   }
   const contentType = response.headers.get('content-type') || 'image/png'
+  const buffer = await response.arrayBuffer()
+  console.log(`[fetchImage] url=${url} status=${response.status} content-type=${contentType} size=${buffer.byteLength}`)
   if (!contentType.startsWith('image/')) {
     throw new Error(`Expected image content-type but got ${contentType} for ${url}`)
   }
-  const buffer = await response.arrayBuffer()
   const base64 = Buffer.from(buffer).toString('base64')
   return `data:${contentType};base64,${base64}`
 }
