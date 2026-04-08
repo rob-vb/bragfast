@@ -1,6 +1,6 @@
 "use client";
 
-import { PixelEmptyState } from "@/components/dashboard/pixel-empty-state";
+import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 export interface TemplateItem {
@@ -24,7 +24,7 @@ export function RecipeStep({ templates, selectedId, onSelect }: RecipeStepProps)
       <PixelEmptyState
         title="No templates"
         description="No templates available yet."
-        cta={{ label: "Go to Templates", href: "/dashboard/kitchen?tab=templates" }}
+        cta={{ label: "Go to Templates", href: "/admin/kitchen?tab=templates" }}
       />
     );
   }

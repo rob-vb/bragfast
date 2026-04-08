@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   if (!installationId) {
     return Response.redirect(
-      new URL("/dashboard/account?error=github_missing_installation_id", request.url)
+      new URL("/admin/account?error=github_missing_installation_id", request.url)
     );
   }
 
@@ -48,5 +48,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return Response.redirect(new URL("/dashboard/account", request.url));
+  return Response.redirect(new URL("/admin/account", request.url));
 }

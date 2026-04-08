@@ -1,7 +1,7 @@
 "use client";
 
-import { PixelCard } from "@/components/dashboard/pixel-card";
-import { PixelButton } from "@/components/dashboard/pixel-button";
+import { PixelCard } from "@/components/admin/pixel-card";
+import { PixelButton } from "@/components/admin/pixel-button";
 import type { ReleaseResult } from "@/lib/types";
 
 const FORMAT_DIMS: Record<string, string> = {

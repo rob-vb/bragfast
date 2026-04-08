@@ -13,10 +13,10 @@ The video part is the real cooker. Same branded slides, but animated with transi
 ## How it works
 
 - **API route.** POST your release data to `/api/v1/cook` with `"video": true`. Get branded images and video back.
-- **GitHub App.** Install it, push a release, AI reads your changelog, images and video show up in your dashboard. Auto-approve or review first.
+- **GitHub App.** Install it, push a release, AI reads your changelog, images and video show up in your admin. Auto-approve or review first.
 - **AI skill.** Skill with MCP integration. Describe your release in conversation and add some images, get images and video back.
 
-There's a visual template editor in the dashboard too. Drag objects around, pick fonts, set colors, configure per-format layouts. For video you can set entrance animations per object.
+There's a visual template editor in the admin too. Drag objects around, pick fonts, set colors, configure per-format layouts. For video you can set entrance animations per object.
 
 Set up your brand and template once, every release gets the same look. No Canva. No video editing. No "I'll do it later."
 

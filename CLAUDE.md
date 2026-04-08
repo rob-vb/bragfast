@@ -64,7 +64,7 @@ npm run remotion:studio  # Remotion preview
 
 ### GitHub App Integration
 
-Webhook flow: GitHub `release.published` → `src/app/api/github/webhooks/route.ts` → verify signature → `map-release.ts` maps release notes to slides → if `autoApprove`: render immediately, else create `pending_review` release → dashboard shows pending reviews for approval. Per-repo config in `githubRepoConfigs` (brand, template, formats, tag filters). AI analysis via `analyze-release.ts` (Claude Haiku extracts slide content).
+Webhook flow: GitHub `release.published` → `src/app/api/github/webhooks/route.ts` → verify signature → `map-release.ts` maps release notes to slides → if `autoApprove`: render immediately, else create `pending_review` release → admin shows pending reviews for approval. Per-repo config in `githubRepoConfigs` (brand, template, formats, tag filters). AI analysis via `analyze-release.ts` (Claude Haiku extracts slide content).
 
 ### API Routes
 
@@ -73,7 +73,7 @@ Public API (`src/app/api/v1/`): `cook` (render), `brands`, `templates`, `fonts`,
 ### Next.js Route Groups
 
 - `(auth)` — login, signup, forgot/reset password
-- `(dashboard)` — dashboard, history, brands, templates, keys, account/billing
+- `(admin)` — admin, history, brands, templates, keys, account/billing
 - `docs`, `demo`, `support`, `terms`, `privacy` — public pages
 
 ### Convex Patterns

@@ -603,10 +603,10 @@ Replace the desktop "Sign in" Link (lines 63-68) with:
 
 ```tsx
 <Link
-  href={loggedIn ? "/dashboard" : "/login"}
+  href={loggedIn ? "/admin" : "/login"}
   className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
 >
-  {loggedIn ? "Dashboard" : "Sign in"}
+  {loggedIn ? "Admin" : "Sign in"}
 </Link>
 ```
 
@@ -616,11 +616,11 @@ Replace the mobile "Sign in" Link (lines 149-155) with:
 
 ```tsx
 <Link
-  href={loggedIn ? "/dashboard" : "/login"}
+  href={loggedIn ? "/admin" : "/login"}
   onClick={() => setOpen(false)}
   className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] transition-all"
 >
-  {loggedIn ? "Dashboard" : "Sign in"}
+  {loggedIn ? "Admin" : "Sign in"}
 </Link>
 ```
 
@@ -628,14 +628,14 @@ Replace the mobile "Sign in" Link (lines 149-155) with:
 
 Run: `npm run dev`.
 - Visit homepage while logged out → "Sign in" → links to `/login`
-- Log in, revisit homepage → "Dashboard" → links to `/dashboard`
+- Log in, revisit homepage → "Admin" → links to `/admin`
 - Test on mobile menu too
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add src/components/landing/landing-nav.tsx
-git commit -m "feat: show Dashboard button in nav when user is logged in"
+git commit -m "feat: show Admin button in nav when user is logged in"
 ```
 
 ---

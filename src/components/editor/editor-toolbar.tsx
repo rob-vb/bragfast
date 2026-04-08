@@ -41,7 +41,7 @@ export function EditorToolbar({ onSave }: EditorToolbarProps) {
     if (state.isDirty) {
       setShowLeaveDialog(true);
     } else {
-      router.push("/dashboard/templates");
+      router.push("/admin/templates");
     }
   }, [state.isDirty, router]);
 
@@ -67,7 +67,7 @@ export function EditorToolbar({ onSave }: EditorToolbarProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => router.push("/dashboard/templates")}
+              onClick={() => router.push("/admin/templates")}
               className="bg-zinc-900 hover:bg-zinc-800 text-white"
             >
               Leave without saving

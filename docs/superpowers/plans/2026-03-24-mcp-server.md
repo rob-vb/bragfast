@@ -9,7 +9,7 @@ Bragfast has a stable REST API for generating release images/videos but is invis
 These override the design doc where they differ:
 
 1. **All renders are async** — both images AND video return `cook_id` immediately (no sync polling). The `/bragfast` skill auto-calls `get_render_status` so users still get seamless UX. Avoids MCP client timeout issues.
-2. **Auth: env var + separate login command** — `npx @bragfast/mcp-server login` opens browser and stores key in `~/.bragfast/credentials.json`. MCP server reads stored key at runtime. No browser auth during MCP server startup. Lazy check on first tool call — returns error with dashboard link if no key found.
+2. **Auth: env var + separate login command** — `npx @bragfast/mcp-server login` opens browser and stores key in `~/.bragfast/credentials.json`. MCP server reads stored key at runtime. No browser auth during MCP server startup. Lazy check on first tool call — returns error with admin link if no key found.
 3. **No N+1 on list_templates** — `GET /templates` already returns full config with object IDs. Single API call.
 4. **New `GET /api/v1/account` route** in main app — returns `{ credits_remaining, plan }` via API key auth.
 5. **CI/CD included** — GitHub Actions for test on PR, npm publish + mcpb build on tag.
@@ -111,7 +111,7 @@ Check ~/.bragfast/credentials.json → found? use it
   ↓ not found
 Return error: "Not authenticated. Run: npx @bragfast/mcp-server login
               Or set BRAGFAST_API_KEY env var.
-              Create a key at: https://bragfast.com/dashboard/api-keys"
+              Create a key at: https://bragfast.com/admin/api-keys"
 ```
 
 **Login command** (`npx @bragfast/mcp-server login`):

@@ -121,7 +121,7 @@ export interface ObjectDataMap {
 - Delete all old default templates (v1 classic/split/hero + v2 classic_v2/split_v2/hero_v2)
 - Seed 5 new default templates with external IDs: `tmpl_standard_browser`, `tmpl_standard_mobile`, `tmpl_split_browser`, `tmpl_split_mobile`, `tmpl_hero`
 
-Note: render path uses `getDefaultConfig()` with hyphenated slugs (e.g. `standard-browser`). Convex stores metadata for the dashboard with `tmpl_` prefixed underscore IDs (e.g. `tmpl_standard_browser`). The dashboard maps between these.
+Note: render path uses `getDefaultConfig()` with hyphenated slugs (e.g. `standard-browser`). Convex stores metadata for the admin with `tmpl_` prefixed underscore IDs (e.g. `tmpl_standard_browser`). The admin maps between these.
 
 ### User template migration (migrateConfig/migrateObject)
 
@@ -162,7 +162,7 @@ For image objects with `imageFrame` = "browser" or "mobile":
 - Traffic-light dots (red/yellow/green) always stay colored — no adjustment needed
 - Default: `#E8E8E8` for browser, `#1A1A1A` for mobile (when no color specified)
 
-### Dashboard Templates Page
+### Admin Templates Page
 
 - `defaultDisplayIds` map updated to new template IDs
 
@@ -202,7 +202,7 @@ For image objects with `imageFrame` = "browser" or "mobile":
 12. `src/app/page.tsx` — homepage example
 13. `src/app/demo/page.tsx` — template list
 14. `scripts/generate-demo-images.ts` — new slugs, remove device_type
-15. `src/app/(dashboard)/dashboard/templates/page.tsx` — display IDs
+15. `src/app/(admin)/admin/templates/page.tsx` — display IDs
 16. `convex/templates.ts` (or seed script) — delete old, seed new
 
 ### Removed files

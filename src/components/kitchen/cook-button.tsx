@@ -1,6 +1,6 @@
 "use client";
 
-import { PixelButton } from "@/components/dashboard/pixel-button";
+import { PixelButton } from "@/components/admin/pixel-button";
 
 type CookButtonStatus = "idle" | "cooking" | "done" | "error";
 

@@ -16,7 +16,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isPending && session) {
-      router.replace("/dashboard");
+      router.replace("/admin");
     }
   }, [isPending, session, router]);
 
@@ -28,7 +28,7 @@ export default function LoginPage() {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/admin",
     });
 
     setLoading(false);
@@ -38,7 +38,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/admin");
   }
 
   return (

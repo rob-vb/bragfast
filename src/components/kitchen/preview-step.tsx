@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PixelButton } from "@/components/dashboard/pixel-button";
-import { PixelSkeleton } from "@/components/dashboard/pixel-skeleton";
+import { PixelButton } from "@/components/admin/pixel-button";
+import { PixelSkeleton } from "@/components/admin/pixel-skeleton";
 import type { FormatKey } from "@/lib/templates/canvas-types";
 
 const FORMAT_TABS: FormatKey[] = ["landscape", "square", "portrait"];

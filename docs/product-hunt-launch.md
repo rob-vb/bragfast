@@ -56,7 +56,7 @@ Hey Product Hunt! 👋 I'm Rob, the maker of brag.fast.
 
 **What I built:**
 
-🍳 **Kitchen UI** — fill in your release details in the dashboard, click Cook, get images and video in seconds. No code required.
+🍳 **Kitchen UI** — fill in your release details in the admin, click Cook, get images and video in seconds. No code required.
 
 ⚡ **REST API** — POST your release notes to `/api/v1/cook`, get landscape + square + portrait images back. Add `"video": true` for MP4.
 
@@ -81,7 +81,7 @@ Developers ship features but never make social content to announce them. brag.fa
 **One API call or GitHub release → branded social images and video in every format.**
 
 Here's how it works:
-- **Kitchen:** Open the dashboard, pick a template, fill in your release details, click Cook — images and video in seconds. No code required.
+- **Kitchen:** Open the admin, pick a template, fill in your release details, click Cook — images and video in seconds. No code required.
 - **API:** POST your release data to `/api/v1/cook` — get landscape, square, and portrait images back. Add `"video": true` for MP4.
 - **GitHub App:** Publish a release → images and video auto-generate. Review or auto-approve.
 - **AI Skill:** Install the MCP server in Claude Code → "make me release images for v2.1" just works.

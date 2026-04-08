@@ -6,7 +6,7 @@ import path from "path";
 //
 // Both cook endpoints must use authenticate() (which accepts API key OR session
 // cookie) rather than validateApiKey() (which only accepts API keys). This
-// ensures dashboard users can generate images/videos without an API key.
+// ensures admin users can generate images/videos without an API key.
 //
 // We verify the import statements in the route files — this is the minimal,
 // reliable approach for Next.js route handlers that can't be unit-tested

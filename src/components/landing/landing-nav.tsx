@@ -64,14 +64,14 @@ export function LandingNav() {
             </Link>
             {loggedIn === null ? (
               <span className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-transparent invisible">
-                Dashboard
+                Admin
               </span>
             ) : (
               <Link
-                href={loggedIn ? "/dashboard" : "/login"}
+                href={loggedIn ? "/admin" : "/login"}
                 className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
               >
-                {loggedIn ? "Dashboard" : "Sign in"}
+                {loggedIn ? "Admin" : "Sign in"}
               </Link>
             )}
           </nav>
@@ -149,15 +149,15 @@ export function LandingNav() {
           </Link>
           {loggedIn !== null ? (
             <Link
-              href={loggedIn ? "/dashboard" : "/login"}
+              href={loggedIn ? "/admin" : "/login"}
               onClick={() => setOpen(false)}
               className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] transition-all"
             >
-              {loggedIn ? "Dashboard" : "Sign in"}
+              {loggedIn ? "Admin" : "Sign in"}
             </Link>
           ) : (
             <span className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 border-2 border-transparent invisible">
-              Dashboard
+              Admin
             </span>
           )}
         </nav>

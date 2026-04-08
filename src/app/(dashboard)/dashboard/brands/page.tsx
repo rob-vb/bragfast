@@ -1,5 +1,0 @@
-import { redirect } from "next/navigation";
-
-export default function BrandsPage() {
-  redirect("/dashboard/kitchen?tab=brands");
-}

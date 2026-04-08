@@ -15,7 +15,7 @@ export const API_REFERENCE: ApiSection[] = [
     title: "Authentication",
     anchor: "authentication",
     description:
-      "Every request needs an API key in the Authorization header. Grab one from your dashboard after signing up — it starts with bf_. Keep it secret, keep it safe. All POST and PATCH requests must include Content-Type: application/json (except file uploads, which use multipart/form-data).",
+      "Every request needs an API key in the Authorization header. Grab one from your admin panel after signing up — it starts with bf_. Keep it secret, keep it safe. All POST and PATCH requests must include Content-Type: application/json (except file uploads, which use multipart/form-data).",
     endpoints: [],
   },
 

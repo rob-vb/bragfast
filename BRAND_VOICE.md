@@ -11,7 +11,7 @@
 Everything maps to cooking:
 - **Templates** = recipes
 - **Generating images** = cooking ("cooking... 42%")
-- **Dashboard** = kitchen
+- **Admin** = kitchen
 - **Pricing** = menu board
 - **Customization** = seasoning
 - **Delivering images** = plating

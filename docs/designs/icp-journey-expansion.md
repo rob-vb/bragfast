@@ -42,7 +42,7 @@ Link sharing gap: No OG images -> OG Image Auto-Gen
 
 ### 1. Onboarding Fast-Track ("First Cook" wizard)
 
-Guided flow on first dashboard visit replacing empty state. 4 steps:
+Guided flow on first admin visit replacing empty state. 4 steps:
 
 1. **Source** — Paste GitHub release URL or describe the release manually
 2. **Template** — Pick from carousel of 5 built-in templates

@@ -37,7 +37,7 @@ export default function SignupPage() {
       name,
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/admin",
     });
 
     setLoading(false);
@@ -47,7 +47,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/admin");
   }
 
   return (

@@ -4,11 +4,11 @@
 
 **Goal:** Replace mechanical text truncation with Claude-powered content analysis that intelligently fills template slots, decides slide count, and extracts images from release bodies. Add an approval flow so users review AI suggestions before rendering (with opt-in auto-approve).
 
-**Architecture:** New `analyzeRelease()` module calls Claude Haiku to produce structured JSON matching the `FormatEntry.slides[].objects[]` schema. Webhook handler branches on `autoApprove` — either render immediately or store as `pending_review`. Approval API route + dashboard UI for reviewing/editing AI suggestions before rendering.
+**Architecture:** New `analyzeRelease()` module calls Claude Haiku to produce structured JSON matching the `FormatEntry.slides[].objects[]` schema. Webhook handler branches on `autoApprove` — either render immediately or store as `pending_review`. Approval API route + admin UI for reviewing/editing AI suggestions before rendering.
 
 **Tech Stack:** Anthropic SDK (`@anthropic-ai/sdk`), Claude Haiku 4.5, Convex, Next.js 16
 
-**Depends on:** Plan A (GitHub App Dashboard UI) must be implemented first. This plan assumes the GitHub section on the Account page exists with repo configs, and the webhook handler is passing `webhookUrl`.
+**Depends on:** Plan A (GitHub App Admin UI) must be implemented first. This plan assumes the GitHub section on the Account page exists with repo configs, and the webhook handler is passing `webhookUrl`.
 
 ---
 
@@ -18,16 +18,16 @@
 - `src/lib/github/analyze-release.ts` — AI content analysis module
 - `src/lib/__tests__/analyze-release.test.ts` — tests with mocked Claude responses
 - `src/app/api/github/releases/[id]/approve/route.ts` — approval endpoint
-- `src/components/dashboard/pending-reviews.tsx` — pending review cards with approve/edit/dismiss
+- `src/components/admin/pending-reviews.tsx` — pending review cards with approve/edit/dismiss
 
 **Modified files:**
 - `convex/schema.ts` — add `pending_review` + `dismissed` status, `aiContent` field on releases
 - `convex/releases.ts` — accept optional status in `create`, add `approve` + `dismiss` mutations, add `listPendingByUser` query
 - `convex/githubRepoConfigs.ts` — add `autoApprove` + `maxSlides` to schema and upsert
 - `src/app/api/github/webhooks/route.ts` — rewrite `handleReleasePublished` to use AI analysis + approval flow
-- `src/components/dashboard/github-repo-card.tsx` — add auto-approve toggle + max slides input
-- `src/app/(dashboard)/dashboard/page.tsx` — show pending reviews section
-- `src/components/dashboard/pixel-badge.tsx` — add `pending_review` and `dismissed` variants
+- `src/components/admin/github-repo-card.tsx` — add auto-approve toggle + max slides input
+- `src/app/(admin)/admin/page.tsx` — show pending reviews section
+- `src/components/admin/pixel-badge.tsx` — add `pending_review` and `dismissed` variants
 - `package.json` — add `@anthropic-ai/sdk`
 - `.env.example` — add `ANTHROPIC_API_KEY`
 
@@ -237,7 +237,7 @@ git commit -m "feat: add pending_review status, aiContent, approve/dismiss mutat
 ### Task 3: Update PixelBadge for new statuses
 
 **Files:**
-- Modify: `src/components/dashboard/pixel-badge.tsx`
+- Modify: `src/components/admin/pixel-badge.tsx`
 
 - [ ] **Step 1: Add new status styles**
 
@@ -251,7 +251,7 @@ dismissed: "bg-brand/20 text-brand",
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/components/dashboard/pixel-badge.tsx
+git add src/components/admin/pixel-badge.tsx
 git commit -m "feat: add pending_review and dismissed badge variants"
 ```
 
@@ -863,7 +863,7 @@ git commit -m "feat: add POST /api/github/releases/[id]/approve route"
 ### Task 8: Pending reviews component
 
 **Files:**
-- Create: `src/components/dashboard/pending-reviews.tsx`
+- Create: `src/components/admin/pending-reviews.tsx`
 
 - [ ] **Step 1: Write the component**
 
@@ -871,9 +871,9 @@ git commit -m "feat: add POST /api/github/releases/[id]/approve route"
 "use client";
 
 import { useState } from "react";
-import { PixelButton } from "@/components/dashboard/pixel-button";
-import { PixelCard } from "@/components/dashboard/pixel-card";
-import { PixelBadge } from "@/components/dashboard/pixel-badge";
+import { PixelButton } from "@/components/admin/pixel-button";
+import { PixelCard } from "@/components/admin/pixel-card";
+import { PixelBadge } from "@/components/admin/pixel-badge";
 
 type PendingRelease = {
   _id: string;
@@ -1032,7 +1032,7 @@ export function PendingReviews({
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/components/dashboard/pending-reviews.tsx
+git add src/components/admin/pending-reviews.tsx
 git commit -m "feat: add PendingReviews component with approve/edit/dismiss"
 ```
 
@@ -1075,20 +1075,20 @@ git commit -m "feat: add DELETE handler for dismissing pending releases"
 
 ---
 
-### Task 10: Dashboard page — show pending reviews
+### Task 10: Admin page — show pending reviews
 
 **Files:**
-- Modify: `src/app/(dashboard)/dashboard/page.tsx`
+- Modify: `src/app/(admin)/admin/page.tsx`
 
 - [ ] **Step 1: Add import**
 
 ```ts
-import { PendingReviews } from "@/components/dashboard/pending-reviews";
+import { PendingReviews } from "@/components/admin/pending-reviews";
 ```
 
 - [ ] **Step 2: Fetch pending releases**
 
-Add to the `Promise.all` in `DashboardPage()`:
+Add to the `Promise.all` in `AdminPage()`:
 
 ```ts
 const [stats, releases, pendingReleases] = await Promise.all([
@@ -1112,8 +1112,8 @@ Insert between the stats row and "Recent Releases":
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/app/\\(dashboard\\)/dashboard/page.tsx
-git commit -m "feat: show pending AI reviews on dashboard home"
+git add src/app/\\(admin\\)/admin/page.tsx
+git commit -m "feat: show pending AI reviews on admin home"
 ```
 
 ---
@@ -1121,7 +1121,7 @@ git commit -m "feat: show pending AI reviews on dashboard home"
 ### Task 11: Update repo config card with auto-approve + max slides
 
 **Files:**
-- Modify: `src/components/dashboard/github-repo-card.tsx`
+- Modify: `src/components/admin/github-repo-card.tsx`
 
 - [ ] **Step 1: Add state for new fields**
 
@@ -1193,7 +1193,7 @@ maxSlides: body.maxSlides,
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/dashboard/github-repo-card.tsx src/app/api/github/configs/route.ts
+git add src/components/admin/github-repo-card.tsx src/app/api/github/configs/route.ts
 git commit -m "feat: add auto-approve toggle and max slides to repo config"
 ```
 
@@ -1217,7 +1217,7 @@ Expected: All pass.
 
 Run: `npx next dev`
 Verify:
-- Dashboard shows "Pending Reviews" section (empty if no pending releases)
+- Admin shows "Pending Reviews" section (empty if no pending releases)
 - Account page GitHub section shows auto-approve toggle on repo cards
 - No console errors
 
@@ -1236,5 +1236,5 @@ Verify:
 
 ## Unresolved Questions
 
-1. **Notification for pending reviews** — No push notification or email when a release arrives for review. Could add later. For now, user sees them on dashboard load.
+1. **Notification for pending reviews** — No push notification or email when a release arrives for review. Could add later. For now, user sees them on admin load.
 2. **Edit UX** — The raw JSON edit textarea is functional but not polished. A proper per-field editor (title input, description textarea) would be better UX. Defer to a later iteration.

@@ -198,7 +198,7 @@ export default function LoginPage() {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/admin",
     });
 
     setLoading(false);
@@ -208,7 +208,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/admin");
   }
 
   return (
@@ -349,7 +349,7 @@ export default function SignupPage() {
       name,
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/admin",
     });
 
     setLoading(false);
@@ -359,7 +359,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/admin");
   }
 
   return (
@@ -700,4 +700,4 @@ git commit -m "feat: polish auth pages"
 - Server-side email sending for password reset
 - `/reset-password` page (token-based, after user clicks email link)
 - `/terms` and `/privacy` pages (linked from signup checkbox)
-- Post-login `/dashboard` page
+- Post-login `/admin` page

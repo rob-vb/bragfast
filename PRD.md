@@ -43,7 +43,7 @@ All using their stored brand colors, font, and logo. Zero design work. The user 
 
 Warm, slightly playful, developer-friendly. Breakfast diner energy: welcoming, quick service, no pretension. The breakfast metaphor shows up in small moments, never forced.
 
-- Dashboard greeting: "What are we serving today?"
+- Admin greeting: "What are we serving today?"
 - Empty state: "Your griddle is cold. Ship something and come back."
 - After generating: "Served hot. Go feed your audience."
 - API docs intro: "One API call. A full plate of visual content."
@@ -281,7 +281,7 @@ If a slide has no `image_url`, all templates render a text-only layout: title + 
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| Framework | Next.js 16 (App Router) | API routes + dashboard in one project, Turbopack stable |
+| Framework | Next.js 16 (App Router) | API routes + admin in one project, Turbopack stable |
 | Database | Convex | Brand kits, releases, usage tracking |
 | Auth | Better Auth | API key management, user accounts |
 | Image Gen | Satori + Sharp | JSX → SVG → PNG, supports embedded images via base64, custom Google Fonts |
@@ -307,7 +307,7 @@ POST /v1/release
 
 ---
 
-## Dashboard (Minimal MVP)
+## Admin (Minimal MVP)
 
 ### Pages
 
@@ -385,7 +385,7 @@ Install the brag.fast GitHub App, select repos, and configure per-repo settings.
 
 ### Review Flow
 
-When auto-approve is off, generated images land in a "Pending Reviews" queue in the dashboard. Users can:
+When auto-approve is off, generated images land in a "Pending Reviews" queue in the admin. Users can:
 
 - **Approve** — publish the images
 - **Edit** — modify AI-suggested content before generating
@@ -431,9 +431,9 @@ No auth, no database, no storage, no billing. Just a local Next.js 16 app with A
 - [x] `POST /v1/release` returns CDN URLs instead of local files
 - [x] `GET /v1/release/:id` endpoint
 
-### Phase 3: Dashboard + Billing (Week 4-5)
+### Phase 3: Admin + Billing (Week 4-5)
 
-- [ ] Dashboard UI (brand kit form with Google Font picker, release history, API key management)
+- [ ] Admin UI (brand kit form with Google Font picker, release history, API key management)
 - [ ] Stripe integration (3 paid plans with flexible credit tiers)
 - [x] Trial credit system (10 credits on signup, decrement on use)
 - [ ] Credit usage tracking + upgrade prompts

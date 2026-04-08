@@ -23,10 +23,10 @@ Best option: attach a short screen recording or GIF showing a generated video (t
 >
 > How it works:
 > - **API route.** POST your release data to `/api/v1/cook` with `"video": true`. Get branded images and video back.
-> - **GitHub App.** Install it, push a release, AI reads your changelog, images and video show up in your dashboard. Auto-approve or review first.
+> - **GitHub App.** Install it, push a release, AI reads your changelog, images and video show up in your admin. Auto-approve or review first.
 > - **AI skill.** Skill with MCP integration. Describe your release in conversation and add some images, get images and video back.
 >
-> There's also a visual template editor in the dashboard. Drag objects around, pick fonts, set colors, upload your logo, tweak per-format layouts (landscape, square, portrait all have independent canvases). You can even set per-object entrance animations for video. It's a proper design tool, just scoped to release announcements so it stays fast.
+> There's also a visual template editor in the admin. Drag objects around, pick fonts, set colors, upload your logo, tweak per-format layouts (landscape, square, portrait all have independent canvases). You can even set per-object entrance animations for video. It's a proper design tool, just scoped to release announcements so it stays fast.
 >
 > Set up your brand and template once, every release gets the same look. No Canva. No video editing. No "I'll do it later."
 >
@@ -70,7 +70,7 @@ Text post (self post). Narrative style.
 >
 > 1. **REST API.** POST to `/api/v1/cook` with your release data. Get back branded images in all three sizes, or video if you want that. One API call.
 >
-> 2. **GitHub App.** Install it on your repo. Publish a release, AI reads your changelog, images and video show up in your dashboard. Auto-approve or review first.
+> 2. **GitHub App.** Install it on your repo. Publish a release, AI reads your changelog, images and video show up in your admin. Auto-approve or review first.
 >
 > 3. **AI skill.** Skill with MCP integration. Describe your release in conversation and add some images, get images and video back.
 >
