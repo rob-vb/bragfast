@@ -187,7 +187,7 @@ while True:
         anchor: "create-cook",
         title: "Create a cook",
         description:
-          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (10 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 8, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
+          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (5 credits per slide) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 8, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
         params: [
           {
             name: "brand_id",
@@ -411,7 +411,7 @@ while True:
   body: JSON.stringify({
     brand_id: "brand_abc123",
     template: "standard-browser",
-    // video: true,              — add for video output (10 credits/slide/format)
+    // video: true,              — add for video output (5 credits/slide/format)
     // video: { duration: 8 },   — custom per-slide duration (3-30s)
     // omit video for images     — default (1 credit/slide/format)
     formats: [
@@ -440,7 +440,7 @@ cook = requests.post(
     json={
         "brand_id": "brand_abc123",
         "template": "standard-browser",
-        # "video": True,             — add for video output (10 credits/slide/format)
+        # "video": True,             — add for video output (5 credits/slide/format)
         # "video": {"duration": 8},  — custom per-slide duration (3-30s)
         # omit video for images      — default (1 credit/slide/format)
         "formats": [

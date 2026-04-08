@@ -458,7 +458,7 @@ describe.sequential("Image happy path", () => {
 // ── 9. Video Happy Path ─────────────────────────────────────────
 
 describe.sequential("Video happy path", () => {
-  test("video: true, 1 format, 1 slide → 202, output: video, credits: 10", async () => {
+  test("video: true, 1 format, 1 slide → 202, output: video, credits: 5", async () => {
     const res = await cookPost({
       video: true,
       formats: [{ name: "landscape", slides: [{}] }],
@@ -468,10 +468,10 @@ describe.sequential("Video happy path", () => {
     expect(data.cook_id).toMatch(/^cook_/);
     expect(data.output).toBe("video");
     expect(data.status).toBe("pending");
-    expect(data.credits_used).toBe(10);
+    expect(data.credits_used).toBe(5);
   });
 
-  test("video with custom duration → 202, credits: 10", async () => {
+  test("video with custom duration → 202, credits: 5", async () => {
     const res = await cookPost({
       video: { duration: 3 },
       formats: [{ name: "landscape", slides: [{}] }],
@@ -479,7 +479,7 @@ describe.sequential("Video happy path", () => {
     expect(res.status).toBe(202);
     const data = await res.json();
     expect(data.output).toBe("video");
-    expect(data.credits_used).toBe(10);
+    expect(data.credits_used).toBe(5);
   });
 
   test("video with split-mobile template, 3 slides → 202, credits = 15", async () => {
