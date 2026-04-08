@@ -160,4 +160,23 @@ export default defineSchema({
     ),
     created_at: v.string(),
   }).index("by_userId", ["userId"]),
+
+  uploads: defineTable({
+    userId: v.string(),
+    externalId: v.string(),
+    filename: v.string(),
+    contentType: v.string(),
+    sizeBytes: v.optional(v.number()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("expired")
+    ),
+    url: v.optional(v.string()),
+    expiresAt: v.number(),
+    created_at: v.string(),
+    completed_at: v.optional(v.string()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_externalId", ["externalId"]),
 });
