@@ -11,6 +11,7 @@ interface BrandOption {
 }
 
 export interface BrandColorPickerProps {
+  label?: string;
   brandId?: string;
   colors: { background: string; text: string; primary: string };
   onBrandChange: (
@@ -21,6 +22,7 @@ export interface BrandColorPickerProps {
 }
 
 export function BrandColorPicker({
+  label = "Colors",
   brandId,
   colors,
   onBrandChange,
@@ -52,7 +54,7 @@ export function BrandColorPicker({
 
   return (
     <div className="space-y-3">
-      <Label className="text-xs font-medium text-zinc-500 uppercase">Colors</Label>
+      <Label className="text-xs font-medium text-zinc-500 uppercase">{label}</Label>
 
       <Select value={brandId || "none"} onValueChange={handleBrandChange}>
         <SelectTrigger className="h-8 text-sm">

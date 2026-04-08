@@ -25,6 +25,7 @@ export function SeasoningStep({
   return (
     <div className="space-y-2">
       <BrandColorPicker
+        label="Template"
         brandId={brandId}
         colors={colors}
         onBrandChange={onBrandChange}

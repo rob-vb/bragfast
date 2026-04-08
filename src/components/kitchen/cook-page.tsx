@@ -103,7 +103,7 @@ function cookReducer(state: CookState, action: CookAction): CookState {
       return {
         ...state,
         outputType: action.outputType,
-        animationPreset: action.outputType === "image" ? undefined : state.animationPreset,
+        animationPreset: action.outputType === "image" ? undefined : (state.animationPreset ?? "showcase"),
       };
 
     case "SET_ANIMATION_PRESET":
@@ -360,7 +360,7 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
           status={state.status}
           disabled={!canCook}
           onClick={state.status === "done" || state.status === "error"
-            ? () => dispatch({ type: "RESET" })
+            ? () => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }
             : handleCook
           }
         />
@@ -374,7 +374,7 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
           </h2>
           <CookResults
             result={state.results}
-            onCookAgain={() => dispatch({ type: "RESET" })}
+            onCookAgain={() => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }}
           />
         </div>
       )}
