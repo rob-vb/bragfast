@@ -98,6 +98,15 @@ export async function renderReleaseAsync(
       // Build slideDataMaps for THIS format's slides
       const slideDataMaps = await buildSlideDataMaps(formatEntry.slides);
 
+      // Normalize all fetched images through Sharp for Satori compatibility
+      for (const dataMap of slideDataMaps) {
+        for (const entry of Object.values(dataMap)) {
+          if (entry.imageBase64) {
+            entry.imageBase64 = await normalizeDataUri(entry.imageBase64);
+          }
+        }
+      }
+
       // Inject static images for this format
       const formatLayout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
       injectStaticImages(slideDataMaps, formatLayout, srcMap);
@@ -197,6 +206,14 @@ export async function renderReleaseAsync(
       console.error(`Upload cleanup error for ${releaseId}:`, err)
     );
   }
+}
+
+async function normalizeDataUri(dataUri: string): Promise<string> {
+  const match = dataUri.match(/^data:[^;]+;base64,(.+)$/);
+  if (!match) return dataUri;
+  const raw = Buffer.from(match[1], "base64");
+  const png = await sharp(raw).png().toBuffer();
+  return `data:image/png;base64,${png.toString("base64")}`;
 }
 
 async function callWebhook(
