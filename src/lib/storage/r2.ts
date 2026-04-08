@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 
 const client = new S3Client({
   region: 'auto',
@@ -52,6 +52,15 @@ export async function deleteByPrefix(prefix: string): Promise<number> {
   } while (continuationToken)
 
   return deleted
+}
+
+export async function getImageBuffer(key: string): Promise<{ buffer: Buffer; contentType: string }> {
+  const res = await client.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
+  const bytes = await res.Body!.transformToByteArray()
+  return {
+    buffer: Buffer.from(bytes),
+    contentType: res.ContentType || 'image/png',
+  }
 }
 
 export async function uploadImage(buffer: Buffer, key: string, contentType = 'image/jpeg'): Promise<string> {
