@@ -4,6 +4,7 @@ import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelButton } from "@/components/admin/pixel-button";
 import type { ReleaseResult } from "@/lib/types";
 
+
 const FORMAT_DIMS: Record<string, string> = {
   landscape: "1200×675",
   square: "1080×1080",
@@ -12,10 +13,9 @@ const FORMAT_DIMS: Record<string, string> = {
 
 interface CookResultsProps {
   result: ReleaseResult;
-  onCookAgain: () => void;
 }
 
-export function CookResults({ result, onCookAgain }: CookResultsProps) {
+export function CookResults({ result }: CookResultsProps) {
   const isVideo = result.output === "video";
 
   if (isVideo && result.videos) {
@@ -49,7 +49,7 @@ export function CookResults({ result, onCookAgain }: CookResultsProps) {
             </PixelCard>
           ))}
         </div>
-        <ResultFooter creditsUsed={result.credits_used} remaining={result.credits_remaining} onCookAgain={onCookAgain} />
+        <ResultFooter creditsUsed={result.credits_used} remaining={result.credits_remaining} />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export function CookResults({ result, onCookAgain }: CookResultsProps) {
             );
           })}
         </div>
-        <ResultFooter creditsUsed={result.credits_used} remaining={result.credits_remaining} onCookAgain={onCookAgain} />
+        <ResultFooter creditsUsed={result.credits_used} remaining={result.credits_remaining} />
       </div>
     );
   }
@@ -108,9 +108,6 @@ export function CookResults({ result, onCookAgain }: CookResultsProps) {
       <p className="text-sm font-[family-name:var(--font-geist-sans)] text-brand/60">
         Generation complete but no outputs found.
       </p>
-      <div className="mt-4">
-        <PixelButton onClick={onCookAgain}>Cook Again</PixelButton>
-      </div>
     </div>
   );
 }
@@ -118,20 +115,15 @@ export function CookResults({ result, onCookAgain }: CookResultsProps) {
 function ResultFooter({
   creditsUsed,
   remaining,
-  onCookAgain,
 }: {
   creditsUsed: number;
   remaining: number;
-  onCookAgain: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between pt-2 border-t-2 border-brand/10">
+    <div className="pt-2 border-t-2 border-brand/10">
       <p className="font-[family-name:var(--font-geist-mono)] text-xs text-brand/50">
         {creditsUsed} {creditsUsed === 1 ? "credit" : "credits"} used · {remaining} remaining
       </p>
-      <PixelButton onClick={onCookAgain} className="text-[10px]">
-        Cook Again
-      </PixelButton>
     </div>
   );
 }

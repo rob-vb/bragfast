@@ -379,10 +379,7 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
           <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand mb-4">
             Order Up!
           </h2>
-          <CookResults
-            result={state.results}
-            onCookAgain={() => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }}
-          />
+          <CookResults result={state.results} />
         </div>
       )}
     </>
