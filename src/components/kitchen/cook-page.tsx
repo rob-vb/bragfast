@@ -365,10 +365,11 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         <CookButton
           status={state.status}
           disabled={!canCook}
-          onClick={state.status === "done" || state.status === "error"
+          onClick={state.status === "error"
             ? () => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }
             : handleCook
           }
+          onStartOver={() => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }}
         />
       </div>
 

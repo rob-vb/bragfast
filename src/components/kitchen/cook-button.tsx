@@ -8,6 +8,7 @@ interface CookButtonProps {
   status: CookButtonStatus;
   disabled?: boolean;
   onClick: () => void;
+  onStartOver?: () => void;
 }
 
 const LABELS: Record<CookButtonStatus, string> = {
@@ -17,12 +18,12 @@ const LABELS: Record<CookButtonStatus, string> = {
   error: "TRY AGAIN",
 };
 
-export function CookButton({ status, disabled, onClick }: CookButtonProps) {
+export function CookButton({ status, disabled, onClick, onStartOver }: CookButtonProps) {
   const label = LABELS[status];
   const isCooking = status === "cooking";
 
   return (
-    <div className="pt-2">
+    <div className="pt-2 flex flex-col gap-2">
       <PixelButton
         onClick={onClick}
         disabled={disabled || isCooking}
@@ -36,6 +37,14 @@ export function CookButton({ status, disabled, onClick }: CookButtonProps) {
           label
         )}
       </PixelButton>
+      {status === "done" && onStartOver && (
+        <button
+          onClick={onStartOver}
+          className="w-full text-center text-xs font-[family-name:var(--font-press-start)] text-muted-foreground hover:text-foreground transition-colors py-2"
+        >
+          START OVER
+        </button>
+      )}
     </div>
   );
 }
