@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SocialButtons } from "../components/social-buttons";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -148,6 +149,8 @@ export default function SignupPage() {
               {loading ? "Creating account..." : "▸ Get started"}
             </button>
           </form>
+
+          <SocialButtons />
         </div>
       </div>
 

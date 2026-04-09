@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
+import { SocialButtons } from "../components/social-buttons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -102,6 +103,8 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "▸ Continue"}
             </button>
           </form>
+
+          <SocialButtons />
         </div>
       </div>
 

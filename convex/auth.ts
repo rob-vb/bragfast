@@ -21,6 +21,22 @@ export const createAuth = (
     baseURL: siteUrl,
     secret: process.env.BETTER_AUTH_SECRET,
     database: authComponent.adapter(ctx),
+    socialProviders: {
+      google: {
+        clientId: process.env.AUTH_GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.AUTH_GOOGLE_CLIENT_SECRET!,
+      },
+      github: {
+        clientId: process.env.AUTH_GITHUB_CLIENT_ID!,
+        clientSecret: process.env.AUTH_GITHUB_CLIENT_SECRET!,
+      },
+    },
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["email-password", "google", "github"],
+      },
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
