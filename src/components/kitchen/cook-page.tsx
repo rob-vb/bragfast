@@ -160,12 +160,14 @@ export function CookPage({ templates }: CookPageProps) {
 
   // ── Real-time release progress (replaces polling) ───────────────────────
   const releaseProgress = useReleaseProgress(state.cookId);
+  const releaseStatus = releaseProgress?.status;
+  const releaseProgressPct = releaseProgress?.progress;
   const fetchingResultRef = useRef(false);
 
   useEffect(() => {
-    if (!releaseProgress || state.status !== "cooking") return;
+    if (!releaseStatus || state.status !== "cooking") return;
 
-    if (releaseProgress.status === "completed" && !fetchingResultRef.current) {
+    if (releaseStatus === "completed" && !fetchingResultRef.current) {
       // Fetch full ReleaseResult (credits_remaining, parsed socialCopy)
       fetchingResultRef.current = true;
       fetch(`/api/v1/cook/${state.cookId}`)
@@ -173,12 +175,12 @@ export function CookPage({ templates }: CookPageProps) {
         .then((data: ReleaseResult) => dispatch({ type: "COOK_DONE", results: data }))
         .catch(() => dispatch({ type: "COOK_ERROR", error: "Failed to load results." }))
         .finally(() => { fetchingResultRef.current = false; });
-    } else if (releaseProgress.status === "failed") {
+    } else if (releaseStatus === "failed") {
       dispatch({ type: "COOK_ERROR", error: "Generation failed. Try again." });
-    } else if (releaseProgress.progress != null) {
-      dispatch({ type: "SET_PROGRESS", progress: releaseProgress.progress });
+    } else if (releaseProgressPct != null) {
+      dispatch({ type: "SET_PROGRESS", progress: releaseProgressPct });
     }
-  }, [releaseProgress, state.status, state.cookId]);
+  }, [releaseStatus, releaseProgressPct, state.status, state.cookId]);
 
   // Safety timeout
   useEffect(() => {
