@@ -52,7 +52,9 @@ export function PixelEmptyState({
   extraCtas,
   noPrimary,
 }: PixelEmptyStateProps) {
-  const allSecondary = [secondaryCta, ...(extraCtas ?? [])].filter(Boolean);
+  const allSecondary = [secondaryCta, ...(extraCtas ?? [])].filter(
+    (c): c is CtaLink => !!c,
+  );
 
   return (
     <div className="border-2 border-brand bg-white p-8 shadow-[4px_4px_0_var(--color-brand)] text-center">
