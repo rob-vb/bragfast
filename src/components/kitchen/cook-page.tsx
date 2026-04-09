@@ -26,6 +26,7 @@ interface CookState {
   animationPreset?: AnimationPreset;
   status: "idle" | "cooking" | "done" | "error";
   cookId?: string;
+  progress?: number;
   results?: ReleaseResult;
   error?: string;
 }
@@ -54,6 +55,7 @@ type CookAction =
   | { type: "SET_ANIMATION_PRESET"; preset: AnimationPreset | undefined }
   | { type: "START_COOK" }
   | { type: "SET_COOK_ID"; cookId: string }
+  | { type: "SET_PROGRESS"; progress: number }
   | { type: "COOK_DONE"; results: ReleaseResult }
   | { type: "COOK_ERROR"; error: string }
   | { type: "RESET" };
@@ -111,10 +113,13 @@ function cookReducer(state: CookState, action: CookAction): CookState {
       return { ...state, animationPreset: action.preset };
 
     case "START_COOK":
-      return { ...state, status: "cooking", results: undefined, error: undefined };
+      return { ...state, status: "cooking", progress: undefined, results: undefined, error: undefined };
 
     case "SET_COOK_ID":
       return { ...state, cookId: action.cookId };
+
+    case "SET_PROGRESS":
+      return { ...state, progress: action.progress };
 
     case "COOK_DONE":
       return { ...state, status: "done", results: action.results };
@@ -178,8 +183,9 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         } else if (data.status === "failed") {
           clearInterval(pollRef.current!);
           dispatch({ type: "COOK_ERROR", error: "Generation failed. Try again." });
+        } else if (data.progress != null) {
+          dispatch({ type: "SET_PROGRESS", progress: data.progress });
         }
-        // pending/pending_review — keep polling
       } catch {
         // Swallow transient errors, keep polling
       }
@@ -365,6 +371,8 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
         <CookButton
           status={state.status}
           disabled={!canCook}
+          progress={state.status === "cooking" ? state.progress : undefined}
+          isVideo={state.outputType === "video"}
           onClick={state.status === "error"
             ? () => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }
             : handleCook

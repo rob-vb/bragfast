@@ -64,6 +64,18 @@ export const refundCredits = internalMutation({
   },
 });
 
+export const updateProgress = internalMutation({
+  args: { externalId: v.string(), progress: v.number() },
+  handler: async (ctx, { externalId, progress }) => {
+    const r = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!r) return;
+    await ctx.db.patch(r._id, { progress });
+  },
+});
+
 export const getRelease = internalQuery({
   args: { externalId: v.string() },
   handler: async (ctx, { externalId }) =>

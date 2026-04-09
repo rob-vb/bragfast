@@ -64,6 +64,7 @@ export async function getRelease(
     videos: r.videos ?? null,
     credits_used: r.credits_used,
     credits_remaining: -1, // filled by caller
+    progress: r.progress,
     created_at: r.created_at,
     completed_at: r.completed_at,
     metadata: r.metadata,

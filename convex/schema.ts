@@ -82,6 +82,7 @@ export default defineSchema({
     transparent: v.optional(v.boolean()),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
+    progress: v.optional(v.number()), // 0-100 for video renders
     source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
     aiContent: v.optional(v.string()),

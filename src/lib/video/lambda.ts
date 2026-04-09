@@ -12,6 +12,7 @@ const SERVE_URL = process.env.REMOTION_SERVE_URL;
 type RenderVideoParams = {
   compositionId: string;
   inputProps: Record<string, unknown>;
+  onProgress?: (pct: number) => void | Promise<void>;
 };
 
 async function withRetry<T>(
@@ -64,6 +65,7 @@ export async function cleanupRender(renderId: string, bucketName: string): Promi
 export async function renderVideo({
   compositionId,
   inputProps,
+  onProgress,
 }: RenderVideoParams): Promise<RenderVideoResult> {
   if (!FUNCTION_NAME || !SERVE_URL) {
     throw new Error("REMOTION_FUNCTION_NAME and REMOTION_SERVE_URL must be set");
@@ -112,6 +114,7 @@ export async function renderVideo({
 
     const pct = Math.round((progress.overallProgress ?? 0) * 100);
     console.log(`[LAMBDA] Progress: ${pct}%`);
+    if (onProgress) await onProgress(pct);
 
     if (progress.fatalErrorEncountered) {
       const errorMsg = progress.errors?.[0]?.message ?? "Unknown error";

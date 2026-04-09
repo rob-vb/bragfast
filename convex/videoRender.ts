@@ -123,8 +123,10 @@ export const render = internalAction({
         { url: string; duration: number; dimensions: string }
       > = {};
       const failures: string[] = [];
+      const totalFormats = request.formats.length;
 
-      for (const format of request.formats) {
+      for (let fi = 0; fi < request.formats.length; fi++) {
+        const format = request.formats[fi];
         try {
           const formatKey = format.name as FormatKey;
           const dims = FORMAT_DIMENSIONS[formatKey];
@@ -167,6 +169,14 @@ export const render = internalAction({
           const { outputUrl, renderId, bucketName } = await renderVideo({
             compositionId: formatKey,
             inputProps,
+            onProgress: async (pct) => {
+              // Scale per-format progress across total formats
+              const overall = Math.round((fi * 100 + pct) / totalFormats);
+              await ctx.runMutation(internal.videoRenderHelpers.updateProgress, {
+                externalId: cookId,
+                progress: Math.min(overall, 99), // 100 only on completion
+              });
+            },
           });
           const mp4Response = await fetch(outputUrl);
           const mp4Buffer = Buffer.from(await mp4Response.arrayBuffer());

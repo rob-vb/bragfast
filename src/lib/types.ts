@@ -84,6 +84,7 @@ export interface ReleaseResult {
   credits_used: number
   credits_remaining: number
   created_at: string
+  progress?: number
   completed_at?: string
   metadata?: string
   webhook_url?: string
