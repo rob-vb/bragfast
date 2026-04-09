@@ -161,17 +161,14 @@ function PendingCard({ release, onAction }: { release: PendingRelease; onAction:
 
 export function PendingReviews({
   releases,
-  onRefresh,
 }: {
   releases: PendingRelease[];
-  onRefresh?: () => void;
 }) {
   if (releases.length === 0) return null;
 
-  function handleAction() {
-    if (onRefresh) onRefresh();
-    else window.location.reload();
-  }
+  // With Convex real-time subscriptions, the parent re-renders automatically
+  // when releases change. No manual refresh needed.
+  function handleAction() {}
 
   return (
     <div className="space-y-3">

@@ -32,7 +32,6 @@ interface KitchenClientProps {
   userTemplates: TemplateListItem[];
   brands: BrandItem[];
   cookTemplates: TemplateItem[];
-  creditBalance?: number;
 }
 
 const tabs = ["cook", "templates", "brands"] as const;
@@ -43,7 +42,6 @@ export function KitchenClient({
   userTemplates,
   brands,
   cookTemplates,
-  creditBalance,
 }: KitchenClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -88,7 +86,7 @@ export function KitchenClient({
 
       {/* Tab content */}
       {activeTab === "cook" && (
-        <CookPage templates={cookTemplates} creditBalance={creditBalance} />
+        <CookPage templates={cookTemplates} />
       )}
 
       {activeTab === "templates" && (

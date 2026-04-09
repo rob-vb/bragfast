@@ -1,6 +1,8 @@
 "use client";
 
-import { useReducer, useEffect, useRef, useCallback, useState } from "react";
+import { useReducer, useEffect, useCallback, useState, useRef } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 import { KitchenScene3D } from "@/components/kitchen/kitchen-scene-3d";
 import { CookSection } from "@/components/kitchen/cook-section";
 import type { CookStep } from "@/components/kitchen/kitchen-animation-state";
@@ -10,6 +12,8 @@ import { IngredientsStep } from "@/components/kitchen/ingredients-step";
 import { PlatingStep } from "@/components/kitchen/plating-step";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { CookResults } from "@/components/kitchen/cook-results";
+import { useReleaseProgress } from "@/hooks/use-release-progress";
+import { useUserId } from "@/hooks/use-user-id";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry } from "@/lib/types";
 
@@ -139,13 +143,11 @@ function cookReducer(state: CookState, action: CookAction): CookState {
 
 interface CookPageProps {
   templates: TemplateItem[];
-  creditBalance?: number;
 }
 
-export function CookPage({ templates, creditBalance }: CookPageProps) {
+export function CookPage({ templates }: CookPageProps) {
   const [state, dispatch] = useReducer(cookReducer, INITIAL_STATE);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollStartRef = useRef<number>(0);
+  const userId = useUserId();
 
   // Progressive disclosure
   const hasTemplate = !!state.templateId;
@@ -153,51 +155,42 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
   const hasPlating = hasTemplate;
   const canCook = hasTemplate && state.formats.length > 0 && state.status !== "cooking";
 
-  // ── Poll for completion ──────────────────────────────────────────────────
-  function startPolling(cookId: string, isVideo: boolean) {
-    pollStartRef.current = Date.now();
-    const interval = isVideo ? 5000 : 2000;
-    const maxMs = 5 * 60 * 1000;
+  // ── Live credit balance ─────────────────────────────────────────────────
+  const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
 
-    pollRef.current = setInterval(async () => {
-      // Pause if tab is hidden
-      if (document.visibilityState === "hidden") return;
+  // ── Real-time release progress (replaces polling) ───────────────────────
+  const releaseProgress = useReleaseProgress(state.cookId);
+  const fetchingResultRef = useRef(false);
 
-      if (Date.now() - pollStartRef.current > maxMs) {
-        clearInterval(pollRef.current!);
-        dispatch({
-          type: "COOK_ERROR",
-          error: "Taking longer than expected. Check History for your results.",
-        });
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/v1/cook/${cookId}`);
-        if (!res.ok) throw new Error("Poll failed");
-        const data: ReleaseResult = await res.json();
-
-        if (data.status === "completed") {
-          clearInterval(pollRef.current!);
-          dispatch({ type: "COOK_DONE", results: data });
-        } else if (data.status === "failed") {
-          clearInterval(pollRef.current!);
-          dispatch({ type: "COOK_ERROR", error: "Generation failed. Try again." });
-        } else if (data.progress != null) {
-          dispatch({ type: "SET_PROGRESS", progress: data.progress });
-        }
-      } catch {
-        // Swallow transient errors, keep polling
-      }
-    }, interval);
-  }
-
-  // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, []);
+    if (!releaseProgress || state.status !== "cooking") return;
+
+    if (releaseProgress.status === "completed" && !fetchingResultRef.current) {
+      // Fetch full ReleaseResult (credits_remaining, parsed socialCopy)
+      fetchingResultRef.current = true;
+      fetch(`/api/v1/cook/${state.cookId}`)
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data: ReleaseResult) => dispatch({ type: "COOK_DONE", results: data }))
+        .catch(() => dispatch({ type: "COOK_ERROR", error: "Failed to load results." }))
+        .finally(() => { fetchingResultRef.current = false; });
+    } else if (releaseProgress.status === "failed") {
+      dispatch({ type: "COOK_ERROR", error: "Generation failed. Try again." });
+    } else if (releaseProgress.progress != null) {
+      dispatch({ type: "SET_PROGRESS", progress: releaseProgress.progress });
+    }
+  }, [releaseProgress, state.status, state.cookId]);
+
+  // Safety timeout
+  useEffect(() => {
+    if (state.status !== "cooking" || !state.cookId) return;
+    const timeout = setTimeout(() => {
+      dispatch({
+        type: "COOK_ERROR",
+        error: "Taking longer than expected. Check History for your results.",
+      });
+    }, 5 * 60 * 1000);
+    return () => clearTimeout(timeout);
+  }, [state.status, state.cookId]);
 
   // ── Cook ─────────────────────────────────────────────────────────────────
   async function handleCook() {
@@ -258,7 +251,6 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
 
       const data: ReleaseResult = await res.json();
       dispatch({ type: "SET_COOK_ID", cookId: data.cook_id });
-      startPolling(data.cook_id, state.outputType === "video");
     } catch {
       dispatch({ type: "COOK_ERROR", error: "Network error. Check connection and try again." });
     }
@@ -346,7 +338,7 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
             formats={state.formats}
             outputType={state.outputType}
             animationPreset={state.animationPreset}
-            creditBalance={creditBalance}
+            creditBalance={creditBalance ?? undefined}
             onToggleFormat={(fmt) => dispatch({ type: "TOGGLE_FORMAT", format: fmt })}
             onOutputTypeChange={(t) => dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })}
             onAnimationPresetChange={(p) =>

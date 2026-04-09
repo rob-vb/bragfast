@@ -9,11 +9,10 @@ export default async function KitchenPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
-  const [userTemplates, defaultTemplates, brands, creditBalance] = await Promise.all([
+  const [userTemplates, defaultTemplates, brands] = await Promise.all([
     fetchQuery(api.templates.listByUser, { userId: user._id }),
     fetchQuery(api.templates.listDefaults, {}),
     fetchQuery(api.brands.listByUser, { userId: user._id }),
-    fetchQuery(api.userProfiles.getBalance, { userId: user._id }),
   ]);
 
   const defaultDisplayIds: Record<string, string> = {
@@ -87,7 +86,6 @@ export default async function KitchenPage() {
         fontFamily: b.font_family,
       }))}
       cookTemplates={cookTemplates}
-      creditBalance={creditBalance}
     />
   );
 }
