@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { BASE_SCENE, COLS, ROWS, CELL, P, POSITIONS } from "./kitchen-scene-data";
 import { KitchenCookSprite } from "./kitchen-cook-sprite";
 import {
@@ -10,11 +10,11 @@ import {
 } from "./kitchen-animation-state";
 
 /**
- * KitchenScene3D — Detailed NES-style pixel-art kitchen with animated cook.
+ * KitchenScene3D — High-res NES-style pixel-art kitchen with animated cook.
  *
- * Rendered as a CSS grid (120×60 cells at 4px each = 480×240px base).
- * The cook sprite walks between kitchen stations based on the active step.
- * Overlay animations: oven flames, steam wisps, ORDER UP ticket, error X.
+ * Base scene rendered via <canvas> (240×120 grid at 2px = 480×240px).
+ * Overlay animations (flames, steam, ticket, error) are positioned divs.
+ * Cook sprite walks between kitchen stations based on the active step.
  */
 
 interface KitchenScene3DProps {
@@ -24,12 +24,37 @@ interface KitchenScene3DProps {
 
 export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
   const phase = deriveAnimPhase(activeStep, status);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const w = COLS * CELL;
   const h = ROWS * CELL;
 
-  // Flatten grid once
-  const flatGrid = useMemo(() => BASE_SCENE.flat(), []);
+  // Draw static scene once on mount
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.imageSmoothingEnabled = false;
+
+    // Run-length optimized drawing: merge horizontal spans of same color
+    for (let r = 0; r < ROWS; r++) {
+      let runStart = 0;
+      let runColor = BASE_SCENE[r][0];
+      for (let c = 1; c <= COLS; c++) {
+        const color = c < COLS ? BASE_SCENE[r][c] : null;
+        if (color !== runColor) {
+          if (runColor) {
+            ctx.fillStyle = runColor;
+            ctx.fillRect(runStart * CELL, r * CELL, (c - runStart) * CELL, CELL);
+          }
+          runStart = c;
+          runColor = color;
+        }
+      }
+    }
+  }, []);
 
   return (
     <>
@@ -53,7 +78,6 @@ export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
           transform-origin: top left;
           image-rendering: pixelated;
         }
-        /* Scale scene to fill container width */
         .ks3-container {
           container-type: inline-size;
         }
@@ -101,25 +125,19 @@ export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
         <div className="ks3-wrap">
           <div className="ks3-viewport">
             <div className="ks3-scene">
-              {/* Base grid */}
-              <div
+              {/* Base scene (static, rendered to canvas) */}
+              <canvas
+                ref={canvasRef}
+                width={w}
+                height={h}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: `repeat(${COLS}, ${CELL}px)`,
-                  gridTemplateRows: `repeat(${ROWS}, ${CELL}px)`,
-                  width: w,
-                  height: h,
                   position: "absolute",
                   inset: 0,
+                  width: w,
+                  height: h,
+                  imageRendering: "pixelated",
                 }}
-              >
-                {flatGrid.map((color, i) => (
-                  <div
-                    key={i}
-                    style={color ? { backgroundColor: color } : undefined}
-                  />
-                ))}
-              </div>
+              />
 
               {/* Cook character */}
               <KitchenCookSprite
@@ -152,27 +170,43 @@ export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
 
 /** Two-frame alternating flames inside the oven glass area */
 function OvenFlames() {
-  // Oven glass area: sx=34, inner at sx+5=39, y=24, 8×8
-  const ox = 39;
-  const oy = 24;
+  // Oven glass: sx=68, ody=46, glass starts ~gy=54, inner at ~56
+  // Bottom of glass cavity for flames
+  const ox = 78;
+  const oy = 80; // near bottom of glass area in shorter oven
 
   const flamePositions = [
-    // Frame A flames (bottom of oven)
-    { x: ox + 1, y: oy + 6, w: 2, h: 2, c: P.flameOuter },
-    { x: ox + 4, y: oy + 6, w: 2, h: 2, c: P.flameOuter },
-    { x: ox + 1, y: oy + 5, w: 2, h: 1, c: P.flameMid },
-    { x: ox + 4, y: oy + 5, w: 2, h: 1, c: P.flameMid },
-    { x: ox + 2, y: oy + 5, w: 1, h: 1, c: P.flameCore },
-    { x: ox + 5, y: oy + 5, w: 1, h: 1, c: P.flameCore },
+    // 4 flame clusters for fuller fire
+    { x: ox, y: oy, w: 4, h: 4, c: P.flameOuter },
+    { x: ox + 6, y: oy, w: 4, h: 4, c: P.flameOuter },
+    { x: ox + 12, y: oy, w: 4, h: 4, c: P.flameOuter },
+    { x: ox + 3, y: oy - 1, w: 4, h: 3, c: P.flameOuter },
+    // Mid flames (taller)
+    { x: ox + 1, y: oy - 3, w: 3, h: 3, c: P.flameMid },
+    { x: ox + 7, y: oy - 4, w: 3, h: 4, c: P.flameMid },
+    { x: ox + 13, y: oy - 3, w: 2, h: 3, c: P.flameMid },
+    { x: ox + 4, y: oy - 2, w: 2, h: 2, c: P.flameMid },
+    // Core tips
+    { x: ox + 2, y: oy - 5, w: 1, h: 2, c: P.flameCore },
+    { x: ox + 8, y: oy - 6, w: 2, h: 2, c: P.flameCore },
+    { x: ox + 13, y: oy - 5, w: 1, h: 2, c: P.flameCore },
   ];
 
   const flameBPositions = [
-    { x: ox + 2, y: oy + 6, w: 2, h: 2, c: P.flameOuter },
-    { x: ox + 5, y: oy + 6, w: 2, h: 2, c: P.flameOuter },
-    { x: ox + 2, y: oy + 5, w: 2, h: 1, c: P.flameMid },
-    { x: ox + 5, y: oy + 5, w: 2, h: 1, c: P.flameMid },
-    { x: ox + 3, y: oy + 4, w: 1, h: 1, c: P.flameCore },
-    { x: ox + 6, y: oy + 4, w: 1, h: 1, c: P.flameCore },
+    // Shifted flame clusters
+    { x: ox + 2, y: oy, w: 4, h: 4, c: P.flameOuter },
+    { x: ox + 8, y: oy, w: 4, h: 4, c: P.flameOuter },
+    { x: ox + 14, y: oy, w: 3, h: 4, c: P.flameOuter },
+    { x: ox + 5, y: oy - 1, w: 3, h: 3, c: P.flameOuter },
+    // Mid flames
+    { x: ox + 3, y: oy - 4, w: 3, h: 4, c: P.flameMid },
+    { x: ox + 9, y: oy - 3, w: 3, h: 3, c: P.flameMid },
+    { x: ox + 1, y: oy - 2, w: 2, h: 2, c: P.flameMid },
+    { x: ox + 14, y: oy - 2, w: 2, h: 2, c: P.flameMid },
+    // Core tips
+    { x: ox + 4, y: oy - 6, w: 1, h: 2, c: P.flameCore },
+    { x: ox + 10, y: oy - 5, w: 2, h: 2, c: P.flameCore },
+    { x: ox + 2, y: oy - 4, w: 1, h: 1, c: P.flameCore },
   ];
 
   return (
@@ -205,13 +239,13 @@ function OvenFlames() {
   );
 }
 
-/** Rising steam wisps above the oven */
+/** Rising steam wisps above the pot on the stove */
 function SteamWisps() {
-  // Steam rises from above oven (sx=34, top at y=14)
+  // Pot sits above oven at roughly x=75, y=22
   const wisps = [
-    { x: 40, delay: 0 },
-    { x: 43, delay: 0.5 },
-    { x: 46, delay: 1.0 },
+    { x: 78, delay: 0 },
+    { x: 82, delay: 0.5 },
+    { x: 86, delay: 1.0 },
   ];
 
   return (
@@ -223,9 +257,9 @@ function SteamWisps() {
           style={{
             position: "absolute",
             left: w.x * CELL,
-            top: 12 * CELL,
-            width: 3 * CELL,
-            height: 3 * CELL,
+            top: 18 * CELL,
+            width: 4 * CELL,
+            height: 4 * CELL,
             borderRadius: "50%",
             backgroundColor: P.steamLight,
             animation: `ks3-rise 2s ease-out ${w.delay}s infinite`,
@@ -271,15 +305,17 @@ function OrderUpTicket() {
 
 /** Pulsing red X over the oven area */
 function ErrorX() {
-  const ox = 42;
-  const oy = 18;
-  const size = 8;
+  // Center on the oven door area
+  const ox = 82;
+  const oy = 40;
+  const size = 16;
 
-  // Diagonal X pattern
   const cells: { x: number; y: number; c: string }[] = [];
   for (let i = 0; i < size; i++) {
     cells.push({ x: ox + i, y: oy + i, c: P.errorRed });
+    cells.push({ x: ox + i + 1, y: oy + i, c: P.errorRed });
     cells.push({ x: ox + size - 1 - i, y: oy + i, c: P.errorDark });
+    cells.push({ x: ox + size - i, y: oy + i, c: P.errorDark });
   }
 
   return (

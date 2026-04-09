@@ -21,12 +21,13 @@ export interface AnimPhase {
 }
 
 // Named X positions (grid columns) for key kitchen landmarks
+// Grid is 240 cols wide at 2px/cell
 export const POS = {
-  FRIDGE: 8,
-  OVEN: 40,
-  SHELVES: 90,
-  CENTER: 55,
-  IDLE: 55,
+  FRIDGE: 20,
+  OVEN: 88,
+  SHELVES: 190,
+  CENTER: 110,
+  IDLE: 110,
 } as const;
 
 export function deriveAnimPhase(

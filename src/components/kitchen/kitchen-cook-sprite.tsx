@@ -4,7 +4,8 @@ import { useEffect, useReducer } from "react";
 
 /**
  * NES-style cook character sprite, rendered as a small CSS grid.
- * 10 cols × 16 rows at the scene cell size.
+ * 14 cols × 22 rows — higher detail version with shaded hat, visible
+ * facial features, coat collar, apron, and better proportions.
  *
  * Animation states:
  *   idle  — subtle 2-frame bob
@@ -21,7 +22,7 @@ interface CookSpriteProps {
   anim: SpriteAnim;
   /** Cell size in px (must match scene) */
   cellSize: number;
-  /** Multiplier to render sprite larger than scene cells (default 1.5) */
+  /** Multiplier to render sprite larger than scene cells (default auto) */
   spriteScale?: number;
   /** Which side the current station is on — controls facing during action anim */
   stationSide?: "left" | "right";
@@ -31,170 +32,223 @@ interface CookSpriteProps {
 
 const S = {
   hat: "#FFFFFF",
+  hatShade: "#E8E4DC",
   hatBand: "#F8AF3C",
   skin: "#FFD4A8",
   skinShadow: "#E8B888",
   eye: "#222222",
+  nose: "#D8A070",
   mouth: "#CC6644",
   coat: "#FFFFFF",
   coatShadow: "#E0DCD4",
+  coatDark: "#D0CCC4",
   coatButton: "#F8AF3C",
   apron: "#FFF8F0",
+  apronShadow: "#E8E0D4",
   pants: "#4A3326",
   pantsDark: "#362418",
   shoe: "#222222",
-  _: null as string | null, // transparent
+  _: null as string | null,
 } as const;
 
 const _ = S._;
+const H = S.hat;
+const Hs = S.hatShade;
+const Hb = S.hatBand;
+const K = S.skin;
+const Ks = S.skinShadow;
+const E = S.eye;
+const N = S.nose;
+const M = S.mouth;
+const C = S.coat;
+const Cd = S.coatShadow;
+const Cx = S.coatDark;
+const Cb = S.coatButton;
+const A = S.apron;
+const As = S.apronShadow;
+const P = S.pants;
+const Pd = S.pantsDark;
+const Sh = S.shoe;
 
-// ── Sprite frames (10 wide × 16 tall, top-to-bottom) ────────────────────────
+// ── Sprite frames (14 wide × 22 tall, top-to-bottom) ───────────────────────
 
 type Frame = (string | null)[];
 
-// Idle frame A (standing, arms down)
+const SPRITE_W = 14;
+const SPRITE_H = 22;
+
+// Idle frame A (standing, arms at sides)
 const IDLE_A: Frame = [
-  _, _, _, S.hat, S.hat, S.hat, S.hat, _, _, _,
-  _, _, S.hat, S.hat, S.hat, S.hat, S.hat, S.hat, _, _,
-  _, _, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, _, _,
-  _, _, S.skin, S.skin, S.skin, S.skin, S.skin, S.skin, _, _,
-  _, _, S.skin, S.eye, S.skin, S.skin, S.eye, S.skin, _, _,
-  _, _, S.skin, S.skin, S.mouth, S.mouth, S.skin, S.skin, _, _,
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, S.coat, S.coat, S.coat, S.coatButton, S.coatButton, S.coat, S.coat, S.coat, _,
-  S.skin, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.skin,
-  _, S.coatShadow, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coatShadow, _,
-  _, _, S.apron, S.apron, S.apron, S.apron, S.apron, S.apron, _, _,
-  _, _, S.coatShadow, S.apron, S.apron, S.apron, S.apron, S.coatShadow, _, _,
-  _, _, S.pants, S.pants, S.pants, S.pants, S.pants, S.pants, _, _,
-  _, _, S.pants, S.pants, S.pantsDark, S.pantsDark, S.pants, S.pants, _, _,
-  _, _, S.shoe, S.shoe, _, _, S.shoe, S.shoe, _, _,
-  _, S.shoe, S.shoe, S.shoe, _, _, S.shoe, S.shoe, S.shoe, _,
+  // Hat (rows 0-3): fluffy chef hat with side shading
+  _, _, _, _, _, H, H, H, H, _, _, _, _, _,
+  _, _, _, H, H, H, H, H, H, H, H, _, _, _,
+  _, _, H, H, H, H, H, H, H, H, H, H, _, _,
+  _, _, Hs, H, H, H, H, H, H, H, H, Hs, _, _,
+  // Hat band (row 4)
+  _, _, Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb, _, _,
+  // Face (rows 5-9) — smile: mouth corners lifted
+  _, _, _, K, K, K, K, K, K, K, K, _, _, _,
+  _, _, K, K, E, K, K, K, K, E, K, K, _, _,
+  _, _, K, K, K, K, N, N, K, K, K, K, _, _,
+  _, _, _, K, K, K, M, M, K, K, K, _, _, _,
+  _, _, _, _, K, Ks,K, K, Ks,K, _, _, _, _,
+  // Coat (rows 10-14)
+  _, _, _, _, C, C, C, C, C, C, _, _, _, _,
+  _, _, _, C, C, C, Cb,Cb,C, C, C, _, _, _,
+  _, _, C, C, C, C, C, C, C, C, C, C, _, _,
+  _, K, C, Cd,C, C, C, C, C, C, Cd,C, K, _,
+  K, K, Cd,C, C, C, C, C, C, C, C, Cd,K, K,
+  // Apron (rows 15-17)
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, _, As,A, A, A, A, A, A, As,_, _, _,
+  // Pants (rows 18-19)
+  _, _, _, P, P, P, P, P, P, P, P, _, _, _,
+  _, _, _, P, P, Pd,_, _, Pd,P, P, _, _, _,
+  // Shoes (rows 20-21)
+  _, _, Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,_, _,
+  _, Sh,Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,Sh,_,
 ];
 
-// Idle frame B (slight bob — squished hat)
+// Idle frame B (slight bob — hat squished, body shifted 1px down feel)
 const IDLE_B: Frame = [
-  _, _, _, _, S.hat, S.hat, S.hat, _, _, _,
-  _, _, S.hat, S.hat, S.hat, S.hat, S.hat, S.hat, _, _,
-  _, _, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, _, _,
-  _, _, S.skin, S.skin, S.skin, S.skin, S.skin, S.skin, _, _,
-  _, _, S.skin, S.eye, S.skin, S.skin, S.eye, S.skin, _, _,
-  _, _, S.skin, S.skin, S.mouth, S.mouth, S.skin, S.skin, _, _,
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, S.coat, S.coat, S.coat, S.coatButton, S.coatButton, S.coat, S.coat, S.coat, _,
-  S.skin, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.skin,
-  _, S.coatShadow, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coatShadow, _,
-  _, _, S.apron, S.apron, S.apron, S.apron, S.apron, S.apron, _, _,
-  _, _, S.coatShadow, S.apron, S.apron, S.apron, S.apron, S.coatShadow, _, _,
-  _, _, S.pants, S.pants, S.pants, S.pants, S.pants, S.pants, _, _,
-  _, _, S.pants, S.pantsDark, S.pants, S.pants, S.pantsDark, S.pants, _, _,
-  _, S.shoe, S.shoe, S.shoe, _, _, S.shoe, S.shoe, S.shoe, _,
-  _, S.shoe, S.shoe, _, _, _, _, S.shoe, S.shoe, _,
+  _, _, _, _, _, _, H, H, _, _, _, _, _, _,
+  _, _, _, H, H, H, H, H, H, H, H, _, _, _,
+  _, _, H, H, H, H, H, H, H, H, H, H, _, _,
+  _, _, Hs, H, H, H, H, H, H, H, H, Hs, _, _,
+  _, _, Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb, _, _,
+  _, _, _, K, K, K, K, K, K, K, K, _, _, _,
+  _, _, K, K, E, K, K, K, K, E, K, K, _, _,
+  _, _, K, K, K, K, N, N, K, K, K, K, _, _,
+  _, _, _, K, K, K, M, M, K, K, K, _, _, _,
+  _, _, _, _, K, Ks,K, K, Ks,K, _, _, _, _,
+  _, _, _, _, C, C, C, C, C, C, _, _, _, _,
+  _, _, _, C, C, C, Cb,Cb,C, C, C, _, _, _,
+  _, _, C, C, C, C, C, C, C, C, C, C, _, _,
+  _, K, C, Cd,C, C, C, C, C, C, Cd,C, K, _,
+  K, K, Cd,C, C, C, C, C, C, C, C, Cd,K, K,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, _, As,A, A, A, A, A, A, As,_, _, _,
+  _, _, _, P, P, P, P, P, P, P, P, _, _, _,
+  _, _, _, P, Pd,P, _, _, P, Pd,P, _, _, _,
+  _, _, Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,_, _,
+  _, _, Sh,Sh,_, _, _, _, _, _, Sh,Sh,_, _,
 ];
 
-// Walk frame A (left leg forward)
+// Walk frame A (left leg forward, right arm forward)
 const WALK_A: Frame = [
-  _, _, _, S.hat, S.hat, S.hat, S.hat, _, _, _,
-  _, _, S.hat, S.hat, S.hat, S.hat, S.hat, S.hat, _, _,
-  _, _, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, _, _,
-  _, _, S.skin, S.skin, S.skin, S.skin, S.skin, S.skin, _, _,
-  _, _, S.skin, S.eye, S.skin, S.skin, S.eye, S.skin, _, _,
-  _, _, S.skin, S.skin, S.mouth, S.mouth, S.skin, S.skin, _, _,
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, S.coat, S.coat, S.coat, S.coatButton, S.coatButton, S.coat, S.coat, S.coat, _,
-  _, S.skin, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, _, S.coatShadow, S.coat, S.coat, S.coat, S.coat, S.coatShadow, S.skin, _,
-  _, _, S.apron, S.apron, S.apron, S.apron, S.apron, S.apron, _, _,
-  _, _, S.coatShadow, S.apron, S.apron, S.apron, S.apron, S.coatShadow, _, _,
-  _, _, S.pants, S.pants, S.pants, S.pants, S.pants, S.pants, _, _,
-  _, S.pants, S.pants, _, _, _, _, S.pants, S.pants, _,
-  S.shoe, S.shoe, _, _, _, _, _, _, S.shoe, S.shoe,
-  S.shoe, S.shoe, S.shoe, _, _, _, _, S.shoe, S.shoe, _,
+  _, _, _, _, _, H, H, H, H, _, _, _, _, _,
+  _, _, _, H, H, H, H, H, H, H, H, _, _, _,
+  _, _, H, H, H, H, H, H, H, H, H, H, _, _,
+  _, _, Hs, H, H, H, H, H, H, H, H, Hs, _, _,
+  _, _, Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb, _, _,
+  _, _, _, K, K, K, K, K, K, K, K, _, _, _,
+  _, _, K, K, E, K, K, K, K, E, K, K, _, _,
+  _, _, K, K, K, K, N, N, K, K, K, K, _, _,
+  _, _, _, K, K, K, M, M, K, K, K, _, _, _,
+  _, _, _, _, K, Ks,K, K, Ks,K, _, _, _, _,
+  _, _, _, _, C, C, C, C, C, C, _, _, _, _,
+  _, _, _, C, C, C, Cb,Cb,C, C, C, _, _, _,
+  _, _, K, C, C, C, C, C, C, C, C, C, _, _,
+  _, _, _, Cd,C, C, C, C, C, C, Cd,C, K, _,
+  _, _, Cd,C, C, C, C, C, C, C, C, Cd,K, K,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, _, As,A, A, A, A, A, A, As,_, _, _,
+  _, _, P, P, P, _, _, _, _, P, P, P, _, _,
+  _, P, P, _, _, _, _, _, _, _, _, P, P, _,
+  Sh,Sh,Sh,_, _, _, _, _, _, _, _, _,Sh,Sh,
+  Sh,Sh,_, _, _, _, _, _, _, _, _, _, Sh,Sh,
 ];
 
-// Walk frame B (right leg forward)
+// Walk frame B (right leg forward, left arm forward)
 const WALK_B: Frame = [
-  _, _, _, S.hat, S.hat, S.hat, S.hat, _, _, _,
-  _, _, S.hat, S.hat, S.hat, S.hat, S.hat, S.hat, _, _,
-  _, _, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, _, _,
-  _, _, S.skin, S.skin, S.skin, S.skin, S.skin, S.skin, _, _,
-  _, _, S.skin, S.eye, S.skin, S.skin, S.eye, S.skin, _, _,
-  _, _, S.skin, S.skin, S.mouth, S.mouth, S.skin, S.skin, _, _,
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, S.coat, S.coat, S.coat, S.coatButton, S.coatButton, S.coat, S.coat, S.coat, _,
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.skin, _,
-  _, S.skin, S.coatShadow, S.coat, S.coat, S.coat, S.coat, S.coatShadow, _, _,
-  _, _, S.apron, S.apron, S.apron, S.apron, S.apron, S.apron, _, _,
-  _, _, S.coatShadow, S.apron, S.apron, S.apron, S.apron, S.coatShadow, _, _,
-  _, _, S.pants, S.pants, S.pants, S.pants, S.pants, S.pants, _, _,
-  _, S.pants, S.pants, _, _, _, _, S.pants, S.pants, _,
-  _, S.shoe, S.shoe, _, _, _, _, S.shoe, S.shoe, S.shoe,
-  _, S.shoe, S.shoe, S.shoe, _, _, _, _, S.shoe, S.shoe,
+  _, _, _, _, _, H, H, H, H, _, _, _, _, _,
+  _, _, _, H, H, H, H, H, H, H, H, _, _, _,
+  _, _, H, H, H, H, H, H, H, H, H, H, _, _,
+  _, _, Hs, H, H, H, H, H, H, H, H, Hs, _, _,
+  _, _, Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb, _, _,
+  _, _, _, K, K, K, K, K, K, K, K, _, _, _,
+  _, _, K, K, E, K, K, K, K, E, K, K, _, _,
+  _, _, K, K, K, K, N, N, K, K, K, K, _, _,
+  _, _, _, K, K, K, M, M, K, K, K, _, _, _,
+  _, _, _, _, K, Ks,K, K, Ks,K, _, _, _, _,
+  _, _, _, _, C, C, C, C, C, C, _, _, _, _,
+  _, _, _, C, C, C, Cb,Cb,C, C, C, _, _, _,
+  _, _, _, C, C, C, C, C, C, C, C, K, _, _,
+  _, K, Cd,C, C, C, C, C, C, C, Cd,_, _, _,
+  K, K, Cd,C, C, C, C, C, C, C, C, Cd,_, _,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, Cd,A, A, A, A, A, A, A, A, Cd,_, _,
+  _, _, _, As,A, A, A, A, A, A, As,_, _, _,
+  _, _, P, P, P, _, _, _, _, P, P, P, _, _,
+  _, P, P, _, _, _, _, _, _, _, _, P, P, _,
+  Sh,Sh,_, _, _, _, _, _, _, _, _, _,Sh,Sh,
+  Sh,Sh,Sh,_, _, _, _, _, _, _, _, Sh,Sh,_,
 ];
 
-// Back-of-head frame: cook facing away from camera (toward shelf/fridge).
-// Designed facing right; CSS scaleX(-1) flips for left-side stations.
+// Back-of-head frame (facing away from camera)
 const BACK: Frame = [
-  // Hat (same from behind)
-  _, _, _, S.hat, S.hat, S.hat, S.hat, _, _, _,
-  _, _, S.hat, S.hat, S.hat, S.hat, S.hat, S.hat, _, _,
-  _, _, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, _, _,
-  // Back of head — no eyes/mouth, slight shadow on sides
-  _, _, S.skinShadow, S.skin, S.skin, S.skin, S.skin, S.skin, S.skinShadow, _,
-  _, _, S.skinShadow, S.skin, S.skin, S.skin, S.skin, S.skin, S.skinShadow, _,
-  _, _, S.skinShadow, S.skin, S.skin, S.skin, S.skin, S.skin, S.skinShadow, _,
-  // Coat back (no buttons — that's the front)
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _,
-  // Arms at sides
-  S.skin, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.skin,
-  _, S.coatShadow, S.coat, S.coat, S.coatShadow, S.coat, S.coat, S.coat, S.coatShadow, _,
-  // Back — no apron visible
-  _, _, S.coat, S.coat, S.coatShadow, S.coat, S.coat, S.coat, _, _,
-  _, _, S.coatShadow, S.coat, S.coat, S.coat, S.coat, S.coatShadow, _, _,
-  _, _, S.pants, S.pants, S.pants, S.pants, S.pants, S.pants, _, _,
-  _, _, S.pants, S.pants, S.pantsDark, S.pantsDark, S.pants, S.pants, _, _,
-  _, _, S.shoe, S.shoe, _, _, S.shoe, S.shoe, _, _,
-  _, S.shoe, S.shoe, S.shoe, _, _, S.shoe, S.shoe, S.shoe, _,
+  _, _, _, _, _, H, H, H, H, _, _, _, _, _,
+  _, _, _, H, H, H, H, H, H, H, H, _, _, _,
+  _, _, H, H, H, H, H, H, H, H, H, H, _, _,
+  _, _, Hs, H, H, H, H, H, H, H, H, Hs, _, _,
+  _, _, Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb, _, _,
+  // Back of head — no eyes, shadow on edges
+  _, _, Ks,K, K, K, K, K, K, K, K, Ks,_, _,
+  _, _, Ks,K, K, K, K, K, K, K, K, Ks,_, _,
+  _, _, Ks,K, K, K, K, K, K, K, K, Ks,_, _,
+  _, _, _, Ks,K, K, K, K, K, K, Ks,_, _, _,
+  _, _, _, _, K, K, K, K, K, K, _, _, _, _,
+  // Coat back (no buttons)
+  _, _, _, _, C, C, C, C, C, C, _, _, _, _,
+  _, _, _, C, C, C, C, C, C, C, C, _, _, _,
+  _, _, C, C, C, C, C, C, C, C, C, C, _, _,
+  _, K, C, Cx,C, C, C, C, C, C, Cx,C, K, _,
+  K, K, Cd,C, C, Cd,C, C, C, Cd,C, Cd,K, K,
+  _, _, Cd,C, C, C, C, C, C, C, C, Cd,_, _,
+  _, _, Cx,C, C, Cd,C, C, C, Cd,C, Cx,_, _,
+  _, _, _, Cd,C, C, C, C, C, C, Cd,_, _, _,
+  _, _, _, P, P, P, P, P, P, P, P, _, _, _,
+  _, _, _, P, P, Pd,_, _, Pd,P, P, _, _, _,
+  _, _, Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,_, _,
+  _, Sh,Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,Sh,_,
 ];
 
-// Back-of-head + right arm raised upward (reaching for shelf above).
-// Flip CSS for left-side station.
+// Back-of-head + arm raised (reaching for shelf above)
 const BACK_REACH: Frame = [
-  // Hat
-  _, _, _, S.hat, S.hat, S.hat, S.hat, _, _, _,
-  _, _, S.hat, S.hat, S.hat, S.hat, S.hat, S.hat, _, _,
-  _, _, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, S.hatBand, _, _,
-  // Back of head
-  _, _, S.skinShadow, S.skin, S.skin, S.skin, S.skin, S.skin, S.skinShadow, _,
-  _, _, S.skinShadow, S.skin, S.skin, S.skin, S.skin, S.skin, S.skinShadow, _,
-  _, _, S.skinShadow, S.skin, S.skin, S.skin, S.skin, S.skin, S.skinShadow, _,
-  // Coat — right arm (col 8-9) starting to raise
-  _, _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.skin, _,
-  _, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.skin, _,
-  // Right arm up (col 8), left arm at side (col 0 = skin)
-  S.skin, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, S.coat, _, _,
-  _, S.coatShadow, S.coat, S.coat, S.coatShadow, S.coat, S.coat, S.coat, S.coatShadow, _,
-  _, _, S.coat, S.coat, S.coatShadow, S.coat, S.coat, S.coat, _, _,
-  _, _, S.coatShadow, S.coat, S.coat, S.coat, S.coat, S.coatShadow, _, _,
-  _, _, S.pants, S.pants, S.pants, S.pants, S.pants, S.pants, _, _,
-  _, _, S.pants, S.pants, S.pantsDark, S.pantsDark, S.pants, S.pants, _, _,
-  _, _, S.shoe, S.shoe, _, _, S.shoe, S.shoe, _, _,
-  _, S.shoe, S.shoe, S.shoe, _, _, S.shoe, S.shoe, S.shoe, _,
+  _, _, _, _, _, H, H, H, H, _, _, _, _, _,
+  _, _, _, H, H, H, H, H, H, H, H, _, _, _,
+  _, _, H, H, H, H, H, H, H, H, H, H, _, _,
+  _, _, Hs, H, H, H, H, H, H, H, H, Hs, _, _,
+  _, _, Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb,Hb, _, _,
+  _, _, Ks,K, K, K, K, K, K, K, K, Ks,_, _,
+  _, _, Ks,K, K, K, K, K, K, K, K, Ks,_, _,
+  _, _, Ks,K, K, K, K, K, K, K, K, Ks,_, _,
+  _, _, _, Ks,K, K, K, K, K, K, Ks,_, _, _,
+  _, _, _, _, K, K, K, K, K, K, _, _, _, _,
+  // Coat — right arm starting to raise
+  _, _, _, _, C, C, C, C, C, C, K, _, _, _,
+  _, _, _, C, C, C, C, C, C, C, C, K, _, _,
+  _, _, C, C, C, C, C, C, C, C, C, _, _, _,
+  _, K, C, Cx,C, C, C, C, C, C, Cx,C, _, _,
+  K, K, Cd,C, C, C, C, C, C, C, C, Cd,_, _,
+  _, _, Cd,C, C, C, C, C, C, C, C, Cd,_, _,
+  _, _, Cx,C, C, Cd,C, C, C, Cd,C, Cx,_, _,
+  _, _, _, Cd,C, C, C, C, C, C, Cd,_, _, _,
+  _, _, _, P, P, P, P, P, P, P, P, _, _, _,
+  _, _, _, P, P, Pd,_, _, Pd,P, P, _, _, _,
+  _, _, Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,_, _,
+  _, Sh,Sh,Sh,Sh,_, _, _, _, Sh,Sh,Sh,Sh,_,
 ];
 
-// Which camera-facing for each action frame:
-//   "station" = face toward the object (profile, using stationSide)
-//   "camera"  = face front (IDLE_A, no flip)
+// Frame facing direction metadata
 const ACTION_FACINGS = ["station", "station", "station", "camera"] as const;
-
-const SPRITE_W = 10;
-const SPRITE_H = 16;
 
 const FRAMES: Record<string, Frame[]> = {
   idle: [IDLE_A, IDLE_B],
   walk: [WALK_A, WALK_B, WALK_A, WALK_B],
-  // turn away → arm up → arm down → face camera
   action: [BACK, BACK_REACH, BACK, IDLE_A],
 };
 
@@ -204,7 +258,7 @@ const ANIM_SPEED: Record<string, number> = {
   action: 450,
 };
 
-// ── Sprite reducer (all state changes happen in dispatch, not effects) ───────
+// ── Sprite reducer ──────────────────────────────────────────────────────────
 
 interface SpriteState {
   currentX: number;
@@ -246,7 +300,7 @@ function spriteReducer(state: SpriteState, action: SpriteAction): SpriteState {
   }
 }
 
-export function KitchenCookSprite({ targetX, anim, cellSize, spriteScale = 1.5, stationSide = "right" }: CookSpriteProps) {
+export function KitchenCookSprite({ targetX, anim, cellSize, spriteScale = cellSize >= 4 ? 1.5 : 2.5, stationSide = "right" }: CookSpriteProps) {
   const [state, dispatch] = useReducer(spriteReducer, {
     currentX: targetX,
     facingLeft: false,
@@ -262,7 +316,7 @@ export function KitchenCookSprite({ targetX, anim, cellSize, spriteScale = 1.5, 
 
     dispatch({ type: "START_WALK", targetX });
 
-    const stepSize = 2;
+    const stepSize = 4;
     const stepInterval = 60;
 
     const iv = setInterval(() => {
@@ -272,7 +326,7 @@ export function KitchenCookSprite({ targetX, anim, cellSize, spriteScale = 1.5, 
     return () => clearInterval(iv);
   }, [targetX]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Detect arrival (currentX reached targetX while walking)
+  // Detect arrival
   useEffect(() => {
     if (state.isWalking && state.currentX === targetX) {
       const tid = setTimeout(() => dispatch({ type: "ARRIVE" }), 200);
@@ -295,19 +349,18 @@ export function KitchenCookSprite({ targetX, anim, cellSize, spriteScale = 1.5, 
   const frameIdx = state.frameIdx % frames.length;
   const frame = frames[frameIdx];
 
-  // Determine horizontal flip.
-  // During action: frames tagged "station" face toward the object; "camera" = front.
+  // Determine horizontal flip
   let flipX = state.facingLeft;
   if (activeAnim === "action") {
     const tag = ACTION_FACINGS[frameIdx % ACTION_FACINGS.length];
     flipX = tag === "station" ? stationSide === "left" : false;
   }
 
-  // Position: cook stands on the floor. Anchor point is bottom-center.
+  // Position: cook stands on the floor. Anchor = bottom-center.
   const sc = cellSize * spriteScale;
   const spriteW = SPRITE_W * sc;
   const spriteH = SPRITE_H * sc;
-  const feetRow = 54;
+  const feetRow = cellSize >= 4 ? 54 : 108;
   const spriteTopPx = feetRow * cellSize - spriteH;
   const spriteCenterX = state.currentX * cellSize - spriteW / 2;
 
