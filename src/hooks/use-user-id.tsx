@@ -1,10 +1,12 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 const UserIdContext = createContext<string | null>(null);
 
-export const UserIdProvider = UserIdContext.Provider;
+export function UserIdProvider({ value, children }: { value: string; children: ReactNode }) {
+  return <UserIdContext.Provider value={value}>{children}</UserIdContext.Provider>;
+}
 
 export function useUserId(): string {
   const userId = useContext(UserIdContext);
