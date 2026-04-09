@@ -23,11 +23,20 @@ export function CookButton({ status, disabled, onClick, onStartOver }: CookButto
   const isCooking = status === "cooking";
 
   return (
-    <div className="pt-2 flex flex-col gap-2">
+    <div className={`pt-2 flex ${status === "done" ? "flex-row gap-3" : "flex-col gap-2"}`}>
+      {status === "done" && onStartOver && (
+        <PixelButton
+          variant="ghost"
+          onClick={onStartOver}
+          className="flex-1 justify-center text-xs py-3"
+        >
+          START OVER
+        </PixelButton>
+      )}
       <PixelButton
         onClick={onClick}
         disabled={disabled || isCooking}
-        className="w-full justify-center text-xs py-3"
+        className={`justify-center text-xs py-3 ${status === "done" ? "flex-1" : "w-full"}`}
       >
         {isCooking ? (
           <span className="flex items-center justify-center gap-2">
@@ -37,14 +46,6 @@ export function CookButton({ status, disabled, onClick, onStartOver }: CookButto
           label
         )}
       </PixelButton>
-      {status === "done" && onStartOver && (
-        <button
-          onClick={onStartOver}
-          className="w-full text-center text-xs font-[family-name:var(--font-press-start)] text-muted-foreground hover:text-foreground transition-colors py-2"
-        >
-          START OVER
-        </button>
-      )}
     </div>
   );
 }
