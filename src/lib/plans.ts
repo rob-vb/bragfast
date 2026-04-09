@@ -14,28 +14,28 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     name: "On the House",
     price: 0,
     credits: 30,
-    label: "30 free credits",
+    label: "Try it. 30 free credits.",
   },
   starter: {
     id: "starter",
     name: "Toast",
     price: 29,
     credits: 800,
-    label: "Quick and crispy",
+    label: "For solo devs shipping monthly",
   },
   pro: {
     id: "pro",
     name: "Full Plate",
     price: 109,
     credits: 8_000,
-    label: "The full stack",
+    label: "For teams with a release cadence",
   },
   scale: {
     id: "scale",
     name: "Buffet",
     price: 219,
     credits: 40_000,
-    label: "All-you-can-eat",
+    label: "For orgs with many repos",
   },
 };
 
