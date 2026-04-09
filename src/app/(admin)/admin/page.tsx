@@ -86,7 +86,7 @@ export default async function AdminPage() {
   return (
     <div className="space-y-8">
       <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
-        Admin
+        Dashboard
       </h1>
 
       {/* Credit meter — primary admin element */}
@@ -124,6 +124,8 @@ export default async function AdminPage() {
             description="Generate your first branded images via the API or MCP."
             cta={{ label: "Read the Docs", href: "/docs" }}
             secondaryCta={{ label: "Set up the MCP", href: "/docs#mcp" }}
+            extraCtas={[{ label: "Cook", href: "/admin/kitchen?tab=cook" }]}
+            noPrimary
           />
         ) : (
           <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>

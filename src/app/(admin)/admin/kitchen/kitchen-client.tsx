@@ -61,7 +61,7 @@ export function KitchenClient({
 
       {/* Tabs */}
       <div className="relative">
-        <div className="flex gap-0 -mb-[2px] relative z-10">
+        <div className="flex gap-0 -mb-[2px] relative z-10 overflow-x-auto">
           {tabs.map((tab) => {
             const isActive = activeTab === tab;
             return (

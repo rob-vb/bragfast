@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 const tabs = [
-  { label: "Admin", href: "/admin" },
+  { label: "Dashboard", href: "/admin" },
   { label: "Kitchen", href: "/admin/kitchen" },
   { label: "History", href: "/admin/history" },
   { label: "Account", href: "/admin/account" },
@@ -76,7 +76,7 @@ export function AdminNav() {
   return (
     <>
       {/* Desktop nav */}
-      <nav className="hidden md:flex gap-1" aria-label="Admin navigation">
+      <nav className="hidden md:flex gap-1 overflow-x-auto" aria-label="Admin navigation">
         {tabs.map((tab) => {
           const isActive =
             tab.href === "/admin"
