@@ -52,7 +52,8 @@ type CookAction =
   | { type: "TOGGLE_FORMAT"; format: FormatKey }
   | { type: "SET_OUTPUT_TYPE"; outputType: "image" | "video" }
   | { type: "SET_ANIMATION_PRESET"; preset: AnimationPreset | undefined }
-  | { type: "START_COOK"; cookId: string }
+  | { type: "START_COOK" }
+  | { type: "SET_COOK_ID"; cookId: string }
   | { type: "COOK_DONE"; results: ReleaseResult }
   | { type: "COOK_ERROR"; error: string }
   | { type: "RESET" };
@@ -110,7 +111,10 @@ function cookReducer(state: CookState, action: CookAction): CookState {
       return { ...state, animationPreset: action.preset };
 
     case "START_COOK":
-      return { ...state, status: "cooking", cookId: action.cookId, results: undefined, error: undefined };
+      return { ...state, status: "cooking", results: undefined, error: undefined };
+
+    case "SET_COOK_ID":
+      return { ...state, cookId: action.cookId };
 
     case "COOK_DONE":
       return { ...state, status: "done", results: action.results };
@@ -215,6 +219,8 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
       body.video = state.animationPreset ? { preset: state.animationPreset } : true;
     }
 
+    dispatch({ type: "START_COOK" });
+
     try {
       const res = await fetch("/api/v1/cook", {
         method: "POST",
@@ -245,7 +251,7 @@ export function CookPage({ templates, creditBalance }: CookPageProps) {
       }
 
       const data: ReleaseResult = await res.json();
-      dispatch({ type: "START_COOK", cookId: data.cook_id });
+      dispatch({ type: "SET_COOK_ID", cookId: data.cook_id });
       startPolling(data.cook_id, state.outputType === "video");
     } catch {
       dispatch({ type: "COOK_ERROR", error: "Network error. Check connection and try again." });
