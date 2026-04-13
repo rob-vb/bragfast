@@ -117,7 +117,10 @@ function cookReducer(state: CookState, action: CookAction): CookState {
       return { ...state, animationPreset: action.preset };
 
     case "START_COOK":
-      return { ...state, status: "cooking", progress: undefined, results: undefined, error: undefined };
+      // Clear cookId so useReleaseProgress doesn't match the previous
+      // completed release and immediately re-dispatch stale results before
+      // the new cook's id arrives from the POST response.
+      return { ...state, status: "cooking", cookId: undefined, progress: undefined, results: undefined, error: undefined };
 
     case "SET_COOK_ID":
       return { ...state, cookId: action.cookId };
@@ -220,6 +223,7 @@ export function CookPage({ templates }: CookPageProps) {
       body.video = state.animationPreset ? { preset: state.animationPreset } : true;
     }
 
+    fetchingResultRef.current = false;
     dispatch({ type: "START_COOK" });
 
     try {
