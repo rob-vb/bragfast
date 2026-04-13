@@ -1,6 +1,16 @@
 import type { AnimationPreset } from "../types";
 
 export type ObjectType = "text" | "image" | "logo";
+export type ColorRole = "primary" | "text" | "background";
+
+/** Resolve a text object's color: colorRole takes precedence over the literal color hex. */
+export function resolveTextColor(
+  obj: { colorRole?: ColorRole; color?: string },
+  colors: { background: string; text: string; primary: string },
+): string {
+  if (obj.colorRole) return colors[obj.colorRole];
+  return obj.color || colors.text;
+}
 
 // Legacy types still in DB — migrated at read time
 type LegacyObjectType = "title" | "description";
@@ -86,6 +96,7 @@ export interface TemplateObject {
 
   // Text-only
   color?: string;
+  colorRole?: ColorRole;
   fontFamily?: string;
   fontSize?: number;
   fontWeight?: number;

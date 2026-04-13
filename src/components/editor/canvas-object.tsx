@@ -3,7 +3,7 @@ import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { useEditor } from "./editor-context";
 import { SelectionHandles, type HandlePosition } from "./selection-handles";
 import type { TemplateObject } from "@/lib/templates/canvas-types";
-import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS, getObjectBorderRadius, resolveTextColor } from "@/lib/templates/canvas-types";
 
 /**
  * Auto-fit font size to container.
@@ -322,7 +322,7 @@ function renderObjectPreview(
     letterSpacing: obj.letterSpacing || 0,
     lineHeight: obj.lineHeight || 1.3,
     textAlign: obj.textAlign || "left",
-    color: obj.color || colors.text,
+    color: resolveTextColor(obj, colors),
     width: "100%",
     height: "100%",
     overflow: "hidden",
