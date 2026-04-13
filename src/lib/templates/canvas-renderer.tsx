@@ -1,7 +1,7 @@
 // src/lib/templates/canvas-renderer.tsx
 import type { CanvasTemplateConfig, TemplateObject, FormatKey } from "./canvas-types";
 import type { Brand } from "../types";
-import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "./canvas-types";
+import { FORMAT_DIMENSIONS, getObjectBorderRadius, resolveTextColor } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
 import { resolveBackground } from "./mesh-gradient";
@@ -161,7 +161,7 @@ export function renderObject(
       const text = data?.text || obj.previewText || "Text";
       const resolvedFont = data?.fontFamily || fontFamily;
       const resolvedWeight = data?.fontWeight || obj.fontWeight || 400;
-      const resolvedColor = data?.color || obj.color || colors.text;
+      const resolvedColor = data?.color || resolveTextColor(obj, colors);
       const fontSize = autoFitFontSize(
         text, obj.fontSize || 24, obj.width, obj.height,
         resolvedWeight, obj.lineHeight || 1.2, obj.letterSpacing || 0,
