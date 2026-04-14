@@ -35,7 +35,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     name: "Buffet",
     price: 79,
     credits: 2_500,
-    label: "All-you-can-eat",
+    label: "Big appetite",
   },
 };
 
