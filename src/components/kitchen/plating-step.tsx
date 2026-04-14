@@ -2,6 +2,8 @@
 
 import type { FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset } from "@/lib/types";
+import { MotionPresetPicker } from "./motion-preset-picker";
+import { VideoTemplatePicker, type VideoTemplateItem } from "./video-template-picker";
 
 const FORMAT_LABELS: Record<FormatKey, string> = {
   landscape: "Landscape",
@@ -20,9 +22,14 @@ interface PlatingStepProps {
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
   creditBalance?: number;
+  videoTemplates: VideoTemplateItem[];
+  videoTemplateId: string | null;
+  autoSelectedPreset?: AnimationPreset;
+  selectedVideoHasHero: boolean;
   onToggleFormat: (format: FormatKey) => void;
   onOutputTypeChange: (type: "image" | "video") => void;
   onAnimationPresetChange: (preset: AnimationPreset | undefined) => void;
+  onVideoTemplateChange: (template: VideoTemplateItem) => void;
 }
 
 export function PlatingStep({
@@ -30,9 +37,14 @@ export function PlatingStep({
   outputType,
   animationPreset,
   creditBalance,
+  videoTemplates,
+  videoTemplateId,
+  autoSelectedPreset,
+  selectedVideoHasHero,
   onToggleFormat,
   onOutputTypeChange,
   onAnimationPresetChange,
+  onVideoTemplateChange,
 }: PlatingStepProps) {
   const creditCost = formats.length * (outputType === "video" ? 5 : 1);
 
@@ -106,24 +118,21 @@ export function PlatingStep({
         </div>
       </div>
 
-      {/* Animation preset — video only */}
+      {/* Video-only: layout + motion pickers */}
       {outputType === "video" && (
-        <div className="space-y-2">
-          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
-            Animation Preset
-          </p>
-          <select
-            className="border-2 border-brand px-3 py-2 text-sm font-[family-name:var(--font-geist-sans)] text-brand bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-            value={animationPreset ?? "none"}
-            onChange={(e) => {
-              const v = e.target.value;
-              onAnimationPresetChange(v === "none" ? undefined : (v as AnimationPreset));
-            }}
-          >
-            <option value="none">None</option>
-            <option value="showcase">Showcase</option>
-          </select>
-        </div>
+        <>
+          <VideoTemplatePicker
+            templates={videoTemplates}
+            selectedId={videoTemplateId}
+            onSelect={onVideoTemplateChange}
+          />
+          <MotionPresetPicker
+            value={animationPreset}
+            autoSelected={autoSelectedPreset}
+            templateHasHero={selectedVideoHasHero}
+            onChange={(p) => onAnimationPresetChange(p)}
+          />
+        </>
       )}
 
       {/* Credit display */}

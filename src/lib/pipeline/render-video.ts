@@ -5,7 +5,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { renderVideo } from "../video/lambda";
 import { uploadImage } from "../storage/r2";
-import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { resolveVideoTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
 import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
 import type { ReleaseResult, FormatEntry, VideoField } from "../types";
@@ -67,7 +67,7 @@ export async function renderVideoAsync(
   const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 10;
   try {
     const templateName = request.template || "standard-browser";
-    let templateConfig = await resolveTemplate(templateName, userId, convex);
+    let templateConfig = await resolveVideoTemplate(templateName, userId, convex);
     const brand = await resolveBrand(request, templateConfig.colors, convex);
     const slideDuration = getSlideDuration(request.video);
 
@@ -75,6 +75,10 @@ export async function renderVideoAsync(
     if (request.video && typeof request.video === 'object' && request.video.preset) {
       templateConfig = { ...templateConfig, animation_preset: request.video.preset };
     }
+
+    console.log(
+      `[VIDEO] Render start cook=${cookId} template=${templateName} animation_preset=${templateConfig.animation_preset ?? "showcase"}`
+    );
 
     const { srcMap } = await prefetchStaticImages(templateConfig);
 

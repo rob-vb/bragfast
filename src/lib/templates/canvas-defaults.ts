@@ -74,7 +74,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
     config: {
       version: 2,
       colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
-      animation_preset: "showcase",
+      animation_preset: "cinematic",
       formats: {
         landscape: {
           objects: [
@@ -108,7 +108,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
     config: {
       version: 2,
       colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
-      animation_preset: "showcase",
+      animation_preset: "kinetic",
       formats: {
         landscape: {
           objects: [
@@ -142,7 +142,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
     config: {
       version: 2,
       colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
-      animation_preset: "showcase",
+      animation_preset: "ken-burns",
       formats: {
         landscape: {
           objects: [
@@ -176,7 +176,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
     config: {
       version: 2,
       colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
-      animation_preset: "showcase",
+      animation_preset: "minimal",
       formats: {
         landscape: {
           objects: [

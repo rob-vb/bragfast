@@ -1,0 +1,41 @@
+name: Remotion Lambda Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - phase-2/infrastructure
+    paths:
+      - "src/remotion/**"
+      - "src/lib/types.ts"
+      - "src/lib/templates/canvas-types.ts"
+      - "src/lib/templates/canvas-defaults.ts"
+      - "src/lib/templates/video-defaults.ts"
+      - "scripts/deploy-remotion.ts"
+  workflow_dispatch:
+
+concurrency:
+  group: remotion-lambda-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      REMOTION_AWS_ACCESS_KEY_ID: ${{ secrets.REMOTION_AWS_ACCESS_KEY_ID }}
+      REMOTION_AWS_SECRET_ACCESS_KEY: ${{ secrets.REMOTION_AWS_SECRET_ACCESS_KEY }}
+      REMOTION_AWS_REGION: ${{ secrets.REMOTION_AWS_REGION || 'us-east-1' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Deploy Remotion site + Lambda function
+        run: npx tsx scripts/deploy-remotion.ts

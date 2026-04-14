@@ -288,14 +288,40 @@ export function resolvePreset(
   isHero?: boolean,
 ): { entrance?: EntranceType; exit?: ExitType; kenBurns?: boolean } {
   if (!preset) preset = "showcase";
-  if (preset === "showcase") {
-    if (objectType === "image") {
-      if (isHero === false) return { entrance: "fade-in", exit: "none", kenBurns: false };
-      return { entrance: "showcase-rise", exit: "none", kenBurns: true };
+
+  switch (preset) {
+    case "showcase": {
+      if (objectType === "image") {
+        if (isHero === false) return { entrance: "fade-in", exit: "none", kenBurns: false };
+        return { entrance: "showcase-rise", exit: "none", kenBurns: true };
+      }
+      return { entrance: "showcase-reveal", exit: "none" };
     }
-    return { entrance: "showcase-reveal", exit: "none" };
+    case "kinetic": {
+      return { entrance: "slide-up", exit: "slide-down" };
+    }
+    case "minimal": {
+      return { entrance: "fade-in-slow", exit: "fade-out" };
+    }
+    case "bounce-pop": {
+      return { entrance: "scale-pop", exit: "scale-out" };
+    }
+    case "ken-burns": {
+      if (objectType === "image" && isHero === true) {
+        return { entrance: "zoom-hold", exit: "none", kenBurns: true };
+      }
+      return { entrance: "fade-in-slow", exit: "fade-out" };
+    }
+    case "cinematic": {
+      if (objectType === "image") {
+        if (isHero === true) return { entrance: "drift-in", exit: "drift-out" };
+        return { entrance: "fade-in-slow", exit: "fade-out" };
+      }
+      return { entrance: "showcase-reveal", exit: "fade-out" };
+    }
+    default:
+      return {};
   }
-  return {};
 }
 
 function computeEntranceStyle(
@@ -462,6 +488,49 @@ function computeEntranceStyle(
       };
     }
 
+    case "fade-in-slow": {
+      const duration = Math.round(fps * 1.2);
+      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.quad),
+      });
+      return { opacity };
+    }
+
+    case "scale-pop": {
+      const opacity = interpolate(localFrame, [0, Math.round(fps * 0.3)], [0, 1], {
+        extrapolateRight: "clamp",
+      });
+      const scale = spring({
+        frame: localFrame,
+        fps,
+        from: 0.6,
+        to: 1.0,
+        config: { damping: 6, stiffness: 180 },
+      });
+      return { opacity, transform: `scale(${scale})` };
+    }
+
+    case "drift-in": {
+      const duration = Math.round(fps * 1.0);
+      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
+        extrapolateRight: "clamp",
+      });
+      const translateX = interpolate(localFrame, [0, duration], [-40, 0], {
+        extrapolateRight: "clamp",
+        easing: Easing.out(Easing.quad),
+      });
+      return { opacity, transform: `translateX(${translateX}px)` };
+    }
+
+    case "zoom-hold": {
+      const duration = Math.round(fps * 0.8);
+      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
+        extrapolateRight: "clamp",
+      });
+      return { opacity };
+    }
+
     default:
       return {};
   }
@@ -536,6 +605,39 @@ function computeExitStyle(
       };
     }
 
+    case "scale-out": {
+      const duration = Math.round(fps * 0.4);
+      const exitStart = slideDurationFrames - duration;
+      const framesFromEnd = Math.max(0, frame - exitStart);
+      const scale = spring({
+        frame: framesFromEnd,
+        fps,
+        from: 1.0,
+        to: 1.1,
+        config: { damping: 10, stiffness: 140 },
+      });
+      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      return { opacity, transform: `scale(${scale})` };
+    }
+
+    case "drift-out": {
+      const duration = Math.round(fps * 0.6);
+      const exitStart = slideDurationFrames - duration;
+      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      const translateX = interpolate(frame, [exitStart, slideDurationFrames], [0, 40], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.in(Easing.quad),
+      });
+      return { opacity, transform: `translateX(${translateX}px)` };
+    }
+
     default:
       return {};
   }
@@ -545,31 +647,21 @@ function computeImageEffects(
   frame: number,
   totalFrames: number,
 ): React.CSSProperties {
-  // 3D tilt effect — cinematic product showcase
-  // Slow pan on Y axis while maintaining a subtle forward tilt
-  const rotateY = interpolate(
-    frame,
-    [0, totalFrames],
-    [-15, 15],
-    { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
-  );
-  const rotateX = interpolate(
-    frame,
-    [0, totalFrames],
-    [8, 3],
-    { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
-  );
-  // Slow zoom out for depth — starts zoomed in enough to cover edges during 3D tilt
-  const scale = interpolate(
-    frame,
-    [0, totalFrames],
-    [1.35, 1.15],
-    { extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) },
-  );
-
+  // Ken Burns effect — slow continuous zoom and gentle pan
+  const scale = interpolate(frame, [0, totalFrames], [1.05, 1.2], {
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.quad),
+  });
+  const translateX = interpolate(frame, [0, totalFrames], [-20, 20], {
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.quad),
+  });
+  const translateY = interpolate(frame, [0, totalFrames], [-10, 10], {
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.quad),
+  });
   return {
-    transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
-    transformStyle: "preserve-3d" as const,
+    transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
     transformOrigin: "center center",
   };
 }

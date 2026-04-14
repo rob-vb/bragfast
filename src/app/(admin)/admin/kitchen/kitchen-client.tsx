@@ -8,6 +8,7 @@ import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { CopyButton } from "@/components/admin/copy-button";
 import { CookPage } from "@/components/kitchen/cook-page";
 import type { TemplateItem } from "@/components/kitchen/recipe-step";
+import type { VideoTemplateItem } from "@/components/kitchen/video-template-picker";
 import Link from "next/link";
 
 interface TemplateListItem {
@@ -32,6 +33,7 @@ interface KitchenClientProps {
   userTemplates: TemplateListItem[];
   brands: BrandItem[];
   cookTemplates: TemplateItem[];
+  videoTemplates: VideoTemplateItem[];
 }
 
 const tabs = ["cook", "templates", "brands"] as const;
@@ -42,6 +44,7 @@ export function KitchenClient({
   userTemplates,
   brands,
   cookTemplates,
+  videoTemplates,
 }: KitchenClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -86,7 +89,7 @@ export function KitchenClient({
 
       {/* Tab content */}
       {activeTab === "cook" && (
-        <CookPage templates={cookTemplates} />
+        <CookPage templates={cookTemplates} videoTemplates={videoTemplates} />
       )}
 
       {activeTab === "templates" && (
