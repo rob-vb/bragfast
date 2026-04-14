@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { uploadFile } from "@/lib/upload/client";
 
 function RadiusInput({
   value,
@@ -106,14 +107,7 @@ export function VisualProperties() {
   async function handleFileUpload(file: File) {
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/v1/upload", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
-      }
-      const { url } = await res.json();
+      const url = await uploadFile(file);
       update("src", url);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -125,14 +119,7 @@ export function VisualProperties() {
   async function handleVideoUpload(file: File) {
     setUploadingVideo(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/v1/upload", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
-      }
-      const { url } = await res.json();
+      const url = await uploadFile(file);
       update("video_url", url);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");

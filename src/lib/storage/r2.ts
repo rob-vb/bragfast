@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const client = new S3Client({
   region: 'auto',
@@ -60,6 +61,34 @@ export async function getImageBuffer(key: string): Promise<{ buffer: Buffer; con
   return {
     buffer: Buffer.from(bytes),
     contentType: res.ContentType || 'image/png',
+  }
+}
+
+export async function createPresignedUploadUrl(
+  key: string,
+  contentType: string,
+  expiresIn = 300,
+): Promise<{ uploadUrl: string; publicUrl: string }> {
+  const uploadUrl = await getSignedUrl(
+    client,
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable',
+    }),
+    { expiresIn },
+  )
+  return { uploadUrl, publicUrl: `${PUBLIC_URL}/${key}` }
+}
+
+export async function headObject(key: string): Promise<{ size: number; contentType: string } | null> {
+  try {
+    const res = await client.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
+    const size = Number(res.ContentLength ?? 0)
+    return { size, contentType: res.ContentType || 'application/octet-stream' }
+  } catch {
+    return null
   }
 }
 

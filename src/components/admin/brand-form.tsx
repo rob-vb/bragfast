@@ -6,6 +6,7 @@ import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { CopyButton } from "@/components/admin/copy-button";
 import { FONT_CATALOG } from "@/lib/font-catalog";
+import { uploadFile } from "@/lib/upload/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -110,17 +111,10 @@ export function BrandForm({
     setUploading(true);
     setError("");
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/v1/upload", { method: "POST", body: formData });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || "Upload failed");
-        return;
-      }
-      update("logo_url", data.url);
-    } catch {
-      setError("Upload failed");
+      const url = await uploadFile(file);
+      update("logo_url", url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
     }

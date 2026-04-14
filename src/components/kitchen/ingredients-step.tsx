@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import type { ObjectModification } from "@/lib/types";
+import { uploadFile } from "@/lib/upload/client";
 
 interface IngredientsStepProps {
   templateConfig: CanvasTemplateConfig;
@@ -106,13 +107,7 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
     setUploading(true);
     setUploadError(null);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/v1/upload", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      const url = data.url ?? data.image_url ?? data.file_url;
-      if (!url) throw new Error("No URL returned");
+      const url = await uploadFile(file);
       setUrlInput(url);
       onChange({ ...mod, image_url: url });
     } catch {
@@ -126,16 +121,7 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
     setUploadingVideo(true);
     setVideoError(null);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/v1/upload", { method: "POST", body: fd });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Upload failed");
-      }
-      const data = await res.json();
-      const url = data.url ?? data.file_url;
-      if (!url) throw new Error("No URL returned");
+      const url = await uploadFile(file);
       onChange({ ...mod, video_url: url });
     } catch (err) {
       setVideoError(err instanceof Error ? err.message : "Upload failed");
