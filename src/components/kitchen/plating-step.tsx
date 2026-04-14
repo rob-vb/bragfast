@@ -21,7 +21,6 @@ interface PlatingStepProps {
   animationPreset?: AnimationPreset;
   creditBalance?: number;
   onToggleFormat: (format: FormatKey) => void;
-  onOutputTypeChange: (type: "image" | "video") => void;
   onAnimationPresetChange: (preset: AnimationPreset | undefined) => void;
 }
 
@@ -31,7 +30,6 @@ export function PlatingStep({
   animationPreset,
   creditBalance,
   onToggleFormat,
-  onOutputTypeChange,
   onAnimationPresetChange,
 }: PlatingStepProps) {
   const creditCost = formats.length * (outputType === "video" ? 5 : 1);
@@ -74,32 +72,6 @@ export function PlatingStep({
                   <span className="font-medium">{FORMAT_LABELS[fmt]}</span>
                   <span className="ml-1 text-xs text-brand/50">{FORMAT_DIMS[fmt]}</span>
                 </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Output type toggle */}
-      <div className="space-y-2">
-        <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
-          Output
-        </p>
-        <div className="inline-flex border-2 border-brand">
-          {(["image", "video"] as const).map((type) => {
-            const active = outputType === type;
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => onOutputTypeChange(type)}
-                className={`
-                  font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
-                  transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
-                  ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
-                `}
-              >
-                {type}
               </button>
             );
           })}

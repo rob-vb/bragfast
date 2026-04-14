@@ -15,10 +15,18 @@ export interface TemplateItem {
 interface RecipeStepProps {
   templates: TemplateItem[];
   selectedId: string | null;
+  outputType: "image" | "video";
   onSelect: (id: string, config: CanvasTemplateConfig) => void;
+  onOutputTypeChange: (type: "image" | "video") => void;
 }
 
-export function RecipeStep({ templates, selectedId, onSelect }: RecipeStepProps) {
+export function RecipeStep({
+  templates,
+  selectedId,
+  outputType,
+  onSelect,
+  onOutputTypeChange,
+}: RecipeStepProps) {
   if (templates.length === 0) {
     return (
       <PixelEmptyState
@@ -30,7 +38,39 @@ export function RecipeStep({ templates, selectedId, onSelect }: RecipeStepProps)
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+    <div className="space-y-5">
+      {/* Output type — image vs video frames the entire flow */}
+      <div className="space-y-2">
+        <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
+          Output
+        </p>
+        <div className="inline-flex border-2 border-brand">
+          {(["image", "video"] as const).map((type) => {
+            const active = outputType === type;
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => onOutputTypeChange(type)}
+                className={`
+                  font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
+                  transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
+                  ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
+                `}
+              >
+                {type}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Template picker */}
+      <div className="space-y-2">
+        <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
+          Template
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       {templates.map((t) => {
         const isSelected = selectedId === t.id;
 
@@ -77,6 +117,8 @@ export function RecipeStep({ templates, selectedId, onSelect }: RecipeStepProps)
           </button>
         );
       })}
+        </div>
+      </div>
     </div>
   );
 }

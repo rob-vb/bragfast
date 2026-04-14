@@ -288,8 +288,12 @@ export function CookPage({ templates }: CookPageProps) {
           <RecipeStep
             templates={templates}
             selectedId={state.templateId}
+            outputType={state.outputType}
             onSelect={(id, config) =>
               dispatch({ type: "SELECT_TEMPLATE", templateId: id, config })
+            }
+            onOutputTypeChange={(t) =>
+              dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })
             }
           />
         </CookSection>
@@ -347,7 +351,6 @@ export function CookPage({ templates }: CookPageProps) {
             animationPreset={state.animationPreset}
             creditBalance={creditBalance ?? undefined}
             onToggleFormat={(fmt) => dispatch({ type: "TOGGLE_FORMAT", format: fmt })}
-            onOutputTypeChange={(t) => dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })}
             onAnimationPresetChange={(p) =>
               dispatch({ type: "SET_ANIMATION_PRESET", preset: p })
             }
