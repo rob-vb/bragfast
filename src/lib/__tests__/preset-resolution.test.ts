@@ -3,7 +3,7 @@ import { resolvePreset } from "../../remotion/VideoCanvasComposition";
 
 describe("resolvePreset", () => {
   it("showcase preset maps image to showcase-rise with kenBurns", () => {
-    expect(resolvePreset("showcase", "image")).toEqual({
+    expect(resolvePreset("showcase", "visual")).toEqual({
       entrance: "showcase-rise",
       exit: "none",
       kenBurns: true,
@@ -25,7 +25,7 @@ describe("resolvePreset", () => {
   });
 
   it("undefined preset defaults to showcase", () => {
-    expect(resolvePreset(undefined, "image")).toEqual({
+    expect(resolvePreset(undefined, "visual")).toEqual({
       entrance: "showcase-rise",
       exit: "none",
       kenBurns: true,
@@ -35,7 +35,7 @@ describe("resolvePreset", () => {
   // Role-based classification tests
 
   it("hero image gets showcase-rise with kenBurns", () => {
-    expect(resolvePreset("showcase", "image", true)).toEqual({
+    expect(resolvePreset("showcase", "visual", true)).toEqual({
       entrance: "showcase-rise",
       exit: "none",
       kenBurns: true,
@@ -43,7 +43,7 @@ describe("resolvePreset", () => {
   });
 
   it("non-hero image gets fade-in without kenBurns", () => {
-    expect(resolvePreset("showcase", "image", false)).toEqual({
+    expect(resolvePreset("showcase", "visual", false)).toEqual({
       entrance: "fade-in",
       exit: "none",
       kenBurns: false,
@@ -51,7 +51,7 @@ describe("resolvePreset", () => {
   });
 
   it("isHero undefined preserves backward compat (showcase-rise)", () => {
-    expect(resolvePreset("showcase", "image", undefined)).toEqual({
+    expect(resolvePreset("showcase", "visual", undefined)).toEqual({
       entrance: "showcase-rise",
       exit: "none",
       kenBurns: true,

@@ -5,7 +5,7 @@ describe("buildAnalysisPrompt", () => {
   const templateObjects = [
     { id: "title", type: "text" as const },
     { id: "description", type: "text" as const },
-    { id: "image", type: "image" as const },
+    { id: "image", type: "visual" as const },
   ];
 
   it("includes release body in user message", () => {

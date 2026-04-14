@@ -8,7 +8,7 @@ import { BackgroundSection } from "./background-section";
 import { BrandColorSection } from "./brand-color-section";
 import { CommonProperties } from "./common-properties";
 import { TextProperties } from "./text-properties";
-import { ImageProperties } from "./image-properties";
+import { VisualProperties } from "./visual-properties";
 
 export function EditorRightSidebar() {
   const { state, dispatch, selectedObject } = useEditor();
@@ -47,7 +47,7 @@ export function EditorRightSidebar() {
               <CommonProperties />
               <Separator />
               <TextProperties />
-              <ImageProperties />
+              <VisualProperties />
             </div>
           )}
         </div>

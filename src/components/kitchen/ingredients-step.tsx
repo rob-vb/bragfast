@@ -8,12 +8,14 @@ interface IngredientsStepProps {
   templateConfig: CanvasTemplateConfig;
   objectContent: Record<string, ObjectModification>;
   onContentChange: (id: string, mod: ObjectModification) => void;
+  outputType?: "image" | "video";
 }
 
 export function IngredientsStep({
   templateConfig,
   objectContent,
   onContentChange,
+  outputType = "image",
 }: IngredientsStepProps) {
   // Use landscape as the canonical object list
   const objects = templateConfig.formats.landscape?.objects ?? [];
@@ -64,12 +66,13 @@ export function IngredientsStep({
           );
         }
 
-        if (obj.type === "image") {
+        if (obj.type === "visual") {
           return (
-            <ImageField
+            <VisualField
               key={obj.id}
               label={obj.name}
               mod={mod}
+              outputType={outputType}
               onChange={(updated) => onContentChange(obj.id, { ...updated, id: obj.id })}
             />
           );
@@ -81,18 +84,22 @@ export function IngredientsStep({
   );
 }
 
-// ─── Image field ──────────────────────────────────────────────────────────────
+// ─── Visual field ─────────────────────────────────────────────────────────────
 
-interface ImageFieldProps {
+interface VisualFieldProps {
   label: string;
   mod: ObjectModification;
+  outputType: "image" | "video";
   onChange: (mod: ObjectModification) => void;
 }
 
-function ImageField({ label, mod, onChange }: ImageFieldProps) {
+function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState(mod.image_url ?? "");
 
   async function handleFile(file: File) {
@@ -115,6 +122,28 @@ function ImageField({ label, mod, onChange }: ImageFieldProps) {
     }
   }
 
+  async function handleVideoFile(file: File) {
+    setUploadingVideo(true);
+    setVideoError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/v1/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Upload failed");
+      }
+      const data = await res.json();
+      const url = data.url ?? data.file_url;
+      if (!url) throw new Error("No URL returned");
+      onChange({ ...mod, video_url: url });
+    } catch (err) {
+      setVideoError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -126,6 +155,9 @@ function ImageField({ label, mod, onChange }: ImageFieldProps) {
       onChange({ ...mod, image_url: urlInput || undefined });
     }
   }
+
+  const hasVideo = !!mod.video_url;
+  const showVideoSlot = outputType === "video";
 
   return (
     <div className="space-y-2">
@@ -149,13 +181,18 @@ function ImageField({ label, mod, onChange }: ImageFieldProps) {
             Uploading...
           </p>
         ) : mod.image_url && mod.image_url.startsWith("http") ? (
-          <div className="space-y-1">
+          <div className="space-y-1 relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={mod.image_url}
               alt="preview"
               className="max-h-24 mx-auto object-contain"
             />
+            {hasVideo && (
+              <span className="absolute top-0 right-0 bg-brand text-white text-[10px] px-1.5 py-0.5">
+                🎬
+              </span>
+            )}
             <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/40">
               Click to replace
             </p>
@@ -203,6 +240,62 @@ function ImageField({ label, mod, onChange }: ImageFieldProps) {
           }}
         />
       </div>
+
+      {showVideoSlot && (
+        <div className="space-y-1 pt-1">
+          <label className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/60 block">
+            Video (optional, MP4/WebM/MOV ≤ 50 MB)
+          </label>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleVideoFile(file);
+              e.target.value = "";
+            }}
+          />
+          {hasVideo ? (
+            <div className="flex items-center gap-2 border-2 border-brand/30 px-2 py-1.5 bg-white">
+              <span className="text-sm">🎬</span>
+              <span className="text-[10px] font-[family-name:var(--font-geist-mono)] text-brand/70 truncate flex-1">
+                Video attached
+              </span>
+              <button
+                type="button"
+                className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/60 hover:text-red-600 px-1"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={uploadingVideo}
+              >
+                Replace
+              </button>
+              <button
+                type="button"
+                className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-500 hover:text-red-600 px-1"
+                onClick={() => onChange({ ...mod, video_url: undefined })}
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="w-full border-2 border-dashed border-brand/30 bg-surface px-2 py-2 text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/60 hover:border-brand/60 transition-colors"
+              onClick={() => videoInputRef.current?.click()}
+              disabled={uploadingVideo}
+            >
+              {uploadingVideo ? "Uploading video..." : "Upload video"}
+            </button>
+          )}
+          {videoError && (
+            <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-600">
+              {videoError}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

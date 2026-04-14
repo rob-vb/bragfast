@@ -1193,7 +1193,7 @@ data = response.json()`,
       blocks: [
         { type: "title" },
         { type: "description" },
-        { type: "image" },
+        { type: "visual" },
         { type: "logo" },
       ],
     },

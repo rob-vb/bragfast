@@ -8,7 +8,7 @@ import { CanvasRenderer, type ObjectDataMap } from "@/lib/templates/canvas-rende
 import { loadFontsForObjects } from "@/lib/fonts";
 import { FORMAT_DIMENSIONS } from "@/lib/types";
 import { fetchImageAsBase64 } from "@/lib/images";
-import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
+import { migrateConfig, type CanvasTemplateConfig, type FormatKey } from "@/lib/templates/canvas-types";
 
 export async function POST(
   request: Request,
@@ -67,7 +67,7 @@ export async function POST(
   const { width, height } = FORMAT_DIMENSIONS[format];
 
   try {
-    const templateConfig = template.config as CanvasTemplateConfig;
+    const templateConfig = migrateConfig(template.config as CanvasTemplateConfig);
 
     const formatLayout = templateConfig.formats[format];
     if (!formatLayout) {
@@ -76,7 +76,7 @@ export async function POST(
 
     // Inject static images (src field) into placeholder data
     for (const obj of formatLayout.objects) {
-      if (obj.type === "image" && obj.src && !placeholderObjectData[obj.id]?.imageBase64) {
+      if (obj.type === "visual" && obj.src && !placeholderObjectData[obj.id]?.imageBase64) {
         const base64 = await fetchImageAsBase64(obj.src);
         placeholderObjectData[obj.id] = { ...placeholderObjectData[obj.id], imageBase64: base64 };
       }

@@ -84,6 +84,43 @@ describe("collectUploadKeys", () => {
     expect(keys.size).toBe(1);
   });
 
+  it("collects video_url when image_url is absent", () => {
+    const formats: FormatEntry[] = [
+      {
+        name: "landscape",
+        slides: [
+          { objects: [{ id: "vid1", video_url: "https://cdn.example.com/uploads/u1/clip.mp4" }] },
+        ],
+      },
+    ];
+    const keys = collectUploadKeys(formats);
+    expect(keys.size).toBe(1);
+    expect(keys.has("uploads/u1/clip.mp4")).toBe(true);
+  });
+
+  it("collects both image_url and video_url from the same visual", () => {
+    const formats: FormatEntry[] = [
+      {
+        name: "landscape",
+        slides: [
+          {
+            objects: [
+              {
+                id: "vis1",
+                image_url: "https://cdn.example.com/uploads/u1/poster.png",
+                video_url: "https://cdn.example.com/uploads/u1/clip.mp4",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    const keys = collectUploadKeys(formats);
+    expect(keys.size).toBe(2);
+    expect(keys.has("uploads/u1/poster.png")).toBe(true);
+    expect(keys.has("uploads/u1/clip.mp4")).toBe(true);
+  });
+
   it("collects from multiple formats and slides", () => {
     const formats: FormatEntry[] = [
       {

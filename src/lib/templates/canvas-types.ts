@@ -1,6 +1,6 @@
 import type { AnimationPreset } from "../types";
 
-export type ObjectType = "text" | "image" | "logo";
+export type ObjectType = "text" | "visual" | "logo";
 export type ColorRole = "primary" | "text" | "background";
 
 /** Resolve a text object's color: colorRole takes precedence over the literal color hex. */
@@ -13,7 +13,7 @@ export function resolveTextColor(
 }
 
 // Legacy types still in DB — migrated at read time
-type LegacyObjectType = "title" | "description";
+type LegacyObjectType = "title" | "description" | "image";
 
 export function slugify(name: string): string {
   return name
@@ -36,12 +36,17 @@ export function uniqueSlug(name: string, existingIds: string[], currentId?: stri
 
 function migrateObject(obj: TemplateObject): TemplateObject {
   const type = obj.type as string;
-  const migrated = (type === "title" || type === "description")
-    ? { ...obj, type: "text" as ObjectType }
-    : { ...obj };
+  let migrated: TemplateObject;
+  if (type === "title" || type === "description") {
+    migrated = { ...obj, type: "text" as ObjectType };
+  } else if (type === "image") {
+    migrated = { ...obj, type: "visual" as ObjectType };
+  } else {
+    migrated = { ...obj };
+  }
 
   // Strip legacy per-object animation fields (now preset-only)
-  const raw = migrated as Record<string, unknown>;
+  const raw = migrated as unknown as Record<string, unknown>;
   delete raw.entrance;
   delete raw.exit;
   delete raw.kenBurns;
@@ -106,9 +111,10 @@ export interface TemplateObject {
   verticalAlign?: VerticalAlign;
   textFit?: boolean;
 
-  // Image-only
+  // Visual-only
   background?: boolean;
   src?: string; // Static image URL — baked into template, not overridable by API
+  video_url?: string; // Optional video URL — preferred over image for video renders
   imageFrame?: ImageFrame;
   imageFrameColor?: string;
   objectFit?: ObjectFit;

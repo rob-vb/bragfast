@@ -121,7 +121,7 @@ const baseConfig: CanvasTemplateConfig = {
     landscape: {
       objects: [
         { id: "title", type: "text", name: "Title", x: 0, y: 0, width: 800, height: 100, zIndex: 1 },
-        { id: "img", type: "image", name: "Screenshot", x: 0, y: 100, width: 800, height: 500, zIndex: 2 },
+        { id: "img", type: "visual", name: "Screenshot", x: 0, y: 100, width: 800, height: 500, zIndex: 2 },
       ],
     },
     square: { objects: [] },

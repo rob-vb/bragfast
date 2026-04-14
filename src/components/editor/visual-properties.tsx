@@ -32,7 +32,6 @@ function RadiusInput({
   );
 }
 
-// Link/unlink icon for corner mode toggle
 function LinkIcon({ linked }: { linked: boolean }) {
   if (linked) {
     return (
@@ -51,15 +50,7 @@ function LinkIcon({ linked }: { linked: boolean }) {
   );
 }
 
-// Corner indicator — shows which corner is being edited
 function CornerIndicator({ corner }: { corner: "tl" | "tr" | "br" | "bl" }) {
-  const pos = {
-    tl: { rx: 6, ry: 2, arc: "2 2" },
-    tr: { rx: 10, ry: 2, arc: "2 2" },
-    br: { rx: 10, ry: 10, arc: "2 2" },
-    bl: { rx: 2, ry: 10, arc: "2 2" },
-  }[corner];
-
   const paths: Record<string, string> = {
     tl: "M 2 7 L 2 4 Q 2 2 4 2 L 7 2",
     tr: "M 7 2 L 10 2 Q 12 2 12 4 L 12 7",
@@ -69,20 +60,19 @@ function CornerIndicator({ corner }: { corner: "tl" | "tr" | "br" | "bl" }) {
 
   return (
     <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-zinc-400">
-      {/* Faint full rounded rect */}
       <rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      {/* Highlighted corner */}
       <path d={paths[corner]} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-export function ImageProperties() {
+export function VisualProperties() {
   const { selectedObject, dispatch } = useEditor();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
-  // Read current radius values (safe defaults for hooks below)
   const uniformRadius = selectedObject?.borderRadius ?? 0;
   const tl = selectedObject?.borderRadiusTL ?? uniformRadius;
   const tr = selectedObject?.borderRadiusTR ?? uniformRadius;
@@ -92,16 +82,15 @@ export function ImageProperties() {
   const cornersMatch = tl === tr && tr === br && br === bl;
   const [unlinked, setUnlinked] = useState(!cornersMatch);
 
-  // Sync unlinked state when selecting a different object
   const objectId = selectedObject?.id;
   useEffect(() => {
     setUnlinked(!cornersMatch);
   }, [objectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!selectedObject) return null;
-  if (selectedObject.type !== "image" && selectedObject.type !== "logo") return null;
+  if (selectedObject.type !== "visual" && selectedObject.type !== "logo") return null;
 
-  const isImage = selectedObject.type === "image";
+  const isVisual = selectedObject.type === "visual";
   const imageFrame = selectedObject.imageFrame || "none";
   const hasDeviceFrame = imageFrame !== "none";
   const imageFrameColor = selectedObject.imageFrameColor || (imageFrame === "mobile" ? "#1A1A1A" : "#E8E8E8");
@@ -133,6 +122,25 @@ export function ImageProperties() {
     }
   }
 
+  async function handleVideoUpload(file: File) {
+    setUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/v1/upload", { method: "POST", body: formData });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Upload failed");
+      }
+      const { url } = await res.json();
+      update("video_url", url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
   function setUniformRadius(v: number) {
     update("borderRadius", v);
     update("borderRadiusTL", v);
@@ -147,7 +155,6 @@ export function ImageProperties() {
 
   function toggleLinked() {
     if (unlinked) {
-      // Re-linking: set all corners to the TL value
       setUniformRadius(tl);
     }
     setUnlinked(!unlinked);
@@ -155,14 +162,13 @@ export function ImageProperties() {
 
   return (
     <div className="space-y-3">
-      <Label className="text-xs font-medium text-zinc-500 uppercase">Image</Label>
+      <Label className="text-xs font-medium text-zinc-500 uppercase">Visual</Label>
 
-      {isImage && (
+      {isVisual && (
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Device Frame</Label>
           <Select value={imageFrame} onValueChange={(v) => {
             update("imageFrame", v);
-            // Set default color when switching frame type
             if (v === "mobile") update("imageFrameColor", "#1A1A1A");
             else if (v === "browser") update("imageFrameColor", "#E8E8E8");
           }}>
@@ -260,8 +266,7 @@ export function ImageProperties() {
         </div>
       </div>
 
-      {/* Border Radius — only when no device frame wrapping */}
-      {(!isImage || !hasDeviceFrame) && (
+      {(!isVisual || !hasDeviceFrame) && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-xs text-zinc-500">Border Radius</Label>
@@ -280,7 +285,6 @@ export function ImageProperties() {
           </div>
 
           {!unlinked ? (
-            /* Linked: single input */
             <div className="flex items-center gap-2">
               <div className="flex-1">
                 <RadiusInput
@@ -292,7 +296,6 @@ export function ImageProperties() {
               <span className="text-[10px] text-zinc-400">px</span>
             </div>
           ) : (
-            /* Unlinked: 2x2 grid matching visual corners */
             <div className="grid grid-cols-2 gap-1.5">
               <div className="flex items-center gap-1">
                 <CornerIndicator corner="tl" />
@@ -315,7 +318,7 @@ export function ImageProperties() {
         </div>
       )}
 
-      {isImage && (
+      {isVisual && (
         <div className="flex items-center justify-between">
           <div>
             <Label className="text-xs text-zinc-500">Background</Label>
@@ -328,8 +331,7 @@ export function ImageProperties() {
         </div>
       )}
 
-      {/* Static Image — separate section at bottom */}
-      {isImage && (
+      {isVisual && (
         <>
           <div className="border-t border-zinc-200 pt-3">
             <Label className="text-xs font-medium text-zinc-500 uppercase">Static Image</Label>
@@ -394,6 +396,74 @@ export function ImageProperties() {
                     )}
                   </Button>
                   <p className="mt-1.5 text-[10px] text-zinc-400">Upload to bake into template. Leave empty for API slot.</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-zinc-200 pt-3">
+            <Label className="text-xs font-medium text-zinc-500 uppercase">Static Video</Label>
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleVideoUpload(file);
+                e.target.value = "";
+              }}
+            />
+            <div className="mt-1.5">
+              {selectedObject.video_url ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded border border-zinc-200 bg-zinc-50">
+                    <span className="text-sm">🎬</span>
+                    <span className="text-xs text-zinc-600 truncate flex-1">Video attached</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-7 text-xs"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={uploadingVideo}
+                    >
+                      Replace
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs text-red-500 hover:text-red-600"
+                      onClick={() => update("video_url", undefined)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-zinc-400">Plays in video output only</p>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs"
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={uploadingVideo}
+                  >
+                    {uploadingVideo ? (
+                      <span className="flex items-center gap-1.5">
+                        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Uploading…
+                      </span>
+                    ) : (
+                      "Upload Video"
+                    )}
+                  </Button>
+                  <p className="mt-1.5 text-[10px] text-zinc-400">MP4/WebM/MOV up to 50 MB. Used only in video output.</p>
                 </>
               )}
             </div>

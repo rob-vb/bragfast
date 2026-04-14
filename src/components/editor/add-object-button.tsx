@@ -12,7 +12,7 @@ import type { ObjectType } from "@/lib/templates/canvas-types";
 
 const ALL_TYPES: { type: ObjectType; label: string }[] = [
   { type: "text", label: "Text" },
-  { type: "image", label: "Image" },
+  { type: "visual", label: "Visual" },
   { type: "logo", label: "Logo" },
 ];
 

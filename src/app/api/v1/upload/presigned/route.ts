@@ -5,13 +5,26 @@ import { getSiteUrl } from "@/lib/site-url";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = new Set([
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const IMAGE_TYPES = new Set([
   "image/png",
   "image/jpeg",
   "image/webp",
   "image/svg+xml",
 ]);
+const VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+]);
+function maxSizeFor(contentType: string): number {
+  return VIDEO_TYPES.has(contentType) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+}
+function isAllowedType(contentType: string): boolean {
+  return IMAGE_TYPES.has(contentType) || VIDEO_TYPES.has(contentType);
+}
+const ALLOWED_LIST = [...IMAGE_TYPES, ...VIDEO_TYPES];
 
 export async function POST(request: Request) {
   const auth = await authenticate(request);
@@ -39,20 +52,21 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing required field: content_type" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.has(content_type)) {
+  if (!isAllowedType(content_type as string)) {
     return Response.json(
-      { error: `Unsupported content type: ${content_type}. Allowed: ${[...ALLOWED_TYPES].join(", ")}` },
+      { error: `Unsupported content type: ${content_type}. Allowed: ${ALLOWED_LIST.join(", ")}` },
       { status: 400 }
     );
   }
 
+  const maxSize = maxSizeFor(content_type as string);
   if (size_bytes !== undefined) {
     if (typeof size_bytes !== "number" || size_bytes <= 0) {
       return Response.json({ error: "size_bytes must be a positive number" }, { status: 400 });
     }
-    if (size_bytes > MAX_SIZE) {
+    if (size_bytes > maxSize) {
       return Response.json(
-        { error: `File too large: ${size_bytes} bytes exceeds ${MAX_SIZE} limit` },
+        { error: `File too large: ${size_bytes} bytes exceeds ${maxSize} limit` },
         { status: 400 }
       );
     }
@@ -73,7 +87,7 @@ export async function POST(request: Request) {
       upload_id: result.externalId,
       upload_url: uploadUrl,
       expires_in: 300,
-      max_size_bytes: MAX_SIZE,
+      max_size_bytes: maxSize,
     },
     { status: 201 }
   );

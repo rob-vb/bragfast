@@ -322,6 +322,7 @@ export function CookPage({ templates }: CookPageProps) {
             <IngredientsStep
               templateConfig={state.templateConfig}
               objectContent={state.objectContent}
+              outputType={state.outputType}
               onContentChange={(id, mod) =>
                 dispatch({ type: "SET_CONTENT", id, mod })
               }

@@ -347,7 +347,7 @@ function renderObjectPreview(
     return <AutoFitText obj={obj} text={text} style={textStyle} />;
   }
 
-  if (obj.type === "image") {
+  if (obj.type === "visual") {
     const imageFrame = obj.imageFrame || "none";
     const checkerboard = "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px";
     const objectPosition = `${obj.anchorX || "center"} ${obj.anchorY || "center"}`;
