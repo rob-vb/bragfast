@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 5 credits per slide per format (e.g. 2 slides in 3 formats = 30 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
+      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 5 credits per slide per format (e.g. 2 slides in 3 formats = 30 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($12/mo) — 200, Pro ($29/mo) — 800, Scale ($79/mo) — 2,500.",
     endpoints: [],
   },
 

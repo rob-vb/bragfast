@@ -9,9 +9,9 @@
 **Product type:** SaaS (API-first)
 **Business model:** Usage-based credits with monthly subscriptions. Credits: 1 per image slide per format, 5 per video slide per format. Plans:
 - **On the House (Free):** 30 credits, no card required
-- **Toast (Starter):** $29/mo, 800 credits, 3 brand kits, 30 req/min
-- **Full Plate (Pro):** $109/mo, 8,000 credits, 10 brand kits, 60 req/min, priority support
-- **Buffet (Scale):** $219/mo, 40,000 credits, unlimited brand kits, 120 req/min, priority support
+- **Toast (Starter):** $12/mo, 200 credits, 3 brand kits, 30 req/min
+- **Full Plate (Pro):** $29/mo, 800 credits, 10 brand kits, 60 req/min, priority support
+- **Buffet (Scale):** $79/mo, 2,500 credits, unlimited brand kits, 120 req/min, priority support
 Credits reset monthly, no rollover. All plans include video gen, custom templates, GitHub integration, AI analysis, webhooks, CDN hosting.
 
 ## Target Audience
@@ -27,7 +27,7 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 - API-driven: POST release data, receive branded images and/or video via webhook
 - GitHub App: Publish a release, images and video auto-generated (review or auto-approve)
 - Template editor: Visual canvas editor with drag positioning, Google Fonts, device frames, per-object video animations (entrance: fade-in, slide-up, bounce; exit: fade-out, slide-down, bounce; Ken Burns)
-- AI skill: Claude Code MCP integration generates images and video through conversation
+- AI skill: Claude Code MCP server — generate release images and video through natural conversation ("make release images for v2.1"), no API calls or UI needed
 
 ## Personas
 
@@ -61,7 +61,8 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 - Multi-format: landscape, square, portrait in one call
 - Visual template editor: canvas-based, drag positioning, Google Fonts, device frames, per-object video entrance/exit animations
 - Branded: custom templates, colors, logos, fonts
-**How we do it differently:** Built for the developer workflow — not a design tool you open, but an API you call or a GitHub App you install.
+- AI skill for Claude Code: install the brag.fast MCP server and generate release images/video through conversation — "make me release images for v2.1" just works
+**How we do it differently:** Built for the developer workflow — not a design tool you open, but an API you call, a GitHub App you install, or an AI skill you talk to.
 **Why that's better:** No context switching, no design skills needed, no manual work per release.
 **Why customers choose us:** "I can just ship my release and the social images appear."
 

@@ -19,22 +19,22 @@ export const PLANS: Record<PlanId, PlanConfig> = {
   starter: {
     id: "starter",
     name: "Toast",
-    price: 29,
-    credits: 800,
+    price: 12,
+    credits: 200,
     label: "Quick and crispy",
   },
   pro: {
     id: "pro",
     name: "Full Plate",
-    price: 109,
-    credits: 8_000,
+    price: 29,
+    credits: 800,
     label: "The full stack",
   },
   scale: {
     id: "scale",
     name: "Buffet",
-    price: 219,
-    credits: 40_000,
+    price: 79,
+    credits: 2_500,
     label: "All-you-can-eat",
   },
 };
