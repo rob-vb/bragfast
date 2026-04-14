@@ -2,12 +2,16 @@
 
 **Personality in one line:** A cheeky breakfast diner for developers who ship fast but hate making social graphics.
 
+## Vision
+
+**Stop building in silence.** Builders know how to build, but they don't tell anyone about it. brag.fast exists to close that gap. Every release deserves an announcement.
+
 ## Core Metaphor: Breakfast/Restaurant
 
 Everything maps to cooking:
 - **Templates** = recipes
 - **Generating images** = cooking ("cooking... 42%")
-- **Dashboard** = kitchen
+- **Admin** = kitchen
 - **Pricing** = menu board
 - **Customization** = seasoning
 - **Delivering images** = plating
@@ -38,6 +42,7 @@ Everything maps to cooking:
 4. **Retro-playful visual language.** NES arrows (&#9656;), pixel fonts, gold/charcoal/cream palette
 5. **Remove friction verbally.** "No credit card required" repeated 5+ times. "Zero design tools." "Hands-free."
 6. **Food puns: yes. Forced puns: no.** The metaphor should feel natural, not labored.
+7. **No em dashes.** Never use " -- " in copy. It reads as AI-generated. Use periods, commas, or break into two sentences instead.
 
 ## Vocabulary
 
@@ -53,7 +58,7 @@ Everything maps to cooking:
 | Cook | A render job -- generating images from a release |
 | Brand kit | Logo + colors + fonts configuration |
 | Slide | One image within a release |
-| Credit | 1 image in 1 format |
+| Credit | 1 image slide in 1 format (videos: 5 credits per slide per format) |
 | Menu | Pricing/plan structure |
 
 ## Emotional Territory
@@ -66,9 +71,9 @@ Everything maps to cooking:
 
 | Context | Tone | Example |
 |---------|------|---------|
-| Headlines | Punchy metaphor | "Show what you've been cooking" |
+| Headlines | Punchy metaphor | "Stop building in silence" |
 | Features | Metaphor + benefit | "Season everything to taste" |
-| CTAs | Direct, low-friction | "Get 10 Free Credits" |
+| CTAs | Direct, low-friction | "Get 30 Free Credits" |
 | Onboarding | Warm, encouraging | "Here's how to get cooking:" |
 | Empty states | Encouraging nudge | "Time to cook!" |
 | Errors | Neutral, minimal | "Something went wrong" -> "Try Again" |

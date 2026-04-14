@@ -1,6 +1,7 @@
 import {
   renderMediaOnLambda,
   getRenderProgress,
+  deleteRender,
 } from "@remotion/lambda-client";
 import type { RenderProgress } from "@remotion/lambda-client";
 
@@ -11,6 +12,7 @@ const SERVE_URL = process.env.REMOTION_SERVE_URL;
 type RenderVideoParams = {
   compositionId: string;
   inputProps: Record<string, unknown>;
+  onProgress?: (pct: number) => void | Promise<void>;
 };
 
 async function withRetry<T>(
@@ -41,10 +43,30 @@ async function withRetry<T>(
   throw new Error("Unreachable");
 }
 
+export type RenderVideoResult = {
+  outputUrl: string;
+  renderId: string;
+  bucketName: string;
+};
+
+export async function cleanupRender(renderId: string, bucketName: string): Promise<void> {
+  try {
+    await deleteRender({
+      renderId,
+      bucketName,
+      region: REGION,
+    });
+    console.log(`[LAMBDA] Cleaned up render ${renderId}`);
+  } catch (err) {
+    console.warn(`[LAMBDA] Failed to clean up render ${renderId}:`, err);
+  }
+}
+
 export async function renderVideo({
   compositionId,
   inputProps,
-}: RenderVideoParams): Promise<string> {
+  onProgress,
+}: RenderVideoParams): Promise<RenderVideoResult> {
   if (!FUNCTION_NAME || !SERVE_URL) {
     throw new Error("REMOTION_FUNCTION_NAME and REMOTION_SERVE_URL must be set");
   }
@@ -60,6 +82,11 @@ export async function renderVideo({
         composition: compositionId,
         inputProps,
         codec: "h264",
+        crf: 28,
+        x264Preset: "medium",
+        encodingMaxRate: "5M",
+        encodingBufferSize: "10M",
+        muted: true,
         timeoutInMilliseconds: 240000,
         // ~2-3 chunks for a typical 12s video. Parallelizes rendering
         // across multiple Lambdas for faster wall-clock time (~15-20s vs ~70s).
@@ -87,6 +114,7 @@ export async function renderVideo({
 
     const pct = Math.round((progress.overallProgress ?? 0) * 100);
     console.log(`[LAMBDA] Progress: ${pct}%`);
+    if (onProgress) await onProgress(pct);
 
     if (progress.fatalErrorEncountered) {
       const errorMsg = progress.errors?.[0]?.message ?? "Unknown error";
@@ -100,5 +128,5 @@ export async function renderVideo({
   }
 
   console.log(`[LAMBDA] Render complete: ${progress.outputFile}`);
-  return progress.outputFile;
+  return { outputUrl: progress.outputFile, renderId, bucketName };
 }

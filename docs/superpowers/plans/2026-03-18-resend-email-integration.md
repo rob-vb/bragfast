@@ -180,10 +180,10 @@ import { EmailLayout } from "./components/layout";
 
 interface WelcomeEmailProps {
   name: string;
-  dashboardUrl: string;
+  adminUrl: string;
 }
 
-export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
+export function WelcomeEmail({ name, adminUrl }: WelcomeEmailProps) {
   return (
     <EmailLayout preview="Welcome to brag.fast!">
       <Text style={heading}>Welcome to brag.fast!</Text>
@@ -191,8 +191,8 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
         Hey {name}, you&apos;re in. Start sharing your wins with the world.
       </Text>
       <Section style={buttonContainer}>
-        <Button style={button} href={dashboardUrl}>
-          Go to dashboard
+        <Button style={button} href={adminUrl}>
+          Go to admin
         </Button>
       </Section>
     </EmailLayout>
@@ -354,7 +354,7 @@ export async function sendWelcomeEmail(
   name: string,
 ): Promise<void> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const html = await render(WelcomeEmail({ name, dashboardUrl: `${siteUrl}/dashboard` }));
+  const html = await render(WelcomeEmail({ name, adminUrl: `${siteUrl}/admin` }));
 
   await resend.emails.send({
     from,
@@ -499,7 +499,7 @@ Replace the success block (after `if (error) { ... return; }`):
 ```ts
 // Fire-and-forget welcome email — don't block navigation
 sendWelcomeEmailAction().catch(() => {});
-router.push("/dashboard");
+router.push("/admin");
 ```
 
 - [ ] **Step 3: Commit**
@@ -779,8 +779,8 @@ git commit -m "feat: add reset password page"
 - [ ] **Step 1: Test welcome email**
 
 1. Sign up with a new account at `/signup`
-2. Check Resend dashboard or inbox — "Welcome to brag.fast!" email should arrive
-3. Verify you land on `/dashboard`
+2. Check Resend admin or inbox — "Welcome to brag.fast!" email should arrive
+3. Verify you land on `/admin`
 
 - [ ] **Step 2: Test forgot + reset password flow**
 

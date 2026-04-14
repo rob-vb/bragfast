@@ -55,7 +55,7 @@ Shared branded email layout wrapping all emails:
 ### `src/lib/emails/welcome.tsx`
 
 - Subject: "Welcome to brag.fast!"
-- Body: "Hey {name}, you're in." + short one-liner + CTA button → `/dashboard`
+- Body: "Hey {name}, you're in." + short one-liner + CTA button → `/admin`
 - Short, no onboarding essay
 
 ### `src/lib/emails/reset-password.tsx`
@@ -164,14 +164,14 @@ emailAndPassword: {
 
 ### `src/app/(auth)/signup/page.tsx`
 
-After successful signup (before `router.push("/dashboard")`):
+After successful signup (before `router.push("/admin")`):
 
 ```ts
 import { sendWelcomeEmailAction } from "@/lib/actions/send-welcome-email";
 
 // After authClient.signUp.email() succeeds:
 sendWelcomeEmailAction().catch(() => {}); // fire-and-forget, don't block navigation
-router.push("/dashboard");
+router.push("/admin");
 ```
 
 Fire-and-forget — don't block navigation on email delivery. The server action reads user info from the session (no client params).

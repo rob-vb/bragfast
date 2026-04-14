@@ -6,6 +6,7 @@ type BrowserFrameProps = {
   width: number;
   height: number;
   frameColor?: string;
+  objectFit?: "cover" | "contain";
 };
 
 export const BrowserFrame: React.FC<BrowserFrameProps> = ({
@@ -13,6 +14,7 @@ export const BrowserFrame: React.FC<BrowserFrameProps> = ({
   width,
   height,
   frameColor = "#E8E8E8",
+  objectFit = "cover",
 }) => {
   const titleBarHeight = 32;
   const radius = 12;
@@ -59,7 +61,7 @@ export const BrowserFrame: React.FC<BrowserFrameProps> = ({
         style={{
           width: "100%",
           height: height - titleBarHeight,
-          objectFit: "cover",
+          objectFit,
         }}
       />
     </div>

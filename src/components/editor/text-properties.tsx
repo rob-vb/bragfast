@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FONT_CATEGORIES } from "./font-data";
+import { resolveTextColor } from "@/lib/templates/canvas-types";
 
 export function TextProperties() {
   const { selectedObject, dispatch, state } = useEditor();
   const colorInputRef = useRef<HTMLInputElement>(null);
   const isText = selectedObject?.type === "text";
   const colors = state.config.colors;
-  const currentColor = isText ? (selectedObject!.color || colors.text) : colors.text;
+  const currentColor = isText ? resolveTextColor(selectedObject!, colors) : colors.text;
+  const currentRole = isText ? selectedObject!.colorRole : undefined;
   const [hexInput, setHexInput] = useState(currentColor);
 
   // Sync local hex input when the actual color changes (swatch click, picker, different object)
@@ -27,6 +29,18 @@ export function TextProperties() {
     dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: false });
   }
 
+  // Pin color to a semantic role (tracks brand/template changes).
+  function setColorRole(role: "primary" | "text") {
+    updateShared("colorRole", role);
+    updateShared("color", undefined);
+  }
+
+  // Pin color to a literal hex (clears any role).
+  function setColorHex(hex: string) {
+    updateShared("colorRole", undefined);
+    updateShared("color", hex);
+  }
+
   return (
     <div className="space-y-3">
       <Label className="text-xs font-medium text-zinc-500 uppercase">Text</Label>
@@ -37,19 +51,19 @@ export function TextProperties() {
         <div className="flex items-center gap-2">
           {/* Text color swatch */}
           <button
-            onClick={() => updateShared("color", colors.text)}
+            onClick={() => setColorRole("text")}
             title={`Text color (${colors.text})`}
             className={`w-7 h-7 rounded-full border-2 transition-all ${
-              currentColor === colors.text ? "border-blue-500 scale-110" : "border-zinc-300"
+              currentRole === "text" ? "border-blue-500 scale-110" : "border-zinc-300"
             }`}
             style={{ backgroundColor: colors.text }}
           />
           {/* Primary color swatch */}
           <button
-            onClick={() => updateShared("color", colors.primary)}
+            onClick={() => setColorRole("primary")}
             title={`Primary color (${colors.primary})`}
             className={`w-7 h-7 rounded-full border-2 transition-all ${
-              currentColor === colors.primary ? "border-blue-500 scale-110" : "border-zinc-300"
+              currentRole === "primary" ? "border-blue-500 scale-110" : "border-zinc-300"
             }`}
             style={{ backgroundColor: colors.primary }}
           />
@@ -59,12 +73,10 @@ export function TextProperties() {
               onClick={() => colorInputRef.current?.click()}
               title="Custom color"
               className={`w-7 h-7 rounded-full border-2 transition-all ${
-                currentColor !== colors.text && currentColor !== colors.primary
-                  ? "border-blue-500 scale-110"
-                  : "border-zinc-300"
+                !currentRole ? "border-blue-500 scale-110" : "border-zinc-300"
               }`}
               style={{
-                background: currentColor !== colors.text && currentColor !== colors.primary
+                background: !currentRole
                   ? currentColor
                   : "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)",
               }}
@@ -73,7 +85,7 @@ export function TextProperties() {
               ref={colorInputRef}
               type="color"
               value={currentColor}
-              onChange={(e) => updateShared("color", e.target.value)}
+              onChange={(e) => setColorHex(e.target.value)}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
           </div>
@@ -83,13 +95,13 @@ export function TextProperties() {
             onChange={(e) => {
               const v = e.target.value;
               setHexInput(v);
-              if (/^#[0-9a-fA-F]{6}$/.test(v)) updateShared("color", v);
+              if (/^#[0-9a-fA-F]{6}$/.test(v)) setColorHex(v);
             }}
             onBlur={() => {
               let v = hexInput.trim();
               if (!v.startsWith("#")) v = "#" + v;
               if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-                updateShared("color", v);
+                setColorHex(v);
               } else {
                 setHexInput(currentColor);
               }

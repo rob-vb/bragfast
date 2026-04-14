@@ -82,7 +82,8 @@ export default defineSchema({
     transparent: v.optional(v.boolean()),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
-    source: v.optional(v.union(v.literal("api"), v.literal("github"))),
+    progress: v.optional(v.number()), // 0-100 for video renders
+    source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
     aiContent: v.optional(v.string()),
     socialCopy: v.optional(v.string()), // JSON string: { twitter: string, linkedin: string }
@@ -137,6 +138,8 @@ export default defineSchema({
     webhookUrl: v.optional(v.string()),
     autoApprove: v.optional(v.boolean()),
     maxSlides: v.optional(v.number()),
+    generateImages: v.optional(v.boolean()),
+    generateVideo: v.optional(v.boolean()),
     created_at: v.string(),
     updated_at: v.string(),
   })
@@ -158,4 +161,23 @@ export default defineSchema({
     ),
     created_at: v.string(),
   }).index("by_userId", ["userId"]),
+
+  uploads: defineTable({
+    userId: v.string(),
+    externalId: v.string(),
+    filename: v.string(),
+    contentType: v.string(),
+    sizeBytes: v.optional(v.number()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("expired")
+    ),
+    url: v.optional(v.string()),
+    expiresAt: v.number(),
+    created_at: v.string(),
+    completed_at: v.optional(v.string()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_externalId", ["externalId"]),
 });

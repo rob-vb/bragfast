@@ -1,19 +1,16 @@
 "use client";
 
 import { createContext, useContext, useReducer, useCallback, useEffect, useRef, type ReactNode } from "react";
-import type { CanvasTemplateConfig, TemplateObject, FormatKey, FormatLayout, ObjectType } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, TemplateObject, FormatKey, FormatLayout, ObjectType, BackgroundConfig, BackgroundMode } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS, uniqueSlug, slugify, migrateConfig } from "@/lib/templates/canvas-types";
+import { randomizeMeshPositions } from "@/lib/templates/mesh-gradient";
 
-/** Layout is always present for core formats; og may not exist */
 function getLayout(config: CanvasTemplateConfig, fmt: FormatKey): FormatLayout {
-  return config.formats[fmt]!;
+  return config.formats[fmt];
 }
 
-/** All formats that exist in this config */
-function allFormats(config: CanvasTemplateConfig): FormatKey[] {
-  const fmts: FormatKey[] = ["landscape", "square", "portrait"];
-  if (config.formats.og) fmts.push("og");
-  return fmts;
+function allFormats(): FormatKey[] {
+  return ["landscape", "square", "portrait"];
 }
 
 // --- State ---
@@ -24,6 +21,7 @@ interface EditorState {
   activeFormat: FormatKey;
   selectedObjectId: string | null;
   isDirty: boolean;
+  backgroundStash: Partial<Record<BackgroundMode, BackgroundConfig>>;
 }
 
 // --- Actions ---
@@ -39,6 +37,10 @@ type EditorAction =
   | { type: "SET_COLORS"; colors: { background: string; text: string; primary: string } }
   | { type: "SET_BRAND"; brandId: string | undefined; previewColors?: { background: string; text: string; primary: string } }
   | { type: "SET_NAME"; name: string }
+  | { type: "SET_ANIMATION_PRESET"; preset: string | undefined }
+  | { type: "SET_BACKGROUND"; background: BackgroundConfig | undefined }
+  | { type: "SET_BACKGROUND_IMAGE"; imageUrl: string }
+  | { type: "RANDOMIZE_MESH" }
   | { type: "COMMIT_MOVE" }
   | { type: "UNDO" }
   | { type: "REDO" }
@@ -81,7 +83,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         const existingIds = getLayout(state.config, state.activeFormat).objects.map((o) => o.id);
         const newId = uniqueSlug(newName, existingIds, action.objectId);
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
-        for (const fmt of allFormats(state.config)) {
+        for (const fmt of allFormats()) {
           newConfig.formats[fmt] = {
             objects: getLayout(newConfig, fmt).objects.map((obj) =>
               obj.id === action.objectId ? { ...obj, name: newName, id: newId } : obj
@@ -94,7 +96,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       if (action.allFormats) {
         // Style properties apply to all formats
         const newConfig = { ...state.config, formats: { ...state.config.formats } };
-        for (const fmt of allFormats(state.config)) {
+        for (const fmt of allFormats()) {
           newConfig.formats[fmt] = {
             objects: getLayout(newConfig, fmt).objects.map((obj) =>
               obj.id === action.objectId ? { ...obj, [action.property]: action.value } : obj
@@ -117,7 +119,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       newObj.zIndex = maxZ + 1;
 
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
-      for (const fmt of allFormats(state.config)) {
+      for (const fmt of allFormats()) {
         const fmtDims = FORMAT_DIMENSIONS[fmt];
         const fmtObj = { ...newObj };
         // Scale position proportionally to each format
@@ -134,7 +136,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case "REMOVE_OBJECT": {
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
-      for (const fmt of allFormats(state.config)) {
+      for (const fmt of allFormats()) {
         newConfig.formats[fmt] = {
           objects: getLayout(newConfig, fmt).objects.filter((o) => o.id !== action.objectId),
         };
@@ -150,7 +152,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
     case "REORDER_OBJECTS": {
       // zIndex is cross-format — reorder in all formats
       const newConfig = { ...state.config, formats: { ...state.config.formats } };
-      for (const fmt of allFormats(state.config)) {
+      for (const fmt of allFormats()) {
         newConfig.formats[fmt] = {
           objects: getLayout(newConfig, fmt).objects.map((obj) => {
             const idx = action.objectIds.indexOf(obj.id);
@@ -161,20 +163,8 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       return { ...state, config: newConfig, isDirty: true };
     }
 
-    case "SWITCH_FORMAT": {
-      if (action.format === "og" && !state.config.formats.og) {
-        const ogObjects = state.config.formats.landscape.objects.map((obj) => {
-          const scale = 630 / 675;
-          return { ...obj, y: Math.round(obj.y * scale), height: Math.round(obj.height * scale) };
-        });
-        const newConfig = {
-          ...state.config,
-          formats: { ...state.config.formats, og: { objects: ogObjects } },
-        };
-        return { ...state, config: newConfig, activeFormat: action.format, selectedObjectId: null, isDirty: true };
-      }
+    case "SWITCH_FORMAT":
       return { ...state, activeFormat: action.format, selectedObjectId: null };
-    }
 
     case "SET_COLORS":
       return {
@@ -196,6 +186,66 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case "SET_NAME":
       return { ...state, name: action.name, isDirty: true };
+
+    case "SET_ANIMATION_PRESET":
+      return {
+        ...state,
+        config: { ...state.config, animation_preset: action.preset as CanvasTemplateConfig["animation_preset"] },
+        isDirty: true,
+      };
+
+    case "SET_BACKGROUND": {
+      const currentBg = state.config.background;
+      const currentMode: BackgroundMode = currentBg?.mode ?? "color";
+      const targetMode: BackgroundMode = action.background?.mode ?? "color";
+      if (currentMode === targetMode) {
+        if (targetMode === "color") return state;
+        return {
+          ...state,
+          config: { ...state.config, background: action.background },
+          isDirty: true,
+        };
+      }
+      const newStash = { ...state.backgroundStash, [currentMode]: currentBg ?? { mode: "color" as const } };
+      let newBg: BackgroundConfig | undefined;
+      if (newStash[targetMode]) {
+        newBg = newStash[targetMode];
+      } else if (targetMode === "mesh_gradient") {
+        newBg = {
+          mode: "mesh_gradient",
+          colors: [state.config.colors.background, state.config.colors.text, state.config.colors.primary],
+          positions: randomizeMeshPositions(),
+        };
+      } else if (targetMode === "image") {
+        newBg = { mode: "image", imageUrl: "" };
+      }
+      return {
+        ...state,
+        config: { ...state.config, background: targetMode === "color" ? undefined : newBg },
+        backgroundStash: newStash,
+        isDirty: true,
+      };
+    }
+
+    case "SET_BACKGROUND_IMAGE": {
+      const bg = state.config.background;
+      if (!bg || bg.mode !== "image") return state;
+      return {
+        ...state,
+        config: { ...state.config, background: { ...bg, imageUrl: action.imageUrl } },
+        isDirty: true,
+      };
+    }
+
+    case "RANDOMIZE_MESH": {
+      const bg = state.config.background;
+      if (!bg || bg.mode !== "mesh_gradient") return state;
+      return {
+        ...state,
+        config: { ...state.config, background: { ...bg, positions: randomizeMeshPositions() } },
+        isDirty: true,
+      };
+    }
 
     case "COMMIT_MOVE":
       // No-op on state — exists only to create an undo snapshot after drag/resize
@@ -287,7 +337,7 @@ function updateObjectInActiveFormat(
 }
 
 function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number, existingIds: string[]): TemplateObject {
-  const defaultNames: Record<ObjectType, string> = { text: "text", image: "image", logo: "logo" };
+  const defaultNames: Record<ObjectType, string> = { text: "text", visual: "visual", logo: "logo" };
   const name = defaultNames[type];
   const id = uniqueSlug(name, existingIds);
 
@@ -312,7 +362,7 @@ function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number,
   switch (type) {
     case "text":
       return { ...base, ...textDefaults, x: 48, y: canvasH * 0.6, width: canvasW - 96, height: 80, fontSize: 24 };
-    case "image":
+    case "visual":
       return { ...base, x: 48, y: 96, width: canvasW - 96, height: canvasH * 0.5, imageFrame: "none" as const, objectFit: "cover" as const };
     case "logo":
       return { ...base, x: 48, y: 32, width: 120, height: 48, objectFit: "contain" as const };
@@ -353,6 +403,7 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
     activeFormat: "landscape",
     selectedObjectId: null,
     isDirty: false,
+    backgroundStash: {},
   };
 
   const [undoState, rawDispatch] = useReducer(undoableReducer, {

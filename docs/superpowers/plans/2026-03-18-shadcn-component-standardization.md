@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace raw HTML form elements in dashboard and auth pages with shadcn/Radix components.
+**Goal:** Replace raw HTML form elements in admin and auth pages with shadcn/Radix components.
 
 **Architecture:** Swap raw `<input>`, `<select>`, `<checkbox>` with existing shadcn Input, Select, Checkbox, Label. Install Switch and Textarea. Use sentinel values for Radix Select empty-value gotcha. Keep PixelButton and auth submit buttons untouched.
 
@@ -12,7 +12,7 @@
 
 ---
 
-## Chunk 1: Install new components + migrate dashboard pages
+## Chunk 1: Install new components + migrate admin pages
 
 ### Task 1: Install shadcn Switch and Textarea
 
@@ -46,7 +46,7 @@ git commit -m "feat: install shadcn Switch and Textarea components"
 ### Task 2: Migrate github-repo-card.tsx
 
 **Files:**
-- Modify: `src/components/dashboard/github-repo-card.tsx`
+- Modify: `src/components/admin/github-repo-card.tsx`
 
 **Key gotcha:** Brand select has `value=""` for "None" option. Radix Select doesn't support empty string values. Use `"__none__"` as sentinel, map back to `""` in state.
 
@@ -353,7 +353,7 @@ Expected: no compilation errors
 - [ ] **Step 13: Commit**
 
 ```bash
-git add src/components/dashboard/github-repo-card.tsx
+git add src/components/admin/github-repo-card.tsx
 git commit -m "feat: migrate github-repo-card to shadcn components"
 ```
 
@@ -362,7 +362,7 @@ git commit -m "feat: migrate github-repo-card to shadcn components"
 ### Task 3: Migrate brand-form.tsx
 
 **Files:**
-- Modify: `src/components/dashboard/brand-form.tsx`
+- Modify: `src/components/admin/brand-form.tsx`
 
 **Key gotcha:** Font select uses `<optgroup>` — map to SelectGroup + SelectLabel. Default font `value=""` needs sentinel `"__default__"`.
 
@@ -588,7 +588,7 @@ Run: `npx next build --no-lint 2>&1 | tail -20`
 - [ ] **Step 10: Commit**
 
 ```bash
-git add src/components/dashboard/brand-form.tsx
+git add src/components/admin/brand-form.tsx
 git commit -m "feat: migrate brand-form to shadcn components"
 ```
 
@@ -597,8 +597,8 @@ git commit -m "feat: migrate brand-form to shadcn components"
 ### Task 4: Migrate key-manager.tsx and delete-account-dialog.tsx
 
 **Files:**
-- Modify: `src/components/dashboard/key-manager.tsx`
-- Modify: `src/components/dashboard/delete-account-dialog.tsx`
+- Modify: `src/components/admin/key-manager.tsx`
+- Modify: `src/components/admin/delete-account-dialog.tsx`
 
 - [ ] **Step 1: Migrate key-manager input**
 
@@ -671,7 +671,7 @@ With:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/components/dashboard/key-manager.tsx src/components/dashboard/delete-account-dialog.tsx
+git add src/components/admin/key-manager.tsx src/components/admin/delete-account-dialog.tsx
 git commit -m "feat: migrate key-manager and delete-account-dialog to shadcn components"
 ```
 
@@ -680,7 +680,7 @@ git commit -m "feat: migrate key-manager and delete-account-dialog to shadcn com
 ### Task 5: Migrate pending-reviews.tsx
 
 **Files:**
-- Modify: `src/components/dashboard/pending-reviews.tsx`
+- Modify: `src/components/admin/pending-reviews.tsx`
 
 - [ ] **Step 1: Add import**
 
@@ -711,7 +711,7 @@ With:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/components/dashboard/pending-reviews.tsx
+git add src/components/admin/pending-reviews.tsx
 git commit -m "feat: migrate pending-reviews textarea to shadcn Textarea"
 ```
 
@@ -873,9 +873,9 @@ Verify in browser:
 - `/login` — inputs render with shadcn styling
 - `/signup` — inputs + checkbox render correctly, terms checkbox toggles
 - `/forgot-password` — input renders
-- `/dashboard` — repo card: switches toggle, selects open with dropdown, checkboxes work, inputs render
-- `/dashboard/brands/new` — all inputs render, font select shows grouped options
-- `/dashboard/keys` — input renders
+- `/admin` — repo card: switches toggle, selects open with dropdown, checkboxes work, inputs render
+- `/admin/brands/new` — all inputs render, font select shows grouped options
+- `/admin/keys` — input renders
 
 - [ ] **Step 3: Check functionality**
 

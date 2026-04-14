@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
+import { SocialButtons } from "../components/social-buttons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isPending && session) {
-      router.replace("/dashboard");
+      router.replace("/admin");
     }
   }, [isPending, session, router]);
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/admin",
     });
 
     setLoading(false);
@@ -38,7 +39,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/admin");
   }
 
   return (
@@ -102,6 +103,8 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "▸ Continue"}
             </button>
           </form>
+
+          <SocialButtons />
         </div>
       </div>
 

@@ -5,7 +5,7 @@ const anthropic = new Anthropic();
 
 type TemplateObjectSlot = {
   id: string;
-  type: "text" | "image" | "logo";
+  type: "text" | "visual" | "logo";
   maxLines?: number;
 };
 
@@ -30,7 +30,7 @@ export function buildAnalysisPrompt(input: AnalysisInput): {
     .map((o) => `- "${o.id}" (text${o.maxLines ? `, fits ~${o.maxLines} line${o.maxLines > 1 ? "s" : ""}` : ""})`)
     .join("\n");
   const imageSlots = input.templateObjects
-    .filter((o) => o.type === "image")
+    .filter((o) => o.type === "visual")
     .map((o) => `- "${o.id}" (image)`)
     .join("\n");
 

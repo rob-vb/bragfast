@@ -162,16 +162,16 @@ Classic, split, hero rewritten as new `TemplateConfig` with pre-positioned objec
 
 ### Architecture
 
-Three-panel layout. Full viewport, no dashboard chrome. Professional look — shadcn components, no pixel/retro style.
+Three-panel layout. Full viewport, no admin chrome. Professional look — shadcn components, no pixel/retro style.
 
 ### Page route
 
-`/dashboard/templates/[id]/edit` — the editor page loads template by ID, skips dashboard layout.
+`/admin/templates/[id]/edit` — the editor page loads template by ID, skips admin layout.
 
 ### Component tree
 
 ```
-src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx
+src/app/(admin)/admin/templates/[id]/edit/page.tsx
   └─ TemplateEditor (orchestrator, state via context)
        ├─ EditorLeftSidebar
        │    ├─ SaveButton + BackButton
@@ -200,7 +200,7 @@ Components stored in `src/components/editor/`.
 ### Left sidebar (~240px)
 
 - **Save Template** button (primary)
-- **Back** button (ghost, navigates to /dashboard/templates)
+- **Back** button (ghost, navigates to /admin/templates)
 - **Template name** — text input
 - **Format switcher** — 3 buttons: Landscape (1200x675), Square (1080x1080), Portrait (1080x1350). Active format highlighted.
 - **Brand / Colors** — mutually exclusive:

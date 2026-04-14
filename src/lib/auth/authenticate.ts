@@ -12,7 +12,7 @@ export async function authenticate(
   const apiKeyAuth = await validateApiKey(request);
   if (apiKeyAuth) return apiKeyAuth;
 
-  // Fall back to session auth (for dashboard)
+  // Fall back to session auth (for admin)
   const user = await getSessionUser();
   if (user) return { userId: user._id };
 

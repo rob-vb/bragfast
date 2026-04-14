@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 
 export const metadata: Metadata = {
-  title: "Support — brag.fast",
+  title: "Support | brag.fast",
   description:
-    "Get in touch anytime. Questions, bug reports, feature requests — we read every message.",
+    "Get in touch anytime. Questions, bug reports, feature requests. We read every message.",
   alternates: { canonical: "/support" },
 };
 

@@ -16,10 +16,9 @@ function priceToPlan(priceId: string): "starter" | "pro" | "scale" | null {
 }
 
 const PLAN_CREDITS: Record<string, number> = {
-  trial: 10,
-  starter: 1_500,
-  pro: 5_000,
-  scale: 15_000,
+  starter: 200,
+  pro: 800,
+  scale: 2_500,
 };
 
 // --- Actions (called from server actions) ---
@@ -45,8 +44,8 @@ export const createCheckoutSession = action({
       priceId,
       customerId: customer.customerId,
       mode: "subscription",
-      successUrl: `${siteUrl}/dashboard/account/upgrade/success`,
-      cancelUrl: `${siteUrl}/dashboard/account/upgrade/cancel`,
+      successUrl: `${siteUrl}/admin/account/upgrade/success`,
+      cancelUrl: `${siteUrl}/admin/account/upgrade/cancel`,
       subscriptionMetadata: { userId },
     });
 
@@ -66,7 +65,7 @@ export const createPortalSession = action({
 
     const portal = await stripeClient.createCustomerPortalSession(ctx, {
       customerId: subscriptions[0].stripeCustomerId,
-      returnUrl: `${process.env.SITE_URL!}/dashboard/account`,
+      returnUrl: `${process.env.SITE_URL!}/admin/account`,
     });
 
     return { url: portal.url };

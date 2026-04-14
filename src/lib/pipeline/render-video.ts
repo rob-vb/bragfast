@@ -10,12 +10,12 @@ import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
 import type { ReleaseResult, FormatEntry, VideoField } from "../types";
 import { calculateCredits } from "../types";
+import { probeMp4DurationSeconds } from "../video/probe";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const DEFAULT_SLIDE_DURATION = 5;
-const TRANSITION_DURATION = 0.5;
+const DEFAULT_SLIDE_DURATION = 8;
 const FPS = 30;
 
 type VideoRenderRequest = {
@@ -37,8 +37,7 @@ function getSlideDuration(video: VideoField): number {
 }
 
 function calculateVideoDuration(slideCount: number, slideDuration: number): number {
-  if (slideCount <= 1) return slideDuration;
-  return slideDuration * slideCount - (slideCount - 1) * TRANSITION_DURATION;
+  return slideDuration * slideCount;
 }
 
 export function createVideoRelease(
@@ -65,18 +64,27 @@ export async function renderVideoAsync(
   userId: string,
   request: VideoRenderRequest
 ) {
-  let partialRefundCount = 0; // formats already refunded (for partial failure)
-  let successCount = 0;       // formats that rendered successfully
+  let partialRefundCredits = 0; // credits already refunded (for partial failure)
+  const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 10;
   try {
     const templateName = request.template || "standard-browser";
-    const templateConfig = await resolveTemplate(templateName, userId, convex);
+    let templateConfig = await resolveTemplate(templateName, userId, convex);
     const brand = await resolveBrand(request, templateConfig.colors, convex);
     const slideDuration = getSlideDuration(request.video);
-    const srcMap = await prefetchStaticImages(templateConfig);
 
-    // Render all formats in parallel
-    const formatResults = await Promise.allSettled(
-      request.formats.map(async (format) => {
+    // Apply API-level animation preset override
+    if (request.video && typeof request.video === 'object' && request.video.preset) {
+      templateConfig = { ...templateConfig, animation_preset: request.video.preset };
+    }
+
+    const { srcMap } = await prefetchStaticImages(templateConfig);
+
+    // Render formats sequentially to avoid Lambda concurrency limits
+    const videos: Record<string, { url: string; duration: number; dimensions: string }> = {};
+    const failures: string[] = [];
+
+    for (const format of request.formats) {
+      try {
         const formatKey = format.name as FormatKey;
         const dims = FORMAT_DIMENSIONS[formatKey];
         if (!dims) throw new Error(`Unknown format: ${format.name}`);
@@ -86,15 +94,31 @@ export async function renderVideoAsync(
         const formatLayout = templateConfig.formats[formatKey] ?? templateConfig.formats.landscape;
         injectStaticImages(slideDataMaps, formatLayout, srcMap);
 
-        // Fail if any slide has a missing image that should have been provided
+        // Fail if any visual has neither a video nor an image source
         for (const dataMap of slideDataMaps) {
           for (const [objId, data] of Object.entries(dataMap)) {
             const obj = formatLayout.objects.find(o => o.id === objId);
-            if (obj?.type === "image" && !obj.src && !data.imageBase64) {
-              throw new Error(`Missing image for object "${objId}" in format "${format.name}"`);
+            if (obj?.type === "visual" && !obj.src && !data.imageBase64 && !data.videoUrl) {
+              throw new Error(`Missing media for visual "${objId}" in format "${format.name}"`);
             }
           }
         }
+
+        // Per-slide duration: stretch to fit the longest video on the slide,
+        // never dipping below the default slide duration.
+        const slideDurations = await Promise.all(
+          slideDataMaps.map(async (dataMap) => {
+            const videoUrls = Object.values(dataMap)
+              .map((d) => d.videoUrl)
+              .filter((u): u is string => !!u);
+            if (videoUrls.length === 0) return slideDuration;
+            const durations = await Promise.all(
+              videoUrls.map((url) => probeMp4DurationSeconds(url))
+            );
+            const maxVideo = Math.max(0, ...durations.filter((d): d is number => d !== null));
+            return Math.max(slideDuration, maxVideo);
+          })
+        );
 
         const inputProps = {
           config: templateConfig,
@@ -108,9 +132,10 @@ export async function renderVideoAsync(
             font_family: brand.font_family ?? "Plus Jakarta Sans",
           },
           slideDuration,
+          slideDurations,
         };
 
-        const duration = calculateVideoDuration(slideDataMaps.length, slideDuration);
+        const duration = slideDurations.reduce((sum, d) => sum + d, 0);
         const filename = `${format.name}.mp4`;
         let url: string;
 
@@ -121,11 +146,11 @@ export async function renderVideoAsync(
           await renderVideoLocal(formatKey, inputProps, outputPath);
           url = `file://${outputPath}`;
         } else {
-          const mp4Url = await renderVideo({
+          const { outputUrl } = await renderVideo({
             compositionId: formatKey,
             inputProps,
           });
-          const mp4Response = await fetch(mp4Url);
+          const mp4Response = await fetch(outputUrl);
           const mp4Buffer = Buffer.from(await mp4Response.arrayBuffer());
           url = await uploadImage(
             mp4Buffer,
@@ -134,26 +159,9 @@ export async function renderVideoAsync(
           );
         }
 
-        return {
-          name: format.name,
-          data: {
-            url,
-            duration,
-            dimensions: `${dims.width}x${dims.height}`,
-          },
-        };
-      })
-    );
-
-    // Collect results and handle partial completion
-    const videos: Record<string, { url: string; duration: number; dimensions: string }> = {};
-    const failures: string[] = [];
-
-    for (const result of formatResults) {
-      if (result.status === "fulfilled") {
-        videos[result.value.name] = result.value.data;
-      } else {
-        failures.push(result.reason?.message ?? "Unknown error");
+        videos[format.name] = { url, duration, dimensions: `${dims.width}x${dims.height}` };
+      } catch (err: unknown) {
+        failures.push(err instanceof Error ? err.message : "Unknown error");
       }
     }
 
@@ -162,10 +170,9 @@ export async function renderVideoAsync(
     }
 
     // Refund credits for failed formats only
-    successCount = Object.keys(videos).length;
     if (failures.length > 0) {
-      partialRefundCount = failures.length;
-      const refundAmount = failures.length * 5;
+      const refundAmount = failures.length * creditsPerFormat;
+      partialRefundCredits = refundAmount;
       console.warn(`[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`);
       await convex.mutation(api.userProfiles.refund, {
         userId,
@@ -200,7 +207,8 @@ export async function renderVideoAsync(
 
     // Only refund formats not already refunded by partial-refund above
     try {
-      const refundAmount = (request.formats.length - partialRefundCount) * 5;
+      const totalCredits = request.formats.length * creditsPerFormat;
+      const refundAmount = totalCredits - partialRefundCredits;
       if (refundAmount > 0) {
         await convex.mutation(api.userProfiles.refund, {
           userId,
@@ -238,6 +246,11 @@ async function renderVideoLocal(
     composition,
     serveUrl: bundleLocation,
     codec: "h264",
+    crf: 28,
+    x264Preset: "slow",
+    encodingMaxRate: "5M",
+    encodingBufferSize: "10M",
+    muted: true,
     outputLocation: outputPath,
     inputProps,
   });

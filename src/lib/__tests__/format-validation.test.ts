@@ -56,4 +56,16 @@ describe('validateFormats', () => {
       { name: 'square', slides: [{}, { objects: [{ id: 'image', anchor_y: 'top' }] }] },
     ])).toBeNull()
   })
+
+  it('rejects non-boolean background field', () => {
+    expect(validateFormats([
+      { name: 'landscape', slides: [{ objects: [{ id: 'img', background: 'true' }] }] },
+    ])).toMatch(/background must be a boolean/)
+  })
+
+  it('accepts boolean background field', () => {
+    expect(validateFormats([
+      { name: 'landscape', slides: [{ objects: [{ id: 'img', background: true }] }] },
+    ])).toBeNull()
+  })
 })

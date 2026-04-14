@@ -30,7 +30,7 @@ const FORMATS = ["landscape", "square", "portrait"] as const;
 const FORMAT_LABELS: Record<string, string> = {
   landscape: "1200 x 675",
   square: "1080 x 1080",
-  portrait: "1080 x 1920",
+  portrait: "1080 x 1350",
 };
 
 // Map internal font value to API font_family value
@@ -213,14 +213,14 @@ export default function DemoPage() {
                   {generated ? (
                     <Image
                       src={imagePath(template, font, format)}
-                      alt={`${template} ${font} — ${format}`}
+                      alt={`${template} ${font} ${format}`}
                       width={format === "landscape" ? 1200 : 1080}
                       height={
                         format === "landscape"
                           ? 675
                           : format === "square"
                             ? 1080
-                            : 1920
+                            : 1350
                       }
                       className="w-full h-auto"
                       unoptimized
@@ -232,7 +232,7 @@ export default function DemoPage() {
                           ? "aspect-[1200/675]"
                           : format === "square"
                             ? "aspect-square"
-                            : "aspect-[1080/1920]"
+                            : "aspect-[1080/1350]"
                       }`}
                     >
                       <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/20">
@@ -271,7 +271,7 @@ export default function DemoPage() {
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] md:text-xs px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Get 10 Free Credits
+              Get 30 Free Credits
             </a>
           </div>
         </div>

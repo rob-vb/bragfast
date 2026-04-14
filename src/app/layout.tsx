@@ -26,32 +26,32 @@ const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "brag.fast — Auto-generate social images for your launches",
+  title: "brag.fast | Your features deserve better than a text post.",
   description:
-    "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+    "Auto-generate branded social images and videos from your releases. One API call or AI skill. Show off every feature in seconds, not hours.",
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: "brag.fast — Auto-generate social images for your launches",
+    title: "brag.fast | Your features deserve better than a text post.",
     description:
-      "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
+      "Auto-generate branded social images and videos from your releases. One API call or AI skill. Show off every feature in seconds, not hours.",
     url: siteUrl,
     siteName: "brag.fast",
+    type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "brag.fast — Auto-generate social images for your launches",
+        alt: "brag.fast | Ship features. Post like a pro.",
       },
     ],
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "brag.fast — Auto-generate social images for your launches",
+    title: "brag.fast | Your features deserve better than a text post.",
     description:
-      "Generate branded social media images from your releases. One API call or GitHub integration — landscape, square, and portrait formats in seconds.",
-    images: ["/og-image.png"],
+      "Auto-generate branded social images and videos from your releases. One API call or AI skill. Show off every feature in seconds, not hours.",
+    images: ["/twitter-image"],
   },
   icons: {
     icon: [

@@ -15,7 +15,7 @@ export const API_REFERENCE: ApiSection[] = [
     title: "Authentication",
     anchor: "authentication",
     description:
-      "Every request needs an API key in the Authorization header. Grab one from your dashboard after signing up — it starts with bf_. Keep it secret, keep it safe. All POST and PATCH requests must include Content-Type: application/json (except file uploads, which use multipart/form-data).",
+      "Every request needs an API key in the Authorization header. Grab one from your admin panel after signing up — it starts with bf_. Keep it secret, keep it safe. All POST and PATCH requests must include Content-Type: application/json (except file uploads, which use multipart/form-data).",
     endpoints: [],
   },
 
@@ -122,7 +122,7 @@ while True:
     title: "Credits",
     anchor: "credits",
     description:
-      "Images: 1 credit per slide (e.g. 1 landscape slide + 2 square slides = 3 credits). Videos: 5 credits per format, regardless of slide count or duration. Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 10 credits free (no card), Starter ($29/mo) — 800, Pro ($109/mo) — 8,000, Scale ($219/mo) — 40,000.",
+      "Images: 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Videos: 5 credits per slide per format (e.g. 2 slides in 3 formats = 30 credits). Credits are reserved upfront and refunded automatically if the render fails. Plans: Trial — 30 credits free (no card), Starter ($12/mo) — 200, Pro ($29/mo) — 800, Scale ($79/mo) — 2,500.",
     endpoints: [],
   },
 
@@ -187,21 +187,21 @@ while True:
         anchor: "create-cook",
         title: "Create a cook",
         description:
-          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (5 credits per format) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 5, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, you can set per-object entrance animations via the entrance field: fade-in, slide-up, bounce, or none. Defaults: text → fade-in, image → fade-in, logo → bounce.",
+          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (5 credits per slide) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 8, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
         params: [
           {
             name: "brand_id",
             type: "string",
             required: false,
             description:
-              "ID of a saved brand kit (e.g. \"brand_abc123\"). If omitted, uses inline colors or defaults to dark theme (#1a1a2e, #ffffff, #e94560).",
+              "ID of a saved brand kit (e.g. \"brand_abc123\"). Uses the brand's colors and logo. Without a brand_id, falls back to inline colors or the dark theme (#1a1a2e, #ffffff, #e94560).",
           },
           {
             name: "colors",
             type: "object",
             required: false,
             description:
-              "Inline brand colors. Optional — defaults to dark theme if omitted.",
+              "Inline brand colors. Optional — ignored when brand_id is set, otherwise defaults to dark theme.",
             children: [
               {
                 name: "background",
@@ -222,12 +222,6 @@ while True:
                 description: 'Accent hex color, e.g. "#e94560".',
               },
             ],
-          },
-          {
-            name: "name",
-            type: "string",
-            required: false,
-            description: "Brand name shown on images. Used with inline colors.",
           },
           {
             name: "logo_url",
@@ -253,14 +247,14 @@ while True:
             name: "formats",
             type: "array",
             required: true,
-            description: "Array of format entries. Each entry specifies a format and its slides. Total credits = sum of slides across all entries.",
+            description: "Array of format entries. Each entry specifies a format and its slides. Image credits = sum of slides across all entries. Video credits = sum of slides × 5.",
             children: [
               {
                 name: "name",
                 type: "string",
                 required: true,
                 description:
-                  'Format name: "landscape" (1200×675), "square" (1080×1080), "portrait" (1080×1920), or "og" (1200×630).',
+                  'Format name: "landscape" (1200×675), "square" (1080×1080), or "portrait" (1080×1350).',
               },
               {
                 name: "slides",
@@ -297,6 +291,14 @@ while True:
                         group: "text",
                         description:
                           "Override the font for this specific text object. Takes precedence over the top-level font_family.",
+                      },
+                      {
+                        name: "font_weight",
+                        type: "number",
+                        required: false,
+                        group: "text",
+                        description:
+                          "Override the font weight for this text object (100–900). Defaults to the template object's weight.",
                       },
                       {
                         name: "color",
@@ -346,14 +348,6 @@ while True:
                         description:
                           'Vertical anchor point for the image when cropped by object-fit cover. One of "top", "center", "bottom". Defaults to template setting (usually "top").',
                       },
-                      {
-                        name: "entrance",
-                        type: "string",
-                        required: false,
-                        group: "video",
-                        description:
-                          'Entrance animation for this object in video mode. One of "fade-in", "slide-up", "bounce", "none". Defaults: text → fade-in, image → fade-in, logo → bounce. Ignored for image output.',
-                      },
                     ],
                   },
                 ],
@@ -369,10 +363,10 @@ while True:
           },
           {
             name: "video",
-            type: "true | { duration: number }",
+            type: 'true | { duration?: number, preset?: "showcase" }',
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each format costs 5 credits. Pass { duration: N } to set per-slide duration (3-30 seconds, default 5). Total video duration cannot exceed 60 seconds. The video uses the same template and objects as images, with entrance animations and Ken Burns effects on images.',
+              'Set to true to generate a video instead of images. Each slide costs 5 credits per format (e.g. 3 slides in 2 formats = 30 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
           },
           {
             name: "webhook_url",
@@ -417,9 +411,9 @@ while True:
   body: JSON.stringify({
     brand_id: "brand_abc123",
     template: "standard-browser",
-    // video: true,              — add for video output (5 credits/format)
+    // video: true,              — add for video output (5 credits/slide/format)
     // video: { duration: 8 },   — custom per-slide duration (3-30s)
-    // omit video for images     — default (1 credit/slide)
+    // omit video for images     — default (1 credit/slide/format)
     formats: [
       {
         name: "landscape",
@@ -446,9 +440,9 @@ cook = requests.post(
     json={
         "brand_id": "brand_abc123",
         "template": "standard-browser",
-        # "video": True,             — add for video output (5 credits/format)
+        # "video": True,             — add for video output (5 credits/slide/format)
         # "video": {"duration": 8},  — custom per-slide duration (3-30s)
-        # omit video for images      — default (1 credit/slide)
+        # omit video for images      — default (1 credit/slide/format)
         "formats": [
             {
                 "name": "landscape",
@@ -1199,7 +1193,7 @@ data = response.json()`,
       blocks: [
         { type: "title" },
         { type: "description" },
-        { type: "image" },
+        { type: "visual" },
         { type: "logo" },
       ],
     },
@@ -1429,7 +1423,7 @@ data = response.json()`,
             type: "string",
             required: false,
             description:
-              'The format to preview: "landscape", "square", "portrait", or "og". Defaults to "landscape".',
+              'The format to preview: "landscape", "square", or "portrait". Defaults to "landscape".',
           },
         ],
         requestExample: {
@@ -1488,7 +1482,7 @@ with open("preview.jpg", "wb") as f:
         },
         responseStatus: 200,
         responseExample: `// Returns a JPEG image (Content-Type: image/jpeg)
-// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1920), og (1200x630)`,
+// Dimensions depend on format: landscape (1200x675), square (1080x1080), portrait (1080x1350)`,
       },
     ],
   },

@@ -2,12 +2,12 @@
 
 ## Goal
 
-Replace raw HTML form elements in dashboard and auth pages with shadcn/Radix components for visual consistency. The editor already uses shadcn — this brings the rest of the app in line.
+Replace raw HTML form elements in admin and auth pages with shadcn/Radix components for visual consistency. The editor already uses shadcn — this brings the rest of the app in line.
 
 ## Scope
 
 ### Keep as-is
-- **PixelButton** — all dashboard/auth submit buttons
+- **PixelButton** — all admin/auth submit buttons
 - **Auth page submit buttons** — raw `<button>` elements with hand-rolled retro CSS (not PixelButton, but intentionally styled; standardizing these to PixelButton is a separate task)
 - **Editor components** — already shadcn, no changes
 - **Auth page layout** — NES card wrappers, header bars

@@ -25,12 +25,12 @@ src/app/api/v1/templates/route.ts                      — GET (list) + POST (cr
 src/app/api/v1/templates/[id]/route.ts                 — GET + PATCH + DELETE
 src/app/api/v1/templates/[id]/clone/route.ts           — POST clone
 src/app/api/v1/templates/[id]/preview/route.ts         — POST preview render
-src/app/(dashboard)/dashboard/templates/page.tsx       — Template list page
-src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx — Template editor page
-src/components/dashboard/template-editor.tsx            — Editor client component (sidebar + canvas)
-src/components/dashboard/template-preview.tsx           — CSS-approximated preview component
-src/components/dashboard/template-card.tsx              — Template grid card
-src/components/dashboard/block-properties.tsx           — Block property editor panel
+src/app/(admin)/admin/templates/page.tsx       — Template list page
+src/app/(admin)/admin/templates/[id]/edit/page.tsx — Template editor page
+src/components/admin/template-editor.tsx            — Editor client component (sidebar + canvas)
+src/components/admin/template-preview.tsx           — CSS-approximated preview component
+src/components/admin/template-card.tsx              — Template grid card
+src/components/admin/block-properties.tsx           — Block property editor panel
 ```
 
 ### Modified files
@@ -41,7 +41,7 @@ src/lib/types.ts                        — Add config types, update TemplateNam
 src/lib/pipeline/render.ts              — Resolve template configs from Convex
 src/app/api/v1/cook/route.ts         — Accept tmpl_ IDs in validation
 src/lib/templates/registry.ts           — Remove after migration verified
-src/components/dashboard/nav.tsx        — Add Templates tab
+src/components/admin/nav.tsx        — Add Templates tab
 ```
 
 ---
@@ -823,7 +823,7 @@ Follow the exact pattern from `src/app/api/v1/brands/route.ts` for auth, rate li
 
 - [ ] **Step 1: Create the route file**
 
-**Auth pattern:** Use `authenticate` (not `validateApiKey`) — supports both session cookies (dashboard) and Bearer tokens (API). Return variable is `auth` with property `auth.userId`. Rate limit pattern: `const rateLimitResponse = await checkRateLimit(auth.userId); if (rateLimitResponse) return rateLimitResponse;`. Convex import: use `@convex/_generated/api` alias (not relative paths).
+**Auth pattern:** Use `authenticate` (not `validateApiKey`) — supports both session cookies (admin) and Bearer tokens (API). Return variable is `auth` with property `auth.userId`. Rate limit pattern: `const rateLimitResponse = await checkRateLimit(auth.userId); if (rateLimitResponse) return rateLimitResponse;`. Convex import: use `@convex/_generated/api` alias (not relative paths).
 
 ```typescript
 import { authenticate } from "@/lib/auth/authenticate";
@@ -1240,39 +1240,39 @@ git commit -m "feat: accept custom template IDs in /v1/release"
 
 ## Chunk 4: Template Editor UI
 
-### Task 13: Add Templates tab to dashboard nav
+### Task 13: Add Templates tab to admin nav
 
 **Files:**
-- Modify: `src/components/dashboard/nav.tsx:7-12`
+- Modify: `src/components/admin/nav.tsx:7-12`
 
 - [ ] **Step 1: Add templates to the tabs array**
 
-In `src/components/dashboard/nav.tsx`, add a Templates entry to the tabs array (around line 7-12). The existing tabs use plain labels with no icons:
+In `src/components/admin/nav.tsx`, add a Templates entry to the tabs array (around line 7-12). The existing tabs use plain labels with no icons:
 
 ```typescript
-{ label: "Templates", href: "/dashboard/templates" },
+{ label: "Templates", href: "/admin/templates" },
 ```
 
 Place it after the Brands entry in the tab order.
 
 - [ ] **Step 2: Verify the nav renders**
 
-Run: `npm run dev` and check the dashboard nav shows the Templates tab.
+Run: `npm run dev` and check the admin nav shows the Templates tab.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/components/dashboard/nav.tsx
-git commit -m "feat: add Templates tab to dashboard navigation"
+git add src/components/admin/nav.tsx
+git commit -m "feat: add Templates tab to admin navigation"
 ```
 
 ### Task 14: Template list page
 
 **Files:**
-- Create: `src/app/(dashboard)/dashboard/templates/page.tsx`
-- Create: `src/components/dashboard/template-card.tsx`
+- Create: `src/app/(admin)/admin/templates/page.tsx`
+- Create: `src/components/admin/template-card.tsx`
 
-Follow the pattern from `src/app/(dashboard)/dashboard/brands/page.tsx` for server-side data fetching and layout.
+Follow the pattern from `src/app/(admin)/admin/brands/page.tsx` for server-side data fetching and layout.
 
 - [ ] **Step 1: Create the template card component**
 
@@ -1322,7 +1322,7 @@ export function TemplateCard({ id, name, isDefault, previewUrl, onClone, onDelet
           </PixelButton>
         ) : (
           <>
-            <PixelButton size="sm" onClick={() => router.push(`/dashboard/templates/${id}/edit`)} className="flex-1">
+            <PixelButton size="sm" onClick={() => router.push(`/admin/templates/${id}/edit`)} className="flex-1">
               <Pencil className="w-3 h-3 mr-1" /> Edit
             </PixelButton>
             <PixelButton size="sm" variant="danger" onClick={() => onDelete?.(id)}>
@@ -1374,23 +1374,23 @@ export default async function TemplatesPage() {
 }
 ```
 
-Also create a client component wrapper at `src/app/(dashboard)/dashboard/templates/template-list-client.tsx` that handles clone/delete actions via fetch calls to the API, and renders the grid using `TemplateCard`. Follow the interactive patterns in the brands page.
+Also create a client component wrapper at `src/app/(admin)/admin/templates/template-list-client.tsx` that handles clone/delete actions via fetch calls to the API, and renders the grid using `TemplateCard`. Follow the interactive patterns in the brands page.
 
 - [ ] **Step 3: Verify the page renders**
 
-Run: `npm run dev`, navigate to `/dashboard/templates`.
+Run: `npm run dev`, navigate to `/admin/templates`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/app/(dashboard)/dashboard/templates/ src/components/dashboard/template-card.tsx
+git add src/app/(admin)/admin/templates/ src/components/admin/template-card.tsx
 git commit -m "feat: add template list page with default and custom template grid"
 ```
 
 ### Task 15: Template editor — CSS preview component
 
 **Files:**
-- Create: `src/components/dashboard/template-preview.tsx`
+- Create: `src/components/admin/template-preview.tsx`
 
 This component renders a CSS-approximated preview of a template config. It does NOT use Satori — it's a pure React/CSS component that visually approximates the Satori output for instant feedback.
 
@@ -1550,14 +1550,14 @@ function PreviewBlock({ block, textColor, primaryColor }: { block: Block; textCo
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/components/dashboard/template-preview.tsx
+git add src/components/admin/template-preview.tsx
 git commit -m "feat: add CSS-approximated template preview component"
 ```
 
 ### Task 16: Block properties panel
 
 **Files:**
-- Create: `src/components/dashboard/block-properties.tsx`
+- Create: `src/components/admin/block-properties.tsx`
 
 - [ ] **Step 1: Create the properties panel**
 
@@ -1675,14 +1675,14 @@ export function BlockProperties({ block, onChange }: BlockPropertiesProps) {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/components/dashboard/block-properties.tsx
+git add src/components/admin/block-properties.tsx
 git commit -m "feat: add block properties editor panel"
 ```
 
 ### Task 17: Template editor main component
 
 **Files:**
-- Create: `src/components/dashboard/template-editor.tsx`
+- Create: `src/components/admin/template-editor.tsx`
 
 This is the main editor component combining sidebar (block list, properties) and canvas (preview). It manages the template config state and handles save/preview actions.
 
@@ -1818,7 +1818,7 @@ export function TemplateEditor({ templateId, initialName, initialConfig, brands 
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
-        <button onClick={() => router.push("/dashboard/templates")} className="flex items-center gap-1 text-sm opacity-60 hover:opacity-100">
+        <button onClick={() => router.push("/admin/templates")} className="flex items-center gap-1 text-sm opacity-60 hover:opacity-100">
           <ArrowLeft className="w-4 h-4" /> Back to Templates
         </button>
         <PixelButton onClick={handleSave} disabled={saving}>
@@ -1977,19 +1977,19 @@ export function TemplateEditor({ templateId, initialName, initialConfig, brands 
 }
 ```
 
-**Note:** The save handler uses fetch to the API. For dashboard routes, the implementer needs to verify whether these routes use session auth (cookies) or API key auth. If session auth, remove the Authorization header — cookies are sent automatically. Check the brands page pattern for reference.
+**Note:** The save handler uses fetch to the API. For admin routes, the implementer needs to verify whether these routes use session auth (cookies) or API key auth. If session auth, remove the Authorization header — cookies are sent automatically. Check the brands page pattern for reference.
 
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/components/dashboard/template-editor.tsx
+git add src/components/admin/template-editor.tsx
 git commit -m "feat: add main template editor component with sidebar and canvas"
 ```
 
 ### Task 18: Template editor page (route)
 
 **Files:**
-- Create: `src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx`
+- Create: `src/app/(admin)/admin/templates/[id]/edit/page.tsx`
 
 - [ ] **Step 1: Create the editor page**
 
@@ -1998,7 +1998,7 @@ import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../../../../../convex/_generated/api";
-import { TemplateEditor } from "@/components/dashboard/template-editor";
+import { TemplateEditor } from "@/components/admin/template-editor";
 import type { TemplateConfig } from "@/lib/templates/config-types";
 
 export default async function TemplateEditPage({
@@ -2013,12 +2013,12 @@ export default async function TemplateEditPage({
   const template = await fetchQuery(api.templates.getByExternalId, { externalId: id });
 
   if (!template || (template.userId !== user._id && !template.isDefault)) {
-    redirect("/dashboard/templates");
+    redirect("/admin/templates");
   }
 
   // Can't edit defaults directly — they should clone first
   if (template.isDefault) {
-    redirect("/dashboard/templates");
+    redirect("/admin/templates");
   }
 
   // Fetch user's brands for preview selector
@@ -2046,7 +2046,7 @@ Run: `npm run dev`, create a template via clone, navigate to edit page.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx
+git add src/app/(admin)/admin/templates/[id]/edit/page.tsx
 git commit -m "feat: add template editor page route"
 ```
 
@@ -2054,18 +2054,18 @@ git commit -m "feat: add template editor page route"
 
 - [ ] **Step 1: Seed default templates**
 
-Run the seed mutation via Convex dashboard or a one-off script.
+Run the seed mutation via Convex admin or a one-off script.
 
 - [ ] **Step 2: Test full flow**
 
-1. Navigate to `/dashboard/templates` — should see 3 default templates
+1. Navigate to `/admin/templates` — should see 3 default templates
 2. Clone "Classic" — should create a copy under "My Templates"
 3. Click "Edit" on the clone — should open editor
 4. Change name, reorder blocks, change properties
 5. Click "Save" — should persist changes
 6. Switch format tabs — preview should update aspect ratio
 7. Click "Preview Real Output" — should open rendered PNG in new tab
-8. Navigate to `/dashboard/templates` — should see updated name
+8. Navigate to `/admin/templates` — should see updated name
 9. Delete the template — should remove it
 10. Test via API: `POST /v1/release` with `template: "tmpl_..."` — should render with custom config
 

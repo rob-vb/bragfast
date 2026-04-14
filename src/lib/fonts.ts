@@ -57,27 +57,66 @@ async function fetchGoogleFontBuffer(family: string, weight: number): Promise<Ar
   }
 }
 
-async function loadGoogleFont(family: string): Promise<FontConfig[]> {
-  if (fontCache.has(family)) return fontCache.get(family)!;
-  const [regularBuf, boldBuf] = await Promise.all([
-    fetchGoogleFontBuffer(family, 400),
-    fetchGoogleFontBuffer(family, 700),
-  ]);
+async function loadGoogleFont(family: string, extraWeights?: Set<number>): Promise<FontConfig[]> {
+  const cacheKey = family;
+  const cached = fontCache.get(cacheKey);
+
+  // Collect all weights we need
+  const weights = new Set([400, 700, ...(extraWeights ?? [])]);
+
+  // If cached, check if we already have all requested weights
+  if (cached) {
+    const cachedWeights = new Set(cached.map((f) => f.weight));
+    const missing = [...weights].filter((w) => !cachedWeights.has(w as Weight));
+    if (missing.length === 0) return cached;
+    // Fetch missing weights and merge
+    const fallbackBuf = cached.find((f) => f.weight === 400)?.data;
+    const fetches = await Promise.all(
+      missing.map(async (w) => {
+        const buf = await fetchGoogleFontBuffer(family, w);
+        return buf ? { name: family, data: buf, weight: w as Weight, style: "normal" as FontStyle } : null;
+      })
+    );
+    const newFonts = fetches.filter((f): f is FontConfig => f !== null);
+    // For missing weights that failed to fetch, use 400 as fallback
+    for (const w of missing) {
+      if (!newFonts.some((f) => f.weight === w) && fallbackBuf) {
+        newFonts.push({ name: family, data: fallbackBuf, weight: w as Weight, style: "normal" });
+      }
+    }
+    const merged = [...cached, ...newFonts];
+    fontCache.set(cacheKey, merged);
+    return merged;
+  }
+
+  // Fresh load
+  const results = await Promise.all(
+    [...weights].map(async (w) => ({
+      weight: w,
+      buf: await fetchGoogleFontBuffer(family, w),
+    }))
+  );
+
+  const regularBuf = results.find((r) => r.weight === 400)?.buf;
   if (!regularBuf) {
     console.warn(`Failed to fetch Google Font "${family}", falling back to ${LOCAL_FAMILY}`);
     return loadLocalFontsAsync();
   }
-  const fonts: FontConfig[] = [
-    { name: family, data: regularBuf, weight: 400, style: "normal" },
-    { name: family, data: boldBuf ?? regularBuf, weight: 700, style: "normal" },
-  ];
-  fontCache.set(family, fonts);
+
+  const fonts: FontConfig[] = results.map((r) => ({
+    name: family,
+    data: r.buf ?? regularBuf,
+    weight: r.weight as Weight,
+    style: "normal" as FontStyle,
+  }));
+
+  fontCache.set(cacheKey, fonts);
   return fonts;
 }
 
-export async function loadFontsForFamily(family: string | undefined): Promise<FontConfig[]> {
+export async function loadFontsForFamily(family: string | undefined, extraWeights?: Set<number>): Promise<FontConfig[]> {
   if (!family || family === LOCAL_FAMILY) return loadLocalFontsAsync();
-  return loadGoogleFont(family);
+  return loadGoogleFont(family, extraWeights);
 }
 
 // Backward compat (sync, local only)
@@ -101,11 +140,14 @@ export async function loadFontsForObjects(objects: TemplateObject[]): Promise<Fo
   const fetches: Promise<void>[] = [];
 
   for (const [family, weights] of needed) {
+    // Pre-fetch weight 400 as fallback for fonts that don't support all weights (e.g. Instrument Serif)
+    const fallbackBufPromise = fetchGoogleFontBuffer(family, 400);
     for (const weight of weights) {
       fetches.push(
-        fetchGoogleFontBuffer(family, weight).then((buf) => {
-          if (buf) {
-            allFonts.push({ name: family, data: buf, weight: weight as Weight, style: "normal" });
+        (weight === 400 ? fallbackBufPromise : fetchGoogleFontBuffer(family, weight)).then(async (buf) => {
+          const data = buf ?? (weight !== 400 ? await fallbackBufPromise : null);
+          if (data) {
+            allFonts.push({ name: family, data, weight: weight as Weight, style: "normal" });
           }
         })
       );

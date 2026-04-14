@@ -1,4 +1,4 @@
-import { FORMAT_DIMENSIONS, VALID_ENTRANCE_TYPES } from './types'
+import { FORMAT_DIMENSIONS, VALID_ANIMATION_PRESETS } from './types'
 import type { VideoField } from './types'
 
 const VALID_FORMATS = Object.keys(FORMAT_DIMENSIONS)
@@ -19,7 +19,7 @@ export function validateFormats(formats: unknown): string | null {
   const seen = new Set<string>()
   for (const entry of formats) {
     if (!entry.name || !VALID_FORMATS.includes(entry.name)) {
-      return `Invalid format: ${entry.name}. Must be landscape, square, portrait, or og`
+      return `Invalid format: ${entry.name}. Must be landscape, square, or portrait`
     }
     if (seen.has(entry.name)) {
       return `Duplicate format: ${entry.name}`
@@ -51,8 +51,8 @@ export function validateFormats(formats: unknown): string | null {
           if (mod.anchor_y && !VALID_ANCHOR_Y.includes(mod.anchor_y)) {
             return 'anchor_y must be "top", "center", or "bottom"'
           }
-          if (mod.entrance && !VALID_ENTRANCE_TYPES.includes(mod.entrance)) {
-            return `entrance must be one of: ${VALID_ENTRANCE_TYPES.join(', ')}`
+          if (mod.background !== undefined && typeof mod.background !== 'boolean') {
+            return 'background must be a boolean'
           }
         }
       }
@@ -79,6 +79,11 @@ export function validateVideoField(video: unknown, slideCount: number): string |
       }
       if (slideCount * v.duration > 60) {
         return `Total video duration exceeds 60s (${slideCount} slides × ${v.duration}s = ${slideCount * v.duration}s)`
+      }
+    }
+    if (v.preset !== undefined) {
+      if (typeof v.preset !== 'string' || !VALID_ANIMATION_PRESETS.includes(v.preset as typeof VALID_ANIMATION_PRESETS[number])) {
+        return `video.preset must be one of: ${VALID_ANIMATION_PRESETS.join(', ')}`
       }
     }
     return null

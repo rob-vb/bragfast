@@ -465,10 +465,10 @@ git commit -m "feat: update Convex template seed with 5 new defaults"
 
 ---
 
-### Task 10: Update dashboard templates page
+### Task 10: Update admin templates page
 
 **Files:**
-- Modify: `src/app/(dashboard)/dashboard/templates/page.tsx`
+- Modify: `src/app/(admin)/admin/templates/page.tsx`
 
 - [ ] **Step 1: Update defaultDisplayIds**
 
@@ -485,8 +485,8 @@ const defaultDisplayIds: Record<string, string> = {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/app/(dashboard)/dashboard/templates/page.tsx
-git commit -m "refactor: update dashboard template display IDs"
+git add src/app/(admin)/admin/templates/page.tsx
+git commit -m "refactor: update admin template display IDs"
 ```
 
 ---

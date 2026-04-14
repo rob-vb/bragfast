@@ -3,7 +3,7 @@ import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { useEditor } from "./editor-context";
 import { SelectionHandles, type HandlePosition } from "./selection-handles";
 import type { TemplateObject } from "@/lib/templates/canvas-types";
-import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS, getObjectBorderRadius, resolveTextColor } from "@/lib/templates/canvas-types";
 
 /**
  * Auto-fit font size to container.
@@ -322,7 +322,7 @@ function renderObjectPreview(
     letterSpacing: obj.letterSpacing || 0,
     lineHeight: obj.lineHeight || 1.3,
     textAlign: obj.textAlign || "left",
-    color: obj.color || colors.text,
+    color: resolveTextColor(obj, colors),
     width: "100%",
     height: "100%",
     overflow: "hidden",
@@ -347,7 +347,7 @@ function renderObjectPreview(
     return <AutoFitText obj={obj} text={text} style={textStyle} />;
   }
 
-  if (obj.type === "image") {
+  if (obj.type === "visual") {
     const imageFrame = obj.imageFrame || "none";
     const checkerboard = "repeating-conic-gradient(#d4d4d4 0% 25%, #e5e5e5 0% 50%) 0 0 / 20px 20px";
     const objectPosition = `${obj.anchorX || "center"} ${obj.anchorY || "center"}`;

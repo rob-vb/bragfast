@@ -3,6 +3,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useEditor } from "./editor-context";
 import { CanvasObject } from "./canvas-object";
 import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
+import { resolveBackground } from "@/lib/templates/mesh-gradient";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 3;
@@ -15,6 +16,7 @@ export function EditorCanvas() {
   const { state, dispatch, activeObjects } = useEditor();
   const containerRef = useRef<HTMLDivElement>(null);
   const dims = FORMAT_DIMENSIONS[state.activeFormat];
+  const bg = resolveBackground(state.config, state.config.colors);
 
   // Camera: zoom level and pan offset (in screen pixels)
   const [zoom, setZoom] = useState<number | null>(null); // null = not initialized
@@ -198,11 +200,18 @@ export function EditorCanvas() {
           height: dims.height,
           transform: `scale(${currentZoom})`,
           transformOrigin: "0 0",
-          background: state.config.colors.background,
+          background: bg.css ?? "transparent",
           borderRadius: 2,
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {bg.imageUrl && (
+          <img
+            src={bg.imageUrl}
+            alt=""
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        )}
         {/* Click on canvas background to deselect */}
         <div
           style={{ position: "absolute", inset: 0 }}

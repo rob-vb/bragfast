@@ -7,11 +7,11 @@ import { authClient } from "@/lib/auth-client";
 
 export function LandingNav() {
   const [open, setOpen] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     authClient.getSession().then((res) => {
-      if (res.data?.user) setLoggedIn(true);
+      setLoggedIn(!!res.data?.user);
     });
   }, []);
 
@@ -45,18 +45,6 @@ export function LandingNav() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-4">
             <Link
-              href="/#features"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              href="/demo"
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
-            >
-              Demo
-            </Link>
-            <Link
               href="/docs"
               className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 text-brand hover:text-gold transition-colors"
             >
@@ -74,12 +62,18 @@ export function LandingNav() {
             >
               Support
             </Link>
-            <Link
-              href={loggedIn ? "/dashboard" : "/login"}
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
-            >
-              {loggedIn ? "Dashboard" : "Sign in"}
-            </Link>
+            {loggedIn === null ? (
+              <span className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-transparent invisible">
+                Admin
+              </span>
+            ) : (
+              <Link
+                href={loggedIn ? "/admin" : "/login"}
+                className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+              >
+                {loggedIn ? "Admin" : "Sign in"}
+              </Link>
+            )}
           </nav>
 
           {/* Mobile hamburger */}
@@ -133,20 +127,6 @@ export function LandingNav() {
         </div>
         <nav className="flex flex-col gap-2 p-4">
           <Link
-            href="/#features"
-            onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
-          >
-            Features
-          </Link>
-          <Link
-            href="/demo"
-            onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
-          >
-            Demo
-          </Link>
-          <Link
             href="/docs"
             onClick={() => setOpen(false)}
             className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:bg-gold/20 transition-all"
@@ -167,13 +147,19 @@ export function LandingNav() {
           >
             Support
           </Link>
-          <Link
-            href={loggedIn ? "/dashboard" : "/login"}
-            onClick={() => setOpen(false)}
-            className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] transition-all"
-          >
-            {loggedIn ? "Dashboard" : "Sign in"}
-          </Link>
+          {loggedIn !== null ? (
+            <Link
+              href={loggedIn ? "/admin" : "/login"}
+              onClick={() => setOpen(false)}
+              className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] transition-all"
+            >
+              {loggedIn ? "Admin" : "Sign in"}
+            </Link>
+          ) : (
+            <span className="font-[family-name:var(--font-press-start)] text-xs px-4 py-3 border-2 border-transparent invisible">
+              Admin
+            </span>
+          )}
         </nav>
       </div>
     </>

@@ -14,7 +14,7 @@ import {
 } from "@codemirror/language";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 
-// Retro theme matching the bragfast dashboard
+// Retro theme matching the bragfast admin
 const retroTheme = EditorView.theme({
   "&": {
     fontSize: "12px",

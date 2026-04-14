@@ -63,7 +63,7 @@ Currently visual-left/text-right using `order-` classes. Flip to text-left/visua
 ### LandingNav — auth-aware CTA
 `LandingNav` is already a client component (`"use client"`). Add session check:
 - Use `authClient.getSession()` from `@/lib/auth-client` (via `useEffect` + state, or `useSWR`-style)
-- If logged in: show "Dashboard" button linking to `/dashboard` instead of "Sign in" → `/login`
+- If logged in: show "Admin" button linking to `/admin` instead of "Sign in" → `/login`
 - Apply to both desktop nav and mobile panel
 - Keep same button styling, just change label and href
 

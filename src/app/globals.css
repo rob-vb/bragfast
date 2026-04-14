@@ -92,6 +92,27 @@
   }
 }
 
+/* Hero fade-in-up animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="fade-in-up"],
+  [class*="fade-in-up"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Pixel skeleton loading animation — dashed border offset */
 @keyframes pixel-skeleton {
   0% {

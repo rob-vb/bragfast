@@ -6,16 +6,16 @@ import { PAID_PLANS } from "@/lib/plans";
 import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 
 export const metadata: Metadata = {
-  title: "Pricing — brag.fast",
+  title: "Pricing | brag.fast",
   description:
-    "Simple, predictable pricing. 1 credit = 1 image in 1 format. Start free, scale as you grow.",
+    "Simple, predictable pricing. Images: 1 credit per slide. Videos: 5 credits per slide. Start free, scale as you grow.",
   alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
   {
-    q: "What counts as 1 credit?",
-    a: "1 credit = 1 image in 1 format. A release with 2 slides in 3 formats (landscape, square, portrait) uses 6 credits.",
+    q: "How do credits work?",
+    a: "Images cost 1 credit per slide per format. Videos cost 5 credits per slide per format. Example: 2 slides in 3 formats = 6 image credits or 30 video credits.",
   },
   {
     q: "Do unused credits roll over?",
@@ -34,16 +34,20 @@ const FAQS = [
     a: "Images are hosted on our global CDN indefinitely. Hotlink them directly in your posts, blog, or app.",
   },
   {
-    q: "How does the GitHub integration work?",
-    a: "Install the brag.fast GitHub App, choose which repos to connect, and configure your template. Every time you publish a release, we auto-generate branded images. Review them first or let it run fully automated.",
+    q: "How does the MCP / AI integration work?",
+    a: "Add the brag.fast MCP to Claude and ask it to generate images from your release. It reads your notes, picks your brand, and cooks the visuals. You never leave the conversation.",
   },
   {
     q: "What does AI analysis do?",
-    a: "When a release comes in via GitHub, our AI reads the changelog, categorizes changes into features, bug fixes, and breaking changes, and generates a summary for your images. Available on all paid plans.",
+    a: "Our AI reads your changelog, categorizes changes into features, fixes, and breaking changes, and writes a summary for your images. Works with any release source. Available on all paid plans.",
   },
   {
     q: "Do you offer refunds?",
-    a: "No. All plans are prepaid and non-refundable. You can cancel or downgrade anytime — changes take effect at the end of your billing cycle.",
+    a: "No. All plans are prepaid and non-refundable. You can cancel or downgrade anytime. Changes take effect at the end of your billing cycle.",
+  },
+  {
+    q: "How does the GitHub integration work?",
+    a: "Install the brag.fast GitHub App on your repos. Every time you publish a release, we generate branded images. Review first or let it run on autopilot.",
   },
 ];
 
@@ -56,15 +60,15 @@ export default function PricingPage() {
       <section className="px-4 pt-16 pb-12 md:pt-24 md:pb-16 md:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-[family-name:var(--font-press-start)] text-lg md:text-2xl leading-relaxed mb-4">
-            Start showing what you&apos;ve been cooking.
+            Your features look good. Make them look even better.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
-            Auto-generate branded social images from your releases — via API or GitHub.
+            Auto-generate branded images and videos from your releases. Via API, MCP, or admin.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
-            1 credit = 1 image in 1 format. Sign up and get{" "}
-            <strong className="text-brand">10 free credits</strong> to
-            try it out —{" "}
+            Images: 1 credit per slide. Videos: 5 credits per slide. Sign up and get{" "}
+            <strong className="text-brand">30 free credits</strong> to
+            try it out.{" "}
             <strong className="text-brand">no credit card required</strong>.
           </p>
         </div>
@@ -131,7 +135,7 @@ export default function PricingPage() {
                 href="/signup"
                 className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start with 10 Free Credits
+                Start with 30 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
                 No credit card required
@@ -281,13 +285,13 @@ export default function PricingPage() {
             Start free. Upgrade when you&apos;re ready.
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/80 leading-relaxed mb-8">
-            10 free credits. No credit card required.
+            30 free credits. No credit card required.
           </p>
           <Link
             href="/signup"
             className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-surface border-2 border-brand bg-brand shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
           >
-            Get 10 Free Credits
+            Get 30 Free Credits
           </Link>
         </div>
       </section>

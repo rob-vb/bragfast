@@ -2,20 +2,17 @@ import { after } from "next/server";
 
 export const maxDuration = 60;
 
-import { validateApiKey } from "@/lib/auth/validate-api-key";
+import { authenticate } from "@/lib/auth/authenticate";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { validateReleaseColors, validateFormats, validateVideoField } from "@/lib/validation";
 import { createRelease, renderReleaseAsync } from "@/lib/pipeline/render";
-import { ReleaseRequest, calculateCredits } from "@/lib/types";
+import { ReleaseRequest, ReleaseResult, calculateCredits } from "@/lib/types";
+import crypto from "crypto";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 
-// Lazy-loaded to avoid pulling Remotion's heavy native deps into every request
-const loadVideoModules = () =>
-  import("@/lib/pipeline/render-video").then((m) => m);
-
 export async function POST(request: Request) {
-  const auth = await validateApiKey(request);
+  const auth = await authenticate(request);
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -52,18 +49,6 @@ export async function POST(request: Request) {
   const formatError = validateFormats(body.formats);
   if (formatError) {
     return Response.json({ error: formatError }, { status: 400 });
-  }
-
-  // Video: reject og format
-  if (isVideo) {
-    for (const format of body.formats) {
-      if (format.name === "og") {
-        return Response.json(
-          { error: 'Video does not support "og" format. Use landscape, square, or portrait.' },
-          { status: 400 }
-        );
-      }
-    }
   }
 
   // Video field validation
@@ -124,10 +109,18 @@ export async function POST(request: Request) {
   // ── Video branch ──────────────────────────────────────────────
 
   if (isVideo) {
-    const { createVideoRelease, renderVideoAsync } = await loadVideoModules();
-
     try {
-      const { cookId, result } = createVideoRelease(creditsNeeded);
+      const cookId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+      const result: ReleaseResult = {
+        cook_id: cookId,
+        output: "video",
+        status: "pending",
+        images: null,
+        videos: null,
+        credits_used: creditsNeeded,
+        credits_remaining: 0,
+        created_at: new Date().toISOString(),
+      };
 
       await fetchMutation(api.releases.create, {
         userId: auth.userId,
@@ -144,11 +137,11 @@ export async function POST(request: Request) {
       result.metadata = body.metadata;
       result.webhook_url = body.webhook_url;
 
-      after(() => {
-        console.log(`[VIDEO] Starting async render for ${cookId}`);
-        renderVideoAsync(cookId, auth.userId, body)
-          .then(() => console.log(`[VIDEO] Render complete for ${cookId}`))
-          .catch((err) => console.error(`[VIDEO] Render failed for ${cookId}:`, err));
+      // Schedule video render as a Convex action (runs outside Vercel's 60s limit)
+      await fetchMutation(api.releases.scheduleVideoRender, {
+        cookId,
+        userId: auth.userId,
+        request: JSON.stringify(body),
       });
 
       return Response.json(result, { status: 202 });

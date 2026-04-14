@@ -127,7 +127,7 @@ Unchanged:
 - All existing API consumers must update payloads
 - Demo script (`scripts/generate-demo-images.ts`) needs rewrite
 - Tests need updating
-- Dashboard docs page needs updated examples
+- Admin docs page needs updated examples
 - Landing page example elements need updated payloads
 
 ## Future-Proofing

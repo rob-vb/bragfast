@@ -74,7 +74,8 @@ export async function POST(
   };
 
   // 4. Reserve credits
-  const creditsNeeded = calculateCredits({ formats });
+  const isVideo = pendingConfig.output === "video";
+  const creditsNeeded = calculateCredits({ video: isVideo || undefined, formats });
   try {
     await fetchMutation(api.userProfiles.reserve, {
       userId: user._id,
@@ -97,7 +98,18 @@ export async function POST(
   });
 
   // 6. Trigger render in background
-  after(() => renderReleaseAsync(releaseId, releaseRequest, user._id));
+  if (isVideo) {
+    await fetchMutation(api.releases.scheduleVideoRender, {
+      cookId: releaseId,
+      userId: user._id,
+      request: JSON.stringify({
+        ...releaseRequest,
+        video: true,
+      }),
+    });
+  } else {
+    after(() => renderReleaseAsync(releaseId, releaseRequest, user._id));
+  }
 
   return Response.json({ ok: true, cook_id: releaseId });
 }

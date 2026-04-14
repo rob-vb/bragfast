@@ -7,7 +7,6 @@ const FORMATS: { key: FormatKey; label: string }[] = [
   { key: "landscape", label: "Landscape" },
   { key: "square", label: "Square" },
   { key: "portrait", label: "Portrait" },
-  { key: "og", label: "OG Image" },
 ];
 
 export function FormatSwitcher() {

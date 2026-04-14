@@ -1,22 +1,24 @@
 // src/lib/templates/canvas-renderer.tsx
 import type { CanvasTemplateConfig, TemplateObject, FormatKey } from "./canvas-types";
 import type { Brand } from "../types";
-import { FORMAT_DIMENSIONS, getObjectBorderRadius } from "./canvas-types";
+import { FORMAT_DIMENSIONS, getObjectBorderRadius, resolveTextColor } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
+import { resolveBackground } from "./mesh-gradient";
 
 // Object data keyed by object ID — values are resolved (URLs already fetched to base64)
 export interface ObjectDataMap {
   [objectId: string]: {
     text?: string;
     imageBase64?: string;
+    videoUrl?: string;
     fontFamily?: string;
+    fontWeight?: number;
     color?: string;
     imageFrame?: string;
     imageFrameColor?: string;
     anchorX?: string;
     anchorY?: string;
-    entrance?: string;
   };
 }
 
@@ -25,23 +27,51 @@ interface CanvasRendererProps {
   format: FormatKey;
   objectData: ObjectDataMap;
   brand: Brand;
+  backgroundImageBase64?: string;
+  /** When true, skip text/image objects that have no data in objectData */
+  skipEmpty?: boolean;
 }
 
-export function CanvasRenderer({ config, format, objectData, brand }: CanvasRendererProps) {
+export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64, skipEmpty }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
   const sortedObjects = [...layout.objects].sort((a, b) => a.zIndex - b.zIndex);
+  const bg = resolveBackground(config, colors);
+  const bgImgSrc = backgroundImageBase64 ?? bg.imageUrl;
+
+  // When skipEmpty is set, filter out text/image objects with no user-provided data
+  const visibleObjects = skipEmpty
+    ? sortedObjects.filter((obj) => {
+        if (obj.type === "logo") return true;
+        // Image objects with a static src are always shown
+        if (obj.type === "visual" && obj.src) return true;
+        return !!objectData[obj.id];
+      })
+    : sortedObjects;
 
   return (
     <div style={{
       width, height,
-      background: colors.background,
+      background: bg.css ?? "white",
       position: "relative",
       overflow: "hidden",
       display: "flex",
     }}>
-      {sortedObjects.map((obj) => (
+      {bgImgSrc && (
+        <img
+          src={bgImgSrc}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      )}
+      {visibleObjects.map((obj) => (
         <div key={obj.id} style={{
           position: "absolute",
           left: obj.x,
@@ -118,11 +148,23 @@ export function autoFitFontSize(
   return MIN_SIZE;
 }
 
+export interface RenderObjectOptions {
+  /** Optional component used to render video visuals (e.g. Remotion's OffthreadVideo).
+   *  When absent, video URLs are ignored and the still image is used instead. */
+  VideoComponent?: React.ComponentType<{
+    src: string;
+    style?: React.CSSProperties;
+    muted?: boolean;
+    loop?: boolean;
+  }>;
+}
+
 export function renderObject(
   obj: TemplateObject,
   objectData: ObjectDataMap,
   brand: Brand,
   colors: { background: string; text: string; primary: string },
+  options: RenderObjectOptions = {},
 ) {
   const fontFamily = brand.font_family || obj.fontFamily || "Plus Jakarta Sans";
   const data = objectData[obj.id];
@@ -131,10 +173,11 @@ export function renderObject(
     case "text": {
       const text = data?.text || obj.previewText || "Text";
       const resolvedFont = data?.fontFamily || fontFamily;
-      const resolvedColor = data?.color || obj.color || colors.text;
+      const resolvedWeight = data?.fontWeight || obj.fontWeight || 400;
+      const resolvedColor = data?.color || resolveTextColor(obj, colors);
       const fontSize = autoFitFontSize(
         text, obj.fontSize || 24, obj.width, obj.height,
-        obj.fontWeight || 400, obj.lineHeight || 1.2, obj.letterSpacing || 0,
+        resolvedWeight, obj.lineHeight || 1.2, obj.letterSpacing || 0,
         obj.textFit ?? false,
       );
       const lines = text.split("\n");
@@ -142,7 +185,7 @@ export function renderObject(
         <div style={{
           fontFamily: resolvedFont,
           fontSize,
-          fontWeight: obj.fontWeight || 400,
+          fontWeight: resolvedWeight,
           letterSpacing: obj.letterSpacing || 0,
           lineHeight: obj.lineHeight || 1.2,
           textAlign: obj.textAlign || "left",
@@ -164,76 +207,103 @@ export function renderObject(
     case "logo": {
       if (!brand.logoBase64) return null;
       const logoAnchorX = obj.anchorX || "center";
-      const logoJustify = logoAnchorX === "center" ? "center"
-                        : logoAnchorX === "right" ? "flex-end" : "flex-start";
+      const logoAnchorY = obj.anchorY || "center";
       return (
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex",
-          justifyContent: logoJustify,
-          alignItems: "center",
-        }}>
-          <img
-            src={brand.logoBase64}
-            style={{
-              maxWidth: "100%",
-              maxHeight: "100%",
-              objectFit: obj.objectFit || "contain",
-            }}
-          />
-        </div>
+        <img
+          src={brand.logoBase64}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: obj.objectFit || "contain",
+            objectPosition: `${logoAnchorX} ${logoAnchorY}`,
+          }}
+        />
       );
     }
 
-    case "image": {
+    case "visual": {
       const imgSrc = data?.imageBase64;
-      if (!imgSrc) {
-        return (
-          <div style={{
-            width: "100%", height: "100%",
-            background: "#e0e0e0",
-            borderRadius: getObjectBorderRadius(obj) || 8,
-          }} />
-        );
-      }
+      const videoUrl = data?.videoUrl;
+      const VideoEl = options.VideoComponent;
+      const useVideo = !!(videoUrl && VideoEl);
+      if (!imgSrc && !useVideo) return null;
       const frame = data?.imageFrame || obj.imageFrame || "none";
       const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
       const anchorX = data?.anchorX || obj.anchorX || "center";
       const anchorY = data?.anchorY || obj.anchorY || "top";
       const objectPosition = `${anchorX} ${anchorY}`;
+      const borderRadius = getObjectBorderRadius(obj) || 8;
+      const resolvedObjectFit = obj.objectFit || "cover";
+
+      // Video render-prop for frames. When useVideo is true, VideoEl and videoUrl
+      // are both defined — frames delegate their inner media slot to this callback.
+      const videoRenderMedia = useVideo && VideoEl && videoUrl
+        ? (style: { width: number; height?: number; objectFit: 'cover' | 'contain'; objectPosition: string; borderRadius?: string }) => {
+            const Video = VideoEl;
+            const inlineStyle: React.CSSProperties = style.objectFit === 'contain'
+              ? { display: 'flex', width: '100%', ...(style.borderRadius ? { borderRadius: style.borderRadius } : {}) }
+              : { display: 'flex', width: '100%', height: '100%', objectFit: 'cover', objectPosition: style.objectPosition, ...(style.borderRadius ? { borderRadius: style.borderRadius } : {}) };
+            return <Video src={videoUrl} muted loop style={inlineStyle} />;
+          }
+        : undefined;
+
       if (frame === "none") {
-        return (
-          <img
-            src={imgSrc}
-            style={{
+        const fitContain = resolvedObjectFit === "contain";
+        const alignMap = { top: 'flex-start', center: 'center', bottom: 'flex-end' } as const;
+        if (fitContain) {
+          return (
+            <div style={{
               width: "100%", height: "100%",
-              objectFit: obj.objectFit || "cover",
-              objectPosition,
-              borderRadius: getObjectBorderRadius(obj) || 8,
-            }}
-          />
-        );
+              display: "flex", flexDirection: "column",
+              overflow: "hidden",
+              justifyContent: alignMap[anchorY as keyof typeof alignMap] || "flex-start",
+              borderRadius,
+            }}>
+              {useVideo && VideoEl && videoUrl ? (() => {
+                const Video = VideoEl;
+                return <Video src={videoUrl} muted loop style={{ width: "100%", borderRadius }} />;
+              })() : <img src={imgSrc!} style={{ width: "100%", borderRadius }} />}
+            </div>
+          );
+        }
+        const coverStyle: React.CSSProperties = {
+          width: "100%", height: "100%",
+          objectFit: "cover",
+          objectPosition,
+          borderRadius,
+        };
+        if (useVideo && VideoEl && videoUrl) {
+          const Video = VideoEl;
+          return <Video src={videoUrl} muted loop style={coverStyle} />;
+        }
+        return <img src={imgSrc!} style={coverStyle} />;
       }
       if (frame === "mobile") {
         return (
           <MobileFrame
             imageBase64={imgSrc}
+            renderMedia={videoRenderMedia}
             primaryColor={colors.primary}
             width={obj.width}
             maxHeight={obj.height}
             color={frameColor}
             objectPosition={objectPosition}
+            objectFit={resolvedObjectFit}
+            anchorY={anchorY as 'top' | 'center' | 'bottom'}
           />
         );
       }
       return (
         <BrowserFrame
           imageBase64={imgSrc}
+          renderMedia={videoRenderMedia}
           primaryColor={colors.primary}
           width={obj.width}
           maxHeight={obj.height}
           color={frameColor}
           objectPosition={objectPosition}
+          objectFit={resolvedObjectFit}
+          anchorY={anchorY as 'top' | 'center' | 'bottom'}
         />
       );
     }

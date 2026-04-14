@@ -62,9 +62,10 @@ export default function TermsPage() {
                   the Service with a monthly credit allocation.
                 </li>
                 <li>
-                  <strong>Credits</strong> — units of usage. 1 credit = 1 slide
-                  rendered in 1 format. For example, a release with 2 slides in
-                  3 formats consumes 6 credits.
+                  <strong>Credits</strong> — units of usage. Images cost 1 credit
+                  per slide per format. Videos cost 5 credits per slide per
+                  format. For example, a release with 2 slides in 3 formats
+                  consumes 6 image credits or 30 video credits.
                 </li>
                 <li>
                   <strong>API Key</strong> — a secret token used to authenticate
@@ -82,7 +83,7 @@ export default function TermsPage() {
               <p>
                 Subscriptions automatically renew at the end of each billing
                 cycle unless you cancel before the renewal date. You may cancel
-                or change your plan at any time through your account dashboard.
+                or change your plan at any time through your admin panel.
               </p>
               <p>
                 Downgrades take effect at the end of the current billing cycle.
@@ -94,8 +95,9 @@ export default function TermsPage() {
             <Section title="4. Credits and Usage">
               <p>
                 Each subscription plan includes a monthly credit allocation.
-                Credits are consumed when images are generated through the API
-                at a rate of 1 credit per slide per format. Unused credits do
+                Credits are consumed when images or videos are generated through
+                the API at a rate of 1 credit per slide per format for images
+                and 5 credits per slide per format for videos. Unused credits do
                 not roll over to the next billing cycle.
               </p>
               <p>
@@ -212,7 +214,7 @@ export default function TermsPage() {
               <p>
                 You must not share, publish, or embed API keys in client-side
                 code. If you suspect an API key has been compromised, revoke it
-                immediately through the dashboard. We are not liable for
+                immediately through the admin panel. We are not liable for
                 unauthorized usage resulting from compromised API keys.
               </p>
             </Section>

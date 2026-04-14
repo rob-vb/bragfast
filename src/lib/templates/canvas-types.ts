@@ -1,7 +1,19 @@
-export type ObjectType = "text" | "image" | "logo";
+import type { AnimationPreset } from "../types";
+
+export type ObjectType = "text" | "visual" | "logo";
+export type ColorRole = "primary" | "text" | "background";
+
+/** Resolve a text object's color: colorRole takes precedence over the literal color hex. */
+export function resolveTextColor(
+  obj: { colorRole?: ColorRole; color?: string },
+  colors: { background: string; text: string; primary: string },
+): string {
+  if (obj.colorRole) return colors[obj.colorRole];
+  return obj.color || colors.text;
+}
 
 // Legacy types still in DB — migrated at read time
-type LegacyObjectType = "title" | "description";
+type LegacyObjectType = "title" | "description" | "image";
 
 export function slugify(name: string): string {
   return name
@@ -24,12 +36,22 @@ export function uniqueSlug(name: string, existingIds: string[], currentId?: stri
 
 function migrateObject(obj: TemplateObject): TemplateObject {
   const type = obj.type as string;
-  const migrated = (type === "title" || type === "description")
-    ? { ...obj, type: "text" as ObjectType }
-    : { ...obj };
+  let migrated: TemplateObject;
+  if (type === "title" || type === "description") {
+    migrated = { ...obj, type: "text" as ObjectType };
+  } else if (type === "image") {
+    migrated = { ...obj, type: "visual" as ObjectType };
+  } else {
+    migrated = { ...obj };
+  }
+
+  // Strip legacy per-object animation fields (now preset-only)
+  const raw = migrated as unknown as Record<string, unknown>;
+  delete raw.entrance;
+  delete raw.exit;
+  delete raw.kenBurns;
 
   // Migrate device → imageFrame
-  const raw = migrated as Record<string, unknown>;
   if ("device" in raw && !("imageFrame" in raw)) {
     migrated.imageFrame = raw.device as ImageFrame;
     delete raw.device;
@@ -47,7 +69,7 @@ function migrateObject(obj: TemplateObject): TemplateObject {
 export function migrateConfig(config: CanvasTemplateConfig): CanvasTemplateConfig {
   const formats = { ...config.formats };
   let changed = false;
-  for (const key of (["landscape", "square", "portrait", "og"] as FormatKey[])) {
+  for (const key of (["landscape", "square", "portrait"] as FormatKey[])) {
     const layout = formats[key];
     if (!layout) continue;  // og may not exist in older templates
     const migrated = layout.objects.map(migrateObject);
@@ -64,7 +86,7 @@ export type ImageFrame = "browser" | "mobile" | "none";
 export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
-export type FormatKey = "landscape" | "square" | "portrait" | "og";
+export type FormatKey = "landscape" | "square" | "portrait";
 
 export interface TemplateObject {
   id: string;
@@ -79,6 +101,7 @@ export interface TemplateObject {
 
   // Text-only
   color?: string;
+  colorRole?: ColorRole;
   fontFamily?: string;
   fontSize?: number;
   fontWeight?: number;
@@ -88,8 +111,10 @@ export interface TemplateObject {
   verticalAlign?: VerticalAlign;
   textFit?: boolean;
 
-  // Image-only
+  // Visual-only
+  background?: boolean;
   src?: string; // Static image URL — baked into template, not overridable by API
+  video_url?: string; // Optional video URL — preferred over image for video renders
   imageFrame?: ImageFrame;
   imageFrameColor?: string;
   objectFit?: ObjectFit;
@@ -101,10 +126,6 @@ export interface TemplateObject {
   borderRadiusBR?: number;
   borderRadiusBL?: number;
 
-  // Video animation
-  entrance?: "fade-in" | "slide-up" | "bounce" | "none";
-  kenBurns?: boolean; // Slow zoom+pan effect for images in video mode
-
   // Editor-only
   previewText?: string;
 }
@@ -112,6 +133,13 @@ export interface TemplateObject {
 export interface FormatLayout {
   objects: TemplateObject[];
 }
+
+export type BackgroundMode = "color" | "image" | "mesh_gradient";
+
+export type BackgroundConfig =
+  | { mode: "color" }
+  | { mode: "image"; imageUrl: string }
+  | { mode: "mesh_gradient"; colors: [string, string, string]; positions: { x: number; y: number }[] };
 
 export interface CanvasTemplateConfig {
   version: 2;
@@ -121,7 +149,9 @@ export interface CanvasTemplateConfig {
     primary: string;
   };
   brandId?: string;
-  formats: Record<"landscape" | "square" | "portrait", FormatLayout> & Partial<Record<"og", FormatLayout>>;
+  animation_preset?: AnimationPreset;
+  background?: BackgroundConfig;
+  formats: Record<"landscape" | "square" | "portrait", FormatLayout>;
 }
 
 /** Returns a CSS borderRadius string from an object's radius properties. */
@@ -145,6 +175,5 @@ export function getObjectBorderRadius(obj: {
 export const FORMAT_DIMENSIONS: Record<FormatKey, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
-  portrait: { width: 1080, height: 1920 },
-  og: { width: 1200, height: 630 },
+  portrait: { width: 1080, height: 1350 },
 };

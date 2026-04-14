@@ -35,8 +35,8 @@ src/components/editor/text-properties.tsx
 src/components/editor/image-properties.tsx
 src/components/editor/font-data.ts           — Re-exports FONT_CATALOG from src/lib/fonts.ts for editor UI
 
-src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx  — Editor page (server component)
-src/app/(dashboard)/dashboard/templates/[id]/edit/layout.tsx — Skip dashboard chrome
+src/app/(admin)/admin/templates/[id]/edit/page.tsx  — Editor page (server component)
+src/app/(admin)/admin/templates/[id]/edit/layout.tsx — Skip admin chrome
 ```
 
 ### Modified files
@@ -1570,7 +1570,7 @@ export function EditorLeftSidebar({ onSave }: { onSave: () => Promise<void> }) {
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => router.push("/dashboard/templates")}
+          onClick={() => router.push("/admin/templates")}
         >
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Button>
@@ -2428,13 +2428,13 @@ git commit -m "feat: main template editor orchestrator"
 ### Task 23: Editor page and layout
 
 **Files:**
-- Create: `src/app/(dashboard)/dashboard/templates/[id]/edit/layout.tsx`
-- Create: `src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx`
+- Create: `src/app/(admin)/admin/templates/[id]/edit/layout.tsx`
+- Create: `src/app/(admin)/admin/templates/[id]/edit/page.tsx`
 
-- [ ] **Step 1: Create layout.tsx to skip dashboard chrome**
+- [ ] **Step 1: Create layout.tsx to skip admin chrome**
 
 ```tsx
-// src/app/(dashboard)/dashboard/templates/[id]/edit/layout.tsx
+// src/app/(admin)/admin/templates/[id]/edit/layout.tsx
 export default function EditorLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
@@ -2445,7 +2445,7 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
 Fetches template from Convex, passes config to TemplateEditor client component. If template uses legacy config, redirects or shows error.
 
 ```tsx
-// src/app/(dashboard)/dashboard/templates/[id]/edit/page.tsx
+// src/app/(admin)/admin/templates/[id]/edit/page.tsx
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { redirect } from "next/navigation";
@@ -2459,14 +2459,14 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
   const template = await convex.query(api.templates.getByExternalId, { externalId: id });
 
   if (!template) {
-    redirect("/dashboard/templates");
+    redirect("/admin/templates");
   }
 
   const config = template.config as CanvasTemplateConfig;
 
   // If legacy config (no version field), redirect to templates list
   if (!("version" in config) || config.version !== 2) {
-    redirect("/dashboard/templates");
+    redirect("/admin/templates");
   }
 
   return (
@@ -2482,14 +2482,14 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/app/\(dashboard\)/dashboard/templates/\[id\]/edit/
-git commit -m "feat: editor page with layout that skips dashboard chrome"
+git add src/app/\(admin\)/admin/templates/\[id\]/edit/
+git commit -m "feat: editor page with layout that skips admin chrome"
 ```
 
 ### Task 24: Update template list to create v2 templates
 
 **Files:**
-- Modify: `src/app/(dashboard)/dashboard/templates/template-list-client.tsx`
+- Modify: `src/app/(admin)/admin/templates/template-list-client.tsx`
 
 - [ ] **Step 1: Update create blank handler**
 
@@ -2521,7 +2521,7 @@ const blankConfig = {
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/app/\(dashboard\)/dashboard/templates/template-list-client.tsx
+git add src/app/\(admin\)/admin/templates/template-list-client.tsx
 git commit -m "feat: create blank now uses v2 canvas config"
 ```
 
@@ -2554,7 +2554,7 @@ git commit -m "feat: API routes accept v2 canvas config"
 npm run dev
 ```
 
-- [ ] **Step 2: Navigate to /dashboard/templates, click Create Blank**
+- [ ] **Step 2: Navigate to /admin/templates, click Create Blank**
 
 Expected: Creates v2 template, redirects to editor page.
 

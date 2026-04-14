@@ -27,22 +27,26 @@ export interface BrandRecord {
 }
 
 export type TextAlign = 'left' | 'center' | 'right'
-export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'none'
+export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'showcase-rise' | 'showcase-reveal' | 'none'
+export type ExitType = 'fade-out' | 'slide-down' | 'bounce' | 'none'
+export type AnimationPreset = 'showcase'
 
 export interface ObjectModification {
   id: string
   // Text objects
   text?: string
   font_family?: string
+  font_weight?: number
   color?: string
-  // Image objects
+  // Visual objects (image and optional video)
   image_url?: string
+  video_url?: string
   image_frame?: 'browser' | 'mobile' | 'none'
   image_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
-  // Video animation
-  entrance?: EntranceType
+  background?: boolean
+
 }
 
 export interface FormatEntry {
@@ -52,7 +56,7 @@ export interface FormatEntry {
   }>
 }
 
-export type VideoField = true | { duration?: number }
+export type VideoField = true | { duration?: number; preset?: AnimationPreset }
 
 export interface ReleaseRequest {
   brand_id?: string
@@ -81,6 +85,7 @@ export interface ReleaseResult {
   credits_used: number
   credits_remaining: number
   created_at: string
+  progress?: number
   completed_at?: string
   metadata?: string
   webhook_url?: string
@@ -92,22 +97,23 @@ export type TemplateName = 'standard-browser' | 'standard-mobile' | 'split-brows
 export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
-  portrait: { width: 1080, height: 1920 },
-  og: { width: 1200, height: 630 },
+  portrait: { width: 1080, height: 1350 },
 }
 
-export type CookCreditsInput =
-  | { video?: false | undefined; formats: FormatEntry[] }
-  | { video: VideoField; formats: { name: string }[] };
+export type CookCreditsInput = {
+  video?: VideoField | false;
+  formats: FormatEntry[];
+};
 
 export function calculateCredits(input: CookCreditsInput): number {
-  if (input.video) {
-    return input.formats.length * 5;
-  }
-  return (input as { formats: FormatEntry[] }).formats.reduce(
+  const totalSlides = input.formats.reduce(
     (sum, f) => sum + f.slides.length,
     0
   );
+  if (input.video) {
+    return totalSlides * 5;
+  }
+  return totalSlides;
 }
 
-export const VALID_ENTRANCE_TYPES: EntranceType[] = ['fade-in', 'slide-up', 'bounce', 'none']
+export const VALID_ANIMATION_PRESETS: AnimationPreset[] = ['showcase']

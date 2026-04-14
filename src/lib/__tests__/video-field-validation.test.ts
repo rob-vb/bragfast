@@ -47,36 +47,18 @@ describe("validateVideoField", () => {
     const error = validateVideoField("yes", 1);
     expect(error).toContain("must be true or");
   });
-});
 
-describe("validateFormats entrance field", () => {
-  it("accepts valid entrance type", () => {
-    const error = validateFormats([{
-      name: "landscape",
-      slides: [{
-        objects: [{ id: "title", text: "Hello", entrance: "fade-in" }],
-      }],
-    }]);
-    expect(error).toBeNull();
+  it("accepts valid preset", () => {
+    expect(validateVideoField({ preset: "showcase" }, 3)).toBeNull();
   });
 
-  it("rejects invalid entrance type", () => {
-    const error = validateFormats([{
-      name: "landscape",
-      slides: [{
-        objects: [{ id: "title", text: "Hello", entrance: "explode" }],
-      }],
-    }]);
-    expect(error).toContain("entrance");
+  it("accepts preset with duration", () => {
+    expect(validateVideoField({ preset: "showcase", duration: 10 }, 3)).toBeNull();
   });
 
-  it("accepts objects without entrance (optional)", () => {
-    const error = validateFormats([{
-      name: "landscape",
-      slides: [{
-        objects: [{ id: "title", text: "Hello" }],
-      }],
-    }]);
-    expect(error).toBeNull();
+  it("rejects invalid preset", () => {
+    const error = validateVideoField({ preset: "invalid" }, 1);
+    expect(error).toContain("video.preset must be one of");
   });
 });
+

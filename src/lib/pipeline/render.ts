@@ -6,11 +6,12 @@ import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { CanvasRenderer } from "../templates/canvas-renderer";
-import type { FormatKey } from "../templates/canvas-types";
+import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { uploadImage } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
 import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { collectUploadKeys, cleanupUploads } from "./cleanup";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 
@@ -63,6 +64,7 @@ export async function getRelease(
     videos: r.videos ?? null,
     credits_used: r.credits_used,
     credits_remaining: -1, // filled by caller
+    progress: r.progress,
     created_at: r.created_at,
     completed_at: r.completed_at,
     metadata: r.metadata,
@@ -76,17 +78,20 @@ export async function renderReleaseAsync(
   request: ReleaseRequest,
   userId: string
 ): Promise<void> {
+  const uploadKeys = collectUploadKeys(request.formats);
   try {
     const templateName = request.template || "standard-browser";
 
     const templateConfig = await resolveTemplate(templateName, userId, convex);
+
+    validateImageOutputSources(request, templateConfig);
 
     const brand = await resolveBrand(request, templateConfig.colors, convex);
 
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
     // Collect all static image src URLs across all formats (fetch once)
-    const srcMap = await prefetchStaticImages(templateConfig);
+    const { srcMap, backgroundImageBase64 } = await prefetchStaticImages(templateConfig);
 
     for (const formatEntry of request.formats) {
       const format = formatEntry.name;
@@ -95,6 +100,15 @@ export async function renderReleaseAsync(
 
       // Build slideDataMaps for THIS format's slides
       const slideDataMaps = await buildSlideDataMaps(formatEntry.slides);
+
+      // Normalize all fetched images through Sharp for Satori compatibility
+      for (const dataMap of slideDataMaps) {
+        for (const entry of Object.values(dataMap)) {
+          if (entry.imageBase64) {
+            entry.imageBase64 = await normalizeDataUri(entry.imageBase64);
+          }
+        }
+      }
 
       // Inject static images for this format
       const formatLayout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
@@ -106,15 +120,18 @@ export async function renderReleaseAsync(
         const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
       }
-      const overrideFamilies = new Set<string>();
+      const overrideFonts = new Map<string, Set<number>>();
       for (const dataMap of slideDataMaps) {
         for (const entry of Object.values(dataMap)) {
-          if (entry.fontFamily) overrideFamilies.add(entry.fontFamily);
+          if (entry.fontFamily) {
+            if (!overrideFonts.has(entry.fontFamily)) overrideFonts.set(entry.fontFamily, new Set());
+            if (entry.fontWeight) overrideFonts.get(entry.fontFamily)!.add(entry.fontWeight);
+          }
         }
       }
-      for (const family of overrideFamilies) {
-        const overrideFonts = await loadFontsForFamily(family);
-        fonts = [...fonts, ...overrideFonts];
+      for (const [family, weights] of overrideFonts) {
+        const loaded = await loadFontsForFamily(family, weights);
+        fonts = [...fonts, ...loaded];
       }
 
       // Render slides
@@ -124,6 +141,8 @@ export async function renderReleaseAsync(
           format: format as FormatKey,
           objectData: slideDataMaps[i],
           brand,
+          backgroundImageBase64,
+          skipEmpty: true,
         });
         const svg = await satori(jsx, { width, height, fonts });
         const jpg = await sharp(Buffer.from(svg))
@@ -185,7 +204,48 @@ export async function renderReleaseAsync(
       const result = await getRelease(releaseId);
       if (result) await callWebhook(request.webhook_url, result);
     }
+  } finally {
+    cleanupUploads(uploadKeys).catch((err) =>
+      console.error(`Upload cleanup error for ${releaseId}:`, err)
+    );
   }
+}
+
+/** Image output requires each visual to have either an image_url (per slide) or a
+ *  static src (on the template). Fail fast if a visual was given only video_url. */
+function validateImageOutputSources(
+  request: ReleaseRequest,
+  templateConfig: CanvasTemplateConfig
+): void {
+  for (const formatEntry of request.formats) {
+    const format = formatEntry.name;
+    const layout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
+    const templateStaticSrc = new Map<string, string | undefined>();
+    for (const obj of layout.objects) {
+      if (obj.type === "visual") templateStaticSrc.set(obj.id, obj.src);
+    }
+    formatEntry.slides.forEach((slide, i) => {
+      if (!slide.objects) return;
+      for (const mod of slide.objects) {
+        if (!mod.video_url || mod.image_url) continue;
+        if (!templateStaticSrc.has(mod.id)) continue; // not a visual in this template — ignore
+        const hasStatic = !!templateStaticSrc.get(mod.id);
+        if (!hasStatic) {
+          throw new Error(
+            `Visual "${mod.id}" on slide ${i + 1} (${format}) has video_url but no image_url — image output requires an image.`
+          );
+        }
+      }
+    });
+  }
+}
+
+async function normalizeDataUri(dataUri: string): Promise<string> {
+  const match = dataUri.match(/^data:[^;]+;base64,(.+)$/);
+  if (!match) return dataUri;
+  const raw = Buffer.from(match[1], "base64");
+  const png = await sharp(raw).png().toBuffer();
+  return `data:image/png;base64,${png.toString("base64")}`;
 }
 
 async function callWebhook(

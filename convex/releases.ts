@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 export const create = mutation({
@@ -9,7 +10,7 @@ export const create = mutation({
     credits_used: v.number(),
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
-    source: v.optional(v.union(v.literal("api"), v.literal("github"))),
+    source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
     sourceMetadata: v.optional(v.string()),
     output: v.optional(v.union(v.literal("image"), v.literal("video"))),
     status: v.optional(v.union(
@@ -152,6 +153,21 @@ export const updateSocialCopy = mutation({
     if (!r) throw new Error("Release not found");
     if (r.userId !== userId) throw new Error("Not authorized");
     await ctx.db.patch(r._id, { socialCopy });
+  },
+});
+
+export const scheduleVideoRender = mutation({
+  args: {
+    cookId: v.string(),
+    userId: v.string(),
+    request: v.string(), // JSON-serialized VideoRenderRequest
+  },
+  handler: async (ctx, { cookId, userId, request }) => {
+    await ctx.scheduler.runAfter(0, internal.videoRender.render, {
+      cookId,
+      userId,
+      request,
+    });
   },
 });
 

@@ -18,15 +18,17 @@ npm run remotion:studio  # Remotion preview
 
 **Stack:** Next.js 16 App Router, Convex (DB + auth + Stripe), Satori + Sharp (image gen), Remotion + AWS Lambda (video gen), Cloudflare R2 (storage), Tailwind v4.
 
-### Render Pipeline (`src/lib/pipeline/render.ts`)
+### Render Pipeline
 
-`POST /api/v1/cook` → `createRelease()` allocates a Convex record, returns `{ status: "pending" }` immediately → `renderReleaseAsync()` runs in background via `after()`:
+**Image** (`src/lib/pipeline/render.ts`): `POST /api/v1/cook` → `createRelease()` allocates a Convex record, returns `{ status: "pending" }` immediately → `renderReleaseAsync()` runs in background via `after()`:
 1. Resolve template config (built-in default or user's custom `tmpl_*` from Convex) → `migrateConfig()`
 2. Resolve brand (by `brand_id` from Convex, or inline from request, fallback to template colors)
 3. Pre-fetch static image URLs from template config
 4. Per format × per slide: build `ObjectDataMap`, fetch user images to base64, load fonts (Google Fonts + local TTF)
 5. `CanvasRenderer` JSX → Satori → SVG → Sharp → JPEG → upload to R2 (or local if `OUTPUT_LOCAL=true`)
 6. On failure: refund credits, mark `failed`, fire webhook
+
+**Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): Same request via `POST /api/v1/cook` with `video` field → Convex `internalAction` (marked `"use node"`) renders via Remotion Lambda (`@remotion/lambda-client`). Composition: `src/remotion/VideoCanvasComposition.tsx`. Slide duration default 8s, transitions 0.5s, 30fps.
 
 ### Template System (v2, canvas-based)
 
@@ -48,12 +50,35 @@ npm run remotion:studio  # Remotion preview
 | `src/lib/github/analyze-release.ts` | Claude Haiku extracts slide content from GitHub release notes |
 | `src/lib/storage/r2.ts` | Cloudflare R2 via AWS SDK S3Client |
 | `src/lib/fonts.ts` | Font loading with in-process caching |
-| `convex/schema.ts` | 10 tables: userProfiles, brands, templates, apiKeys, releases, etc. |
+| `src/lib/video/lambda.ts` | Remotion Lambda render + progress polling with retry |
+| `src/lib/pipeline/shared.ts` | Shared helpers: resolveTemplate, resolveBrand, buildSlideDataMaps |
+| `convex/videoRender.ts` | Convex node action for video rendering (`"use node"`) |
+| `src/remotion/VideoCanvasComposition.tsx` | Remotion composition for video output |
+| `convex/schema.ts` | 11 tables: userProfiles, brands, templates, videoTemplates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, githubSkippedReleases |
+| `docs/solutions/` | Documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) |
 
 ### Image Dimensions
 
-- Landscape: 1200×675, Square: 1080×1080, Portrait: 1080×1350, OG: 1200×630
+- Landscape: 1200×675, Square: 1080×1080, Portrait: 1080×1350
 - Video: Same as image dimensions (renders at template resolution)
+
+### GitHub App Integration
+
+Webhook flow: GitHub `release.published` → `src/app/api/github/webhooks/route.ts` → verify signature → `map-release.ts` maps release notes to slides → if `autoApprove`: render immediately, else create `pending_review` release → admin shows pending reviews for approval. Per-repo config in `githubRepoConfigs` (brand, template, formats, tag filters). AI analysis via `analyze-release.ts` (Claude Haiku extracts slide content).
+
+### API Routes
+
+Public API (`src/app/api/v1/`): `cook` (render), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `guided-cook`. All authenticated via Bearer API key. GitHub routes: `webhooks`, `callback`, `installations`, `repos`, `configs`, `releases/[id]/approve`.
+
+### Next.js Route Groups
+
+- `(auth)` — login, signup, forgot/reset password
+- `(admin)` — admin, history, brands, templates, keys, account/billing
+- `docs`, `demo`, `support`, `terms`, `privacy` — public pages
+
+### Convex Patterns
+
+Convex functions in `convex/` use queries (reads) and mutations (writes). Heavy compute (video rendering) uses `internalAction` with `"use node"` directive at top of file. Next.js calls Convex via `ConvexHttpClient` (server-side) or `fetchQuery`/`fetchMutation` from `convex/nextjs`.
 
 ### Storage
 
