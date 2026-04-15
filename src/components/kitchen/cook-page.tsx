@@ -10,7 +10,6 @@ import { RecipeStep, type TemplateItem } from "@/components/kitchen/recipe-step"
 import { SeasoningStep } from "@/components/kitchen/seasoning-step";
 import { IngredientsStep } from "@/components/kitchen/ingredients-step";
 import { PlatingStep } from "@/components/kitchen/plating-step";
-import type { VideoTemplateItem } from "@/components/kitchen/video-template-picker";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { CookResults } from "@/components/kitchen/cook-results";
 import { useReleaseProgress } from "@/hooks/use-release-progress";
@@ -29,8 +28,6 @@ interface CookState {
   formats: FormatKey[];
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
-  videoTemplateId: string | null;
-  videoTemplateHasHero: boolean;
   autoSelectedPreset?: AnimationPreset;
   status: "idle" | "cooking" | "done" | "error";
   cookId?: string;
@@ -41,6 +38,14 @@ interface CookState {
 
 const DEFAULT_COLORS = { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" };
 
+function templateHasHero(config: CanvasTemplateConfig | null): boolean {
+  if (!config) return false;
+  for (const layout of Object.values(config.formats)) {
+    if (layout?.objects.some((o) => o.type === "visual")) return true;
+  }
+  return false;
+}
+
 const INITIAL_STATE: CookState = {
   templateId: null,
   templateConfig: null,
@@ -48,8 +53,6 @@ const INITIAL_STATE: CookState = {
   objectContent: {},
   formats: ["landscape", "square", "portrait"],
   outputType: "image",
-  videoTemplateId: null,
-  videoTemplateHasHero: false,
   status: "idle",
 };
 
@@ -63,12 +66,6 @@ type CookAction =
   | { type: "TOGGLE_FORMAT"; format: FormatKey }
   | { type: "SET_OUTPUT_TYPE"; outputType: "image" | "video" }
   | { type: "SET_ANIMATION_PRESET"; preset: AnimationPreset | undefined }
-  | {
-      type: "SET_VIDEO_TEMPLATE";
-      videoTemplateId: string;
-      animationPreset: AnimationPreset;
-      hasHero: boolean;
-    }
   | { type: "START_COOK" }
   | { type: "SET_COOK_ID"; cookId: string }
   | { type: "SET_PROGRESS"; progress: number }
@@ -78,7 +75,8 @@ type CookAction =
 
 function cookReducer(state: CookState, action: CookAction): CookState {
   switch (action.type) {
-    case "SELECT_TEMPLATE":
+    case "SELECT_TEMPLATE": {
+      const preset = action.config.animation_preset ?? "showcase";
       return {
         ...state,
         templateId: action.templateId,
@@ -88,7 +86,10 @@ function cookReducer(state: CookState, action: CookAction): CookState {
           ? state.colors
           : { ...DEFAULT_COLORS, ...action.config.colors },
         objectContent: {},
+        animationPreset: preset,
+        autoSelectedPreset: preset,
       };
+    }
 
     case "SET_BRAND":
       return {
@@ -118,30 +119,29 @@ function cookReducer(state: CookState, action: CookAction): CookState {
       };
     }
 
-    case "SET_OUTPUT_TYPE":
+    case "SET_OUTPUT_TYPE": {
       if (action.outputType === "image") {
         return {
           ...state,
           outputType: "image",
           animationPreset: undefined,
-          videoTemplateId: null,
-          videoTemplateHasHero: false,
           autoSelectedPreset: undefined,
         };
       }
-      return { ...state, outputType: "video" };
+      if (state.animationPreset) {
+        return { ...state, outputType: "video" };
+      }
+      const seeded = state.templateConfig?.animation_preset ?? "showcase";
+      return {
+        ...state,
+        outputType: "video",
+        animationPreset: seeded,
+        autoSelectedPreset: seeded,
+      };
+    }
 
     case "SET_ANIMATION_PRESET":
       return { ...state, animationPreset: action.preset, autoSelectedPreset: undefined };
-
-    case "SET_VIDEO_TEMPLATE":
-      return {
-        ...state,
-        videoTemplateId: action.videoTemplateId,
-        videoTemplateHasHero: action.hasHero,
-        animationPreset: action.animationPreset,
-        autoSelectedPreset: action.animationPreset,
-      };
 
     case "START_COOK":
       // Clear cookId so useReleaseProgress doesn't match the previous
@@ -173,10 +173,9 @@ function cookReducer(state: CookState, action: CookAction): CookState {
 
 interface CookPageProps {
   templates: TemplateItem[];
-  videoTemplates: VideoTemplateItem[];
 }
 
-export function CookPage({ templates, videoTemplates }: CookPageProps) {
+export function CookPage({ templates }: CookPageProps) {
   const [state, dispatch] = useReducer(cookReducer, INITIAL_STATE);
   const userId = useUserId();
 
@@ -240,13 +239,8 @@ export function CookPage({ templates, videoTemplates }: CookPageProps) {
       slides: [{ objects: objects.length > 0 ? objects : undefined }],
     }));
 
-    const templateForRender =
-      state.outputType === "video" && state.videoTemplateId
-        ? state.videoTemplateId
-        : state.templateId;
-
     const body: Record<string, unknown> = {
-      template: templateForRender,
+      template: state.templateId,
       formats,
       ...(state.brandId ? { brand_id: state.brandId } : { colors: state.colors }),
       source: "dashboard",
@@ -383,21 +377,11 @@ export function CookPage({ templates, videoTemplates }: CookPageProps) {
             outputType={state.outputType}
             animationPreset={state.animationPreset}
             creditBalance={creditBalance ?? undefined}
-            videoTemplates={videoTemplates}
-            videoTemplateId={state.videoTemplateId}
             autoSelectedPreset={state.autoSelectedPreset}
-            selectedVideoHasHero={state.videoTemplateHasHero}
+            selectedVideoHasHero={templateHasHero(state.templateConfig)}
             onToggleFormat={(fmt) => dispatch({ type: "TOGGLE_FORMAT", format: fmt })}
             onAnimationPresetChange={(p) =>
               dispatch({ type: "SET_ANIMATION_PRESET", preset: p })
-            }
-            onVideoTemplateChange={(t) =>
-              dispatch({
-                type: "SET_VIDEO_TEMPLATE",
-                videoTemplateId: t.id,
-                animationPreset: t.animationPreset,
-                hasHero: t.hasHero,
-              })
             }
           />
         </CookSection>

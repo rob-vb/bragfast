@@ -3,7 +3,6 @@
 import type { FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset } from "@/lib/types";
 import { MotionPresetPicker } from "./motion-preset-picker";
-import { VideoTemplatePicker, type VideoTemplateItem } from "./video-template-picker";
 
 const FORMAT_LABELS: Record<FormatKey, string> = {
   landscape: "Landscape",
@@ -22,13 +21,10 @@ interface PlatingStepProps {
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
   creditBalance?: number;
-  videoTemplates: VideoTemplateItem[];
-  videoTemplateId: string | null;
   autoSelectedPreset?: AnimationPreset;
   selectedVideoHasHero: boolean;
   onToggleFormat: (format: FormatKey) => void;
   onAnimationPresetChange: (preset: AnimationPreset | undefined) => void;
-  onVideoTemplateChange: (template: VideoTemplateItem) => void;
 }
 
 export function PlatingStep({
@@ -36,13 +32,10 @@ export function PlatingStep({
   outputType,
   animationPreset,
   creditBalance,
-  videoTemplates,
-  videoTemplateId,
   autoSelectedPreset,
   selectedVideoHasHero,
   onToggleFormat,
   onAnimationPresetChange,
-  onVideoTemplateChange,
 }: PlatingStepProps) {
   const creditCost = formats.length * (outputType === "video" ? 5 : 1);
 
@@ -90,21 +83,14 @@ export function PlatingStep({
         </div>
       </div>
 
-      {/* Video-only: layout + motion pickers */}
+      {/* Video-only: motion picker */}
       {outputType === "video" && (
-        <>
-          <VideoTemplatePicker
-            templates={videoTemplates}
-            selectedId={videoTemplateId}
-            onSelect={onVideoTemplateChange}
-          />
-          <MotionPresetPicker
-            value={animationPreset}
-            autoSelected={autoSelectedPreset}
-            templateHasHero={selectedVideoHasHero}
-            onChange={(p) => onAnimationPresetChange(p)}
-          />
-        </>
+        <MotionPresetPicker
+          value={animationPreset}
+          autoSelected={autoSelectedPreset}
+          templateHasHero={selectedVideoHasHero}
+          onChange={(p) => onAnimationPresetChange(p)}
+        />
       )}
 
       {/* Credit display */}

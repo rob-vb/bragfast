@@ -5,7 +5,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { renderVideo } from "../video/lambda";
 import { uploadImage } from "../storage/r2";
-import { resolveVideoTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
 import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
 import type { ReleaseResult, FormatEntry, VideoField, AnimationPreset } from "../types";
@@ -78,7 +78,7 @@ export async function renderVideoAsync(
   const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 10;
   try {
     const templateName = request.template || "standard-browser";
-    let templateConfig = await resolveVideoTemplate(templateName, userId, convex);
+    let templateConfig = await resolveTemplate(templateName, userId, convex);
     const brand = await resolveBrand(request, templateConfig.colors, convex);
 
     // Apply API-level animation preset override before resolving slide duration,

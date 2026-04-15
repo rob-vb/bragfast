@@ -10,15 +10,6 @@ export const getTemplate = internalQuery({
       .first(),
 });
 
-export const getVideoTemplate = internalQuery({
-  args: { externalId: v.string() },
-  handler: async (ctx, { externalId }) =>
-    ctx.db
-      .query("videoTemplates")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first(),
-});
-
 export const getBrand = internalQuery({
   args: { externalId: v.string() },
   handler: async (ctx, { externalId }) =>
