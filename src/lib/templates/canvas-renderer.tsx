@@ -15,8 +15,8 @@ export interface ObjectDataMap {
     fontFamily?: string;
     fontWeight?: number;
     color?: string;
-    imageFrame?: string;
-    imageFrameColor?: string;
+    visualFrame?: string;
+    visualFrameColor?: string;
     anchorX?: string;
     anchorY?: string;
   };
@@ -227,8 +227,8 @@ export function renderObject(
       const VideoEl = options.VideoComponent;
       const useVideo = !!(videoUrl && VideoEl);
       if (!imgSrc && !useVideo) return null;
-      const frame = data?.imageFrame || obj.imageFrame || "none";
-      const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
+      const frame = data?.visualFrame || obj.visualFrame || "none";
+      const frameColor = data?.visualFrameColor || obj.visualFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
       const anchorX = data?.anchorX || obj.anchorX || "center";
       const anchorY = data?.anchorY || obj.anchorY || "top";
       const objectPosition = `${anchorX} ${anchorY}`;
