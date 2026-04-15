@@ -92,9 +92,9 @@ export function VisualProperties() {
   if (selectedObject.type !== "visual" && selectedObject.type !== "logo") return null;
 
   const isVisual = selectedObject.type === "visual";
-  const imageFrame = selectedObject.imageFrame || "none";
-  const hasDeviceFrame = imageFrame !== "none";
-  const imageFrameColor = selectedObject.imageFrameColor || (imageFrame === "mobile" ? "#1A1A1A" : "#E8E8E8");
+  const visualFrame = selectedObject.visualFrame || "none";
+  const hasDeviceFrame = visualFrame !== "none";
+  const visualFrameColor = selectedObject.visualFrameColor || (visualFrame === "mobile" ? "#1A1A1A" : "#E8E8E8");
 
   function update(property: string, value: unknown) {
     dispatch({ type: "UPDATE_PROPERTY", objectId: selectedObject!.id, property, value, allFormats: true });
@@ -154,10 +154,10 @@ export function VisualProperties() {
       {isVisual && (
         <div className="space-y-1">
           <Label className="text-xs text-zinc-500">Device Frame</Label>
-          <Select value={imageFrame} onValueChange={(v) => {
-            update("imageFrame", v);
-            if (v === "mobile") update("imageFrameColor", "#1A1A1A");
-            else if (v === "browser") update("imageFrameColor", "#E8E8E8");
+          <Select value={visualFrame} onValueChange={(v) => {
+            update("visualFrame", v);
+            if (v === "mobile") update("visualFrameColor", "#1A1A1A");
+            else if (v === "browser") update("visualFrameColor", "#E8E8E8");
           }}>
             <SelectTrigger className="h-8 text-sm">
               <SelectValue />
@@ -172,9 +172,9 @@ export function VisualProperties() {
             <div className="flex items-center gap-2 mt-1.5">
               <button
                 type="button"
-                onClick={() => update("imageFrameColor", "#E8E8E8")}
+                onClick={() => update("visualFrameColor", "#E8E8E8")}
                 className={`w-6 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
-                  imageFrameColor === "#E8E8E8"
+                  visualFrameColor === "#E8E8E8"
                     ? "border-blue-500"
                     : "border-zinc-200 hover:border-zinc-300"
                 }`}
@@ -183,9 +183,9 @@ export function VisualProperties() {
               />
               <button
                 type="button"
-                onClick={() => update("imageFrameColor", "#1A1A1A")}
+                onClick={() => update("visualFrameColor", "#1A1A1A")}
                 className={`w-6 h-6 rounded-full border-2 transition-colors flex-shrink-0 ${
-                  imageFrameColor === "#1A1A1A"
+                  visualFrameColor === "#1A1A1A"
                     ? "border-blue-500"
                     : "border-zinc-200 hover:border-zinc-300"
                 }`}
@@ -195,13 +195,13 @@ export function VisualProperties() {
               <div className="flex items-center gap-1 flex-1">
                 <input
                   type="color"
-                  value={imageFrameColor}
-                  onChange={(e) => update("imageFrameColor", e.target.value)}
+                  value={visualFrameColor}
+                  onChange={(e) => update("visualFrameColor", e.target.value)}
                   className="w-7 h-7 rounded border border-zinc-200 cursor-pointer flex-shrink-0"
                 />
                 <Input
-                  value={imageFrameColor}
-                  onChange={(e) => update("imageFrameColor", e.target.value)}
+                  value={visualFrameColor}
+                  onChange={(e) => update("visualFrameColor", e.target.value)}
                   className="h-7 text-xs font-mono"
                   placeholder="#E8E8E8"
                 />

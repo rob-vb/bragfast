@@ -363,7 +363,7 @@ function createDefaultObject(type: ObjectType, canvasW: number, canvasH: number,
     case "text":
       return { ...base, ...textDefaults, x: 48, y: canvasH * 0.6, width: canvasW - 96, height: 80, fontSize: 24 };
     case "visual":
-      return { ...base, x: 48, y: 96, width: canvasW - 96, height: canvasH * 0.5, imageFrame: "none" as const, objectFit: "cover" as const };
+      return { ...base, x: 48, y: 96, width: canvasW - 96, height: canvasH * 0.5, visualFrame: "none" as const, objectFit: "cover" as const };
     case "logo":
       return { ...base, x: 48, y: 32, width: 120, height: 48, objectFit: "contain" as const };
   }
