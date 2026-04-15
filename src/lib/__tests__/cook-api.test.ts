@@ -220,18 +220,18 @@ describe.sequential("Format validation", () => {
     expect(data.error).toContain("requires a string id");
   });
 
-  test("invalid image_frame → 400", async () => {
+  test("invalid visual_frame → 400", async () => {
     const res = await cookPost({
       formats: [
         {
           name: "landscape",
-          slides: [slide([{ id: "img1", image_frame: "tablet" }])],
+          slides: [slide([{ id: "img1", visual_frame: "tablet" }])],
         },
       ],
     });
     expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.error).toContain("image_frame");
+    expect(data.error).toContain("visual_frame");
   });
 
   test("invalid anchor_x → 400", async () => {
@@ -384,7 +384,7 @@ describe.sequential("Image happy path", () => {
                 text: "Hello World",
                 color: "#FF0000",
                 font_family: "Inter",
-                image_frame: "browser",
+                visual_frame: "browser",
                 anchor_x: "center",
                 anchor_y: "top",
               },
