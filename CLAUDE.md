@@ -54,7 +54,7 @@ npm run remotion:studio  # Remotion preview
 | `src/lib/pipeline/shared.ts` | Shared helpers: resolveTemplate, resolveBrand, buildSlideDataMaps |
 | `convex/videoRender.ts` | Convex node action for video rendering (`"use node"`) |
 | `src/remotion/VideoCanvasComposition.tsx` | Remotion composition for video output |
-| `convex/schema.ts` | 11 tables: userProfiles, brands, templates, videoTemplates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, githubSkippedReleases |
+| `convex/schema.ts` | 10 tables: userProfiles, brands, templates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, githubSkippedReleases, uploads |
 | `docs/solutions/` | Documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) |
 
 ### Image Dimensions
