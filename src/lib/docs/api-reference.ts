@@ -314,7 +314,15 @@ while True:
                         required: false,
                         group: "image",
                         description:
-                          "Image URL for image objects.",
+                          "Image URL for visual objects. Required for image output. For video output, still required as a fallback when video_url is not set on a given slide.",
+                      },
+                      {
+                        name: "video_url",
+                        type: "string",
+                        required: false,
+                        group: "image",
+                        description:
+                          "Video URL (MP4/WebM/MOV) for visual objects. Only used when the top-level video field is set — plays in place of image_url in the rendered video.",
                       },
                       {
                         name: "image_frame",
@@ -1036,7 +1044,7 @@ data = response.json()`,
   "objects": [
     { "id": "title", "type": "text", "data": "text" },
     { "id": "description", "type": "text", "data": "text" },
-    { "id": "image", "type": "image", "data": "url" },
+    { "id": "image", "type": "visual", "data": "url" },
     { "id": "logo", "type": "logo", "data": "auto" }
   ],
   "preview_url": null,
@@ -1136,7 +1144,7 @@ data = response.json()`,
   "objects": [
     { "id": "title", "type": "text", "text": null, "font_family": null, "color": "#EFFBF9" },
     { "id": "description", "type": "text", "text": null, "font_family": null, "color": "#EFFBF9" },
-    { "id": "image", "type": "image", "image_url": null, "image_frame": "browser", "image_frame_color": "#E8E8E8", "anchor_x": "center", "anchor_y": "top" },
+    { "id": "image", "type": "visual", "image_url": null, "video_url": null, "image_frame": "browser", "image_frame_color": "#E8E8E8", "anchor_x": "center", "anchor_y": "top" },
     { "id": "logo", "type": "logo" }
   ],
   "preview_url": null,
@@ -1176,7 +1184,7 @@ data = response.json()`,
       "blocks": [
         { "type": "title" },
         { "type": "description" },
-        { "type": "image" },
+        { "type": "visual" },
         { "type": "logo" }
       ]
     }
@@ -1211,7 +1219,7 @@ response = requests.post(
             "blocks": [
                 {"type": "title"},
                 {"type": "description"},
-                {"type": "image"},
+                {"type": "visual"},
                 {"type": "logo"},
             ]
         },
@@ -1228,7 +1236,7 @@ data = response.json()`,
     "blocks": [
       { "type": "title" },
       { "type": "description" },
-      { "type": "image" },
+      { "type": "visual" },
       { "type": "logo" }
     ]
   },

@@ -102,6 +102,7 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState(mod.image_url ?? "");
+  const [videoUrlInput, setVideoUrlInput] = useState(mod.video_url ?? "");
 
   async function handleFile(file: File) {
     setUploading(true);
@@ -122,6 +123,7 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
     setVideoError(null);
     try {
       const url = await uploadFile(file);
+      setVideoUrlInput(url);
       onChange({ ...mod, video_url: url });
     } catch (err) {
       setVideoError(err instanceof Error ? err.message : "Upload failed");
@@ -142,6 +144,12 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
     }
   }
 
+  function handleVideoUrlBlur() {
+    if (videoUrlInput !== mod.video_url) {
+      onChange({ ...mod, video_url: videoUrlInput || undefined });
+    }
+  }
+
   const hasVideo = !!mod.video_url;
   const showVideoSlot = outputType === "video";
 
@@ -149,6 +157,10 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
     <div className="space-y-2">
       <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand capitalize block">
         {label}
+      </label>
+
+      <label className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/60 block">
+        Image
       </label>
 
       {/* Drop zone */}
@@ -260,7 +272,10 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
               <button
                 type="button"
                 className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-500 hover:text-red-600 px-1"
-                onClick={() => onChange({ ...mod, video_url: undefined })}
+                onClick={() => {
+                  setVideoUrlInput("");
+                  onChange({ ...mod, video_url: undefined });
+                }}
               >
                 Remove
               </button>
@@ -275,6 +290,25 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
               {uploadingVideo ? "Uploading video..." : "Upload video"}
             </button>
           )}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/50 whitespace-nowrap">
+              or URL
+            </span>
+            <input
+              type="url"
+              className="flex-1 border-2 border-brand/30 px-2 py-1.5 text-xs font-[family-name:var(--font-geist-mono)] text-brand bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand"
+              placeholder="https://..."
+              value={videoUrlInput}
+              onChange={(e) => setVideoUrlInput(e.target.value)}
+              onBlur={handleVideoUrlBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleVideoUrlBlur();
+                }
+              }}
+            />
+          </div>
           {videoError && (
             <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-600">
               {videoError}
