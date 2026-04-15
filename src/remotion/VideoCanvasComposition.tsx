@@ -168,9 +168,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         const presetAnim = isBg
           ? { entrance: "none" as EntranceType, exit: "none" as ExitType, kenBurns: false }
           : resolvePreset(config.animation_preset, obj.type, isHero);
-        const hasVideo = obj.type === "visual" && !!data?.videoUrl;
-        let entrance: EntranceType = presetAnim.entrance ?? getDefaultEntrance(obj.type);
-        if (hasVideo && entrance === "showcase-rise") entrance = "fade-in";
+        const entrance: EntranceType = presetAnim.entrance ?? getDefaultEntrance(obj.type);
         const exit: ExitType = presetAnim.exit ?? getDefaultExit(obj.type);
 
         const staggerDelay = sortIndex * Math.round(fps * 0.15);
