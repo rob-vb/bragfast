@@ -142,4 +142,12 @@ describe("resolvePreset", () => {
       kenBurns: false,
     });
   });
+
+  it("simple-fade isHero has no effect (undefined still gives fade-in)", () => {
+    expect(resolvePreset("simple-fade", "visual", undefined)).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
 });
