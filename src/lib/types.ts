@@ -51,8 +51,8 @@ export interface ObjectModification {
   // Visual objects (image and optional video)
   image_url?: string
   video_url?: string
-  image_frame?: 'browser' | 'mobile' | 'none'
-  image_frame_color?: string
+  visual_frame?: 'browser' | 'mobile' | 'none'
+  visual_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
   background?: boolean
