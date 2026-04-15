@@ -75,6 +75,21 @@ const SHOWCASE_TEMPLATES = [
   "hero",
 ] as const;
 
+// Test composition: video-in-video (visual object with videoUrl)
+const videoTestProps: VideoCanvasCompositionProps = {
+  config: getDefaultConfig("split-browser")!,
+  format: "landscape",
+  slides: [
+    {
+      title: { text: "Video In Video" },
+      description: { text: "Should show mov inside browser frame" },
+      image: { videoUrl: staticFile("demo/screenrecording_bragfast.mov") },
+    },
+  ],
+  brand: showcaseBrand,
+  slideDuration: 8,
+};
+
 // Test composition: custom font + font_weight override
 const fontTestProps: VideoCanvasCompositionProps = {
   config: getDefaultConfig("split-mobile")!,
@@ -116,6 +131,16 @@ export const RemotionRoot: React.FC = () => {
           calculateMetadata={calculateMetadata}
         />
       ))}
+      <Composition
+        id="video-test"
+        component={VideoCanvasComposition}
+        fps={FPS}
+        width={FORMAT_DIMENSIONS.landscape.width}
+        height={FORMAT_DIMENSIONS.landscape.height}
+        durationInFrames={Math.ceil(8 * FPS)}
+        defaultProps={videoTestProps}
+        calculateMetadata={calculateMetadata}
+      />
       <Composition
         id="font-test"
         component={VideoCanvasComposition}

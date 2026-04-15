@@ -4,51 +4,151 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev` — Next.js dev server
-- `npm run build` — runs `convex codegen` then `next build`
-- `npm run lint` — ESLint (flat config, `eslint.config.mjs`)
-- `npm test` — Vitest (config: `vitest.config.ts`). Run a single test: `npx vitest run path/to/file.test.ts -t "test name"`
-- `npm run remotion:studio` — local Remotion studio on `src/remotion/index.ts`
-- `npm run remotion:deploy` — deploys Remotion site + Lambda function. **Required after any change in `src/remotion/`** before it takes effect in prod rendering.
-- Convex: dev runs implicitly via the app; deploys happen via Convex's own tooling. `convex/_generated/` is generated — don't edit.
+```bash
+npm run dev              # Next.js dev server
+npm run build            # Convex codegen + Next.js build
+npm run lint             # ESLint
+npm test                 # Vitest (watch mode)
+npx vitest run           # Run tests once
+npx vitest run src/lib/__tests__/credits.test.ts  # Single test file
+npm run remotion:studio  # Remotion preview
+```
 
 ## Architecture
 
-**brag.fast** is an API-first service that turns release metadata into branded images (and videos). See `PRD.md` for product context and `DESIGN.md` for the design system (NES/breakfast-diner aesthetic, Press Start 2P + Geist, `--color-brand` / `--color-gold` / `--color-surface`).
+**Stack:** Next.js 16 App Router, Convex (DB + auth + Stripe), Satori + Sharp (image gen), Remotion + AWS Lambda (video gen), Cloudflare R2 (storage), Tailwind v4.
 
-### Stack
-- **Next.js 16 / React 19** (App Router) in `src/app/`
-- **Convex** backend in `convex/` — schema in `convex/schema.ts`, tables include `userProfiles` (credits/plan), `brands`, `templates`, `apiKeys`, releases, github installations, uploads, video renders
-- **Better Auth** via `@convex-dev/better-auth` (`convex/auth.ts`, `src/lib/auth/`)
-- **Stripe** via `@convex-dev/stripe` (`convex/stripe.ts`)
-- **Satori** for image rendering, **Remotion + Lambda** for video rendering
-- **R2 / S3** for asset storage (AWS SDK + presigned URLs)
-- **Resend + React Email** for transactional mail (`src/lib/emails/`)
+### Render Pipeline
 
-### Rendering pipelines
-- **Images**: `src/lib/pipeline/render.ts` — Satori → SVG → sharp → PNG. Templates in `src/lib/templates/`. Satori supports `objectPosition` directly; do not switch those to `backgroundImage`.
-- **Video**: `src/lib/pipeline/render-video.ts` + `src/lib/video/lambda.ts` drive `src/remotion/` compositions (`Root.tsx`, `VideoCanvasComposition.tsx`). Render status tracked in Convex (`convex/videoRender.ts`).
-- Shared pipeline utilities: `src/lib/pipeline/shared.ts`, `cleanup.ts`.
+**Image** (`src/lib/pipeline/render.ts`): `POST /api/v1/cook` → `createRelease()` allocates a Convex record, returns `{ status: "pending" }` immediately → `renderReleaseAsync()` runs in background via `after()`:
+1. Resolve template config (built-in default or user's custom `tmpl_*` from Convex) → `migrateConfig()`
+2. Resolve brand (by `brand_id` from Convex, or inline from request, fallback to template colors)
+3. Pre-fetch static image URLs from template config
+4. Per format × per slide: build `ObjectDataMap`, fetch user images to base64, load fonts (Google Fonts + local TTF)
+5. `CanvasRenderer` JSX → Satori → SVG → Sharp → JPEG → upload to R2 (or local if `OUTPUT_LOCAL=true`)
+6. On failure: refund credits, mark `failed`, fire webhook
 
-### API surface
-- `src/app/api/v1/**` — public API (authenticated via API keys verified in `convex/verifyKey.ts` / `apiKeys.ts`).
-- `src/app/api/github/**` — GitHub App webhook + OAuth; config lives in `convex/githubInstallations.ts` / `githubRepoConfigs.ts` / `githubSkippedReleases.ts`.
-- `src/app/api/internal/**` — internal-only endpoints.
-- `src/app/api/auth/**` — Better Auth handlers.
+**Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): Same request via `POST /api/v1/cook` with `video` field → Convex `internalAction` (marked `"use node"`) renders via Remotion Lambda (`@remotion/lambda-client`). Composition: `src/remotion/VideoCanvasComposition.tsx`. Slide duration default 8s, transitions 0.5s, 30fps.
 
-### Uploads
-Uploads use **R2-direct presigned PUT** to bypass Vercel's 4.5 MB request body limit. Flow: client → `bragfast_get_upload_url` / `src/lib/upload/` → PUT directly to R2 → register with Convex. Don't route large uploads through Next route handlers.
+### Template System (v2, canvas-based)
 
-### App routes
-`src/app/` uses route groups: `(admin)` for admin dashboard, `(auth)` for signup/login. Marketing/docs pages live at the root (`page.tsx`, `pricing/`, `docs/`, `support/`, `terms/`, `privacy/`).
+- `CanvasTemplateConfig` — `version: 2`, contains `formats: { landscape, square, portrait }`, each with `objects: TemplateObject[]`
+- `TemplateObject` — absolute-positioned (x, y, width, height, zIndex), typed as `text | image | logo`
+- `CanvasRenderer` — React component rendering objects absolute-positioned in a fixed-size div, sorted by zIndex
+- 5 built-in templates in `canvas-defaults.ts`: `standard-browser`, `standard-mobile`, `split-browser`, `split-mobile`, `hero`
+- Custom templates stored in Convex `templates` table, prefixed `tmpl_*`
+- `migrateConfig()` handles legacy schema at read time
 
-### Testing
-Vitest with `@vitejs/plugin-react`. Tests live under `src/lib/__tests__/`. Integration tests for rendering should hit real pipelines where feasible; avoid over-mocking the database layer.
+### Key Modules
 
-## Conventions
+| Module | Purpose |
+|--------|---------|
+| `src/lib/types.ts` | Shared types (Brand, ReleaseRequest, FormatEntry, calculateCredits) |
+| `src/lib/templates/canvas-types.ts` | CanvasTemplateConfig, TemplateObject, migrateConfig() |
+| `src/lib/templates/canvas-renderer.tsx` | Satori-compatible JSX renderer |
+| `src/lib/auth/authenticate.ts` | Dual auth: API key (Bearer token) or session (Better Auth cookies) |
+| `src/lib/github/analyze-release.ts` | Claude Haiku extracts slide content from GitHub release notes |
+| `src/lib/storage/r2.ts` | Cloudflare R2 via AWS SDK S3Client |
+| `src/lib/fonts.ts` | Font loading with in-process caching |
+| `src/lib/video/lambda.ts` | Remotion Lambda render + progress polling with retry |
+| `src/lib/pipeline/shared.ts` | Shared helpers: resolveTemplate, resolveBrand, buildSlideDataMaps |
+| `convex/videoRender.ts` | Convex node action for video rendering (`"use node"`) |
+| `src/remotion/VideoCanvasComposition.tsx` | Remotion composition for video output |
+| `convex/schema.ts` | 11 tables: userProfiles, brands, templates, videoTemplates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, githubSkippedReleases |
+| `docs/solutions/` | Documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) |
 
-- TypeScript strict; Zod for runtime validation (`src/lib/validation.ts`).
-- UI uses shadcn/Radix + Tailwind v4 (`components.json`, `src/components/`). Design tokens per `DESIGN.md`.
-- Brand name in user-facing copy is "brag.fast" (with the dot), not "bragfast".
-- Remotion changes require `npm run remotion:deploy` to propagate to Lambda.
-- Cherry-picks: always use an explicit commit hash, never a range expression.
+### Image Dimensions
+
+- Landscape: 1200×675, Square: 1080×1080, Portrait: 1080×1350
+- Video: Same as image dimensions (renders at template resolution)
+
+### GitHub App Integration
+
+Webhook flow: GitHub `release.published` → `src/app/api/github/webhooks/route.ts` → verify signature → `map-release.ts` maps release notes to slides → if `autoApprove`: render immediately, else create `pending_review` release → admin shows pending reviews for approval. Per-repo config in `githubRepoConfigs` (brand, template, formats, tag filters). AI analysis via `analyze-release.ts` (Claude Haiku extracts slide content).
+
+### API Routes
+
+Public API (`src/app/api/v1/`): `cook` (render), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `guided-cook`. All authenticated via Bearer API key. GitHub routes: `webhooks`, `callback`, `installations`, `repos`, `configs`, `releases/[id]/approve`.
+
+### Next.js Route Groups
+
+- `(auth)` — login, signup, forgot/reset password
+- `(admin)` — admin, history, brands, templates, keys, account/billing
+- `docs`, `demo`, `support`, `terms`, `privacy` — public pages
+
+### Convex Patterns
+
+Convex functions in `convex/` use queries (reads) and mutations (writes). Heavy compute (video rendering) uses `internalAction` with `"use node"` directive at top of file. Next.js calls Convex via `ConvexHttpClient` (server-side) or `fetchQuery`/`fetchMutation` from `convex/nextjs`.
+
+### Storage
+
+File-based for local dev (`OUTPUT_LOCAL=true`): releases in `.output/:id/`, brands in `.brands/:id/`. Production uses Convex + R2.
+
+## Brand & Design
+
+See `BRAND_VOICE.md` (breakfast diner metaphor, NES-retro personality) and `DESIGN.md` (color tokens, Press Start 2P + Geist fonts, hard-offset shadows, zero border-radius). Light mode only.
+
+## Workflow Orchestration
+
+### 1. Plan Mode Default
+- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
+- If something goes sideways, STOP and re-plan immediately -- don't keep pushing
+- Use plan mode for verification steps, not just building
+- Write detailed specs upfront to reduce ambiguity
+
+### 2. Subagent Strategy
+- Use subagents liberally to keep main context window clean
+- Offload research, exploration, and parallel analysis to subagents
+- For complex problems, throw more compute at it via subagents
+- One task per subagent for focused execution
+
+### 3. Self-Improvement Loop
+- After ANY correction from the user: update `tasks/lessons.md` with the pattern
+- Write rules for yourself that prevent the same mistake
+- Ruthlessly iterate on these lessons until mistake rate drops
+- Review lessons at session start for relevant project
+
+### 4. Verification Before Done
+- Never mark a task complete without proving it works
+- Diff behavior between main and your changes when relevant
+- Ask yourself: "Would a staff engineer approve this?"
+- Run tests, check logs, demonstrate correctness
+
+### 5. Demand Elegance (Balanced)
+- For non-trivial changes: pause and ask "is there a more elegant way?"
+- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
+- Skip this for simple, obvious fixes -- don't over-engineer
+- Challenge your own work before presenting it
+
+### 6. Autonomous Bug Fixing
+- When given a bug report: just fix it. Don't ask for hand-holding
+- Point at logs, errors, failing tests -- then resolve them
+- Zero context switching required from the user
+- Go fix failing CI tests without being told how
+
+## Task Management
+
+1. **Plan First:** Write plan to `tasks/todo.md` with checkable items
+2. **Verify Plan:** Check in before starting implementation
+3. **Track Progress:** Mark items complete as you go
+4. **Explain Changes:** High-level summary at each step
+5. **Document Results:** Add review section to `tasks/todo.md`
+6. **Capture Lessons:** Update `tasks/lessons.md` after corrections
+
+## Core Principles
+
+- **Simplicity First:** Make every change as simple as possible. Impact minimal code.
+- **No Laziness:** Find root causes. No temporary fixes. Senior developer standards.
+- **Minimal Impact:** Changes should only touch what's necessary. Avoid introducing bugs.
+
+## Plan Mode
+
+- Make the plan extremely concise. Sacrifice grammar for the sake of concision.
+- At the end of each plan, give me a list of unresolved questions to answer, if any.
+
+## Model Tier Awareness
+
+- Call out when I'm using the wrong model tier
+- Lookups on Opus = waste
+- Architecture on Sonnet = underpowered
+- Quick nudge, not a lecture

@@ -204,7 +204,7 @@ export function CookPage({ templates }: CookPageProps) {
     // Build FormatEntry array — single slide per format
     const objects = Object.values(state.objectContent).filter((m) => {
       // Only include mods that have some content
-      return m.text || m.image_url;
+      return m.text || m.image_url || m.video_url;
     });
 
     const formats: FormatEntry[] = state.formats.map((fmt) => ({
