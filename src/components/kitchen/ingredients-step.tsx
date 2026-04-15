@@ -104,6 +104,11 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
   const [urlInput, setUrlInput] = useState(mod.image_url ?? "");
   const [videoUrlInput, setVideoUrlInput] = useState(mod.video_url ?? "");
 
+  // For video output: track which type the user has chosen (image or video, not both)
+  const [visualMode, setVisualMode] = useState<"image" | "video">(() =>
+    mod.video_url ? "video" : "image"
+  );
+
   async function handleFile(file: File) {
     setUploading(true);
     setUploadError(null);
@@ -150,100 +155,183 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
     }
   }
 
-  const hasVideo = !!mod.video_url;
-  const showVideoSlot = outputType === "video";
+  function switchVisualMode(mode: "image" | "video") {
+    if (mode === visualMode) return;
+    setVisualMode(mode);
+    if (mode === "video") {
+      // Clear image
+      setUrlInput("");
+      onChange({ ...mod, image_url: undefined, video_url: mod.video_url });
+    } else {
+      // Clear video
+      setVideoUrlInput("");
+      onChange({ ...mod, video_url: undefined, image_url: mod.image_url });
+    }
+    setUploadError(null);
+    setVideoError(null);
+  }
 
+  const hasVideo = !!mod.video_url;
+
+  // Image output: always show image field only
+  if (outputType === "image") {
+    return (
+      <div className="space-y-2">
+        <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand capitalize block">
+          {label}
+        </label>
+        <div
+          className={`border-2 border-dashed border-brand/30 bg-surface p-4 text-center cursor-pointer hover:border-brand/60 transition-colors ${uploading ? "opacity-60" : ""}`}
+          onClick={() => !uploading && inputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          {uploading ? (
+            <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/60 animate-pulse">
+              Uploading...
+            </p>
+          ) : mod.image_url && mod.image_url.startsWith("http") ? (
+            <div className="space-y-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={mod.image_url} alt="preview" className="max-h-24 mx-auto object-contain" />
+              <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/40">
+                Click to replace
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/50">
+              Drop image here or click to upload
+            </p>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFile(file);
+            }}
+          />
+        </div>
+        {uploadError && (
+          <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-600">
+            {uploadError}
+          </p>
+        )}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/50 whitespace-nowrap">
+            or URL
+          </span>
+          <input
+            type="url"
+            className="flex-1 border-2 border-brand/30 px-2 py-1.5 text-xs font-[family-name:var(--font-geist-mono)] text-brand bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand"
+            placeholder="https://..."
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onBlur={handleUrlBlur}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleUrlBlur(); } }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Video output: mutually exclusive image OR video picker
   return (
     <div className="space-y-2">
       <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand capitalize block">
         {label}
       </label>
 
-      <label className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/60 block">
-        Image
-      </label>
-
-      {/* Drop zone */}
-      <div
-        className={`
-          border-2 border-dashed border-brand/30 bg-surface p-4 text-center cursor-pointer
-          hover:border-brand/60 transition-colors
-          ${uploading ? "opacity-60" : ""}
-        `}
-        onClick={() => !uploading && inputRef.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-      >
-        {uploading ? (
-          <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/60 animate-pulse">
-            Uploading...
-          </p>
-        ) : mod.image_url && mod.image_url.startsWith("http") ? (
-          <div className="space-y-1 relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={mod.image_url}
-              alt="preview"
-              className="max-h-24 mx-auto object-contain"
-            />
-            {hasVideo && (
-              <span className="absolute top-0 right-0 bg-brand text-white text-[10px] px-1.5 py-0.5">
-                🎬
-              </span>
-            )}
-            <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/40">
-              Click to replace
-            </p>
-          </div>
-        ) : (
-          <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/50">
-            Drop image here or click to upload
-          </p>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
-          }}
-        />
+      {/* Mode toggle */}
+      <div className="flex gap-0">
+        <button
+          type="button"
+          onClick={() => switchVisualMode("image")}
+          className={`flex-1 px-3 py-1.5 text-[10px] font-[family-name:var(--font-geist-sans)] border-2 transition-colors ${
+            visualMode === "image"
+              ? "bg-brand text-white border-brand"
+              : "bg-white text-brand/50 border-brand/30 hover:border-brand/60"
+          }`}
+        >
+          Image
+        </button>
+        <button
+          type="button"
+          onClick={() => switchVisualMode("video")}
+          className={`flex-1 px-3 py-1.5 text-[10px] font-[family-name:var(--font-geist-sans)] border-2 border-l-0 transition-colors ${
+            visualMode === "video"
+              ? "bg-brand text-white border-brand"
+              : "bg-white text-brand/50 border-brand/30 hover:border-brand/60"
+          }`}
+        >
+          Video
+        </button>
       </div>
 
-      {uploadError && (
-        <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-600">
-          {uploadError}
-        </p>
+      {/* Image slot */}
+      {visualMode === "image" && (
+        <>
+          <div
+            className={`border-2 border-dashed border-brand/30 bg-surface p-4 text-center cursor-pointer hover:border-brand/60 transition-colors ${uploading ? "opacity-60" : ""}`}
+            onClick={() => !uploading && inputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+          >
+            {uploading ? (
+              <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/60 animate-pulse">
+                Uploading...
+              </p>
+            ) : mod.image_url && mod.image_url.startsWith("http") ? (
+              <div className="space-y-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={mod.image_url} alt="preview" className="max-h-24 mx-auto object-contain" />
+                <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/40">
+                  Click to replace
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs font-[family-name:var(--font-geist-sans)] text-brand/50">
+                Drop image here or click to upload
+              </p>
+            )}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+              }}
+            />
+          </div>
+          {uploadError && (
+            <p className="text-[10px] font-[family-name:var(--font-geist-sans)] text-red-600">
+              {uploadError}
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/50 whitespace-nowrap">
+              or URL
+            </span>
+            <input
+              type="url"
+              className="flex-1 border-2 border-brand/30 px-2 py-1.5 text-xs font-[family-name:var(--font-geist-mono)] text-brand bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand"
+              placeholder="https://..."
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onBlur={handleUrlBlur}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleUrlBlur(); } }}
+            />
+          </div>
+        </>
       )}
 
-      {/* URL input */}
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/50 whitespace-nowrap">
-          or URL
-        </span>
-        <input
-          type="url"
-          className="flex-1 border-2 border-brand/30 px-2 py-1.5 text-xs font-[family-name:var(--font-geist-mono)] text-brand bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand"
-          placeholder="https://..."
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          onBlur={handleUrlBlur}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleUrlBlur();
-            }
-          }}
-        />
-      </div>
-
-      {showVideoSlot && (
-        <div className="space-y-1 pt-1">
-          <label className="text-[10px] font-[family-name:var(--font-geist-sans)] text-brand/60 block">
-            Video (optional, MP4/WebM/MOV ≤ 50 MB)
-          </label>
+      {/* Video slot */}
+      {visualMode === "video" && (
+        <div className="space-y-1">
           <input
             ref={videoInputRef}
             type="file"
@@ -287,7 +375,7 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
               onClick={() => videoInputRef.current?.click()}
               disabled={uploadingVideo}
             >
-              {uploadingVideo ? "Uploading video..." : "Upload video"}
+              {uploadingVideo ? "Uploading..." : "Upload video (MP4/WebM/MOV ≤ 50 MB)"}
             </button>
           )}
           <div className="flex items-center gap-2">
@@ -301,12 +389,7 @@ function VisualField({ label, mod, outputType, onChange }: VisualFieldProps) {
               value={videoUrlInput}
               onChange={(e) => setVideoUrlInput(e.target.value)}
               onBlur={handleVideoUrlBlur}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleVideoUrlBlur();
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleVideoUrlBlur(); } }}
             />
           </div>
           {videoError && (
