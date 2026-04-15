@@ -240,9 +240,17 @@ export function renderObject(
       const videoRenderMedia = useVideo && VideoEl && videoUrl
         ? (style: { width: number; height?: number; objectFit: 'cover' | 'contain'; objectPosition: string; borderRadius?: string }) => {
             const Video = VideoEl;
+            const radius = style.borderRadius ? { borderRadius: style.borderRadius } : {};
             const inlineStyle: React.CSSProperties = style.objectFit === 'contain'
-              ? { display: 'flex', width: '100%', ...(style.borderRadius ? { borderRadius: style.borderRadius } : {}) }
-              : { display: 'flex', width: '100%', height: '100%', objectFit: 'cover', objectPosition: style.objectPosition, ...(style.borderRadius ? { borderRadius: style.borderRadius } : {}) };
+              ? { display: 'flex', width: `${style.width}px`, ...radius }
+              : {
+                  display: 'flex',
+                  width: `${style.width}px`,
+                  ...(style.height ? { height: `${style.height}px` } : {}),
+                  objectFit: 'cover',
+                  objectPosition: style.objectPosition,
+                  ...radius,
+                };
             return <Video src={videoUrl} muted loop style={inlineStyle} />;
           }
         : undefined;
