@@ -29,6 +29,7 @@
     "@remotion/cli": "^4.0.435",
     "@remotion/fonts": "^4.0.435",
     "@remotion/lambda": "^4.0.435",
+    "@remotion/player": "^4.0.448",
     "@remotion/transitions": "^4.0.435",
     "better-auth": "^1.4.9",
     "class-variance-authority": "^0.7.1",
