@@ -4,7 +4,6 @@ import type { AnimationPreset } from "@/lib/types";
 type MotionPresetMeta = {
   slug: AnimationPreset;
   name: string;
-  description: string;
   best_for: string[];
 };
 
@@ -12,13 +11,11 @@ const MOTION_PRESET_METADATA: MotionPresetMeta[] = [
   {
     slug: "showcase",
     name: "Showcase",
-    description: "3D-rise hero with delayed text reveal. The default.",
-    best_for: ["standard-browser", "standard-mobile", "hero", "video-full-bleed"],
+    best_for: ["standard-browser", "standard-mobile", "hero"],
   },
   {
     slug: "3d-tilt-angles",
-    name: "3D Tilt",
-    description: "Hero screenshot rotates through multiple 3D angles before settling face-on.",
+    name: "3D Multiple Angles",
     best_for: ["standard-browser", "standard-mobile", "hero"],
   },
 ];

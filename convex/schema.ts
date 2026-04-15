@@ -96,19 +96,6 @@ export default defineSchema({
     .index("by_externalId", ["externalId"])
     .index("by_sourceMetadata", ["sourceMetadata"]),
 
-  videoTemplates: defineTable({
-    userId: v.string(),
-    externalId: v.string(),
-    name: v.string(),
-    isDefault: v.boolean(),
-    config: v.any(),
-    previewUrl: v.optional(v.string()),
-    created_at: v.number(),
-    updated_at: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_externalId", ["externalId"]),
-
   githubInstallations: defineTable({
     userId: v.string(),
     installationId: v.number(),

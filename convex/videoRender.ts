@@ -9,7 +9,6 @@ import { buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "..
 import { collectUploadKeys, cleanupUploads } from "../src/lib/pipeline/cleanup";
 import { fetchImageAsBase64 } from "../src/lib/images";
 import { getDefaultConfig } from "../src/lib/templates/default-configs";
-import { getVideoDefaultConfig } from "../src/lib/templates/video-defaults";
 import { migrateConfig } from "../src/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "../src/lib/templates/canvas-types";
 import type { FormatKey } from "../src/lib/templates/canvas-types";
@@ -59,22 +58,9 @@ export const render = internalAction({
       const templateName = request.template || "standard-browser";
       let templateConfig: CanvasTemplateConfig;
 
-      const videoDefault = getVideoDefaultConfig(templateName);
-      const videoRow = videoDefault
-        ? null
-        : await ctx.runQuery(internal.videoRenderHelpers.getVideoTemplate, {
-            externalId: templateName,
-          });
-      const defaultConfig = videoDefault ? null : getDefaultConfig(templateName);
+      const defaultConfig = getDefaultConfig(templateName);
 
-      if (videoDefault) {
-        templateConfig = migrateConfig(videoDefault);
-      } else if (videoRow) {
-        if (!videoRow.isDefault && videoRow.userId !== userId) {
-          throw new Error(`Template not found: ${templateName}`);
-        }
-        templateConfig = migrateConfig(videoRow.config as CanvasTemplateConfig);
-      } else if (defaultConfig) {
+      if (defaultConfig) {
         templateConfig = migrateConfig(defaultConfig);
       } else if (templateName.startsWith("tmpl_")) {
         const tmpl = await ctx.runQuery(internal.videoRenderHelpers.getTemplate, {

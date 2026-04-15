@@ -68,8 +68,6 @@ export async function POST(request: Request) {
       "split-browser",
       "split-mobile",
       "hero",
-      "video-text-only",
-      "video-full-bleed",
     ];
     const isDefault = validDefaults.includes(body.template);
     const isCustom = typeof body.template === "string" && body.template.startsWith("tmpl_");
