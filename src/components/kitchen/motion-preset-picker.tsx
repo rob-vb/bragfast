@@ -113,9 +113,6 @@ export function MotionPresetPicker({
                 )}
               </span>
               <span className="font-medium">{preset.name}</span>
-              {degraded && (
-                <span className="ml-1 text-xs text-brand/50">needs visual</span>
-              )}
             </button>
           );
         })}

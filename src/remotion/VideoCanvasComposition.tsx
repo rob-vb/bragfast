@@ -174,7 +174,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         const localFrame = Math.max(0, frame - staggerDelay);
 
         // Compute entrance animation style
-        const entranceStyle = computeEntranceStyle(entrance, localFrame, fps, slideDurationFrames, height);
+        const entranceStyle = computeEntranceStyle(entrance, localFrame, fps, slideDurationFrames, height, obj.y, obj.height);
 
         // Compute exit animation style
         const exitStyle = computeExitStyle(exit, frame, fps, slideDurationFrames);
@@ -326,6 +326,8 @@ function computeEntranceStyle(
   fps: number,
   slideDurationFrames?: number,
   containerHeight?: number,
+  objY?: number,
+  objHeight?: number,
 ): React.CSSProperties {
   switch (entrance) {
     case "none":
@@ -459,8 +461,8 @@ function computeEntranceStyle(
     }
 
     case "3d-tilt": {
-      // Hero screenshot enters from below, rises well above rest toward frame
-      // center while rotating through multiple 3D angles, then settles into
+      // Hero screenshot enters from below with 3D angles, rises to canvas
+      // center (landing visually centered in the frame), then settles into
       // rest position. Hold at the end is always 3s (fixed), so motion
       // stretches to fill whatever duration remains before the hold.
       const total = slideDurationFrames ?? Math.round(fps * 8);
@@ -469,35 +471,40 @@ function computeEntranceStyle(
       // Motion must end early enough for text reveal + 3s hold; clamp minimum.
       const motionEnd = Math.max(fps * 2, total - holdFrames - textRevealFrames);
 
-      const stops = [0, motionEnd * 0.27, motionEnd * 0.55, motionEnd * 0.82, motionEnd, total].map((f) => Math.round(f));
-      const rotateY = interpolate(localFrame, stops, [-38, 28, -24, 14, 0, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.cubic),
-      });
-      const rotateX = interpolate(localFrame, stops, [10, -6, 8, -3, 0, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.cubic),
-      });
-      const scale = interpolate(localFrame, stops, [0.88, 1.02, 1.05, 1.02, 1.0, 1.0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.cubic),
-      });
-      const translateZ = interpolate(localFrame, stops, [-220, 0, 40, 20, 0, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.cubic),
-      });
-
-      // Y arc: just below rest (visible early) → rises well above rest toward
-      // frame center → settles at rest. CSS Y grows downward, so up = negative.
+      // Canvas-center offset: translateY needed to vertically center the element.
+      // CSS Y grows downward, so negative = up.
       const h = containerHeight ?? 675;
+      const centerOffset =
+        objY !== undefined && objHeight !== undefined
+          ? h / 2 - (objY + objHeight / 2)
+          : -h * 0.35;
+
+      // 5-stop path: start → arc up → land at canvas center → slide to rest → hold
+      const stops = [0, motionEnd * 0.30, motionEnd * 0.58, motionEnd * 0.82, motionEnd, total].map((f) => Math.round(f));
+      const rotateY = interpolate(localFrame, stops, [-38, 28, -12, 0, 0, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
+      const rotateX = interpolate(localFrame, stops, [10, -6, 4, 0, 0, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
+      const scale = interpolate(localFrame, stops, [0.88, 1.02, 1.05, 1.0, 1.0, 1.0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
+      const translateZ = interpolate(localFrame, stops, [-220, 0, 30, 0, 0, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
       const translateY = interpolate(
         localFrame,
         stops,
-        [h * 0.15, -h * 0.35, -h * 0.5, -h * 0.2, 0, 0],
+        [h * 0.15, -h * 0.35, centerOffset, 0, 0, 0],
         {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
