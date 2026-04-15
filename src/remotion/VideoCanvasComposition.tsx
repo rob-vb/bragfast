@@ -7,7 +7,6 @@ import {
   useVideoConfig,
   interpolate,
   Easing,
-  spring,
   delayRender,
   continueRender,
 } from "remotion";
@@ -306,27 +305,12 @@ export function resolvePreset(
       }
       return { entrance: "showcase-reveal", exit: "none" };
     }
-    case "kinetic": {
-      return { entrance: "slide-up", exit: "slide-down" };
-    }
-    case "minimal": {
-      return { entrance: "fade-in-slow", exit: "fade-out" };
-    }
-    case "bounce-pop": {
-      return { entrance: "scale-pop", exit: "scale-out" };
-    }
-    case "ken-burns": {
-      if (objectType === "visual" && isHero === true) {
-        return { entrance: "zoom-hold", exit: "none", kenBurns: true };
-      }
-      return { entrance: "fade-in-slow", exit: "fade-out" };
-    }
-    case "cinematic": {
+    case "3d-tilt-angles": {
       if (objectType === "visual") {
-        if (isHero === true) return { entrance: "drift-in", exit: "drift-out" };
-        return { entrance: "fade-in-slow", exit: "fade-out" };
+        if (isHero === false) return { entrance: "fade-in", exit: "none", kenBurns: false };
+        return { entrance: "3d-tilt", exit: "none", kenBurns: false };
       }
-      return { entrance: "showcase-reveal", exit: "fade-out" };
+      return { entrance: "3d-tilt-reveal", exit: "none" };
     }
     default:
       return {};
@@ -358,46 +342,17 @@ function computeEntranceStyle(
       };
     }
 
-    case "slide-up": {
-      const duration = Math.round(fps * 0.3);
-      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
-        extrapolateRight: "clamp",
-      });
-      const translateY = spring({
-        frame: localFrame,
-        fps,
-        from: 60,
-        to: 0,
-        config: { damping: 12, stiffness: 100 },
-      });
-      return {
-        opacity,
-        transform: `translateY(${translateY}px)`,
-      };
-    }
-
-    case "bounce": {
-      const scale = spring({
-        frame: localFrame,
-        fps,
-        from: 0.8,
-        to: 1.0,
-        config: { damping: 8, stiffness: 150 },
-      });
-      return {
-        transform: `scale(${scale})`,
-      };
-    }
-
     case "showcase-rise": {
-      // All timings are proportional to slide duration so they scale
-      // with any duration (5s, 10s, etc.).
-      // First 60% = motion (rise, zoom, tilt), last 40% = settled & readable.
+      // Hold at the end is always 3s (fixed); motion stretches to fill the
+      // remainder. Internal proportions below are the original 0→0.6 timings
+      // of the motion arc, rescaled into the [0, motionEnd] window.
       const total = slideDurationFrames ?? Math.round(fps * 5);
+      const holdFrames = fps * 3;
+      const motionEnd = Math.max(fps * 2, total - holdFrames);
 
-      // Rise: 0→20% fly up with overshoot, 20→50% settle to position
-      const riseMid = Math.round(total * 0.2);
-      const riseEnd = Math.round(total * 0.5);
+      // Rise: 0→33% fly up with overshoot, 33→83% settle to position
+      const riseMid = Math.round(motionEnd * 0.33);
+      const riseEnd = Math.round(motionEnd * 0.83);
       const riseDistance = containerHeight ?? 600;
       const overshoot = -250;
 
@@ -416,9 +371,9 @@ function computeEntranceStyle(
         });
       }
 
-      // Zoom: 0→40% overshoot small, 40→60% settle to 1.0
-      const zoomOutEnd = Math.round(total * 0.4);
-      const zoomSettleEnd = Math.round(total * 0.6);
+      // Zoom: 0→67% overshoot small, 67→100% settle to 1.0 (of motion window)
+      const zoomOutEnd = Math.round(motionEnd * 0.67);
+      const zoomSettleEnd = motionEnd;
 
       let scale: number;
       if (localFrame <= zoomOutEnd) {
@@ -435,9 +390,9 @@ function computeEntranceStyle(
         });
       }
 
-      // 3D tilt: 0→30% pan across, 30→60% settle to neutral
-      const tiltMid = Math.round(total * 0.3);
-      const tiltEnd = Math.round(total * 0.6);
+      // 3D tilt: 0→50% pan across, 50→100% settle to neutral (of motion window)
+      const tiltMid = Math.round(motionEnd * 0.5);
+      const tiltEnd = motionEnd;
 
       let rotateY: number;
       let rotateX: number;
@@ -472,10 +427,13 @@ function computeEntranceStyle(
     }
 
     case "showcase-reveal": {
-      // Reveal after the image has settled into position.
-      // Starts at 40% so text is readable for ~2.5s on a 5s slide.
+      // Reveal fires during the image's settle phase and completes before the
+      // fixed 3s end-hold starts. Proportional to the motion window so the
+      // text/image choreography stays consistent across any slide duration.
       const totalFrames = slideDurationFrames ?? Math.round(fps * 10);
-      const revealStart = Math.round(totalFrames * 0.4);
+      const holdFrames = fps * 3;
+      const motionEnd = Math.max(fps * 2, totalFrames - holdFrames);
+      const revealStart = Math.round(motionEnd * 0.67);
       const revealDuration = Math.round(fps * 0.6);
 
       if (localFrame < revealStart) {
@@ -497,47 +455,87 @@ function computeEntranceStyle(
       };
     }
 
-    case "fade-in-slow": {
-      const duration = Math.round(fps * 1.2);
-      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
+    case "3d-tilt": {
+      // Hero screenshot enters from below, rises well above rest toward frame
+      // center while rotating through multiple 3D angles, then settles into
+      // rest position. Hold at the end is always 3s (fixed), so motion
+      // stretches to fill whatever duration remains before the hold.
+      const total = slideDurationFrames ?? Math.round(fps * 8);
+      const holdFrames = fps * 3;
+      const textRevealFrames = Math.round(fps * 0.7);
+      // Motion must end early enough for text reveal + 3s hold; clamp minimum.
+      const motionEnd = Math.max(fps * 2, total - holdFrames - textRevealFrames);
+
+      const stops = [0, motionEnd * 0.27, motionEnd * 0.55, motionEnd * 0.82, motionEnd, total].map((f) => Math.round(f));
+      const rotateY = interpolate(localFrame, stops, [-38, 28, -24, 14, 0, 0], {
+        extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.quad),
+        easing: Easing.inOut(Easing.cubic),
       });
-      return { opacity };
+      const rotateX = interpolate(localFrame, stops, [10, -6, 8, -3, 0, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
+      const scale = interpolate(localFrame, stops, [0.88, 1.02, 1.05, 1.02, 1.0, 1.0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
+      const translateZ = interpolate(localFrame, stops, [-220, 0, 40, 20, 0, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.cubic),
+      });
+
+      // Y arc: just below rest (visible early) → rises well above rest toward
+      // frame center → settles at rest. CSS Y grows downward, so up = negative.
+      const h = containerHeight ?? 675;
+      const translateY = interpolate(
+        localFrame,
+        stops,
+        [h * 0.15, -h * 0.35, -h * 0.5, -h * 0.2, 0, 0],
+        {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.cubic),
+        },
+      );
+
+      const opacityEnd = Math.round(fps * 0.6);
+      const opacity = interpolate(localFrame, [0, opacityEnd], [0, 1], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+
+      return {
+        opacity,
+        transform: `perspective(1400px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
+      };
     }
 
-    case "scale-pop": {
-      const opacity = interpolate(localFrame, [0, Math.round(fps * 0.3)], [0, 1], {
-        extrapolateRight: "clamp",
-      });
-      const scale = spring({
-        frame: localFrame,
-        fps,
-        from: 0.6,
-        to: 1.0,
-        config: { damping: 6, stiffness: 180 },
-      });
-      return { opacity, transform: `scale(${scale})` };
-    }
+    case "3d-tilt-reveal": {
+      // Text/logo reveal tuned for 3d-tilt: fires exactly when the hero
+      // settles, so the last 3s of the slide are a fully-assembled hold.
+      const totalFrames = slideDurationFrames ?? Math.round(fps * 10);
+      const revealDuration = Math.round(fps * 0.7);
+      const holdFrames = fps * 3;
+      const revealStart = Math.max(fps * 2, totalFrames - holdFrames - revealDuration);
 
-    case "drift-in": {
-      const duration = Math.round(fps * 1.0);
-      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
+      if (localFrame < revealStart) {
+        return { opacity: 0 };
+      }
+
+      const progress = localFrame - revealStart;
+      const opacity = interpolate(progress, [0, revealDuration], [0, 1], {
         extrapolateRight: "clamp",
       });
-      const translateX = interpolate(localFrame, [0, duration], [-40, 0], {
+      const slideY = interpolate(progress, [0, revealDuration], [18, 0], {
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.quad),
       });
-      return { opacity, transform: `translateX(${translateX}px)` };
-    }
 
-    case "zoom-hold": {
-      const duration = Math.round(fps * 0.8);
-      const opacity = interpolate(localFrame, [0, duration], [0, 1], {
-        extrapolateRight: "clamp",
-      });
-      return { opacity };
+      return { opacity, transform: `translateY(${slideY}px)` };
     }
 
     default:
@@ -570,81 +568,6 @@ function computeExitStyle(
         opacity,
         transform: `translateY(${translateY}px)`,
       };
-    }
-
-    case "slide-down": {
-      const duration = Math.round(fps * 0.3);
-      const exitStart = slideDurationFrames - duration;
-      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      });
-      const framesFromEnd = Math.max(0, frame - exitStart);
-      const translateY = spring({
-        frame: framesFromEnd,
-        fps,
-        from: 0,
-        to: 60,
-        config: { damping: 12, stiffness: 100 },
-      });
-      return {
-        opacity,
-        transform: `translateY(${translateY}px)`,
-      };
-    }
-
-    case "bounce": {
-      const duration = Math.round(fps * 0.4);
-      const exitStart = slideDurationFrames - duration;
-      const framesFromEnd = Math.max(0, frame - exitStart);
-      const scale = spring({
-        frame: framesFromEnd,
-        fps,
-        from: 1.0,
-        to: 0.8,
-        config: { damping: 8, stiffness: 150 },
-      });
-      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      });
-      return {
-        opacity,
-        transform: `scale(${scale})`,
-      };
-    }
-
-    case "scale-out": {
-      const duration = Math.round(fps * 0.4);
-      const exitStart = slideDurationFrames - duration;
-      const framesFromEnd = Math.max(0, frame - exitStart);
-      const scale = spring({
-        frame: framesFromEnd,
-        fps,
-        from: 1.0,
-        to: 1.1,
-        config: { damping: 10, stiffness: 140 },
-      });
-      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      });
-      return { opacity, transform: `scale(${scale})` };
-    }
-
-    case "drift-out": {
-      const duration = Math.round(fps * 0.6);
-      const exitStart = slideDurationFrames - duration;
-      const opacity = interpolate(frame, [exitStart, slideDurationFrames], [1, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      });
-      const translateX = interpolate(frame, [exitStart, slideDurationFrames], [0, 40], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.in(Easing.quad),
-      });
-      return { opacity, transform: `translateX(${translateX}px)` };
     }
 
     default:

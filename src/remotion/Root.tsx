@@ -45,11 +45,7 @@ const presetSlide = {
 
 const PRESETS: AnimationPreset[] = [
   "showcase",
-  "kinetic",
-  "minimal",
-  "bounce-pop",
-  "ken-burns",
-  "cinematic",
+  "3d-tilt-angles",
 ];
 
 const baseConfig = getDefaultConfig("standard-browser")!;
@@ -57,25 +53,28 @@ const baseConfig = getDefaultConfig("standard-browser")!;
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {PRESETS.map((preset) => (
-        <Composition
-          key={`preset-${preset}`}
-          id={`preset-${preset}`}
-          component={VideoCanvasComposition}
-          fps={FPS}
-          width={FORMAT_DIMENSIONS.landscape.width}
-          height={FORMAT_DIMENSIONS.landscape.height}
-          durationInFrames={Math.ceil(8 * FPS)}
-          defaultProps={{
-            config: { ...baseConfig, animation_preset: preset },
-            format: "landscape",
-            slides: [presetSlide],
-            brand: presetBrand,
-            slideDuration: 8,
-          }}
-          calculateMetadata={calculateMetadata}
-        />
-      ))}
+      {PRESETS.map((preset) => {
+        const slideDuration = preset === "3d-tilt-angles" ? 12 : 8;
+        return (
+          <Composition
+            key={`preset-${preset}`}
+            id={`preset-${preset}`}
+            component={VideoCanvasComposition}
+            fps={FPS}
+            width={FORMAT_DIMENSIONS.landscape.width}
+            height={FORMAT_DIMENSIONS.landscape.height}
+            durationInFrames={Math.ceil(slideDuration * FPS)}
+            defaultProps={{
+              config: { ...baseConfig, animation_preset: preset },
+              format: "landscape",
+              slides: [presetSlide],
+              brand: presetBrand,
+              slideDuration,
+            }}
+            calculateMetadata={calculateMetadata}
+          />
+        );
+      })}
     </>
   );
 };

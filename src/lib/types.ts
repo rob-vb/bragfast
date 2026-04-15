@@ -29,29 +29,17 @@ export interface BrandRecord {
 export type TextAlign = 'left' | 'center' | 'right'
 export type EntranceType =
   | 'fade-in'
-  | 'slide-up'
-  | 'bounce'
   | 'showcase-rise'
   | 'showcase-reveal'
-  | 'scale-pop'
-  | 'fade-in-slow'
-  | 'drift-in'
-  | 'zoom-hold'
+  | '3d-tilt'
+  | '3d-tilt-reveal'
   | 'none'
 export type ExitType =
   | 'fade-out'
-  | 'slide-down'
-  | 'bounce'
-  | 'scale-out'
-  | 'drift-out'
   | 'none'
 export type AnimationPreset =
   | 'showcase'
-  | 'kinetic'
-  | 'minimal'
-  | 'bounce-pop'
-  | 'ken-burns'
-  | 'cinematic'
+  | '3d-tilt-angles'
 
 export interface ObjectModification {
   id: string
@@ -140,9 +128,5 @@ export function calculateCredits(input: CookCreditsInput): number {
 
 export const VALID_ANIMATION_PRESETS: AnimationPreset[] = [
   'showcase',
-  'kinetic',
-  'minimal',
-  'bounce-pop',
-  'ken-burns',
-  'cinematic',
+  '3d-tilt-angles',
 ]

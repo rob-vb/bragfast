@@ -142,7 +142,7 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
     config: {
       version: 2,
       colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
-      animation_preset: "ken-burns",
+      animation_preset: "showcase",
       formats: {
         landscape: {
           objects: [

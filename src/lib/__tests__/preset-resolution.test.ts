@@ -68,4 +68,44 @@ describe("resolvePreset", () => {
       exit: "none",
     });
   });
+
+  // 3d-tilt-angles preset
+
+  it("3d-tilt-angles hero visual maps to 3d-tilt without kenBurns", () => {
+    expect(resolvePreset("3d-tilt-angles", "visual", true)).toEqual({
+      entrance: "3d-tilt",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("3d-tilt-angles non-hero visual maps to fade-in", () => {
+    expect(resolvePreset("3d-tilt-angles", "visual", false)).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("3d-tilt-angles visual without isHero defaults to 3d-tilt (backward compat)", () => {
+    expect(resolvePreset("3d-tilt-angles", "visual", undefined)).toEqual({
+      entrance: "3d-tilt",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("3d-tilt-angles text uses 3d-tilt-reveal so text lands after screenshot settles", () => {
+    expect(resolvePreset("3d-tilt-angles", "text")).toEqual({
+      entrance: "3d-tilt-reveal",
+      exit: "none",
+    });
+  });
+
+  it("3d-tilt-angles logo uses 3d-tilt-reveal", () => {
+    expect(resolvePreset("3d-tilt-angles", "logo")).toEqual({
+      entrance: "3d-tilt-reveal",
+      exit: "none",
+    });
+  });
 });

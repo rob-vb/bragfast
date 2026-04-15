@@ -22,11 +22,7 @@ interface VideoTemplatePickerProps {
 
 const PRESET_LABEL: Record<AnimationPreset, string> = {
   showcase: "SHOWCASE",
-  kinetic: "KINETIC",
-  minimal: "MINIMAL",
-  "bounce-pop": "BOUNCE POP",
-  "ken-burns": "KEN BURNS",
-  cinematic: "CINEMATIC",
+  "3d-tilt-angles": "3D TILT",
 };
 
 export function VideoTemplatePicker({

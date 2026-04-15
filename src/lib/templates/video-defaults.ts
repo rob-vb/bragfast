@@ -13,7 +13,7 @@ export const VIDEO_DEFAULTS: Record<
     config: {
       version: 2,
       colors: { background: "#0F0F0F", text: "#FFFFFF", primary: "#F8AF3C" },
-      animation_preset: "bounce-pop",
+      animation_preset: "showcase",
       formats: {
         landscape: {
           objects: [
@@ -45,7 +45,7 @@ export const VIDEO_DEFAULTS: Record<
     config: {
       version: 2,
       colors: { background: "#0F0F0F", text: "#FFFFFF", primary: "#F8AF3C" },
-      animation_preset: "cinematic",
+      animation_preset: "showcase",
       formats: {
         landscape: {
           objects: [

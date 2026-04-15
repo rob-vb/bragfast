@@ -12,11 +12,7 @@ type PresetOption = {
 
 const PRESETS: PresetOption[] = [
   { slug: "showcase", name: "Showcase", description: "3D-rise hero with delayed text reveal." },
-  { slug: "kinetic", name: "Kinetic", description: "Fast slide-up stagger, snappy spring." },
-  { slug: "minimal", name: "Minimal", description: "Slow opacity fade, no movement." },
-  { slug: "bounce-pop", name: "Bounce Pop", description: "Overshoot spring scale on every object." },
-  { slug: "ken-burns", name: "Ken Burns", description: "Slow zoom and pan on hero image.", requiresHero: true },
-  { slug: "cinematic", name: "Cinematic", description: "Horizontal drift on image, late title." },
+  { slug: "3d-tilt-angles", name: "3D Tilt", description: "Hero screenshot rotates through multiple 3D angles before settling face-on.", requiresHero: true },
 ];
 
 interface MotionPresetPickerProps {
@@ -124,7 +120,7 @@ export function MotionPresetPicker({
         })}
       </div>
       <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
-        Motions apply to the whole video. Some (Ken Burns) work best when there&apos;s a
+        Motions apply to the whole video. Some (3D Tilt) work best when there&apos;s a
         hero image.
       </p>
       <style jsx>{`
