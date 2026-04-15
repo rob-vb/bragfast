@@ -9,10 +9,11 @@ export default async function KitchenPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
-  const [userTemplates, defaultTemplates, brands] = await Promise.all([
+  const [userTemplates, defaultTemplates, brands, videoDefaults] = await Promise.all([
     fetchQuery(api.templates.listByUser, { userId: user._id }),
     fetchQuery(api.templates.listDefaults, {}),
     fetchQuery(api.brands.listByUser, { userId: user._id }),
+    fetchQuery(api.videoTemplates.listDefaults, {}),
   ]);
 
   const defaultDisplayIds: Record<string, string> = {
@@ -74,6 +75,41 @@ export default async function KitchenPage() {
     config: t.config as CanvasTemplateConfig,
   }));
 
+  // Build unified video templates list: image defaults (composable with motion)
+  // + video-native rows from Convex. Each entry embeds its default motion preset.
+  const hasImageObject = (config: CanvasTemplateConfig) => {
+    for (const layout of Object.values(config.formats)) {
+      if (layout?.objects.some((o) => o.type === "visual")) return true;
+    }
+    return false;
+  };
+
+  const videoTemplates = [
+    ...cookTemplates
+      .filter((t) => t.isDefault)
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        isVideoNative: false,
+        primaryColor: t.config.colors?.primary ?? "#F8AF3C",
+        animationPreset: t.config.animation_preset ?? "showcase",
+        hasHero: hasImageObject(t.config),
+        config: t.config,
+      })),
+    ...videoDefaults.map((row) => {
+      const config = row.config as CanvasTemplateConfig;
+      return {
+        id: row.externalId,
+        name: row.name,
+        isVideoNative: true,
+        primaryColor: config.colors?.primary ?? "#F8AF3C",
+        animationPreset: config.animation_preset ?? "showcase",
+        hasHero: hasImageObject(config),
+        config,
+      };
+    }),
+  ];
+
   return (
     <KitchenClient
       defaults={v2Defaults.map(mapTemplate)}
@@ -86,6 +122,7 @@ export default async function KitchenPage() {
         fontFamily: b.font_family,
       }))}
       cookTemplates={cookTemplates}
+      videoTemplates={videoTemplates}
     />
   );
 }

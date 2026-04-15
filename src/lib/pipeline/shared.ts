@@ -3,6 +3,7 @@ import { api } from "@convex/_generated/api";
 import type { CanvasTemplateConfig, FormatKey, FormatLayout } from "../templates/canvas-types";
 import { migrateConfig } from "../templates/canvas-types";
 import { getDefaultConfig } from "../templates/default-configs";
+import { getVideoDefaultConfig } from "../templates/video-defaults";
 import type { ObjectDataMap } from "../templates/canvas-renderer";
 import { fetchImageAsBase64 } from "../images";
 import type { Brand, BrandColors, ObjectModification } from "../types";
@@ -25,6 +26,30 @@ export async function resolveTemplate(
   }
 
   throw new Error(`Invalid template: ${templateName}`);
+}
+
+// Video-aware template resolver. Checks the 2 video-native layouts first
+// (static map + Convex videoTemplates fallback), then falls through to
+// `resolveTemplate` for image-era slugs (`standard-browser`, `tmpl_*`, etc.).
+export async function resolveVideoTemplate(
+  templateName: string,
+  userId: string,
+  convex: ConvexHttpClient
+): Promise<CanvasTemplateConfig> {
+  const videoDefault = getVideoDefaultConfig(templateName);
+  if (videoDefault) return migrateConfig(videoDefault);
+
+  const videoRow = await convex.query(api.videoTemplates.getByExternalId, {
+    externalId: templateName,
+  });
+  if (videoRow) {
+    if (!videoRow.isDefault && videoRow.userId !== userId) {
+      throw new Error(`Template not found: ${templateName}`);
+    }
+    return migrateConfig(videoRow.config as CanvasTemplateConfig);
+  }
+
+  return resolveTemplate(templateName, userId, convex);
 }
 
 export async function resolveBrand(

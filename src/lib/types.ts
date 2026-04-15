@@ -27,9 +27,19 @@ export interface BrandRecord {
 }
 
 export type TextAlign = 'left' | 'center' | 'right'
-export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'showcase-rise' | 'showcase-reveal' | 'none'
-export type ExitType = 'fade-out' | 'slide-down' | 'bounce' | 'none'
-export type AnimationPreset = 'showcase'
+export type EntranceType =
+  | 'fade-in'
+  | 'showcase-rise'
+  | 'showcase-reveal'
+  | '3d-tilt'
+  | '3d-tilt-reveal'
+  | 'none'
+export type ExitType =
+  | 'fade-out'
+  | 'none'
+export type AnimationPreset =
+  | 'showcase'
+  | '3d-tilt-angles'
 
 export interface ObjectModification {
   id: string
@@ -116,4 +126,7 @@ export function calculateCredits(input: CookCreditsInput): number {
   return totalSlides;
 }
 
-export const VALID_ANIMATION_PRESETS: AnimationPreset[] = ['showcase']
+export const VALID_ANIMATION_PRESETS: AnimationPreset[] = [
+  'showcase',
+  '3d-tilt-angles',
+]

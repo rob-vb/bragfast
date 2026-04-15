@@ -171,44 +171,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       },
     },
   },
-  changelog: {
-    name: "Changelog",
-    config: {
-      version: 2,
-      colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
-      animation_preset: "showcase",
-      formats: {
-        landscape: {
-          objects: [
-            { id: "logo", type: "logo", name: "logo", x: 80, y: 24, width: 260, height: 48, opacity: 1, zIndex: 4, objectFit: "contain" },
-            { id: "version", type: "text", name: "version", x: 80, y: 110, width: 1040, height: 56, opacity: 1, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 32, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", colorRole: "primary" },
-            { id: "features", type: "text", name: "features", x: 80, y: 196, width: 1040, height: 200, opacity: 1, zIndex: 3, fontFamily: "Geist", fontSize: 36, fontWeight: 600, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "fixes", type: "text", name: "fixes", x: 80, y: 416, width: 1040, height: 180, opacity: 0.7, zIndex: 3, fontFamily: "Geist", fontSize: 30, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "branding", type: "text", name: "branding", x: 80, y: 631, width: 1040, height: 28, opacity: 0.5, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 16, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "right", verticalAlign: "top" },
-          ],
-        },
-        square: {
-          objects: [
-            { id: "logo", type: "logo", name: "logo", x: 80, y: 48, width: 300, height: 56, opacity: 1, zIndex: 4, objectFit: "contain" },
-            { id: "version", type: "text", name: "version", x: 80, y: 148, width: 920, height: 64, opacity: 1, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 36, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", colorRole: "primary" },
-            { id: "features", type: "text", name: "features", x: 80, y: 244, width: 920, height: 320, opacity: 1, zIndex: 3, fontFamily: "Geist", fontSize: 36, fontWeight: 600, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "fixes", type: "text", name: "fixes", x: 80, y: 584, width: 920, height: 380, opacity: 0.7, zIndex: 3, fontFamily: "Geist", fontSize: 30, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "branding", type: "text", name: "branding", x: 80, y: 1024, width: 920, height: 28, opacity: 0.5, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 16, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "right", verticalAlign: "top" },
-          ],
-        },
-        portrait: {
-          objects: [
-            { id: "logo", type: "logo", name: "logo", x: 80, y: 48, width: 300, height: 56, opacity: 1, zIndex: 4, objectFit: "contain" },
-            { id: "version", type: "text", name: "version", x: 80, y: 148, width: 920, height: 64, opacity: 1, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 36, fontWeight: 700, letterSpacing: 0, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", colorRole: "primary" },
-            { id: "features", type: "text", name: "features", x: 80, y: 244, width: 920, height: 440, opacity: 1, zIndex: 3, fontFamily: "Geist", fontSize: 36, fontWeight: 600, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "fixes", type: "text", name: "fixes", x: 80, y: 704, width: 920, height: 560, opacity: 0.7, zIndex: 3, fontFamily: "Geist", fontSize: 30, fontWeight: 400, letterSpacing: 0, lineHeight: 1.5, textAlign: "left", verticalAlign: "top" },
-            { id: "branding", type: "text", name: "branding", x: 80, y: 1298, width: 920, height: 28, opacity: 0.5, zIndex: 2, fontFamily: "Press Start 2P", fontSize: 16, fontWeight: 400, letterSpacing: 0, lineHeight: 1.2, textAlign: "right", verticalAlign: "top" },
-          ],
-        },
-      },
-    },
-  },
-
 };
 
 export function getCanvasDefaultConfig(name: string): CanvasTemplateConfig | null {
