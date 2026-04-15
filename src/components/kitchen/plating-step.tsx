@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormatKey } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset } from "@/lib/types";
 import { MotionPresetPicker } from "./motion-preset-picker";
 
@@ -23,6 +23,7 @@ interface PlatingStepProps {
   creditBalance?: number;
   autoSelectedPreset?: AnimationPreset;
   selectedVideoHasHero: boolean;
+  templateConfig?: CanvasTemplateConfig;
   onToggleFormat: (format: FormatKey) => void;
   onAnimationPresetChange: (preset: AnimationPreset | undefined) => void;
 }
@@ -34,6 +35,7 @@ export function PlatingStep({
   creditBalance,
   autoSelectedPreset,
   selectedVideoHasHero,
+  templateConfig,
   onToggleFormat,
   onAnimationPresetChange,
 }: PlatingStepProps) {
@@ -89,6 +91,7 @@ export function PlatingStep({
           value={animationPreset}
           autoSelected={autoSelectedPreset}
           templateHasHero={selectedVideoHasHero}
+          templateConfig={templateConfig}
           onChange={(p) => onAnimationPresetChange(p)}
         />
       )}

@@ -379,6 +379,7 @@ export function CookPage({ templates }: CookPageProps) {
             creditBalance={creditBalance ?? undefined}
             autoSelectedPreset={state.autoSelectedPreset}
             selectedVideoHasHero={templateHasHero(state.templateConfig)}
+            templateConfig={state.templateConfig ?? undefined}
             onToggleFormat={(fmt) => dispatch({ type: "TOGGLE_FORMAT", format: fmt })}
             onAnimationPresetChange={(p) =>
               dispatch({ type: "SET_ANIMATION_PRESET", preset: p })
