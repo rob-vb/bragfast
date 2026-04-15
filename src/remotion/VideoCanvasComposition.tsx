@@ -31,6 +31,7 @@ export type VideoCanvasCompositionProps = {
   /** Optional per-slide duration override in seconds. When provided, each slide
    *  uses its own duration; otherwise all slides use `slideDuration`. */
   slideDurations?: number[];
+  showPlaceholders?: boolean;
 };
 
 export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
@@ -40,6 +41,7 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
   brand,
   slideDuration,
   slideDurations,
+  showPlaceholders,
 }) => {
   const { fps } = useVideoConfig();
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -92,6 +94,7 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
               objectData={slideData}
               brand={brand}
               slideDurationFrames={slideFrames}
+              showPlaceholders={showPlaceholders}
             />
           </Series.Sequence>
         );
@@ -110,6 +113,7 @@ interface SlideRendererProps {
   objectData: ObjectDataMap;
   brand: Brand;
   slideDurationFrames: number;
+  showPlaceholders?: boolean;
 }
 
 const SlideRenderer: React.FC<SlideRendererProps> = ({
@@ -118,6 +122,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
   objectData,
   brand,
   slideDurationFrames,
+  showPlaceholders,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -234,11 +239,11 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
                   ...imageEffectStyle,
                 }}
               >
-                {renderObject(obj, objectData, brand, colors, { VideoComponent: OffthreadVideo })}
+                {renderObject(obj, objectData, brand, colors, { VideoComponent: OffthreadVideo, showVisualPlaceholders: showPlaceholders })}
               </div>
             </div>
           ) : (
-            renderObject(obj, objectData, brand, colors, { VideoComponent: OffthreadVideo })
+            renderObject(obj, objectData, brand, colors, { VideoComponent: OffthreadVideo, showVisualPlaceholders: showPlaceholders })
           )}
           </div>
         );

@@ -157,6 +157,8 @@ export interface RenderObjectOptions {
     muted?: boolean;
     loop?: boolean;
   }>;
+  /** When true, render a grey placeholder (with device frame) for visual objects with no image/video data */
+  showVisualPlaceholders?: boolean;
 }
 
 export function renderObject(
@@ -226,7 +228,52 @@ export function renderObject(
       const videoUrl = data?.videoUrl;
       const VideoEl = options.VideoComponent;
       const useVideo = !!(videoUrl && VideoEl);
-      if (!imgSrc && !useVideo) return null;
+      if (!imgSrc && !useVideo) {
+        if (!options.showVisualPlaceholders) return null;
+
+        const frame = data?.visualFrame || obj.visualFrame || "none";
+        const frameColor = data?.visualFrameColor || obj.visualFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
+        const borderRadius = getObjectBorderRadius(obj) || 4;
+
+        const placeholderIcon = (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="#AAAAAA" strokeWidth="1.5"/>
+            <circle cx="8.5" cy="8.5" r="1.5" stroke="#AAAAAA" strokeWidth="1.5"/>
+            <path d="M21 15L16 10L5 21" stroke="#AAAAAA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        );
+
+        if (frame === "browser") {
+          return (
+            <div style={{ width: "100%", height: "100%", borderRadius: 8, overflow: "hidden", background: frameColor, boxShadow: "0 4px 24px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column" }}>
+              <div style={{ height: 28, minHeight: 28, background: frameColor, display: "flex", alignItems: "center", paddingLeft: 10, gap: 5 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444" }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
+              </div>
+              <div style={{ flex: 1, background: "#E0E0E0", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {placeholderIcon}
+              </div>
+            </div>
+          );
+        }
+
+        if (frame === "mobile") {
+          return (
+            <div style={{ width: "100%", height: "100%", borderRadius: 24, background: frameColor, padding: 6, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+              <div style={{ width: "100%", height: "100%", borderRadius: 18, overflow: "hidden", background: "#E0E0E0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {placeholderIcon}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ width: "100%", height: "100%", background: "#E0E0E0", borderRadius, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {placeholderIcon}
+          </div>
+        );
+      }
       const frame = data?.visualFrame || obj.visualFrame || "none";
       const frameColor = data?.visualFrameColor || obj.visualFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
       const anchorX = data?.anchorX || obj.anchorX || "center";

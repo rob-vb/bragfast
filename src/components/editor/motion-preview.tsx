@@ -47,6 +47,7 @@ export function MotionPreview({
           slides: [slide],
           brand,
           slideDuration: cappedDuration,
+          showPlaceholders: true,
         }}
         durationInFrames={durationInFrames}
         compositionWidth={dims.width}
