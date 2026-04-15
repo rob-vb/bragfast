@@ -51,9 +51,30 @@ const PRESETS: AnimationPreset[] = [
 
 const baseConfig = getDefaultConfig("standard-browser")!;
 
+const defaultFormatProps: VideoCanvasCompositionProps = {
+  config: baseConfig,
+  format: "landscape",
+  slides: [presetSlide],
+  brand: presetBrand,
+  slideDuration: 8,
+};
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {(["landscape", "square", "portrait"] as const).map((format) => (
+        <Composition
+          key={format}
+          id={format}
+          component={VideoCanvasComposition}
+          fps={FPS}
+          width={FORMAT_DIMENSIONS[format].width}
+          height={FORMAT_DIMENSIONS[format].height}
+          durationInFrames={Math.ceil(8 * FPS)}
+          defaultProps={{ ...defaultFormatProps, format }}
+          calculateMetadata={calculateMetadata}
+        />
+      ))}
       {PRESETS.map((preset) => {
         const slideDuration = preset === "3d-tilt-angles" ? 12 : 8;
         return (
