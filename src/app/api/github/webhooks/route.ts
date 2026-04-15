@@ -198,9 +198,9 @@ async function handleReleasePublished(payload: GitHubReleasePayload) {
   // Extract object slots from the first format with line capacity hints
   const templateObjects = templateConfig
     ? Object.values(templateConfig.formats)[0].objects.map((o) => {
-        const slot: { id: string; type: "text" | "image" | "logo"; maxLines?: number } = {
+        const slot: { id: string; type: "text" | "visual" | "logo"; maxLines?: number } = {
           id: o.id,
-          type: o.type as "text" | "image" | "logo",
+          type: o.type as "text" | "visual" | "logo",
         };
         if (o.type === "text" && o.height && o.fontSize) {
           slot.maxLines = Math.max(1, Math.floor(o.height / ((o.fontSize) * (o.lineHeight || 1.2))));

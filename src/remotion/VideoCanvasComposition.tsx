@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   AbsoluteFill,
+  OffthreadVideo,
   Series,
   useCurrentFrame,
   useVideoConfig,
@@ -27,7 +28,10 @@ export type VideoCanvasCompositionProps = {
   format: FormatKey;
   slides: ObjectDataMap[];
   brand: Brand;
-  slideDuration: number; // seconds per slide
+  slideDuration: number; // seconds per slide (fallback)
+  /** Optional per-slide duration override in seconds. When provided, each slide
+   *  uses its own duration; otherwise all slides use `slideDuration`. */
+  slideDurations?: number[];
 };
 
 export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
@@ -36,6 +40,7 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
   slides,
   brand,
   slideDuration,
+  slideDurations,
 }) => {
   const { fps } = useVideoConfig();
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -73,21 +78,25 @@ export const VideoCanvasComposition: React.FC<VideoCanvasCompositionProps> = ({
 
   if (!fontLoaded) return null;
 
-  const slideFrames = Math.round(slideDuration * fps);
+  const framesFor = (i: number) =>
+    Math.round((slideDurations?.[i] ?? slideDuration) * fps);
 
   return (
     <Series>
-      {slides.map((slideData, i) => (
-        <Series.Sequence key={i} durationInFrames={slideFrames}>
-          <SlideRenderer
-            config={config}
-            format={format}
-            objectData={slideData}
-            brand={brand}
-            slideDurationFrames={slideFrames}
-          />
-        </Series.Sequence>
-      ))}
+      {slides.map((slideData, i) => {
+        const slideFrames = framesFor(i);
+        return (
+          <Series.Sequence key={i} durationInFrames={slideFrames}>
+            <SlideRenderer
+              config={config}
+              format={format}
+              objectData={slideData}
+              brand={brand}
+              slideDurationFrames={slideFrames}
+            />
+          </Series.Sequence>
+        );
+      })}
     </Series>
   );
 };
@@ -146,14 +155,14 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
       {sortedObjects.filter((obj) => {
         // Skip text/image objects with no user-provided data
         if (obj.type === "logo") return true;
-        if (obj.type === "image" && obj.src) return true;
+        if (obj.type === "visual" && obj.src) return true;
         return !!objectData[obj.id];
       }).map((obj, sortIndex) => {
         const data = objectData[obj.id];
 
         // Background images: static, no animation
-        const isBg = obj.type === "image" && obj.background === true;
-        const isHero = obj.type === "image" ? obj.id === heroId : undefined;
+        const isBg = obj.type === "visual" && obj.background === true;
+        const isHero = obj.type === "visual" ? obj.id === heroId : undefined;
 
         // Resolve animation from preset (or fall back to type defaults)
         const presetAnim = isBg
@@ -174,7 +183,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         // Compute image-specific effects (Ken Burns from preset)
         const kenBurnsEnabled = presetAnim.kenBurns ?? false;
         const imageEffectStyle =
-          obj.type === "image" && kenBurnsEnabled && entrance !== "showcase-rise"
+          obj.type === "visual" && kenBurnsEnabled && entrance !== "showcase-rise"
             ? computeImageEffects(frame, slideDurationFrames)
             : {};
 
@@ -226,11 +235,11 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
                   ...imageEffectStyle,
                 }}
               >
-                {renderObject(obj, objectData, brand, colors)}
+                {renderObject(obj, objectData, brand, colors, { VideoComponent: OffthreadVideo })}
               </div>
             </div>
           ) : (
-            renderObject(obj, objectData, brand, colors)
+            renderObject(obj, objectData, brand, colors, { VideoComponent: OffthreadVideo })
           )}
           </div>
         );
@@ -247,7 +256,7 @@ function getDefaultEntrance(type: string): EntranceType {
   switch (type) {
     case "text":
       return "fade-in";
-    case "image":
+    case "visual":
       return "fade-in";
     case "logo":
       return "none";
@@ -260,7 +269,7 @@ function getDefaultExit(type: string): ExitType {
   switch (type) {
     case "text":
       return "fade-out";
-    case "image":
+    case "visual":
       return "fade-out";
     case "logo":
       return "none";
@@ -271,7 +280,7 @@ function getDefaultExit(type: string): ExitType {
 
 export function findHeroImageId(objects: TemplateObject[]): string | null {
   const candidates = objects.filter(
-    (o) => o.type === "image" && !o.background,
+    (o) => o.type === "visual" && !o.background,
   );
   if (candidates.length === 0) return null;
   candidates.sort((a, b) => {
@@ -291,7 +300,7 @@ export function resolvePreset(
 
   switch (preset) {
     case "showcase": {
-      if (objectType === "image") {
+      if (objectType === "visual") {
         if (isHero === false) return { entrance: "fade-in", exit: "none", kenBurns: false };
         return { entrance: "showcase-rise", exit: "none", kenBurns: true };
       }
@@ -307,13 +316,13 @@ export function resolvePreset(
       return { entrance: "scale-pop", exit: "scale-out" };
     }
     case "ken-burns": {
-      if (objectType === "image" && isHero === true) {
+      if (objectType === "visual" && isHero === true) {
         return { entrance: "zoom-hold", exit: "none", kenBurns: true };
       }
       return { entrance: "fade-in-slow", exit: "fade-out" };
     }
     case "cinematic": {
-      if (objectType === "image") {
+      if (objectType === "visual") {
         if (isHero === true) return { entrance: "drift-in", exit: "drift-out" };
         return { entrance: "fade-in-slow", exit: "fade-out" };
       }

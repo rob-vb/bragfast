@@ -10,6 +10,7 @@ import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
 import type { ReleaseResult, FormatEntry, VideoField } from "../types";
 import { calculateCredits } from "../types";
+import { probeMp4DurationSeconds } from "../video/probe";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -97,15 +98,31 @@ export async function renderVideoAsync(
         const formatLayout = templateConfig.formats[formatKey] ?? templateConfig.formats.landscape;
         injectStaticImages(slideDataMaps, formatLayout, srcMap);
 
-        // Fail if any slide has a missing image that should have been provided
+        // Fail if any visual has neither a video nor an image source
         for (const dataMap of slideDataMaps) {
           for (const [objId, data] of Object.entries(dataMap)) {
             const obj = formatLayout.objects.find(o => o.id === objId);
-            if (obj?.type === "image" && !obj.src && !data.imageBase64) {
-              throw new Error(`Missing image for object "${objId}" in format "${format.name}"`);
+            if (obj?.type === "visual" && !obj.src && !data.imageBase64 && !data.videoUrl) {
+              throw new Error(`Missing media for visual "${objId}" in format "${format.name}"`);
             }
           }
         }
+
+        // Per-slide duration: stretch to fit the longest video on the slide,
+        // never dipping below the default slide duration.
+        const slideDurations = await Promise.all(
+          slideDataMaps.map(async (dataMap) => {
+            const videoUrls = Object.values(dataMap)
+              .map((d) => d.videoUrl)
+              .filter((u): u is string => !!u);
+            if (videoUrls.length === 0) return slideDuration;
+            const durations = await Promise.all(
+              videoUrls.map((url) => probeMp4DurationSeconds(url))
+            );
+            const maxVideo = Math.max(0, ...durations.filter((d): d is number => d !== null));
+            return Math.max(slideDuration, maxVideo);
+          })
+        );
 
         const inputProps = {
           config: templateConfig,
@@ -119,9 +136,10 @@ export async function renderVideoAsync(
             font_family: brand.font_family ?? "Plus Jakarta Sans",
           },
           slideDuration,
+          slideDurations,
         };
 
-        const duration = calculateVideoDuration(slideDataMaps.length, slideDuration);
+        const duration = slideDurations.reduce((sum, d) => sum + d, 0);
         const filename = `${format.name}.mp4`;
         let url: string;
 

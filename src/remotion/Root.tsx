@@ -20,8 +20,11 @@ const calculateMetadata: CalculateMetadataFunction<
 > = ({ props }) => {
   const slideCount = props.slides?.length || 1;
   const slideDuration = props.slideDuration || 8;
-  const netDuration = calculateVideoDuration(slideCount, slideDuration);
-  return { durationInFrames: Math.ceil(netDuration * FPS) };
+  const perSlide = props.slideDurations;
+  const total = perSlide && perSlide.length > 0
+    ? perSlide.reduce((sum, d) => sum + d, 0)
+    : calculateVideoDuration(slideCount, slideDuration);
+  return { durationInFrames: Math.ceil(total * FPS) };
 };
 
 const defaultConfig = getDefaultConfig("split-browser")!;

@@ -1,7 +1,10 @@
 import React from 'react'
+import type { FramedMediaStyle } from './BrowserFrame'
 
 interface MobileFrameProps {
-  imageBase64: string
+  imageBase64?: string
+  /** Optional override: renders a custom element (e.g. OffthreadVideo) in place of the default <img>. */
+  renderMedia?: (style: FramedMediaStyle & { borderRadius: string }) => React.ReactNode
   primaryColor: string
   width: number
   maxHeight?: number
@@ -12,13 +15,28 @@ interface MobileFrameProps {
   anchorY?: 'top' | 'center' | 'bottom'
 }
 
-export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush, color = '#1A1A1A', objectPosition = 'center top', objectFit = 'cover', anchorY = 'top' }: MobileFrameProps) {
+export function MobileFrame({ imageBase64, renderMedia, primaryColor, width, maxHeight, flush, color = '#1A1A1A', objectPosition = 'center top', objectFit = 'cover', anchorY = 'top' }: MobileFrameProps) {
   const bezel = Math.round(width * 0.025)
   const cornerRadius = Math.round(width * 0.12)
   const innerRadius = Math.max(0, cornerRadius - bezel)
   const isContain = objectFit === 'contain'
+  const innerBorderRadius = flush
+    ? `${innerRadius}px ${innerRadius}px 0 0`
+    : `${innerRadius}px`
 
   const alignMap = { top: 'flex-start', center: 'center', bottom: 'flex-end' } as const
+
+  const defaultImg = (style: React.CSSProperties) =>
+    imageBase64 ? <img src={imageBase64} style={style} /> : null
+
+  const mediaNode = (fit: 'cover' | 'contain') => {
+    const style: React.CSSProperties = fit === 'contain'
+      ? { display: 'flex', width: '100%', borderRadius: innerBorderRadius }
+      : { display: 'flex', width: '100%', height: '100%', borderRadius: innerBorderRadius, objectFit: 'cover', objectPosition }
+    return renderMedia
+      ? renderMedia({ width, objectFit: fit, objectPosition, borderRadius: innerBorderRadius })
+      : defaultImg(style)
+  }
 
   return (
     <div
@@ -42,34 +60,15 @@ export function MobileFrame({ imageBase64, primaryColor, width, maxHeight, flush
             flexDirection: 'column',
             width: '100%',
             height: '100%',
-            borderRadius: flush ? `${innerRadius}px ${innerRadius}px 0 0` : `${innerRadius}px`,
+            borderRadius: innerBorderRadius,
             overflow: 'hidden',
             justifyContent: alignMap[anchorY],
           }}
         >
-          <img
-            src={imageBase64}
-            style={{
-              display: 'flex',
-              width: '100%',
-              borderRadius: flush
-                ? `${innerRadius}px ${innerRadius}px 0 0`
-                : `${innerRadius}px`,
-            }}
-          />
+          {mediaNode('contain')}
         </div>
       ) : (
-        <img
-          src={imageBase64}
-          style={{
-            display: 'flex',
-            width: '100%',
-            height: '100%',
-            borderRadius: flush ? `${innerRadius}px ${innerRadius}px 0 0` : `${innerRadius}px`,
-            objectFit: 'cover',
-            objectPosition,
-          }}
-        />
+        mediaNode('cover')
       )}
     </div>
   )

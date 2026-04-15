@@ -122,9 +122,9 @@ export async function POST(request: Request) {
     (o) => {
       const slot: {
         id: string;
-        type: "text" | "image" | "logo";
+        type: "text" | "visual" | "logo";
         maxLines?: number;
-      } = { id: o.id, type: o.type as "text" | "image" | "logo" };
+      } = { id: o.id, type: o.type as "text" | "visual" | "logo" };
       if (o.type === "text" && o.height && o.fontSize) {
         slot.maxLines = Math.max(
           1,

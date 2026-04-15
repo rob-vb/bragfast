@@ -2,22 +2,26 @@ import { isR2Url, keyFromUrl, deleteByKey } from "../storage/r2";
 import type { FormatEntry } from "../types";
 
 /**
- * Collect R2 keys for user-uploaded images from request formats.
- * Only collects keys under the "uploads/" prefix — brand logos and
- * release assets are left untouched.
+ * Collect R2 keys for user-uploaded source media from request formats.
+ * Captures both image_url and video_url. Only collects keys under the
+ * "uploads/" prefix — brand logos and release assets are left untouched.
  */
 export function collectUploadKeys(formats: FormatEntry[]): Set<string> {
   const keys = new Set<string>();
+  const addUrl = (url: string | undefined) => {
+    if (!url) return;
+    if (!isR2Url(url)) return;
+    const key = keyFromUrl(url);
+    if (key && key.startsWith("uploads/")) {
+      keys.add(key);
+    }
+  };
   for (const format of formats) {
     for (const slide of format.slides) {
       if (!slide.objects) continue;
       for (const obj of slide.objects) {
-        if (!obj.image_url) continue;
-        if (!isR2Url(obj.image_url)) continue;
-        const key = keyFromUrl(obj.image_url);
-        if (key && key.startsWith("uploads/")) {
-          keys.add(key);
-        }
+        addUrl(obj.image_url);
+        addUrl(obj.video_url);
       }
     }
   }

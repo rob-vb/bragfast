@@ -11,6 +11,7 @@ export interface ObjectDataMap {
   [objectId: string]: {
     text?: string;
     imageBase64?: string;
+    videoUrl?: string;
     fontFamily?: string;
     fontWeight?: number;
     color?: string;
@@ -44,7 +45,7 @@ export function CanvasRenderer({ config, format, objectData, brand, backgroundIm
     ? sortedObjects.filter((obj) => {
         if (obj.type === "logo") return true;
         // Image objects with a static src are always shown
-        if (obj.type === "image" && obj.src) return true;
+        if (obj.type === "visual" && obj.src) return true;
         return !!objectData[obj.id];
       })
     : sortedObjects;
@@ -147,11 +148,23 @@ export function autoFitFontSize(
   return MIN_SIZE;
 }
 
+export interface RenderObjectOptions {
+  /** Optional component used to render video visuals (e.g. Remotion's OffthreadVideo).
+   *  When absent, video URLs are ignored and the still image is used instead. */
+  VideoComponent?: React.ComponentType<{
+    src: string;
+    style?: React.CSSProperties;
+    muted?: boolean;
+    loop?: boolean;
+  }>;
+}
+
 export function renderObject(
   obj: TemplateObject,
   objectData: ObjectDataMap,
   brand: Brand,
   colors: { background: string; text: string; primary: string },
+  options: RenderObjectOptions = {},
 ) {
   const fontFamily = brand.font_family || obj.fontFamily || "Plus Jakarta Sans";
   const data = objectData[obj.id];
@@ -208,16 +221,34 @@ export function renderObject(
       );
     }
 
-    case "image": {
+    case "visual": {
       const imgSrc = data?.imageBase64;
-      if (!imgSrc) return null;
+      const videoUrl = data?.videoUrl;
+      const VideoEl = options.VideoComponent;
+      const useVideo = !!(videoUrl && VideoEl);
+      if (!imgSrc && !useVideo) return null;
       const frame = data?.imageFrame || obj.imageFrame || "none";
       const frameColor = data?.imageFrameColor || obj.imageFrameColor || (frame === "mobile" ? "#1A1A1A" : "#E8E8E8");
       const anchorX = data?.anchorX || obj.anchorX || "center";
       const anchorY = data?.anchorY || obj.anchorY || "top";
       const objectPosition = `${anchorX} ${anchorY}`;
+      const borderRadius = getObjectBorderRadius(obj) || 8;
+      const resolvedObjectFit = obj.objectFit || "cover";
+
+      // Video render-prop for frames. When useVideo is true, VideoEl and videoUrl
+      // are both defined — frames delegate their inner media slot to this callback.
+      const videoRenderMedia = useVideo && VideoEl && videoUrl
+        ? (style: { width: number; height?: number; objectFit: 'cover' | 'contain'; objectPosition: string; borderRadius?: string }) => {
+            const Video = VideoEl;
+            const inlineStyle: React.CSSProperties = style.objectFit === 'contain'
+              ? { display: 'flex', width: '100%', ...(style.borderRadius ? { borderRadius: style.borderRadius } : {}) }
+              : { display: 'flex', width: '100%', height: '100%', objectFit: 'cover', objectPosition: style.objectPosition, ...(style.borderRadius ? { borderRadius: style.borderRadius } : {}) };
+            return <Video src={videoUrl} muted loop style={inlineStyle} />;
+          }
+        : undefined;
+
       if (frame === "none") {
-        const fitContain = obj.objectFit === "contain";
+        const fitContain = resolvedObjectFit === "contain";
         const alignMap = { top: 'flex-start', center: 'center', bottom: 'flex-end' } as const;
         if (fitContain) {
           return (
@@ -226,34 +257,38 @@ export function renderObject(
               display: "flex", flexDirection: "column",
               overflow: "hidden",
               justifyContent: alignMap[anchorY as keyof typeof alignMap] || "flex-start",
-              borderRadius: getObjectBorderRadius(obj) || 8,
+              borderRadius,
             }}>
-              <img src={imgSrc} style={{ width: "100%", borderRadius: getObjectBorderRadius(obj) || 8 }} />
+              {useVideo && VideoEl && videoUrl ? (() => {
+                const Video = VideoEl;
+                return <Video src={videoUrl} muted loop style={{ width: "100%", borderRadius }} />;
+              })() : <img src={imgSrc!} style={{ width: "100%", borderRadius }} />}
             </div>
           );
         }
-        return (
-          <img
-            src={imgSrc}
-            style={{
-              width: "100%", height: "100%",
-              objectFit: "cover",
-              objectPosition,
-              borderRadius: getObjectBorderRadius(obj) || 8,
-            }}
-          />
-        );
+        const coverStyle: React.CSSProperties = {
+          width: "100%", height: "100%",
+          objectFit: "cover",
+          objectPosition,
+          borderRadius,
+        };
+        if (useVideo && VideoEl && videoUrl) {
+          const Video = VideoEl;
+          return <Video src={videoUrl} muted loop style={coverStyle} />;
+        }
+        return <img src={imgSrc!} style={coverStyle} />;
       }
       if (frame === "mobile") {
         return (
           <MobileFrame
             imageBase64={imgSrc}
+            renderMedia={videoRenderMedia}
             primaryColor={colors.primary}
             width={obj.width}
             maxHeight={obj.height}
             color={frameColor}
             objectPosition={objectPosition}
-            objectFit={obj.objectFit || "cover"}
+            objectFit={resolvedObjectFit}
             anchorY={anchorY as 'top' | 'center' | 'bottom'}
           />
         );
@@ -261,12 +296,13 @@ export function renderObject(
       return (
         <BrowserFrame
           imageBase64={imgSrc}
+          renderMedia={videoRenderMedia}
           primaryColor={colors.primary}
           width={obj.width}
           maxHeight={obj.height}
           color={frameColor}
           objectPosition={objectPosition}
-          objectFit={obj.objectFit || "cover"}
+          objectFit={resolvedObjectFit}
           anchorY={anchorY as 'top' | 'center' | 'bottom'}
         />
       );

@@ -6,7 +6,7 @@ import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { CanvasRenderer } from "../templates/canvas-renderer";
-import type { FormatKey } from "../templates/canvas-types";
+import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { uploadImage } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
@@ -83,6 +83,8 @@ export async function renderReleaseAsync(
     const templateName = request.template || "standard-browser";
 
     const templateConfig = await resolveTemplate(templateName, userId, convex);
+
+    validateImageOutputSources(request, templateConfig);
 
     const brand = await resolveBrand(request, templateConfig.colors, convex);
 
@@ -206,6 +208,35 @@ export async function renderReleaseAsync(
     cleanupUploads(uploadKeys).catch((err) =>
       console.error(`Upload cleanup error for ${releaseId}:`, err)
     );
+  }
+}
+
+/** Image output requires each visual to have either an image_url (per slide) or a
+ *  static src (on the template). Fail fast if a visual was given only video_url. */
+function validateImageOutputSources(
+  request: ReleaseRequest,
+  templateConfig: CanvasTemplateConfig
+): void {
+  for (const formatEntry of request.formats) {
+    const format = formatEntry.name;
+    const layout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
+    const templateStaticSrc = new Map<string, string | undefined>();
+    for (const obj of layout.objects) {
+      if (obj.type === "visual") templateStaticSrc.set(obj.id, obj.src);
+    }
+    formatEntry.slides.forEach((slide, i) => {
+      if (!slide.objects) return;
+      for (const mod of slide.objects) {
+        if (!mod.video_url || mod.image_url) continue;
+        if (!templateStaticSrc.has(mod.id)) continue; // not a visual in this template — ignore
+        const hasStatic = !!templateStaticSrc.get(mod.id);
+        if (!hasStatic) {
+          throw new Error(
+            `Visual "${mod.id}" on slide ${i + 1} (${format}) has video_url but no image_url — image output requires an image.`
+          );
+        }
+      }
+    });
   }
 }
 

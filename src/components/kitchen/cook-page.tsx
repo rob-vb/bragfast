@@ -321,8 +321,12 @@ export function CookPage({ templates, videoTemplates }: CookPageProps) {
           <RecipeStep
             templates={templates}
             selectedId={state.templateId}
+            outputType={state.outputType}
             onSelect={(id, config) =>
               dispatch({ type: "SELECT_TEMPLATE", templateId: id, config })
+            }
+            onOutputTypeChange={(t) =>
+              dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })
             }
           />
         </CookSection>
@@ -355,6 +359,7 @@ export function CookPage({ templates, videoTemplates }: CookPageProps) {
             <IngredientsStep
               templateConfig={state.templateConfig}
               objectContent={state.objectContent}
+              outputType={state.outputType}
               onContentChange={(id, mod) =>
                 dispatch({ type: "SET_CONTENT", id, mod })
               }
@@ -383,7 +388,6 @@ export function CookPage({ templates, videoTemplates }: CookPageProps) {
             autoSelectedPreset={state.autoSelectedPreset}
             selectedVideoHasHero={state.videoTemplateHasHero}
             onToggleFormat={(fmt) => dispatch({ type: "TOGGLE_FORMAT", format: fmt })}
-            onOutputTypeChange={(t) => dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })}
             onAnimationPresetChange={(p) =>
               dispatch({ type: "SET_ANIMATION_PRESET", preset: p })
             }

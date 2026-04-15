@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { BackgroundMode } from "@/lib/templates/canvas-types";
+import { uploadFile } from "@/lib/upload/client";
 
 export function BackgroundSection() {
   const { state, dispatch } = useEditor();
@@ -29,14 +30,7 @@ export function BackgroundSection() {
   async function handleFileUpload(file: File) {
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/v1/upload", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
-      }
-      const { url } = await res.json();
+      const url = await uploadFile(file);
       dispatch({ type: "SET_BACKGROUND_IMAGE", imageUrl: url });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");

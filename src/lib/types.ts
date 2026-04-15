@@ -60,8 +60,9 @@ export interface ObjectModification {
   font_family?: string
   font_weight?: number
   color?: string
-  // Image objects
+  // Visual objects (image and optional video)
   image_url?: string
+  video_url?: string
   image_frame?: 'browser' | 'mobile' | 'none'
   image_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
