@@ -37,6 +37,7 @@ export function EditorRightSidebar() {
                     <SelectItem value="none">None</SelectItem>
                     <SelectItem value="showcase">Showcase</SelectItem>
                     <SelectItem value="3d-tilt-angles">3D Multiple Angles</SelectItem>
+                    <SelectItem value="simple-fade">Simple Fade</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-[10px] text-zinc-400">Controls how objects animate in video mode</p>

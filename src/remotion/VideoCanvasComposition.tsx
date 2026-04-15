@@ -312,6 +312,9 @@ export function resolvePreset(
       }
       return { entrance: "3d-tilt-reveal", exit: "none" };
     }
+    case "simple-fade": {
+      return { entrance: "fade-in", exit: "none", kenBurns: false };
+    }
     default:
       return {};
   }

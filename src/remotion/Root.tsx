@@ -46,6 +46,7 @@ const presetSlide = {
 const PRESETS: AnimationPreset[] = [
   "showcase",
   "3d-tilt-angles",
+  "simple-fade",
 ];
 
 const baseConfig = getDefaultConfig("standard-browser")!;

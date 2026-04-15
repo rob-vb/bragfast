@@ -108,4 +108,38 @@ describe("resolvePreset", () => {
       exit: "none",
     });
   });
+
+  // simple-fade preset
+
+  it("simple-fade hero visual maps to fade-in without kenBurns", () => {
+    expect(resolvePreset("simple-fade", "visual", true)).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("simple-fade non-hero visual maps to fade-in without kenBurns", () => {
+    expect(resolvePreset("simple-fade", "visual", false)).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("simple-fade text maps to fade-in", () => {
+    expect(resolvePreset("simple-fade", "text")).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
+
+  it("simple-fade logo maps to fade-in", () => {
+    expect(resolvePreset("simple-fade", "logo")).toEqual({
+      entrance: "fade-in",
+      exit: "none",
+      kenBurns: false,
+    });
+  });
 });

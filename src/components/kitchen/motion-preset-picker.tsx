@@ -12,6 +12,7 @@ type PresetOption = {
 const PRESETS: PresetOption[] = [
   { slug: "showcase", name: "Showcase" },
   { slug: "3d-tilt-angles", name: "3D Multiple Angles", requiresHero: true },
+  { slug: "simple-fade", name: "Simple Fade" },
 ];
 
 interface MotionPresetPickerProps {

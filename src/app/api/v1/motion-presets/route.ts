@@ -18,6 +18,11 @@ const MOTION_PRESET_METADATA: MotionPresetMeta[] = [
     name: "3D Multiple Angles",
     best_for: ["standard-browser", "standard-mobile", "hero"],
   },
+  {
+    slug: "simple-fade",
+    name: "Simple Fade",
+    best_for: ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"],
+  },
 ];
 
 export async function GET(request: Request) {

@@ -40,6 +40,7 @@ export type ExitType =
 export type AnimationPreset =
   | 'showcase'
   | '3d-tilt-angles'
+  | 'simple-fade'
 
 export interface ObjectModification {
   id: string
@@ -129,4 +130,5 @@ export function calculateCredits(input: CookCreditsInput): number {
 export const VALID_ANIMATION_PRESETS: AnimationPreset[] = [
   'showcase',
   '3d-tilt-angles',
+  'simple-fade',
 ]
