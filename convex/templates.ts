@@ -203,6 +203,7 @@ export const clone = mutation({
       isDefault: false,
       created_at: now,
       updated_at: now,
+      ...(source.previewUrl ? { previewUrl: source.previewUrl } : {}),
     });
 
     return {
@@ -210,6 +211,7 @@ export const clone = mutation({
       name: cloneName,
       isDefault: false,
       config: source.config,
+      previewUrl: source.previewUrl,
       created_at: now,
       updated_at: now,
     };
