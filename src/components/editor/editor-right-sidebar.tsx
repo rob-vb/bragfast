@@ -44,7 +44,7 @@ export function EditorRightSidebar() {
                 <p className="text-[10px] text-zinc-400">Controls how objects animate in video mode</p>
                 {state.config.animation_preset !== undefined && (
                   <div className="pt-1">
-                    <MotionPreview config={state.config} width={240} />
+                    <MotionPreview config={state.config} format={state.activeFormat} width={240} />
                   </div>
                 )}
               </div>

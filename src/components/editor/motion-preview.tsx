@@ -53,7 +53,7 @@ export function MotionPreview({
         compositionHeight={dims.height}
         fps={30}
         style={{ width, height }}
-        playing={true}
+        autoPlay={true}
         loop={true}
         controls={false}
         showVolumeControls={false}
