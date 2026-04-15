@@ -83,7 +83,7 @@ const videoTestProps: VideoCanvasCompositionProps = {
     {
       title: { text: "Video In Video" },
       description: { text: "Should show mov inside browser frame" },
-      image: { videoUrl: staticFile("demo/screenrecording_bragfast.mov") },
+      image: { videoUrl: staticFile("demo/video_x_example_compressed.mp4") },
     },
   ],
   brand: showcaseBrand,
