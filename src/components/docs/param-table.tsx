@@ -55,7 +55,7 @@ function ParamRow({ param, depth = 0 }: { param: ApiParam; depth?: number }) {
 
 const GROUP_LABELS: Record<string, string> = {
   text: "Text objects",
-  image: "Image objects",
+  image: "Visual objects",
 }
 
 function GroupedParamRows({ params, depth }: { params: ApiParam[]; depth: number }) {

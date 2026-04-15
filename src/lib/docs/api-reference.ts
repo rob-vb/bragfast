@@ -325,20 +325,20 @@ while True:
                           "Video URL (MP4/WebM/MOV) for visual objects. Only used when the top-level video field is set — plays in place of image_url in the rendered video.",
                       },
                       {
-                        name: "image_frame",
+                        name: "visual_frame",
                         type: "string",
                         required: false,
                         group: "image",
                         description:
-                          'Override the device frame type. One of "browser", "mobile", or "none". Defaults to the template\'s setting — see GET /api/v1/templates/:id.',
+                          'Override the visual frame type. One of "browser", "mobile", or "none". Defaults to the template\'s setting — see GET /api/v1/templates/:id.',
                       },
                       {
-                        name: "image_frame_color",
+                        name: "visual_frame_color",
                         type: "string",
                         required: false,
                         group: "image",
                         description:
-                          'Hex color for the device frame, e.g. "#ffffff" for a light frame or "#1a1a2e" for a dark one.',
+                          'Hex color for the visual frame, e.g. "#ffffff" for a light frame or "#1a1a2e" for a dark one.',
                       },
                       {
                         name: "anchor_x",
@@ -1144,7 +1144,7 @@ data = response.json()`,
   "objects": [
     { "id": "title", "type": "text", "text": null, "font_family": null, "color": "#EFFBF9" },
     { "id": "description", "type": "text", "text": null, "font_family": null, "color": "#EFFBF9" },
-    { "id": "image", "type": "visual", "image_url": null, "video_url": null, "image_frame": "browser", "image_frame_color": "#E8E8E8", "anchor_x": "center", "anchor_y": "top" },
+    { "id": "image", "type": "visual", "image_url": null, "video_url": null, "visual_frame": "browser", "visual_frame_color": "#E8E8E8", "anchor_x": "center", "anchor_y": "top" },
     { "id": "logo", "type": "logo" }
   ],
   "preview_url": null,

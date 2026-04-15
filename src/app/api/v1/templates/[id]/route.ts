@@ -66,8 +66,8 @@ export async function GET(
           type,
           image_url: null,
           video_url: null,
-          image_frame: (o.imageFrame as string) ?? "none",
-          image_frame_color: (o.imageFrameColor as string) ?? null,
+          visual_frame: (o.visualFrame as string) ?? "none",
+          visual_frame_color: (o.visualFrameColor as string) ?? null,
           anchor_x: (o.anchorX as string) ?? "center",
           anchor_y: (o.anchorY as string) ?? "top",
         };
