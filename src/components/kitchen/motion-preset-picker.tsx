@@ -35,6 +35,15 @@ export function MotionPresetPicker({
   const gridRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<{ preset: AnimationPreset; x: number; y: number } | null>(null);
 
+  const TOOLTIP_W = 216; // 200px preview + border/shadow
+  const TOOLTIP_H = 130; // approximate landscape height
+
+  function clampTooltipPos(rawX: number, rawY: number) {
+    const x = Math.min(rawX + 16, window.innerWidth - TOOLTIP_W);
+    const y = Math.min(rawY + 16, window.innerHeight - TOOLTIP_H);
+    return { x, y };
+  }
+
   function handleKeyNav(e: React.KeyboardEvent<HTMLButtonElement>, index: number) {
     const buttons = gridRef.current?.querySelectorAll<HTMLButtonElement>("[role='radio']");
     if (!buttons) return;
@@ -72,8 +81,18 @@ export function MotionPresetPicker({
               aria-checked={selected}
               onKeyDown={(e) => handleKeyNav(e, i)}
               onClick={() => onChange(preset.slug)}
-              onMouseMove={(e) => setTooltip({ preset: preset.slug, x: e.clientX, y: e.clientY })}
+              onMouseMove={(e) => {
+                if (!window.matchMedia("(hover: hover)").matches) return;
+                const pos = clampTooltipPos(e.clientX, e.clientY);
+                setTooltip({ preset: preset.slug, ...pos });
+              }}
               onMouseLeave={() => setTooltip(null)}
+              onFocus={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pos = clampTooltipPos(rect.right, rect.top);
+                setTooltip({ preset: preset.slug, ...pos });
+              }}
+              onBlur={() => setTooltip(null)}
               className={`
                 flex items-center gap-2 border-2 border-brand px-3 py-2
                 font-[family-name:var(--font-geist-sans)] text-sm text-brand

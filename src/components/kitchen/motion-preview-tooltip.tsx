@@ -17,8 +17,8 @@ export function MotionPreviewTooltip({ preset, config, x, y }: MotionPreviewTool
     <div
       style={{
         position: "fixed",
-        left: x + 16,
-        top: y + 16,
+        left: x,
+        top: y,
         pointerEvents: "none",
         zIndex: 9999,
       }}
