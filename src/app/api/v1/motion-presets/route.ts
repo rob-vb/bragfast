@@ -19,13 +19,13 @@ const MOTION_PRESET_METADATA: MotionPresetMeta[] = [
     slug: "kinetic",
     name: "Kinetic",
     description: "Fast slide-up stagger with a snappy spring.",
-    best_for: ["split-mobile", "changelog"],
+    best_for: ["split-mobile"],
   },
   {
     slug: "minimal",
     name: "Minimal",
     description: "Slow opacity fade, no movement. Works on any layout.",
-    best_for: ["changelog", "video-text-only"],
+    best_for: ["video-text-only"],
   },
   {
     slug: "bounce-pop",

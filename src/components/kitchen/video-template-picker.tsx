@@ -122,7 +122,7 @@ export function VideoTemplatePicker({
 export function detectHero(config: CanvasTemplateConfig): boolean {
   for (const layout of Object.values(config.formats)) {
     if (!layout) continue;
-    if (layout.objects.some((o) => o.type === "image")) return true;
+    if (layout.objects.some((o) => o.type === "visual")) return true;
   }
   return false;
 }

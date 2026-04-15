@@ -79,7 +79,7 @@ export default async function KitchenPage() {
   // + video-native rows from Convex. Each entry embeds its default motion preset.
   const hasImageObject = (config: CanvasTemplateConfig) => {
     for (const layout of Object.values(config.formats)) {
-      if (layout?.objects.some((o) => o.type === "image")) return true;
+      if (layout?.objects.some((o) => o.type === "visual")) return true;
     }
     return false;
   };

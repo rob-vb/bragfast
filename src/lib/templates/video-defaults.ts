@@ -49,24 +49,24 @@ export const VIDEO_DEFAULTS: Record<
       formats: {
         landscape: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1200, height: 675, opacity: 1, zIndex: 1, imageFrame: "none", objectFit: "cover" },
-            { id: "scrim", type: "image", name: "scrim", x: 0, y: 405, width: 1200, height: 270, opacity: 0.55, zIndex: 2, imageFrame: "none", objectFit: "cover", background: true },
+            { id: "image", type: "visual", name: "visual", x: 0, y: 0, width: 1200, height: 675, opacity: 1, zIndex: 1, imageFrame: "none", objectFit: "cover" },
+            { id: "scrim", type: "visual", name: "scrim", x: 0, y: 405, width: 1200, height: 270, opacity: 0.55, zIndex: 2, imageFrame: "none", objectFit: "cover", background: true },
             { id: "title", type: "text", name: "title", x: 64, y: 500, width: 1072, height: 80, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 64, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.15, textAlign: "left", verticalAlign: "bottom", colorRole: "primary", previewText: "Your headline", textFit: true },
             { id: "description", type: "text", name: "description", x: 64, y: 590, width: 1072, height: 50, opacity: 0.9, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 400, letterSpacing: 0, lineHeight: 1.4, textAlign: "left", verticalAlign: "top", previewText: "Short supporting copy", textFit: false },
           ],
         },
         square: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1080, opacity: 1, zIndex: 1, imageFrame: "none", objectFit: "cover" },
-            { id: "scrim", type: "image", name: "scrim", x: 0, y: 700, width: 1080, height: 380, opacity: 0.55, zIndex: 2, imageFrame: "none", objectFit: "cover", background: true },
+            { id: "image", type: "visual", name: "visual", x: 0, y: 0, width: 1080, height: 1080, opacity: 1, zIndex: 1, imageFrame: "none", objectFit: "cover" },
+            { id: "scrim", type: "visual", name: "scrim", x: 0, y: 700, width: 1080, height: 380, opacity: 0.55, zIndex: 2, imageFrame: "none", objectFit: "cover", background: true },
             { id: "title", type: "text", name: "title", x: 64, y: 820, width: 952, height: 120, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 80, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.15, textAlign: "left", verticalAlign: "bottom", colorRole: "primary", previewText: "Your headline", textFit: true },
             { id: "description", type: "text", name: "description", x: 64, y: 950, width: 952, height: 60, opacity: 0.9, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, letterSpacing: 0, lineHeight: 1.4, textAlign: "left", verticalAlign: "top", previewText: "Short supporting copy", textFit: false },
           ],
         },
         portrait: {
           objects: [
-            { id: "image", type: "image", name: "image", x: 0, y: 0, width: 1080, height: 1350, opacity: 1, zIndex: 1, imageFrame: "none", objectFit: "cover" },
-            { id: "scrim", type: "image", name: "scrim", x: 0, y: 900, width: 1080, height: 450, opacity: 0.55, zIndex: 2, imageFrame: "none", objectFit: "cover", background: true },
+            { id: "image", type: "visual", name: "visual", x: 0, y: 0, width: 1080, height: 1350, opacity: 1, zIndex: 1, imageFrame: "none", objectFit: "cover" },
+            { id: "scrim", type: "visual", name: "scrim", x: 0, y: 900, width: 1080, height: 450, opacity: 0.55, zIndex: 2, imageFrame: "none", objectFit: "cover", background: true },
             { id: "title", type: "text", name: "title", x: 64, y: 1050, width: 952, height: 140, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 88, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1.15, textAlign: "left", verticalAlign: "bottom", colorRole: "primary", previewText: "Your headline", textFit: true },
             { id: "description", type: "text", name: "description", x: 64, y: 1200, width: 952, height: 70, opacity: 0.9, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 34, fontWeight: 400, letterSpacing: 0, lineHeight: 1.4, textAlign: "left", verticalAlign: "top", previewText: "Short supporting copy", textFit: false },
           ],
