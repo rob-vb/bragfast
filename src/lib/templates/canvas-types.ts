@@ -51,16 +51,26 @@ function migrateObject(obj: TemplateObject): TemplateObject {
   delete raw.exit;
   delete raw.kenBurns;
 
-  // Migrate device → imageFrame
-  if ("device" in raw && !("imageFrame" in raw)) {
-    migrated.imageFrame = raw.device as ImageFrame;
+  // Migrate device → visualFrame (legacy enum)
+  if ("device" in raw && !("visualFrame" in raw) && !("imageFrame" in raw)) {
+    migrated.visualFrame = raw.device as VisualFrame;
     delete raw.device;
   }
-  // Migrate deviceColor → imageFrameColor (enum to hex)
-  if ("deviceColor" in raw && !("imageFrameColor" in raw)) {
+  // Migrate deviceColor → visualFrameColor (legacy enum → hex)
+  if ("deviceColor" in raw && !("visualFrameColor" in raw) && !("imageFrameColor" in raw)) {
     const dc = raw.deviceColor as string;
-    migrated.imageFrameColor = dc === "dark" ? "#1A1A1A" : "#E8E8E8";
+    migrated.visualFrameColor = dc === "dark" ? "#1A1A1A" : "#E8E8E8";
     delete raw.deviceColor;
+  }
+  // Migrate imageFrame → visualFrame (previous rename)
+  if ("imageFrame" in raw && !("visualFrame" in raw)) {
+    migrated.visualFrame = raw.imageFrame as VisualFrame;
+    delete raw.imageFrame;
+  }
+  // Migrate imageFrameColor → visualFrameColor (previous rename)
+  if ("imageFrameColor" in raw && !("visualFrameColor" in raw)) {
+    migrated.visualFrameColor = raw.imageFrameColor as string;
+    delete raw.imageFrameColor;
   }
 
   return migrated;
@@ -82,7 +92,7 @@ export function migrateConfig(config: CanvasTemplateConfig): CanvasTemplateConfi
 }
 export type TextAlign = "left" | "center" | "right";
 export type VerticalAlign = "top" | "center" | "bottom";
-export type ImageFrame = "browser" | "mobile" | "none";
+export type VisualFrame = "browser" | "mobile" | "none";
 export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
@@ -115,8 +125,8 @@ export interface TemplateObject {
   background?: boolean;
   src?: string; // Static image URL — baked into template, not overridable by API
   video_url?: string; // Optional video URL — preferred over image for video renders
-  imageFrame?: ImageFrame;
-  imageFrameColor?: string;
+  visualFrame?: VisualFrame;
+  visualFrameColor?: string;
   objectFit?: ObjectFit;
   anchorX?: AnchorX;
   anchorY?: AnchorY;
