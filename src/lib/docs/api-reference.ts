@@ -371,10 +371,10 @@ while True:
           },
           {
             name: "video",
-            type: 'true | { duration?: number, preset?: "showcase" }',
+            type: 'true | { duration?: number, preset?: "showcase" | "3d-tilt-angles" | "simple-fade" }',
             required: false,
             description:
-              'Set to true to generate a video instead of images. Each slide costs 5 credits per format (e.g. 3 slides in 2 formats = 30 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset ("showcase" adds cinematic rise + reveal animations). Built-in templates include the showcase preset by default.',
+              'Set to true to generate a video instead of images. Each slide costs 5 credits per format (e.g. 3 slides in 2 formats = 30 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset — "showcase" (cinematic rise + reveal, default for built-in templates), "3d-tilt-angles" (perspective tilt), or "simple-fade" (clean cross-fade).',
           },
           {
             name: "webhook_url",
