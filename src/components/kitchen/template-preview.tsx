@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useRef, useState, useLayoutEffect, memo } from "react";
+import React, { useRef, useState, useLayoutEffect, useEffect, memo } from "react";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import type { Brand } from "@/lib/types";
 import { CanvasRenderer } from "@/lib/templates/canvas-renderer";
 import { buildSampleSlide } from "@/lib/preview-sample";
+
+const injectedFonts = new Set<string>();
+
+function injectGoogleFont(family: string) {
+  if (injectedFonts.has(family)) return;
+  injectedFonts.add(family);
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@400;700&display=swap`;
+  document.head.appendChild(link);
+}
 
 // Landscape 1200×675 — matches aspect-video container used in RecipeStep thumbnail slot
 const PREVIEW_WIDTH = 1200;
@@ -23,6 +34,19 @@ interface TemplatePreviewProps {
 export const TemplatePreview = memo(function TemplatePreview({ config, brand }: TemplatePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
+
+  useEffect(() => {
+    // Always load Plus Jakarta Sans (default font, not in app layout)
+    injectGoogleFont("Plus Jakarta Sans");
+    // Load brand font
+    if (brand.font_family) injectGoogleFont(brand.font_family);
+    // Load per-object fonts
+    for (const fmt of Object.values(config.formats)) {
+      for (const obj of fmt.objects) {
+        if (obj.fontFamily) injectGoogleFont(obj.fontFamily);
+      }
+    }
+  }, [config, brand.font_family]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;

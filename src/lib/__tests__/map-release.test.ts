@@ -106,20 +106,20 @@ describe('mapReleaseToRequest', () => {
   it('uses release name as title', () => {
     const payload = makePayload()
     const result = mapReleaseToRequest(payload, {})
-    const titleObj = result.formats[0].slides[0].objects.find((o) => o.id === 'title')
+    const titleObj = result.formats[0]!.slides[0]!.objects?.find((o) => o.id === 'title')
     expect(titleObj?.text).toBe('Release 1.0')
   })
 
   it('falls back to tag_name when name is null', () => {
     const payload = makePayload({ release: { ...makePayload().release, name: null } })
     const result = mapReleaseToRequest(payload, {})
-    const titleObj = result.formats[0].slides[0].objects.find((o) => o.id === 'title')
+    const titleObj = result.formats[0]!.slides[0]!.objects?.find((o) => o.id === 'title')
     expect(titleObj?.text).toBe('v1.0.0')
   })
 
   it('strips markdown from body for description', () => {
     const result = mapReleaseToRequest(makePayload(), {})
-    const descObj = result.formats[0].slides[0].objects.find((o) => o.id === 'description')
+    const descObj = result.formats[0]!.slides[0]!.objects?.find((o) => o.id === 'description')
     expect(descObj?.text).not.toContain('##')
     expect(descObj?.text).not.toContain('- ')
   })
@@ -128,7 +128,7 @@ describe('mapReleaseToRequest', () => {
     const longBody = 'A'.repeat(300)
     const payload = makePayload({ release: { ...makePayload().release, body: longBody } })
     const result = mapReleaseToRequest(payload, {})
-    const descObj = result.formats[0].slides[0].objects.find((o) => o.id === 'description')
+    const descObj = result.formats[0]!.slides[0]!.objects?.find((o) => o.id === 'description')
     expect(descObj?.text?.length).toBe(200)
     expect(descObj?.text).toMatch(/\.\.\.$/)
   })
@@ -136,7 +136,7 @@ describe('mapReleaseToRequest', () => {
   it('does not add description object when body is null', () => {
     const payload = makePayload({ release: { ...makePayload().release, body: null } })
     const result = mapReleaseToRequest(payload, {})
-    const descObj = result.formats[0].slides[0].objects.find((o) => o.id === 'description')
+    const descObj = result.formats[0]!.slides[0]!.objects?.find((o) => o.id === 'description')
     expect(descObj).toBeUndefined()
   })
 
