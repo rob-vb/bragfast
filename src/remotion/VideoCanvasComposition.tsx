@@ -160,6 +160,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         // Skip text/image objects with no user-provided data
         if (obj.type === "logo") return true;
         if (obj.type === "visual" && obj.src) return true;
+        if (obj.type === "visual" && showPlaceholders) return true;
         return !!objectData[obj.id];
       }).map((obj, sortIndex) => {
         const data = objectData[obj.id];
