@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import type { Brand } from "@/lib/types";
 import { buildBragfastSampleBrand } from "@/lib/preview-sample";
 import { TemplatePreview } from "@/components/kitchen/template-preview";
+
+// Module-level constant — no computation, no reason to useMemo per instance
+const BRAGFAST_BRAND = buildBragfastSampleBrand();
 
 export interface TemplateItem {
   id: string;
@@ -31,8 +33,6 @@ export function RecipeStep({
   onSelect,
   userBrand,
 }: RecipeStepProps) {
-  const bragfastBrand = useMemo(() => buildBragfastSampleBrand(), []);
-
   if (templates.length === 0) {
     return (
       <PixelEmptyState
@@ -56,7 +56,7 @@ export function RecipeStep({
             // Defaults always preview with brag.fast branding.
             // Custom templates use the user's own brand if available; fallback to brag.fast
             // so previews never crash on new accounts with no brands yet.
-            const previewBrand = t.isDefault ? bragfastBrand : (userBrand ?? bragfastBrand);
+            const previewBrand = t.isDefault ? BRAGFAST_BRAND : (userBrand ?? BRAGFAST_BRAND);
 
             return (
               <button
