@@ -43,8 +43,8 @@ const templateObjectValidator = v.object({
   lineHeight: v.optional(v.number()),
   textAlign: v.optional(v.union(v.literal("left"), v.literal("center"), v.literal("right"))),
   verticalAlign: v.optional(v.union(v.literal("top"), v.literal("center"), v.literal("bottom"))),
-  imageFrame: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
-  imageFrameColor: v.optional(v.string()),
+  visualFrame: v.optional(v.union(v.literal("browser"), v.literal("mobile"), v.literal("none"))),
+  visualFrameColor: v.optional(v.string()),
   objectFit: v.optional(v.union(v.literal("cover"), v.literal("contain"))),
   previewText: v.optional(v.string()),
 });
@@ -203,6 +203,7 @@ export const clone = mutation({
       isDefault: false,
       created_at: now,
       updated_at: now,
+      ...(source.previewUrl ? { previewUrl: source.previewUrl } : {}),
     });
 
     return {
@@ -210,6 +211,7 @@ export const clone = mutation({
       name: cloneName,
       isDefault: false,
       config: source.config,
+      previewUrl: source.previewUrl,
       created_at: now,
       updated_at: now,
     };

@@ -72,11 +72,12 @@ export async function buildSlideDataMaps(
         const entry: ObjectDataMap[string] = {};
         if (mod.text) entry.text = mod.text;
         if (mod.image_url) entry.imageBase64 = await fetchImageAsBase64(mod.image_url);
+        if (mod.video_url) entry.videoUrl = mod.video_url;
         if (mod.font_family) entry.fontFamily = mod.font_family;
         if (mod.font_weight) entry.fontWeight = Number(mod.font_weight);
         if (mod.color) entry.color = mod.color;
-        if (mod.image_frame) entry.imageFrame = mod.image_frame;
-        if (mod.image_frame_color) entry.imageFrameColor = mod.image_frame_color;
+        if (mod.visual_frame) entry.visualFrame = mod.visual_frame;
+        if (mod.visual_frame_color) entry.visualFrameColor = mod.visual_frame_color;
         if (mod.anchor_x) entry.anchorX = mod.anchor_x;
         if (mod.anchor_y) entry.anchorY = mod.anchor_y;
         dataMap[mod.id] = entry;
@@ -106,7 +107,7 @@ export async function prefetchStaticImages(
     const fLayout = templateConfig.formats[fKey];
     if (!fLayout) continue;
     for (const obj of fLayout.objects) {
-      if (obj.type === "image" && obj.src) staticSrcs.add(obj.src);
+      if (obj.type === "visual" && obj.src) staticSrcs.add(obj.src);
     }
   }
   const srcMap: Record<string, string> = {};
@@ -128,7 +129,7 @@ export function injectStaticImages(
   srcMap: Record<string, string>
 ): void {
   for (const obj of formatLayout.objects) {
-    if (obj.type === "image" && obj.src && srcMap[obj.src]) {
+    if (obj.type === "visual" && obj.src && srcMap[obj.src]) {
       for (const dataMap of slideDataMaps) {
         if (!dataMap[obj.id]?.imageBase64) {
           dataMap[obj.id] = { ...dataMap[obj.id], imageBase64: srcMap[obj.src] };

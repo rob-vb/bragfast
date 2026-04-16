@@ -80,6 +80,12 @@ export function TemplateCard({
                 Legacy
               </span>
             )}
+            <PixelButton
+              variant="ghost"
+              onClick={() => onClone(id)}
+            >
+              Clone
+            </PixelButton>
             {onDelete && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>

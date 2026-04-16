@@ -10,7 +10,6 @@ const TEMPLATES = [
   { id: "split-browser", name: "Split Browser" },
   { id: "split-mobile", name: "Split Mobile" },
   { id: "hero", name: "Hero" },
-  { id: "changelog", name: "Changelog" },
 ];
 
 type Step = "source" | "template" | "brand" | "cooking";

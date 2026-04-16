@@ -59,6 +59,7 @@ export async function POST(
         name: cloned.name,
         is_default: false,
         config: cloned.config,
+        preview_url: cloned.previewUrl ?? null,
         created_at: cloned.created_at,
         updated_at: cloned.updated_at,
       },

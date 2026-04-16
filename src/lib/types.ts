@@ -27,9 +27,20 @@ export interface BrandRecord {
 }
 
 export type TextAlign = 'left' | 'center' | 'right'
-export type EntranceType = 'fade-in' | 'slide-up' | 'bounce' | 'showcase-rise' | 'showcase-reveal' | 'none'
-export type ExitType = 'fade-out' | 'slide-down' | 'bounce' | 'none'
-export type AnimationPreset = 'showcase'
+export type EntranceType =
+  | 'fade-in'
+  | 'showcase-rise'
+  | 'showcase-reveal'
+  | '3d-tilt'
+  | '3d-tilt-reveal'
+  | 'none'
+export type ExitType =
+  | 'fade-out'
+  | 'none'
+export type AnimationPreset =
+  | 'showcase'
+  | '3d-tilt-angles'
+  | 'simple-fade'
 
 export interface ObjectModification {
   id: string
@@ -38,10 +49,11 @@ export interface ObjectModification {
   font_family?: string
   font_weight?: number
   color?: string
-  // Image objects
+  // Visual objects (image and optional video)
   image_url?: string
-  image_frame?: 'browser' | 'mobile' | 'none'
-  image_frame_color?: string
+  video_url?: string
+  visual_frame?: 'browser' | 'mobile' | 'none'
+  visual_frame_color?: string
   anchor_x?: 'left' | 'center' | 'right'
   anchor_y?: 'top' | 'center' | 'bottom'
   background?: boolean
@@ -115,4 +127,8 @@ export function calculateCredits(input: CookCreditsInput): number {
   return totalSlides;
 }
 
-export const VALID_ANIMATION_PRESETS: AnimationPreset[] = ['showcase']
+export const VALID_ANIMATION_PRESETS: AnimationPreset[] = [
+  'showcase',
+  '3d-tilt-angles',
+  'simple-fade',
+]

@@ -8,7 +8,8 @@ import { BackgroundSection } from "./background-section";
 import { BrandColorSection } from "./brand-color-section";
 import { CommonProperties } from "./common-properties";
 import { TextProperties } from "./text-properties";
-import { ImageProperties } from "./image-properties";
+import { VisualProperties } from "./visual-properties";
+import { MotionPreview } from "./motion-preview";
 
 export function EditorRightSidebar() {
   const { state, dispatch, selectedObject } = useEditor();
@@ -36,9 +37,16 @@ export function EditorRightSidebar() {
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     <SelectItem value="showcase">Showcase</SelectItem>
+                    <SelectItem value="3d-tilt-angles">3D Multiple Angles</SelectItem>
+                    <SelectItem value="simple-fade">Simple Fade</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-[10px] text-zinc-400">Controls how objects animate in video mode</p>
+                {state.config.animation_preset !== undefined && (
+                  <div className="pt-1">
+                    <MotionPreview config={state.config} format={state.activeFormat} width={240} />
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -47,7 +55,7 @@ export function EditorRightSidebar() {
               <CommonProperties />
               <Separator />
               <TextProperties />
-              <ImageProperties />
+              <VisualProperties />
             </div>
           )}
         </div>

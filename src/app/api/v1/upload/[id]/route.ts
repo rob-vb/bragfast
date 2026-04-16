@@ -6,12 +6,16 @@ import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { NextRequest } from "next/server";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-  "image/svg+xml": "svg",
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const ALLOWED_TYPES: Record<string, { ext: string; kind: "image" | "video" }> = {
+  "image/png": { ext: "png", kind: "image" },
+  "image/jpeg": { ext: "jpg", kind: "image" },
+  "image/webp": { ext: "webp", kind: "image" },
+  "image/svg+xml": { ext: "svg", kind: "image" },
+  "video/mp4": { ext: "mp4", kind: "video" },
+  "video/webm": { ext: "webm", kind: "video" },
+  "video/quicktime": { ext: "mov", kind: "video" },
 };
 
 export async function PUT(
@@ -79,10 +83,12 @@ export async function PUT(
   }
 
   const buffer = Buffer.from(await request.arrayBuffer());
+  const typeInfo = ALLOWED_TYPES[contentType];
+  const maxSize = typeInfo.kind === "video" ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
 
-  if (buffer.length > MAX_SIZE) {
+  if (buffer.length > maxSize) {
     return Response.json(
-      { error: `File too large: ${buffer.length} bytes exceeds ${MAX_SIZE} limit` },
+      { error: `File too large: ${buffer.length} bytes exceeds ${maxSize} limit` },
       { status: 400 }
     );
   }
@@ -94,8 +100,7 @@ export async function PUT(
     );
   }
 
-  const ext = ALLOWED_TYPES[contentType];
-  const key = `uploads/${upload.userId}/${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}.${ext}`;
+  const key = `uploads/${upload.userId}/${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}.${typeInfo.ext}`;
   const url = await uploadImage(buffer, key, contentType);
 
   await fetchMutation(api.uploads.markCompleted, {

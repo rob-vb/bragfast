@@ -1,7 +1,8 @@
 "use client";
 
-import type { FormatKey } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset } from "@/lib/types";
+import { MotionPresetPicker } from "./motion-preset-picker";
 
 const FORMAT_LABELS: Record<FormatKey, string> = {
   landscape: "Landscape",
@@ -20,8 +21,10 @@ interface PlatingStepProps {
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
   creditBalance?: number;
+  autoSelectedPreset?: AnimationPreset;
+  selectedVideoHasHero: boolean;
+  templateConfig?: CanvasTemplateConfig;
   onToggleFormat: (format: FormatKey) => void;
-  onOutputTypeChange: (type: "image" | "video") => void;
   onAnimationPresetChange: (preset: AnimationPreset | undefined) => void;
 }
 
@@ -30,8 +33,10 @@ export function PlatingStep({
   outputType,
   animationPreset,
   creditBalance,
+  autoSelectedPreset,
+  selectedVideoHasHero,
+  templateConfig,
   onToggleFormat,
-  onOutputTypeChange,
   onAnimationPresetChange,
 }: PlatingStepProps) {
   const creditCost = formats.length * (outputType === "video" ? 5 : 1);
@@ -80,50 +85,15 @@ export function PlatingStep({
         </div>
       </div>
 
-      {/* Output type toggle */}
-      <div className="space-y-2">
-        <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
-          Output
-        </p>
-        <div className="inline-flex border-2 border-brand">
-          {(["image", "video"] as const).map((type) => {
-            const active = outputType === type;
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => onOutputTypeChange(type)}
-                className={`
-                  font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
-                  transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
-                  ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
-                `}
-              >
-                {type}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Animation preset — video only */}
+      {/* Video-only: motion picker */}
       {outputType === "video" && (
-        <div className="space-y-2">
-          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
-            Animation Preset
-          </p>
-          <select
-            className="border-2 border-brand px-3 py-2 text-sm font-[family-name:var(--font-geist-sans)] text-brand bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-            value={animationPreset ?? "none"}
-            onChange={(e) => {
-              const v = e.target.value;
-              onAnimationPresetChange(v === "none" ? undefined : (v as AnimationPreset));
-            }}
-          >
-            <option value="none">None</option>
-            <option value="showcase">Showcase</option>
-          </select>
-        </div>
+        <MotionPresetPicker
+          value={animationPreset}
+          autoSelected={autoSelectedPreset}
+          templateHasHero={selectedVideoHasHero}
+          templateConfig={templateConfig}
+          onChange={(p) => onAnimationPresetChange(p)}
+        />
       )}
 
       {/* Credit display */}

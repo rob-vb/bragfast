@@ -8,14 +8,21 @@ import { uploadImage } from "../storage/r2";
 import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
 import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
-import type { ReleaseResult, FormatEntry, VideoField } from "../types";
+import type { ReleaseResult, FormatEntry, VideoField, AnimationPreset } from "../types";
 import { calculateCredits } from "../types";
+import { probeMp4DurationSeconds } from "../video/probe";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 const DEFAULT_SLIDE_DURATION = 8;
 const FPS = 30;
+
+// Per-preset default slide duration. Presets with longer motion arcs
+// need more runway so they don't feel rushed. Falls back to DEFAULT_SLIDE_DURATION.
+const PRESET_DEFAULT_DURATION: Partial<Record<AnimationPreset, number>> = {
+  "3d-tilt-angles": 12,
+};
 
 type VideoRenderRequest = {
   brand_id?: string;
@@ -30,9 +37,13 @@ type VideoRenderRequest = {
   metadata?: string;
 };
 
-function getSlideDuration(video: VideoField): number {
-  if (video === true) return DEFAULT_SLIDE_DURATION;
-  return video.duration ?? DEFAULT_SLIDE_DURATION;
+function getSlideDuration(video: VideoField, preset?: AnimationPreset): number {
+  const requested = typeof video === "object" ? video.duration : undefined;
+  if (requested !== undefined) return requested;
+  if (preset && PRESET_DEFAULT_DURATION[preset] !== undefined) {
+    return PRESET_DEFAULT_DURATION[preset]!;
+  }
+  return DEFAULT_SLIDE_DURATION;
 }
 
 function calculateVideoDuration(slideCount: number, slideDuration: number): number {
@@ -69,12 +80,18 @@ export async function renderVideoAsync(
     const templateName = request.template || "standard-browser";
     let templateConfig = await resolveTemplate(templateName, userId, convex);
     const brand = await resolveBrand(request, templateConfig.colors, convex);
-    const slideDuration = getSlideDuration(request.video);
 
-    // Apply API-level animation preset override
+    // Apply API-level animation preset override before resolving slide duration,
+    // so preset-specific duration defaults (e.g. 3d-tilt-angles → 12s) apply.
     if (request.video && typeof request.video === 'object' && request.video.preset) {
       templateConfig = { ...templateConfig, animation_preset: request.video.preset };
     }
+
+    const slideDuration = getSlideDuration(request.video, templateConfig.animation_preset);
+
+    console.log(
+      `[VIDEO] Render start cook=${cookId} template=${templateName} animation_preset=${templateConfig.animation_preset ?? "showcase"}`
+    );
 
     const { srcMap } = await prefetchStaticImages(templateConfig);
 
@@ -93,15 +110,31 @@ export async function renderVideoAsync(
         const formatLayout = templateConfig.formats[formatKey] ?? templateConfig.formats.landscape;
         injectStaticImages(slideDataMaps, formatLayout, srcMap);
 
-        // Fail if any slide has a missing image that should have been provided
+        // Fail if any visual has neither a video nor an image source
         for (const dataMap of slideDataMaps) {
           for (const [objId, data] of Object.entries(dataMap)) {
             const obj = formatLayout.objects.find(o => o.id === objId);
-            if (obj?.type === "image" && !obj.src && !data.imageBase64) {
-              throw new Error(`Missing image for object "${objId}" in format "${format.name}"`);
+            if (obj?.type === "visual" && !obj.src && !data.imageBase64 && !data.videoUrl) {
+              throw new Error(`Missing media for visual "${objId}" in format "${format.name}"`);
             }
           }
         }
+
+        // Per-slide duration: stretch to fit the longest video on the slide,
+        // never dipping below the default slide duration.
+        const slideDurations = await Promise.all(
+          slideDataMaps.map(async (dataMap) => {
+            const videoUrls = Object.values(dataMap)
+              .map((d) => d.videoUrl)
+              .filter((u): u is string => !!u);
+            if (videoUrls.length === 0) return slideDuration;
+            const durations = await Promise.all(
+              videoUrls.map((url) => probeMp4DurationSeconds(url))
+            );
+            const maxVideo = Math.max(0, ...durations.filter((d): d is number => d !== null));
+            return Math.max(slideDuration, maxVideo);
+          })
+        );
 
         const inputProps = {
           config: templateConfig,
@@ -115,9 +148,10 @@ export async function renderVideoAsync(
             font_family: brand.font_family ?? "Plus Jakarta Sans",
           },
           slideDuration,
+          slideDurations,
         };
 
-        const duration = calculateVideoDuration(slideDataMaps.length, slideDuration);
+        const duration = slideDurations.reduce((sum, d) => sum + d, 0);
         const filename = `${format.name}.mp4`;
         let url: string;
 

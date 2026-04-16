@@ -48,7 +48,8 @@ export async function GET(
     is_default: template.isDefault,
     objects: objects.map((o) => {
       const rawType = o.type as string;
-      const type = rawType === "title" || rawType === "description" ? "text" : rawType;
+      let type = rawType === "title" || rawType === "description" ? "text" : rawType;
+      if (type === "image") type = "visual";
 
       if (type === "text") {
         return {
@@ -59,13 +60,14 @@ export async function GET(
           color: (o.color as string) ?? null,
         };
       }
-      if (type === "image") {
+      if (type === "visual") {
         return {
           id: o.id,
           type,
           image_url: null,
-          image_frame: (o.imageFrame as string) ?? "none",
-          image_frame_color: (o.imageFrameColor as string) ?? null,
+          video_url: null,
+          visual_frame: (o.visualFrame as string) ?? "none",
+          visual_frame_color: (o.visualFrameColor as string) ?? null,
           anchor_x: (o.anchorX as string) ?? "center",
           anchor_y: (o.anchorY as string) ?? "top",
         };

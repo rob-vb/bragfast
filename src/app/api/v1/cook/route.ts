@@ -62,12 +62,18 @@ export async function POST(request: Request) {
 
   // Template validation (image and video both use templates now)
   if (body.template) {
-    const validDefaults = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
+    const validDefaults = [
+      "standard-browser",
+      "standard-mobile",
+      "split-browser",
+      "split-mobile",
+      "hero",
+    ];
     const isDefault = validDefaults.includes(body.template);
     const isCustom = typeof body.template === "string" && body.template.startsWith("tmpl_");
     if (!isDefault && !isCustom) {
       return Response.json(
-        { error: "Invalid template. Must be standard-browser, standard-mobile, split-browser, split-mobile, hero, or a template ID (tmpl_...)" },
+        { error: `Invalid template. Must be one of: ${validDefaults.join(", ")}, or a template ID (tmpl_...)` },
         { status: 400 }
       );
     }

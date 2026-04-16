@@ -1,6 +1,6 @@
 import type { AnimationPreset } from "../types";
 
-export type ObjectType = "text" | "image" | "logo";
+export type ObjectType = "text" | "visual" | "logo";
 export type ColorRole = "primary" | "text" | "background";
 
 /** Resolve a text object's color: colorRole takes precedence over the literal color hex. */
@@ -13,7 +13,7 @@ export function resolveTextColor(
 }
 
 // Legacy types still in DB — migrated at read time
-type LegacyObjectType = "title" | "description";
+type LegacyObjectType = "title" | "description" | "image";
 
 export function slugify(name: string): string {
   return name
@@ -36,26 +36,41 @@ export function uniqueSlug(name: string, existingIds: string[], currentId?: stri
 
 function migrateObject(obj: TemplateObject): TemplateObject {
   const type = obj.type as string;
-  const migrated = (type === "title" || type === "description")
-    ? { ...obj, type: "text" as ObjectType }
-    : { ...obj };
+  let migrated: TemplateObject;
+  if (type === "title" || type === "description") {
+    migrated = { ...obj, type: "text" as ObjectType };
+  } else if (type === "image") {
+    migrated = { ...obj, type: "visual" as ObjectType };
+  } else {
+    migrated = { ...obj };
+  }
 
   // Strip legacy per-object animation fields (now preset-only)
-  const raw = migrated as Record<string, unknown>;
+  const raw = migrated as unknown as Record<string, unknown>;
   delete raw.entrance;
   delete raw.exit;
   delete raw.kenBurns;
 
-  // Migrate device → imageFrame
-  if ("device" in raw && !("imageFrame" in raw)) {
-    migrated.imageFrame = raw.device as ImageFrame;
+  // Migrate device → visualFrame (legacy enum)
+  if ("device" in raw && !("visualFrame" in raw) && !("imageFrame" in raw)) {
+    migrated.visualFrame = raw.device as VisualFrame;
     delete raw.device;
   }
-  // Migrate deviceColor → imageFrameColor (enum to hex)
-  if ("deviceColor" in raw && !("imageFrameColor" in raw)) {
+  // Migrate deviceColor → visualFrameColor (legacy enum → hex)
+  if ("deviceColor" in raw && !("visualFrameColor" in raw) && !("imageFrameColor" in raw)) {
     const dc = raw.deviceColor as string;
-    migrated.imageFrameColor = dc === "dark" ? "#1A1A1A" : "#E8E8E8";
+    migrated.visualFrameColor = dc === "dark" ? "#1A1A1A" : "#E8E8E8";
     delete raw.deviceColor;
+  }
+  // Migrate imageFrame → visualFrame (previous rename)
+  if ("imageFrame" in raw && !("visualFrame" in raw)) {
+    migrated.visualFrame = raw.imageFrame as VisualFrame;
+    delete raw.imageFrame;
+  }
+  // Migrate imageFrameColor → visualFrameColor (previous rename)
+  if ("imageFrameColor" in raw && !("visualFrameColor" in raw)) {
+    migrated.visualFrameColor = raw.imageFrameColor as string;
+    delete raw.imageFrameColor;
   }
 
   return migrated;
@@ -77,7 +92,7 @@ export function migrateConfig(config: CanvasTemplateConfig): CanvasTemplateConfi
 }
 export type TextAlign = "left" | "center" | "right";
 export type VerticalAlign = "top" | "center" | "bottom";
-export type ImageFrame = "browser" | "mobile" | "none";
+export type VisualFrame = "browser" | "mobile" | "none";
 export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
@@ -106,11 +121,12 @@ export interface TemplateObject {
   verticalAlign?: VerticalAlign;
   textFit?: boolean;
 
-  // Image-only
+  // Visual-only
   background?: boolean;
   src?: string; // Static image URL — baked into template, not overridable by API
-  imageFrame?: ImageFrame;
-  imageFrameColor?: string;
+  video_url?: string; // Optional video URL — preferred over image for video renders
+  visualFrame?: VisualFrame;
+  visualFrameColor?: string;
   objectFit?: ObjectFit;
   anchorX?: AnchorX;
   anchorY?: AnchorY;

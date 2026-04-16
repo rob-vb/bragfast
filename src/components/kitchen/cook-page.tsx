@@ -15,7 +15,7 @@ import { CookResults } from "@/components/kitchen/cook-results";
 import { useReleaseProgress } from "@/hooks/use-release-progress";
 import { useUserId } from "@/hooks/use-user-id";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
-import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry } from "@/lib/types";
+import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry, Brand } from "@/lib/types";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +28,7 @@ interface CookState {
   formats: FormatKey[];
   outputType: "image" | "video";
   animationPreset?: AnimationPreset;
+  autoSelectedPreset?: AnimationPreset;
   status: "idle" | "cooking" | "done" | "error";
   cookId?: string;
   progress?: number;
@@ -36,6 +37,14 @@ interface CookState {
 }
 
 const DEFAULT_COLORS = { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" };
+
+function templateHasHero(config: CanvasTemplateConfig | null): boolean {
+  if (!config) return false;
+  for (const layout of Object.values(config.formats)) {
+    if (layout?.objects.some((o) => o.type === "visual")) return true;
+  }
+  return false;
+}
 
 const INITIAL_STATE: CookState = {
   templateId: null,
@@ -66,7 +75,8 @@ type CookAction =
 
 function cookReducer(state: CookState, action: CookAction): CookState {
   switch (action.type) {
-    case "SELECT_TEMPLATE":
+    case "SELECT_TEMPLATE": {
+      const preset = action.config.animation_preset ?? "showcase";
       return {
         ...state,
         templateId: action.templateId,
@@ -76,7 +86,10 @@ function cookReducer(state: CookState, action: CookAction): CookState {
           ? state.colors
           : { ...DEFAULT_COLORS, ...action.config.colors },
         objectContent: {},
+        animationPreset: preset,
+        autoSelectedPreset: preset,
       };
+    }
 
     case "SET_BRAND":
       return {
@@ -106,15 +119,29 @@ function cookReducer(state: CookState, action: CookAction): CookState {
       };
     }
 
-    case "SET_OUTPUT_TYPE":
+    case "SET_OUTPUT_TYPE": {
+      if (action.outputType === "image") {
+        return {
+          ...state,
+          outputType: "image",
+          animationPreset: undefined,
+          autoSelectedPreset: undefined,
+        };
+      }
+      if (state.animationPreset) {
+        return { ...state, outputType: "video" };
+      }
+      const seeded = state.templateConfig?.animation_preset ?? "showcase";
       return {
         ...state,
-        outputType: action.outputType,
-        animationPreset: action.outputType === "image" ? undefined : (state.animationPreset ?? "showcase"),
+        outputType: "video",
+        animationPreset: seeded,
+        autoSelectedPreset: seeded,
       };
+    }
 
     case "SET_ANIMATION_PRESET":
-      return { ...state, animationPreset: action.preset };
+      return { ...state, animationPreset: action.preset, autoSelectedPreset: undefined };
 
     case "START_COOK":
       // Clear cookId so useReleaseProgress doesn't match the previous
@@ -161,6 +188,20 @@ export function CookPage({ templates }: CookPageProps) {
   // ── Live credit balance ─────────────────────────────────────────────────
   const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
 
+  // ── Primary brand for template previews ────────────────────────────────
+  // Independent of the brand selected for cooking — the picker always shows
+  // the user's first brand so custom templates preview with their identity.
+  const userBrandsRaw = useQuery(api.brands.listByUser, { userId });
+  const primaryBrand: Brand | undefined = userBrandsRaw?.[0]
+    ? {
+        name: userBrandsRaw[0].name,
+        logoBase64: userBrandsRaw[0].logo_url ?? "",
+        website: userBrandsRaw[0].website ?? "",
+        colors: userBrandsRaw[0].colors,
+        font_family: userBrandsRaw[0].font_family,
+      }
+    : undefined;
+
   // ── Real-time release progress (replaces polling) ───────────────────────
   const releaseProgress = useReleaseProgress(state.cookId);
   const releaseStatus = releaseProgress?.status;
@@ -204,7 +245,7 @@ export function CookPage({ templates }: CookPageProps) {
     // Build FormatEntry array — single slide per format
     const objects = Object.values(state.objectContent).filter((m) => {
       // Only include mods that have some content
-      return m.text || m.image_url;
+      return m.text || m.image_url || m.video_url;
     });
 
     const formats: FormatEntry[] = state.formats.map((fmt) => ({
@@ -277,6 +318,32 @@ export function CookPage({ templates }: CookPageProps) {
 
   const stepsContent = (
     <>
+      {/* Output type toggle — always visible above steps */}
+      <div className="space-y-2 mb-4">
+        <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
+          Output
+        </p>
+        <div className="inline-flex border-2 border-brand">
+          {(["image", "video"] as const).map((type) => {
+            const active = state.outputType === type;
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => dispatch({ type: "SET_OUTPUT_TYPE", outputType: type })}
+                className={`
+                  font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
+                  transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
+                  ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
+                `}
+              >
+                {type}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Steps (accordion — only one open at a time) */}
       <div className="space-y-0">
         {/* 1. Recipe — Template selection */}
@@ -291,6 +358,7 @@ export function CookPage({ templates }: CookPageProps) {
             onSelect={(id, config) =>
               dispatch({ type: "SELECT_TEMPLATE", templateId: id, config })
             }
+            userBrand={primaryBrand}
           />
         </CookSection>
 
@@ -322,6 +390,7 @@ export function CookPage({ templates }: CookPageProps) {
             <IngredientsStep
               templateConfig={state.templateConfig}
               objectContent={state.objectContent}
+              outputType={state.outputType}
               onContentChange={(id, mod) =>
                 dispatch({ type: "SET_CONTENT", id, mod })
               }
@@ -345,8 +414,10 @@ export function CookPage({ templates }: CookPageProps) {
             outputType={state.outputType}
             animationPreset={state.animationPreset}
             creditBalance={creditBalance ?? undefined}
+            autoSelectedPreset={state.autoSelectedPreset}
+            selectedVideoHasHero={templateHasHero(state.templateConfig)}
+            templateConfig={state.templateConfig ?? undefined}
             onToggleFormat={(fmt) => dispatch({ type: "TOGGLE_FORMAT", format: fmt })}
-            onOutputTypeChange={(t) => dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })}
             onAnimationPresetChange={(p) =>
               dispatch({ type: "SET_ANIMATION_PRESET", preset: p })
             }

@@ -7,6 +7,7 @@ export const create = mutation({
     filename: v.string(),
     contentType: v.string(),
     sizeBytes: v.optional(v.number()),
+    url: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const externalId = `upl_${crypto.randomUUID().slice(0, 10)}`;
@@ -22,6 +23,29 @@ export const create = mutation({
     });
 
     return { externalId, expiresAt };
+  },
+});
+
+export const completeByExternalId = mutation({
+  args: {
+    externalId: v.string(),
+    sizeBytes: v.number(),
+  },
+  handler: async (ctx, { externalId, sizeBytes }) => {
+    const upload = await ctx.db
+      .query("uploads")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+
+    if (!upload || upload.status !== "pending" || !upload.url) return null;
+
+    await ctx.db.patch(upload._id, {
+      status: "completed",
+      sizeBytes,
+      completed_at: new Date().toISOString(),
+    });
+
+    return { externalId, url: upload.url, sizeBytes };
   },
 });
 

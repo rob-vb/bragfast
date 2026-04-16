@@ -4,7 +4,7 @@ import type { TemplateObject } from "../templates/canvas-types";
 
 function img(overrides: Partial<TemplateObject> & { id: string; zIndex: number }): TemplateObject {
   return {
-    type: "image",
+    type: "visual",
     name: overrides.id,
     x: 0, y: 0, width: 100, height: 100,
     opacity: 1,
