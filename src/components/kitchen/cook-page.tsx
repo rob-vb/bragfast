@@ -304,6 +304,32 @@ export function CookPage({ templates }: CookPageProps) {
 
   const stepsContent = (
     <>
+      {/* Output type toggle — always visible above steps */}
+      <div className="space-y-2 mb-4">
+        <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
+          Output
+        </p>
+        <div className="inline-flex border-2 border-brand">
+          {(["image", "video"] as const).map((type) => {
+            const active = state.outputType === type;
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => dispatch({ type: "SET_OUTPUT_TYPE", outputType: type })}
+                className={`
+                  font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
+                  transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
+                  ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
+                `}
+              >
+                {type}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Steps (accordion — only one open at a time) */}
       <div className="space-y-0">
         {/* 1. Recipe — Template selection */}
@@ -315,12 +341,8 @@ export function CookPage({ templates }: CookPageProps) {
           <RecipeStep
             templates={templates}
             selectedId={state.templateId}
-            outputType={state.outputType}
             onSelect={(id, config) =>
               dispatch({ type: "SELECT_TEMPLATE", templateId: id, config })
-            }
-            onOutputTypeChange={(t) =>
-              dispatch({ type: "SET_OUTPUT_TYPE", outputType: t })
             }
           />
         </CookSection>
