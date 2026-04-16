@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { ConvexError } from "convex/values";
 
 export const create = mutation({
   args: {
@@ -80,6 +81,127 @@ export const markCompleted = mutation({
     });
 
     return { externalId, url, sizeBytes };
+  },
+});
+
+export const createMultipart = mutation({
+  args: {
+    userId: v.string(),
+    externalId: v.string(),
+    filename: v.string(),
+    contentType: v.string(),
+    declaredSizeBytes: v.number(),
+    totalParts: v.number(),
+    partSizeBytes: v.number(),
+    finalKey: v.string(),
+    tempPrefix: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = new Date().toISOString();
+    const expiresAt = Date.now() + 15 * 60_000; // 15 minutes
+
+    await ctx.db.insert("uploads", {
+      userId: args.userId,
+      externalId: args.externalId,
+      filename: args.filename,
+      contentType: args.contentType,
+      status: "uploading",
+      kind: "multipart",
+      expiresAt,
+      created_at: now,
+      finalKey: args.finalKey,
+      tempPrefix: args.tempPrefix,
+      partSizeBytes: args.partSizeBytes,
+      totalParts: args.totalParts,
+      declaredSizeBytes: args.declaredSizeBytes,
+      uploadedParts: [],
+    });
+
+    return { externalId: args.externalId, expiresAt };
+  },
+});
+
+export const recordPart = mutation({
+  args: {
+    externalId: v.string(),
+    partNumber: v.number(),
+    sizeBytes: v.number(),
+  },
+  handler: async (ctx, { externalId, partNumber, sizeBytes }) => {
+    const upload = await ctx.db
+      .query("uploads")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+
+    if (!upload) throw new ConvexError({ code: "NOT_FOUND", message: "Upload not found" });
+    if (upload.status !== "uploading") throw new ConvexError({ code: "CONFLICT", message: "Upload not in uploading state" });
+    if (upload.expiresAt < Date.now()) throw new ConvexError({ code: "EXPIRED", message: "Upload has expired" });
+    if (partNumber < 1 || partNumber > (upload.totalParts ?? 0)) {
+      throw new ConvexError({ code: "INVALID_PART", message: `Part number out of range: ${partNumber}` });
+    }
+
+    const existing = upload.uploadedParts ?? [];
+    const filtered = existing.filter((p) => p.partNumber !== partNumber);
+    const updated = [...filtered, { partNumber, sizeBytes, uploaded_at: new Date().toISOString() }];
+
+    await ctx.db.patch(upload._id, { uploadedParts: updated });
+
+    return {
+      partNumber,
+      totalParts: upload.totalParts ?? 0,
+      uploadedCount: updated.length,
+    };
+  },
+});
+
+export const completeMultipart = mutation({
+  args: {
+    externalId: v.string(),
+    url: v.string(),
+    sizeBytes: v.number(),
+  },
+  handler: async (ctx, { externalId, url, sizeBytes }) => {
+    const upload = await ctx.db
+      .query("uploads")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+
+    if (!upload) return null;
+
+    // Idempotent: already completed with matching url
+    if (upload.status === "completed" && upload.url === url) {
+      return { externalId, url, sizeBytes: upload.sizeBytes ?? sizeBytes };
+    }
+
+    if (upload.status !== "uploading") {
+      throw new ConvexError({ code: "CONFLICT", message: "Upload not in uploading state" });
+    }
+
+    await ctx.db.patch(upload._id, {
+      status: "completed",
+      url,
+      sizeBytes,
+      completed_at: new Date().toISOString(),
+    });
+
+    return { externalId, url, sizeBytes };
+  },
+});
+
+export const abortMultipart = mutation({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const upload = await ctx.db
+      .query("uploads")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+
+    if (!upload) return null;
+    if (upload.status === "completed") return null; // route returns 409
+    if (upload.status === "aborted" || upload.status === "expired") return { tempPrefix: upload.tempPrefix };
+
+    await ctx.db.patch(upload._id, { status: "aborted" });
+    return { tempPrefix: upload.tempPrefix };
   },
 });
 

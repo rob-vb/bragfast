@@ -37,3 +37,42 @@ export function verifyUploadSignature(
     Buffer.from(expected, "hex")
   );
 }
+
+function buildPartMessage(
+  uploadId: string,
+  partNumber: number,
+  expiresAt: number,
+  contentType: string
+): string {
+  return `PUT\n/api/v1/upload/chunked/${uploadId}/part/${partNumber}\n${expiresAt}\n${contentType}`;
+}
+
+export function signPartUrl(
+  uploadId: string,
+  partNumber: number,
+  expiresAt: number,
+  contentType: string
+): string {
+  const message = buildPartMessage(uploadId, partNumber, expiresAt, contentType);
+  return crypto
+    .createHmac("sha256", getSigningKey())
+    .update(message)
+    .digest("hex");
+}
+
+export function verifyPartSignature(
+  uploadId: string,
+  partNumber: number,
+  expiresAt: number,
+  contentType: string,
+  signature: string
+): boolean {
+  const expected = signPartUrl(uploadId, partNumber, expiresAt, contentType);
+
+  if (signature.length !== expected.length) return false;
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, "hex"),
+    Buffer.from(expected, "hex")
+  );
+}

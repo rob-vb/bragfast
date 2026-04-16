@@ -1,18 +1,7 @@
 import crypto from "crypto";
 import { authenticate } from "@/lib/auth/authenticate";
 import { uploadImage } from "@/lib/storage/r2";
-
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_TYPES: Record<string, { ext: string; kind: "image" | "video" }> = {
-  "image/png": { ext: "png", kind: "image" },
-  "image/jpeg": { ext: "jpg", kind: "image" },
-  "image/webp": { ext: "webp", kind: "image" },
-  "image/svg+xml": { ext: "svg", kind: "image" },
-  "video/mp4": { ext: "mp4", kind: "video" },
-  "video/webm": { ext: "webm", kind: "video" },
-  "video/quicktime": { ext: "mov", kind: "video" },
-};
+import { ALLOWED_TYPES, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from "@/lib/upload/constants";
 
 export async function POST(request: Request) {
   const auth = await authenticate(request);

@@ -102,3 +102,29 @@ export async function uploadImage(buffer: Buffer, key: string, contentType = 'im
   }))
   return `${PUBLIC_URL}/${key}`
 }
+
+export async function putChunk(key: string, body: Buffer, contentType: string): Promise<{ size: number }> {
+  await client.send(new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  }))
+  return { size: body.length }
+}
+
+export async function getChunkBuffer(key: string): Promise<Buffer> {
+  const res = await client.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
+  const bytes = await res.Body!.transformToByteArray()
+  return Buffer.from(bytes)
+}
+
+export async function assembleChunks(opts: {
+  chunkKeys: string[]
+  destKey: string
+  contentType: string
+}): Promise<string> {
+  const buffers = await Promise.all(opts.chunkKeys.map(getChunkBuffer))
+  const merged = Buffer.concat(buffers)
+  return uploadImage(merged, opts.destKey, opts.contentType)
+}

@@ -157,13 +157,27 @@ export default defineSchema({
     sizeBytes: v.optional(v.number()),
     status: v.union(
       v.literal("pending"),
+      v.literal("uploading"),
       v.literal("completed"),
-      v.literal("expired")
+      v.literal("expired"),
+      v.literal("aborted"),
     ),
     url: v.optional(v.string()),
     expiresAt: v.number(),
     created_at: v.string(),
     completed_at: v.optional(v.string()),
+    // multipart-only fields
+    kind: v.optional(v.union(v.literal("single"), v.literal("multipart"))),
+    finalKey: v.optional(v.string()),
+    tempPrefix: v.optional(v.string()),
+    partSizeBytes: v.optional(v.number()),
+    totalParts: v.optional(v.number()),
+    declaredSizeBytes: v.optional(v.number()),
+    uploadedParts: v.optional(v.array(v.object({
+      partNumber: v.number(),
+      sizeBytes: v.number(),
+      uploaded_at: v.string(),
+    }))),
   })
     .index("by_userId", ["userId"])
     .index("by_externalId", ["externalId"]),
