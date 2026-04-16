@@ -180,7 +180,7 @@ const SlideRenderer: React.FC<SlideRendererProps> = ({
         const localFrame = Math.max(0, frame - staggerDelay);
 
         // Compute entrance animation style
-        const entranceStyle = computeEntranceStyle(entrance, localFrame, fps, slideDurationFrames, height, obj.y, obj.height);
+        const entranceStyle = computeEntranceStyle(entrance, localFrame, fps, slideDurationFrames, height, obj.y, obj.height, width, obj.x, obj.width);
 
         // Compute exit animation style
         const exitStyle = computeExitStyle(exit, frame, fps, slideDurationFrames);
@@ -334,6 +334,9 @@ function computeEntranceStyle(
   containerHeight?: number,
   objY?: number,
   objHeight?: number,
+  containerWidth?: number,
+  objX?: number,
+  objWidth?: number,
 ): React.CSSProperties {
   switch (entrance) {
     case "none":
@@ -477,13 +480,17 @@ function computeEntranceStyle(
       // Motion must end early enough for text reveal + 3s hold; clamp minimum.
       const motionEnd = Math.max(fps * 2, total - holdFrames - textRevealFrames);
 
-      // Canvas-center offset: translateY needed to vertically center the element.
-      // CSS Y grows downward, so negative = up.
+      // Canvas-center offsets: translate needed to center the element both axes.
       const h = containerHeight ?? 675;
-      const centerOffset =
+      const w = containerWidth ?? 1200;
+      const centerYOffset =
         objY !== undefined && objHeight !== undefined
           ? h / 2 - (objY + objHeight / 2)
           : -h * 0.35;
+      const centerXOffset =
+        objX !== undefined && objWidth !== undefined
+          ? w / 2 - (objX + objWidth / 2)
+          : 0;
 
       // 5-stop path: start → arc up → land at canvas center → slide to rest → hold
       const stops = [0, motionEnd * 0.30, motionEnd * 0.58, motionEnd * 0.82, motionEnd, total].map((f) => Math.round(f));
@@ -510,7 +517,17 @@ function computeEntranceStyle(
       const translateY = interpolate(
         localFrame,
         stops,
-        [h * 0.15, -h * 0.35, centerOffset, 0, 0, 0],
+        [h * 0.15, -h * 0.35, centerYOffset, 0, 0, 0],
+        {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.cubic),
+        },
+      );
+      const translateX = interpolate(
+        localFrame,
+        stops,
+        [0, centerXOffset * 0.5, centerXOffset, 0, 0, 0],
         {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
@@ -526,17 +543,18 @@ function computeEntranceStyle(
 
       return {
         opacity,
-        transform: `perspective(1400px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
+        transform: `perspective(1400px) translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
       };
     }
 
     case "3d-tilt-reveal": {
-      // Text/logo reveal tuned for 3d-tilt: fires exactly when the hero
-      // settles, so the last 3s of the slide are a fully-assembled hold.
+      // Text/logo reveal tuned for 3d-tilt: fires when the hero settles to
+      // rest (motionEnd * 0.82), so the hold begins as soon as everything lands.
       const totalFrames = slideDurationFrames ?? Math.round(fps * 10);
       const revealDuration = Math.round(fps * 0.7);
       const holdFrames = fps * 3;
-      const revealStart = Math.max(fps * 2, totalFrames - holdFrames - revealDuration);
+      const motionEnd = Math.max(fps * 2, totalFrames - holdFrames - revealDuration);
+      const revealStart = Math.round(motionEnd * 0.82);
 
       if (localFrame < revealStart) {
         return { opacity: 0 };

@@ -77,18 +77,22 @@ export const RemotionRoot: React.FC = () => {
       ))}
       {PRESETS.map((preset) => {
         const slideDuration = preset === "3d-tilt-angles" ? 12 : 8;
+        const presetConfig = preset === "3d-tilt-angles"
+          ? getDefaultConfig("split-mobile")!
+          : baseConfig;
+        const presetFormat = preset === "3d-tilt-angles" ? "square" : "landscape";
         return (
           <Composition
             key={`preset-${preset}`}
             id={`preset-${preset}`}
             component={VideoCanvasComposition}
             fps={FPS}
-            width={FORMAT_DIMENSIONS.landscape.width}
-            height={FORMAT_DIMENSIONS.landscape.height}
+            width={FORMAT_DIMENSIONS[presetFormat].width}
+            height={FORMAT_DIMENSIONS[presetFormat].height}
             durationInFrames={Math.ceil(slideDuration * FPS)}
             defaultProps={{
-              config: { ...baseConfig, animation_preset: preset },
-              format: "landscape",
+              config: { ...presetConfig, animation_preset: preset },
+              format: presetFormat,
               slides: [presetSlide],
               brand: presetBrand,
               slideDuration,
