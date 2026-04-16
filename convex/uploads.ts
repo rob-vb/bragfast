@@ -27,6 +27,37 @@ export const create = mutation({
   },
 });
 
+/**
+ * Create an upload record that is already completed (used by the token-upload flow
+ * where the file is streamed directly to R2 before the record is persisted).
+ */
+export const createCompleted = mutation({
+  args: {
+    userId: v.string(),
+    filename: v.string(),
+    contentType: v.string(),
+    sizeBytes: v.number(),
+    url: v.string(),
+    externalId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = new Date().toISOString();
+    await ctx.db.insert("uploads", {
+      userId: args.userId,
+      externalId: args.externalId,
+      filename: args.filename,
+      contentType: args.contentType,
+      sizeBytes: args.sizeBytes,
+      url: args.url,
+      status: "completed",
+      expiresAt: Date.now() + 300_000,
+      created_at: now,
+      completed_at: now,
+    });
+    return { externalId: args.externalId, url: args.url };
+  },
+});
+
 export const completeByExternalId = mutation({
   args: {
     externalId: v.string(),

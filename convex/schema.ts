@@ -149,6 +149,27 @@ export default defineSchema({
     created_at: v.string(),
   }).index("by_userId", ["userId"]),
 
+  uploadTokens: defineTable({
+    token: v.string(),           // "utk_" + 21-char random — primary lookup key
+    userId: v.string(),
+    filename: v.string(),
+    contentType: v.string(),
+    sizeBytes: v.optional(v.number()),   // declared at mint, may be absent
+    maxSizeBytes: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("consumed"),
+      v.literal("expired")
+    ),
+    uploadId: v.optional(v.string()),    // set when status=consumed
+    expiresAt: v.number(),               // epoch ms
+    created_at: v.string(),
+    consumed_at: v.optional(v.string()),
+  })
+    .index("by_token", ["token"])
+    .index("by_userId", ["userId"])
+    .index("by_status_expires", ["status", "expiresAt"]),
+
   uploads: defineTable({
     userId: v.string(),
     externalId: v.string(),
