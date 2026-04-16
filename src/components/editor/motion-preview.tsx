@@ -31,8 +31,7 @@ export function MotionPreview({
   const height = Math.round(width * dims.height / dims.width);
 
   const duration = getPreviewDuration(previewConfig.animation_preset);
-  const cappedDuration = Math.min(duration, 5);
-  const durationInFrames = Math.round(cappedDuration * 30);
+  const durationInFrames = Math.round(duration * 30);
 
   const slide = buildSampleSlide(previewConfig, format);
   const brand = buildSampleBrand(previewConfig);
@@ -46,7 +45,7 @@ export function MotionPreview({
           format,
           slides: [slide],
           brand,
-          slideDuration: cappedDuration,
+          slideDuration: duration,
           showPlaceholders: true,
         }}
         durationInFrames={durationInFrames}
