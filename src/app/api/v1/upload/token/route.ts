@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     sizeBytes: typeof size_bytes === "number" ? size_bytes : undefined,
   });
 
-  const uploadUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://brag.fast"}/api/v1/upload/by-token?upload_token=${token}`;
+  const uploadUrl = `${process.env.UPLOAD_BASE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://brag.fast"}/api/v1/upload/by-token?upload_token=${token}`;
 
   return Response.json(
     {
