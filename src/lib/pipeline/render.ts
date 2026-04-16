@@ -205,7 +205,7 @@ export async function renderReleaseAsync(
       if (result) await callWebhook(request.webhook_url, result);
     }
   } finally {
-    cleanupUploads(uploadKeys).catch((err) =>
+    await cleanupUploads(uploadKeys).catch((err) =>
       console.error(`Upload cleanup error for ${releaseId}:`, err)
     );
   }

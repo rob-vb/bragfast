@@ -287,7 +287,7 @@ export const render = internalAction({
         console.error(`Failed to refund credits:`, refundErr);
       }
     } finally {
-      cleanupUploads(uploadKeys).catch((err) =>
+      await cleanupUploads(uploadKeys).catch((err) =>
         console.error(`Upload cleanup error for ${cookId}:`, err)
       );
     }
