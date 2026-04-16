@@ -30,9 +30,12 @@ interface CanvasRendererProps {
   backgroundImageBase64?: string;
   /** When true, skip text/image objects that have no data in objectData */
   skipEmpty?: boolean;
+  /** When true, render device-framed grey placeholders for visual objects with no image/video data.
+   *  Off by default so Satori/production render paths are unaffected. */
+  showPlaceholders?: boolean;
 }
 
-export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64, skipEmpty }: CanvasRendererProps) {
+export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64, skipEmpty, showPlaceholders }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
@@ -84,7 +87,7 @@ export function CanvasRenderer({ config, format, objectData, brand, backgroundIm
           justifyContent: obj.verticalAlign === "center" ? "center"
                         : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start",
         }}>
-          {renderObject(obj, objectData, brand, colors)}
+          {renderObject(obj, objectData, brand, colors, { showVisualPlaceholders: showPlaceholders })}
         </div>
       ))}
     </div>

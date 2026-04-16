@@ -15,7 +15,7 @@ import { CookResults } from "@/components/kitchen/cook-results";
 import { useReleaseProgress } from "@/hooks/use-release-progress";
 import { useUserId } from "@/hooks/use-user-id";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
-import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry } from "@/lib/types";
+import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry, Brand } from "@/lib/types";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -188,6 +188,20 @@ export function CookPage({ templates }: CookPageProps) {
   // ── Live credit balance ─────────────────────────────────────────────────
   const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
 
+  // ── Primary brand for template previews ────────────────────────────────
+  // Independent of the brand selected for cooking — the picker always shows
+  // the user's first brand so custom templates preview with their identity.
+  const userBrandsRaw = useQuery(api.brands.listByUser, { userId });
+  const primaryBrand: Brand | undefined = userBrandsRaw?.[0]
+    ? {
+        name: userBrandsRaw[0].name,
+        logoBase64: userBrandsRaw[0].logo_url ?? "",
+        website: userBrandsRaw[0].website ?? "",
+        colors: userBrandsRaw[0].colors,
+        font_family: userBrandsRaw[0].font_family,
+      }
+    : undefined;
+
   // ── Real-time release progress (replaces polling) ───────────────────────
   const releaseProgress = useReleaseProgress(state.cookId);
   const releaseStatus = releaseProgress?.status;
@@ -344,6 +358,7 @@ export function CookPage({ templates }: CookPageProps) {
             onSelect={(id, config) =>
               dispatch({ type: "SELECT_TEMPLATE", templateId: id, config })
             }
+            userBrand={primaryBrand}
           />
         </CookSection>
 
