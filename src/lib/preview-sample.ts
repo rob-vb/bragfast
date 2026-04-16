@@ -35,3 +35,18 @@ export function buildSampleBrand(config: CanvasTemplateConfig): Brand {
     colors: config.colors,
   };
 }
+
+/** brag.fast-branded sample Brand for default-template previews and as fallback when the user has no brands yet.
+ *  `logoBase64` is a public URL (browser <img src> accepts it). Not safe for Satori server render. */
+export function buildBragfastSampleBrand(): Brand {
+  return {
+    name: "brag.fast",
+    logoBase64: "/logo-icon.svg",
+    website: "brag.fast",
+    colors: {
+      background: "#FFF8F0",
+      text: "#1A1A1A",
+      primary: "#F8AF3C",
+    },
+  };
+}
