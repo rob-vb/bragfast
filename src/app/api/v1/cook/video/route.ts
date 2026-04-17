@@ -74,25 +74,22 @@ export async function POST(request: Request) {
       webhook_url: webhookUrl,
     };
 
-    await fetchMutation(api.releases.create, {
-      userId,
-      externalId: cookId,
-      template,
-      credits_used: creditsNeeded,
-      output: "video",
-      metadata,
-      webhook_url: webhookUrl,
-      source: "api",
-    });
-
     // The Convex action requires a defined `video` field (see VideoRenderRequest
     // in convex/videoRender.ts). Inject the normalized value so downstream code
     // never sees `undefined`.
     const downstreamBody = { ...body, video };
 
-    await fetchMutation(api.releases.scheduleVideoRender, {
-      cookId,
+    // Atomic: insert release record + schedule the render action in one
+    // transactional mutation so we can't end up with an orphaned pending
+    // record if the scheduler throws.
+    await fetchMutation(api.releases.createAndScheduleVideo, {
       userId,
+      externalId: cookId,
+      template,
+      credits_used: creditsNeeded,
+      metadata,
+      webhook_url: webhookUrl,
+      source: "api",
       request: JSON.stringify(downstreamBody),
     });
 

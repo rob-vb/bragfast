@@ -5,13 +5,18 @@
  */
 import { describe, test, expect } from "vitest";
 
-const BASE = "https://bragfast.vercel.app/api/v1";
+const BASE = process.env.TEST_BASE_URL ?? "https://bragfast.vercel.app/api/v1";
 const IMAGE_URL = `${BASE}/cook/image`;
 const VIDEO_URL = `${BASE}/cook/video`;
 const POLL_URL = `${BASE}/cook`;
-const API_KEY = "bf_YuSsx6h30p7w6bW0vOPz2FKn1sxm96y0HZuvuSeB";
-const VERCEL_JWT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJicmFnZmFzdC52ZXJjZWwuYXBwIiwic3ViIjoicHJvdGVjdGlvbi1ieXBhc3MtdXJsIiwiZXhwIjoxNzc0MzQ1NjczLCJieXBhc3MiOiJ6NjNHQmNSd0RaTEdSYkFoQTZ5OGVLaDcwT0JET0JZNiIsImlhdCI6MTc3NDI2Mjg3OX0.MQRuzcFt7WCkLsR2FM_Jun3aETQYE_MORzNNiQGKmUY";
+const API_KEY = process.env.TEST_API_KEY ?? "";
+const VERCEL_JWT = process.env.TEST_VERCEL_JWT ?? "";
+
+if (!API_KEY) {
+  throw new Error(
+    "TEST_API_KEY env var is required for cook-api.test.ts. Set it in .env.test or CI secrets."
+  );
+}
 
 async function post(
   url: string,
