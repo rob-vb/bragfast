@@ -174,106 +174,77 @@ export default function Home() {
             </h2>
           </div>
 
-          {/* Menu-board style: single framed card with divided rows */}
-          <div className="border-[3px] border-brand bg-white shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
-            {/* Row: Cook page */}
-            <div className="grid md:grid-cols-[auto_1fr_auto] gap-4 md:gap-6 items-center px-5 md:px-7 py-5 md:py-6 border-b-2 border-brand/10">
-              <div className="flex items-center gap-3">
-                <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg text-brand/30 w-6">
-                  01
-                </span>
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-gold">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            {/* Cook page — primary */}
+            <div className="border-[3px] border-brand bg-gold p-6 md:p-7 shadow-[6px_6px_0_var(--color-brand)] flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/70">
                   Cook page
                 </span>
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider bg-brand text-gold px-2 py-1">
+                  Fastest
+                </span>
               </div>
-              <div>
-                <h3 className="font-[family-name:var(--font-press-start)] text-xs md:text-sm mb-1.5 leading-[1.5]">
-                  Open it. Drop. Hit Cook.
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
-                  Done in a minute. No design tool to learn.
-                </p>
-              </div>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
+                Open it. Drop. Hit Cook.
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-relaxed mb-6 flex-1">
+                Drop screenshots or screen recordings. Pick a template. Branded images and video out in under a minute.
+              </p>
               <Link
                 href="/signup"
-                className="justify-self-start md:justify-self-end font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
               >
                 Start Cooking →
               </Link>
             </div>
 
-            {/* Row: MCP */}
-            <div className="grid md:grid-cols-[auto_1fr_auto] gap-4 md:gap-6 items-center px-5 md:px-7 py-5 md:py-6 border-b-2 border-brand/10 bg-surface">
-              <div className="flex items-center gap-3">
-                <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg text-brand/30 w-6">
-                  02
-                </span>
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-gold">
+            {/* MCP */}
+            <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
+              <div className="mb-4">
+                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
                   MCP
                 </span>
               </div>
-              <div>
-                <h3 className="font-[family-name:var(--font-press-start)] text-xs md:text-sm mb-1.5 leading-[1.5]">
-                  Already in Claude? Just ask.
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-2">
-                  Works in Claude Desktop and Claude Code. Paste the URL:
-                </p>
-                <code className="inline-block font-[family-name:var(--font-geist-mono)] text-[11px] text-brand bg-gold/30 border border-brand/30 px-2 py-1 select-all break-all">
-                  https://mcp.brag.fast/mcp
-                </code>
-              </div>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
+                Already in Claude? Just ask.
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
+                Works in Claude Desktop and Claude Code. Paste the URL:
+              </p>
+              <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-brand bg-gold/30 border border-brand/30 px-2 py-1.5 select-all break-all mb-6">
+                https://mcp.brag.fast/mcp
+              </code>
               <Link
                 href="#mcp"
-                className="justify-self-start md:justify-self-end font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
+                className="inline-block self-start mt-auto font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
               >
                 Install MCP →
               </Link>
             </div>
 
-            {/* Row: API */}
-            <div className="grid md:grid-cols-[auto_1fr_auto] gap-4 md:gap-6 items-center px-5 md:px-7 py-5 md:py-6">
-              <div className="flex items-center gap-3">
-                <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg text-brand/30 w-6">
-                  03
-                </span>
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-gold">
+            {/* REST API */}
+            <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
+              <div className="mb-4">
+                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
                   REST API
                 </span>
               </div>
-              <div>
-                <h3 className="font-[family-name:var(--font-press-start)] text-xs md:text-sm mb-1.5 leading-[1.5]">
-                  Wire it into CI/CD.
-                </h3>
-                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-2">
-                  POST your release, get branded visuals back.
-                </p>
-                <code className="inline-block font-[family-name:var(--font-geist-mono)] text-[11px] text-surface bg-brand px-2 py-1 break-all">
-                  POST /api/v1/cook/image
-                </code>
-              </div>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
+                Wire it into CI/CD.
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
+                POST your release, get branded visuals back.
+              </p>
+              <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-surface bg-brand px-2 py-1.5 break-all mb-6">
+                POST /api/v1/cook/image
+              </code>
               <Link
                 href="/docs"
-                className="justify-self-start md:justify-self-end font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
+                className="inline-block self-start mt-auto font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
               >
                 Read the docs →
               </Link>
-            </div>
-
-            {/* Footer note: GitHub App bonus */}
-            <div className="bg-brand text-surface/80 px-5 md:px-7 py-3 flex items-center gap-3 flex-wrap">
-              <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider text-gold/80">
-                Side dish
-              </span>
-              <span className="font-[family-name:var(--font-geist-sans)] text-xs md:text-sm text-surface/70">
-                GitHub App. Releases self-announce.{" "}
-                <Link
-                  href="/docs"
-                  className="text-gold hover:underline underline-offset-2"
-                >
-                  Learn more →
-                </Link>
-              </span>
             </div>
           </div>
         </div>
