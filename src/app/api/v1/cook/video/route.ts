@@ -8,9 +8,10 @@ import {
   parseJsonBody,
   validateCommonFields,
   reserveCreditsOrError,
+  refundAndFail,
 } from "../_shared";
 import { validateVideoField } from "@/lib/validation";
-import { ReleaseResult, VideoField, calculateCredits } from "@/lib/types";
+import { ReleaseResult, VideoField, FormatEntry, calculateCredits } from "@/lib/types";
 
 export async function POST(request: Request) {
   const authResult = await authenticateAndCheckRateLimit(request);
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
 
   const parsed = await parseJsonBody(request);
   if (parsed instanceof Response) return parsed;
-  const body = parsed as Record<string, unknown>;
+  const body = parsed;
 
   const commonError = await validateCommonFields(body, userId);
   if (commonError) return commonError;
@@ -28,29 +29,27 @@ export async function POST(request: Request) {
   // /cook/video treats absence, `true`, and {} as "use defaults".
   // Any other primitive (string/number/false) is a client error.
   const rawVideo = body.video;
-  let video: VideoField;
-  if (rawVideo === undefined || rawVideo === true) {
-    video = true;
-  } else if (typeof rawVideo === "object" && rawVideo !== null) {
-    video = rawVideo as VideoField;
-  } else {
+  const isObjectVideo = typeof rawVideo === "object" && rawVideo !== null && !Array.isArray(rawVideo);
+  if (rawVideo !== undefined && rawVideo !== true && !isObjectVideo) {
     return Response.json(
       { error: "video must be true or { duration: number }" },
       { status: 400 }
     );
   }
 
-  const formats = body.formats as { slides: unknown[] }[];
-  const maxSlides = Math.max(...formats.map((f) => f.slides?.length ?? 0));
-  const videoError = validateVideoField(video, maxSlides);
+  const formats = body.formats as FormatEntry[];
+  const maxSlides = Math.max(0, ...formats.map((f) => f.slides?.length ?? 0));
+  const videoError = validateVideoField(rawVideo, maxSlides);
   if (videoError) {
     return Response.json({ error: videoError }, { status: 400 });
   }
 
-  const creditsNeeded = calculateCredits({
-    video,
-    formats: body.formats as Parameters<typeof calculateCredits>[0]["formats"],
-  });
+  // After validation, rawVideo is known to be undefined | true | VideoField-shaped object.
+  const video: VideoField = rawVideo === undefined || rawVideo === true
+    ? true
+    : (rawVideo as VideoField);
+
+  const creditsNeeded = calculateCredits({ video, formats });
 
   const reserveResult = await reserveCreditsOrError(userId, creditsNeeded);
   if (reserveResult instanceof Response) return reserveResult;
@@ -58,6 +57,10 @@ export async function POST(request: Request) {
 
   try {
     const cookId = `cook_${crypto.randomUUID().slice(0, 10)}`;
+    const metadata = typeof body.metadata === "string" ? body.metadata : undefined;
+    const webhookUrl = typeof body.webhook_url === "string" ? body.webhook_url : undefined;
+    const template = typeof body.template === "string" ? body.template : "standard-browser";
+
     const result: ReleaseResult = {
       cook_id: cookId,
       output: "video",
@@ -67,18 +70,18 @@ export async function POST(request: Request) {
       credits_used: creditsNeeded,
       credits_remaining: remaining,
       created_at: new Date().toISOString(),
-      metadata: body.metadata as string | undefined,
-      webhook_url: body.webhook_url as string | undefined,
+      metadata,
+      webhook_url: webhookUrl,
     };
 
     await fetchMutation(api.releases.create, {
       userId,
       externalId: cookId,
-      template: (body.template as string) || "standard-browser",
+      template,
       credits_used: creditsNeeded,
       output: "video",
-      metadata: body.metadata as string | undefined,
-      webhook_url: body.webhook_url as string | undefined,
+      metadata,
+      webhook_url: webhookUrl,
       source: "api",
     });
 
@@ -95,14 +98,7 @@ export async function POST(request: Request) {
 
     return Response.json(result, { status: 202 });
   } catch (err) {
-    await fetchMutation(api.userProfiles.refund, {
-      userId,
-      amount: creditsNeeded,
-    }).catch(console.error);
     console.error("Failed to create video release:", err);
-    return Response.json(
-      { error: "Something burned. Try again." },
-      { status: 500 }
-    );
+    return refundAndFail(userId, creditsNeeded, "video scheduleRender");
   }
 }

@@ -188,7 +188,7 @@ while True:
         anchor: "create-image-cook",
         title: "Create an image cook",
         description:
-          "Queues image generation and returns 202 immediately. Costs 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Credits are reserved upfront and refunded if the render fails.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, use POST /api/v1/cook/video instead. The image endpoint rejects requests that include a 'video' field.",
+          "Queues image generation and returns 202 immediately. Costs 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Credits are reserved upfront and refunded if the render fails.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, use POST /api/v1/cook/video instead. The image endpoint rejects ANY 'video' field in the body (including 'video: false') with a 400 — the old unified /cook endpoint treated 'video: false' as image mode, so callers migrating from the legacy endpoint should remove the field entirely.",
         params: [
           {
             name: "brand_id",
@@ -458,6 +458,7 @@ cook = requests.post(
   "output": "image",
   "status": "pending",
   "images": null,
+  "videos": null,
   "credits_used": 1,
   "credits_remaining": 29
 }`,
@@ -569,6 +570,7 @@ cook = requests.post(
   "cook_id": "cook_def456",
   "output": "video",
   "status": "pending",
+  "images": null,
   "videos": null,
   "credits_used": 5,
   "credits_remaining": 95

@@ -60,6 +60,11 @@ describe("POST /api/v1/cook/image — auth", () => {
     expect(src).toContain('from "../_shared"');
   });
 
+  it("calls authenticateAndCheckRateLimit(request) at the top of the handler", () => {
+    const src = readFile(COOK_IMAGE_ROUTE);
+    expect(src).toContain("authenticateAndCheckRateLimit(request)");
+  });
+
   it("does not import from @/lib/auth/validate-api-key", () => {
     const src = readFile(COOK_IMAGE_ROUTE);
     expect(src).not.toContain("validate-api-key");
@@ -71,6 +76,11 @@ describe("POST /api/v1/cook/video — auth", () => {
     const src = readFile(COOK_VIDEO_ROUTE);
     expect(src).toContain("authenticateAndCheckRateLimit");
     expect(src).toContain('from "../_shared"');
+  });
+
+  it("calls authenticateAndCheckRateLimit(request) at the top of the handler", () => {
+    const src = readFile(COOK_VIDEO_ROUTE);
+    expect(src).toContain("authenticateAndCheckRateLimit(request)");
   });
 
   it("does not import from @/lib/auth/validate-api-key", () => {

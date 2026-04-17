@@ -6,6 +6,7 @@ import {
 } from "@/lib/validation";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
+import type { FormatEntry, ReleaseRequest } from "@/lib/types";
 
 export const VALID_DEFAULT_TEMPLATES = [
   "standard-browser",
@@ -17,6 +18,7 @@ export const VALID_DEFAULT_TEMPLATES = [
 
 export function isValidTemplateName(template: unknown): boolean {
   if (typeof template !== "string") return false;
+  // .includes() on a const tuple only accepts its union type as argument — widening to string[] is safe here.
   if ((VALID_DEFAULT_TEMPLATES as readonly string[]).includes(template)) return true;
   return template.startsWith("tmpl_");
 }
@@ -35,9 +37,15 @@ export async function authenticateAndCheckRateLimit(
   return { userId: auth.userId };
 }
 
-export async function parseJsonBody(request: Request): Promise<unknown | Response> {
+export async function parseJsonBody(
+  request: Request
+): Promise<Record<string, unknown> | Response> {
   try {
-    return await request.json();
+    const body = await request.json();
+    if (typeof body !== "object" || body === null || Array.isArray(body)) {
+      return Response.json({ error: "Request body must be a JSON object" }, { status: 400 });
+    }
+    return body as Record<string, unknown>;
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -57,9 +65,12 @@ export async function validateCommonFields(
     return Response.json({ error: colorError }, { status: 400 });
   }
 
-  if (body.brand_id) {
+  if (body.brand_id !== undefined) {
+    if (typeof body.brand_id !== "string" || body.brand_id === "") {
+      return Response.json({ error: "brand_id must be a non-empty string" }, { status: 400 });
+    }
     const brand = await fetchQuery(api.brands.getByExternalId, {
-      externalId: body.brand_id as string,
+      externalId: body.brand_id,
     });
     if (!brand || brand.userId !== userId) {
       return Response.json({ error: "Brand not found" }, { status: 404 });
@@ -81,6 +92,46 @@ export async function validateCommonFields(
   }
 
   return null;
+}
+
+/**
+ * Maps a validated request body to the ReleaseRequest shape the pipeline expects.
+ * Call AFTER validateCommonFields has accepted the body. Picks only known fields;
+ * unknown keys are dropped so downstream code never sees caller-supplied garbage.
+ */
+export function toReleaseRequest(body: Record<string, unknown>): ReleaseRequest {
+  const request: ReleaseRequest = {
+    formats: body.formats as FormatEntry[],
+  };
+  if (typeof body.brand_id === "string") request.brand_id = body.brand_id;
+  if (typeof body.name === "string") request.name = body.name;
+  if (typeof body.logo_url === "string") request.logo_url = body.logo_url;
+  if (typeof body.font_family === "string") request.font_family = body.font_family;
+  if (typeof body.template === "string") {
+    request.template = body.template as ReleaseRequest["template"];
+  }
+  if (typeof body.metadata === "string") request.metadata = body.metadata;
+  if (typeof body.webhook_url === "string") request.webhook_url = body.webhook_url;
+  if (body.colors && typeof body.colors === "object") {
+    request.colors = body.colors as ReleaseRequest["colors"];
+  }
+  return request;
+}
+
+/**
+ * Refunds reserved credits and returns the standard 500 response. Swallows refund
+ * errors with a structured console.error — credits may leak if the refund mutation
+ * itself fails, which is logged for later reconciliation.
+ */
+export async function refundAndFail(
+  userId: string,
+  amount: number,
+  context: string
+): Promise<Response> {
+  await fetchMutation(api.userProfiles.refund, { userId, amount }).catch((err) => {
+    console.error(`[cook] Refund failed userId=${userId} amount=${amount} context=${context}:`, err);
+  });
+  return Response.json({ error: "Something burned. Try again." }, { status: 500 });
 }
 
 /**

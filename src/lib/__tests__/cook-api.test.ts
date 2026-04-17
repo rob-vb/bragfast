@@ -323,6 +323,56 @@ describe.sequential("Video validation (on /cook/video)", () => {
     const data = await res.json();
     expect(data.error).toContain("video must be true or");
   });
+
+  test("video: false → 400 (not image fallback)", async () => {
+    const res = await cookPostVideo({
+      video: false,
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("video must be true or");
+  });
+
+  test("video: 0 → 400", async () => {
+    const res = await cookPostVideo({
+      video: 0,
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("video must be true or");
+  });
+
+  test("video: {} → 202 (empty object uses defaults)", async () => {
+    const res = await cookPostVideo({
+      video: {},
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(202);
+    const data = await res.json();
+    expect(data.output).toBe("video");
+  });
+
+  test("non-existent brand_id on /cook/video → 404", async () => {
+    const res = await cookPostVideo({
+      brand_id: "brand_doesnotexist99999",
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(404);
+    const data = await res.json();
+    expect(data.error).toBe("Brand not found");
+  });
+
+  test("non-string brand_id → 400 (not 500)", async () => {
+    const res = await cookPost({
+      brand_id: { $ne: null } as unknown as string,
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("brand_id must be a non-empty string");
+  });
 });
 
 describe.sequential("Image route rejects video field", () => {

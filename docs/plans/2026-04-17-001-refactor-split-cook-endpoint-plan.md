@@ -64,12 +64,13 @@ Splitting gives each output type its own route, its own validator, its own credi
 | Caller | File | Migration |
 |---|---|---|
 | Studio UI | `src/components/kitchen/cook-page.tsx` | POST to `/cook/image` or `/cook/video` based on mode |
-| Onboarding wizard | `src/components/admin/first-cook-wizard.tsx` | POST to `/cook/image` (image-only flow) |
 | Demo script | `scripts/generate-demo-images.ts` | POST to `/cook/image` |
 | Live integration test | `src/lib/__tests__/cook-api.test.ts` | Update endpoint URLs |
 | Static auth test | `src/lib/__tests__/cook-auth.test.ts` | Update file-path references |
 | API docs | `src/lib/docs/api-reference.ts` | Split into two endpoint entries |
 | Homepage/demo curl | `src/app/page.tsx`, `src/app/demo/page.tsx` | Update curl snippet URLs |
+
+(Note: `src/components/admin/first-cook-wizard.tsx` polls `/api/v1/cook/:id` but POSTs to `/api/v1/guided-cook`, not `/api/v1/cook` — no migration needed.)
 
 ### Institutional Learnings
 
