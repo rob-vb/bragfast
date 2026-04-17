@@ -28,14 +28,14 @@ export const API_REFERENCE: ApiSection[] = [
     endpoints: [
       {
         method: "POST",
-        path: "/api/v1/cook",
+        path: "/api/v1/cook/image",
         anchor: "async-flow",
         title: "How it works",
         description:
-          "Two ways to get your images when they're done:\n\n1. Polling — call GET /api/v1/cook/:id until the status flips from \"pending\" to \"completed\".\n\n2. Webhook — pass a webhook_url when creating the cook. brag.fast will POST the completed cook object (same shape as the GET response, with image URLs) to that URL when the images are served hot.\n\nPolling is simpler for scripts. Webhooks are better for production — no looping, just a callback.",
+          "Two endpoints, one flow. POST /api/v1/cook/image for static images, POST /api/v1/cook/video for animated MP4s. Both return 202 immediately and render in the background.\n\nTwo ways to get the result:\n\n1. Polling — call GET /api/v1/cook/:id until the status flips from \"pending\" to \"completed\". Polling is on the unified /cook/:id path regardless of whether you POSTed to /cook/image or /cook/video.\n\n2. Webhook — pass a webhook_url when creating the cook. brag.fast will POST the completed cook object (same shape as the GET response) to that URL when rendering finishes.\n\nPolling is simpler for scripts. Webhooks are better for production — no looping, just a callback.",
         requestExample: {
           curl: `# 1. Fire off a cook
-curl -X POST https://brag.fast/api/v1/cook \\
+curl -X POST https://brag.fast/api/v1/cook/image \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -48,7 +48,7 @@ curl -X POST https://brag.fast/api/v1/cook \\
 curl https://brag.fast/api/v1/cook/cook_abc123 \\
   -H "Authorization: Bearer bf_your_api_key"`,
           javascript: `// 1. Start a cook (returns immediately)
-const cook = await fetch("https://brag.fast/api/v1/cook", {
+const cook = await fetch("https://brag.fast/api/v1/cook/image", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -75,7 +75,7 @@ import time
 
 # 1. Start a cook (returns immediately)
 cook = requests.post(
-    "https://brag.fast/api/v1/cook",
+    "https://brag.fast/api/v1/cook/image",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
@@ -156,8 +156,8 @@ while True:
     title: "Cook",
     anchor: "cook",
     description:
-      "One endpoint for images and videos. Send format entries with slides containing text and screenshots — brag.fast generates branded output using the chosen template. Add video: true to get an animated MP4 instead of static images. Same template, same objects, same endpoint.",
-    sampleObject: `// Image cook (default)
+      "Two endpoints, same body shape. POST /api/v1/cook/image for static images (1 credit per slide). POST /api/v1/cook/video for animated MP4s (5 credits per slide). Same template, same objects, same formats — just pick the route. Poll GET /api/v1/cook/:id for completion; the response includes both 'images' and 'videos' fields (only one will be populated).",
+    sampleObject: `// Image cook — POST /api/v1/cook/image
 {
   "cook_id": "cook_abc123",
   "status": "completed",
@@ -169,9 +169,10 @@ while True:
   "credits_remaining": 28
 }
 
-// Video cook (video: true)
+// Video cook — POST /api/v1/cook/video
 {
   "cook_id": "cook_def456",
+  "output": "video",
   "status": "completed",
   "images": null,
   "videos": {
@@ -183,11 +184,11 @@ while True:
     endpoints: [
       {
         method: "POST",
-        path: "/api/v1/cook",
-        anchor: "create-cook",
-        title: "Create a cook",
+        path: "/api/v1/cook/image",
+        anchor: "create-image-cook",
+        title: "Create an image cook",
         description:
-          "Queues generation and returns 202 immediately. By default, generates static images (1 credit per slide). Add video: true for an animated MP4 instead (5 credits per slide) — text fades in, images get a Ken Burns zoom effect, and multi-slide cooks crossfade between slides. Set custom duration with video: { duration: N } (3-30s per slide, default 8, max 60s total).\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.",
+          "Queues image generation and returns 202 immediately. Costs 1 credit per slide per format (e.g. 2 slides in 3 formats = 6 credits). Credits are reserved upfront and refunded if the render fails.\n\nEvery template exposes named objects — text slots, image slots, and a logo. Pass content via the objects map, keyed by object ID. Default templates use: title (text), description (text), and image (url). Custom templates define their own IDs — discover them with GET /api/v1/templates/:id.\n\nFor video output, use POST /api/v1/cook/video instead. The image endpoint rejects requests that include a 'video' field.",
         params: [
           {
             name: "brand_id",
@@ -370,13 +371,6 @@ while True:
               "Anything you want to store with the cook, e.g. a record ID from your database.",
           },
           {
-            name: "video",
-            type: 'true | { duration?: number, preset?: "showcase" | "3d-tilt-angles" | "simple-fade" }',
-            required: false,
-            description:
-              'Set to true to generate a video instead of images. Each slide costs 5 credits per format (e.g. 3 slides in 2 formats = 30 credits). Options: duration (3-30 seconds, default 8, total max 60s) and preset — "showcase" (cinematic rise + reveal, default for built-in templates), "3d-tilt-angles" (perspective tilt), or "simple-fade" (clean cross-fade).',
-          },
-          {
             name: "webhook_url",
             type: "string",
             required: false,
@@ -385,13 +379,12 @@ while True:
           },
         ],
         requestExample: {
-          curl: `curl -X POST https://brag.fast/api/v1/cook \\
+          curl: `curl -X POST https://brag.fast/api/v1/cook/image \\
   -H "Authorization: Bearer bf_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "brand_id": "brand_abc123",
     "template": "standard-browser",
-    "video": true,
     "formats": [
       {
         "name": "landscape",
@@ -406,11 +399,8 @@ while True:
         ]
       }
     ]
-  }'
-
-# For images only, omit the "video" field.
-# For custom duration: "video": { "duration": 8 }`,
-          javascript: `const response = await fetch("https://brag.fast/api/v1/cook", {
+  }'`,
+          javascript: `const response = await fetch("https://brag.fast/api/v1/cook/image", {
   method: "POST",
   headers: {
     "Authorization": "Bearer bf_your_api_key",
@@ -419,9 +409,6 @@ while True:
   body: JSON.stringify({
     brand_id: "brand_abc123",
     template: "standard-browser",
-    // video: true,              — add for video output (5 credits/slide/format)
-    // video: { duration: 8 },   — custom per-slide duration (3-30s)
-    // omit video for images     — default (1 credit/slide/format)
     formats: [
       {
         name: "landscape",
@@ -443,14 +430,11 @@ const cook = await response.json();
           python: `import requests
 
 cook = requests.post(
-    "https://brag.fast/api/v1/cook",
+    "https://brag.fast/api/v1/cook/image",
     headers={"Authorization": "Bearer bf_your_api_key"},
     json={
         "brand_id": "brand_abc123",
         "template": "standard-browser",
-        # "video": True,             — add for video output (5 credits/slide/format)
-        # "video": {"duration": 8},  — custom per-slide duration (3-30s)
-        # omit video for images      — default (1 credit/slide/format)
         "formats": [
             {
                 "name": "landscape",
@@ -469,17 +453,119 @@ cook = requests.post(
 ).json()`,
         },
         responseStatus: 202,
-        responseExample: `// Image cook (default — no video field)
-{
+        responseExample: `{
   "cook_id": "cook_abc123",
+  "output": "image",
   "status": "pending",
   "images": null,
   "credits_used": 1,
   "credits_remaining": 29
-}
+}`,
+      },
+      {
+        method: "POST",
+        path: "/api/v1/cook/video",
+        anchor: "create-video-cook",
+        title: "Create a video cook",
+        description:
+          "Queues video generation (animated MP4) and returns 202 immediately. Costs 5 credits per slide per format (e.g. 2 slides in 3 formats = 30 credits). Text fades in, images get a Ken Burns zoom, and multi-slide cooks crossfade between slides. Max total duration per format is 60 seconds.\n\nAccepts the same body shape as /cook/image, plus an optional 'video' field controlling duration and animation preset.",
+        params: [
+          {
+            name: "video",
+            type: 'true | { duration?: number, preset?: "showcase" | "3d-tilt-angles" | "simple-fade" }',
+            required: false,
+            description:
+              'Options container for video rendering. Omit or set to true for defaults (8s per slide, showcase preset). Provide an object with duration (3-30 seconds, default 8) and/or preset — "showcase" (cinematic rise + reveal, default for built-in templates), "3d-tilt-angles" (perspective tilt), or "simple-fade" (clean cross-fade).',
+          },
+          {
+            name: "— all other fields",
+            type: "same as /cook/image",
+            required: false,
+            description:
+              "brand_id, colors, name, logo_url, font_family, template, formats, metadata, webhook_url — identical shape and semantics to POST /api/v1/cook/image. See that endpoint for field details.",
+          },
+        ],
+        requestExample: {
+          curl: `curl -X POST https://brag.fast/api/v1/cook/video \\
+  -H "Authorization: Bearer bf_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "brand_id": "brand_abc123",
+    "template": "standard-browser",
+    "video": { "duration": 8, "preset": "showcase" },
+    "formats": [
+      {
+        "name": "landscape",
+        "slides": [
+          {
+            "objects": [
+              { "id": "title", "text": "Launched dark mode" },
+              { "id": "description", "text": "Your app, your vibe." },
+              { "id": "image", "image_url": "https://example.com/screenshot.png" }
+            ]
+          }
+        ]
+      }
+    ]
+  }'
 
-// Video cook (video: true)
-{
+# For defaults (8s per slide, showcase preset), omit the "video" field entirely.`,
+          javascript: `const response = await fetch("https://brag.fast/api/v1/cook/video", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer bf_your_api_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    brand_id: "brand_abc123",
+    template: "standard-browser",
+    video: { duration: 8, preset: "showcase" }, // optional — omit for defaults
+    formats: [
+      {
+        name: "landscape",
+        slides: [
+          {
+            objects: [
+              { id: "title", text: "Launched dark mode" },
+              { id: "description", text: "Your app, your vibe." },
+              { id: "image", image_url: "https://example.com/screenshot.png" },
+            ],
+          },
+        ],
+      },
+    ],
+  }),
+});
+const cook = await response.json();
+// Poll cook.cook_id until status === "completed"`,
+          python: `import requests
+
+cook = requests.post(
+    "https://brag.fast/api/v1/cook/video",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+    json={
+        "brand_id": "brand_abc123",
+        "template": "standard-browser",
+        "video": {"duration": 8, "preset": "showcase"},  # optional
+        "formats": [
+            {
+                "name": "landscape",
+                "slides": [
+                    {
+                        "objects": [
+                            {"id": "title", "text": "Launched dark mode"},
+                            {"id": "description", "text": "Your app, your vibe."},
+                            {"id": "image", "image_url": "https://example.com/screenshot.png"},
+                        ]
+                    }
+                ],
+            }
+        ],
+    },
+).json()`,
+        },
+        responseStatus: 202,
+        responseExample: `{
   "cook_id": "cook_def456",
   "output": "video",
   "status": "pending",

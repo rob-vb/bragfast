@@ -17,7 +17,7 @@ Next.js 16 App Router · Convex (DB + auth + Stripe) · Satori + Sharp (image ge
 
 ## Render Pipeline
 
-**Image** (`src/lib/pipeline/render.ts`): `POST /api/v1/cook` → allocate Convex record → return `{ status: "pending" }` → background via `after()`:
+**Image** (`src/lib/pipeline/render.ts`): `POST /api/v1/cook/image` → allocate Convex record → return `{ status: "pending" }` → background via `after()`:
 1. Resolve template → `migrateConfig()`
 2. Resolve brand (by ID, inline, or fallback to template colors)
 3. Pre-fetch static image URLs
@@ -25,7 +25,7 @@ Next.js 16 App Router · Convex (DB + auth + Stripe) · Satori + Sharp (image ge
 5. `CanvasRenderer` → Satori → SVG → Sharp → JPEG → R2 (or local if `OUTPUT_LOCAL=true`)
 6. On failure: refund credits, mark `failed`, fire webhook
 
-**Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): same `POST /api/v1/cook` with `video` field → Convex `internalAction` (`"use node"`) → Remotion Lambda. Composition: `src/remotion/VideoCanvasComposition.tsx`. Default 8s/slide, 0.5s transitions, 30fps.
+**Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): `POST /api/v1/cook/video` → Convex `internalAction` (`"use node"`) → Remotion Lambda. Composition: `src/remotion/VideoCanvasComposition.tsx`. Default 8s/slide, 0.5s transitions, 30fps. Optional body.video `{ duration, preset }` overrides defaults.
 
 ## Template System (v2)
 
@@ -63,7 +63,7 @@ Landscape: 1200×675 · Square: 1080×1080 · Portrait: 1080×1350 · Video: sam
 
 ## API Routes
 
-`/api/v1/`: `cook`, `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `guided-cook` — all Bearer auth.
+`/api/v1/`: `cook/image`, `cook/video`, `cook/[id]` (poll/download/copy), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `guided-cook` — all Bearer auth.
 GitHub: `webhooks`, `callback`, `installations`, `repos`, `configs`, `releases/[id]/approve`
 
 ## Route Groups
