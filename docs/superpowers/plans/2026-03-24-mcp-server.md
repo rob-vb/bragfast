@@ -1,5 +1,7 @@
 # Bragfast MCP Server — Implementation Plan
 
+> **⚠️ Endpoint update (2026-04-17):** The cook endpoint has been split. Tools that were planned to call `POST /api/v1/cook` must now call `POST /api/v1/cook/image` (for `generate_images`) or `POST /api/v1/cook/video` (for `generate_video`). Polling URL `GET /api/v1/cook/:id` is unchanged. References to the unified endpoint below are stale; use the split routes when implementing.
+
 ## Context
 
 Bragfast has a stable REST API for generating release images/videos but is invisible to the MCP ecosystem. This plan creates a thin MCP client package that wraps the API, distributed via 3 channels (Desktop Extension, Claude Code plugin marketplace, npx). Design doc: `~/.gstack/projects/rob-vb-bragfast/henk-rob-vb/video-gen-review-design-20260324-132523.md`.

@@ -268,7 +268,8 @@ export function CookPage({ templates }: CookPageProps) {
     dispatch({ type: "START_COOK" });
 
     try {
-      const res = await fetch("/api/v1/cook", {
+      const endpoint = state.outputType === "video" ? "/api/v1/cook/video" : "/api/v1/cook/image";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

@@ -171,6 +171,40 @@ export const scheduleVideoRender = mutation({
   },
 });
 
+/**
+ * Atomically inserts a video release record AND schedules the render action.
+ * Convex mutations are transactional — if the scheduler.runAfter succeeds, the
+ * insert is committed; if anything throws, neither happens. This prevents
+ * orphaned pending records when the route handler would otherwise make two
+ * separate mutations.
+ */
+export const createAndScheduleVideo = mutation({
+  args: {
+    userId: v.string(),
+    externalId: v.string(),
+    template: v.string(),
+    credits_used: v.number(),
+    metadata: v.optional(v.string()),
+    webhook_url: v.optional(v.string()),
+    source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
+    request: v.string(), // JSON-serialized VideoRenderRequest
+  },
+  handler: async (ctx, { request, ...releaseArgs }) => {
+    const now = new Date().toISOString();
+    await ctx.db.insert("releases", {
+      ...releaseArgs,
+      output: "video",
+      status: "pending",
+      created_at: now,
+    });
+    await ctx.scheduler.runAfter(0, internal.videoRender.render, {
+      cookId: releaseArgs.externalId,
+      userId: releaseArgs.userId,
+      request,
+    });
+  },
+});
+
 export const listPendingByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {

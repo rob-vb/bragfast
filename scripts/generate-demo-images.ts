@@ -116,7 +116,7 @@ function buildPayload(template: string, font: string, format: typeof FORMATS[num
 
 async function createRelease(payload: ReturnType<typeof buildPayload>, retries = 5): Promise<{ cook_id: string }> {
   for (let attempt = 0; attempt < retries; attempt++) {
-    const res = await fetch(`${BASE}/api/v1/cook`, {
+    const res = await fetch(`${BASE}/api/v1/cook/image`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${API_KEY}`,
@@ -132,7 +132,7 @@ async function createRelease(payload: ReturnType<typeof buildPayload>, retries =
     }
     if (!res.ok) {
       const body = await res.text();
-      throw new Error(`POST /api/v1/cook failed (${res.status}): ${body}`);
+      throw new Error(`POST /api/v1/cook/image failed (${res.status}): ${body}`);
     }
     return (await res.json()) as { cook_id: string };
   }
