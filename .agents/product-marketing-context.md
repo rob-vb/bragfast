@@ -1,13 +1,13 @@
 # Product Marketing Context
 
-*Last updated: 2026-03-25*
+*Last updated: 2026-04-17*
 
 ## Product Overview
-**One-liner:** brag.fast auto-generates branded social media images and videos from your software releases.
-**What it does:** One API call or GitHub integration turns your release notes into polished social images and videos in landscape, square, and portrait formats. AI reads your changelog, picks the highlights, and renders branded visuals. Video uses the same branded slides with animated transitions, rendered as MP4 at 30fps via Remotion + AWS Lambda.
+**One-liner:** brag.fast turns your software releases into branded social images and videos — fast.
+**What it does:** Open the Cook page, drop in screenshots, pick a template, hit Cook — branded images or video come out in landscape, square, and portrait. Also usable via MCP in Claude Desktop/Code ("make release images for v2.1"), via REST API for CI/CD automation, or via GitHub App for hands-off release triggers. Video uses the same branded slides with animated transitions, rendered as MP4 at 30fps via Remotion + AWS Lambda.
 **Product category:** Developer marketing tools / release announcement automation
 **Product type:** SaaS (API-first)
-**Business model:** Usage-based credits with monthly subscriptions. Credits: 1 per image slide per format, 5 per video slide per format. Plans:
+**Business model:** Usage-based credits with monthly subscriptions. Credits: 1 per image per format, 5 per video per format. Plans:
 - **On the House (Free):** 30 credits, no card required
 - **Toast (Starter):** $12/mo, 200 credits, 3 brand kits, 30 req/min
 - **Full Plate (Pro):** $29/mo, 800 credits, 10 brand kits, 60 req/min, priority support
@@ -23,11 +23,12 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 - "I want branded visuals for every GitHub release without manual design work"
 - "I need consistent social content across landscape, square, and portrait formats"
 - "I want a short branded video for my release without touching a video editor"
-**Use cases:**
-- API-driven: POST release data, receive branded images and/or video via webhook
-- GitHub App: Publish a release, images and video auto-generated (review or auto-approve)
-- Template editor: Visual canvas editor with drag positioning, Google Fonts, device frames, per-object video animations (entrance: fade-in, slide-up, bounce; exit: fade-out, slide-down, bounce; Ken Burns)
-- AI skill: Claude Code MCP server — generate release images and video through natural conversation ("make release images for v2.1"), no API calls or UI needed
+**Use cases (ordered by importance):**
+- **Cook page (primary):** Visual UI at `/cook` — drop in screenshots, pick template + brand, hit Cook. Images or video out in seconds. Fastest path to first render, zero setup.
+- **MCP in Claude Desktop / Claude Code (secondary):** Install once, then generate through conversation — "make release images for v2.1". No UI, no API calls. Especially easy setup in Claude Desktop.
+- **REST API (for automation):** POST release data, receive branded images and/or video via webhook. For developers wiring brag.fast into CI/CD, bots, or their own tooling.
+- **GitHub App (nice extra):** Publish release → images and video auto-generated (review or auto-approve). Low usage today — treat as bonus, not hero capability.
+- **Template editor:** Visual canvas editor with drag positioning, Google Fonts, device frames, per-object video animations (entrance: fade-in, slide-up, bounce; exit: fade-out, slide-down, bounce; Ken Burns).
 
 ## Personas
 
@@ -54,17 +55,17 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 
 ## Differentiation
 **Key differentiators:**
-- API-first: one POST request generates all formats (images + video)
-- Video from the same API: add `"video": true`, get an MP4 back. No separate video tool.
-- GitHub-native: zero-config integration that triggers on release publish
-- AI-powered: Claude reads changelogs and extracts highlights
-- Multi-format: landscape, square, portrait in one call
-- Visual template editor: canvas-based, drag positioning, Google Fonts, device frames, per-object video entrance/exit animations
-- Branded: custom templates, colors, logos, fonts
-- AI skill for Claude Code: install the brag.fast MCP server and generate release images/video through conversation — "make me release images for v2.1" just works
-**How we do it differently:** Built for the developer workflow — not a design tool you open, but an API you call, a GitHub App you install, or an AI skill you talk to.
+- **Cook page speed:** upload screenshots, pick template, hit Cook → images or video out in seconds. No design tool, no learning curve.
+- **MCP in Claude Desktop / Code:** install in one command, then generate through conversation. Uniquely easy AI-native entry point.
+- **Video from the same pipeline:** same templates, same brand kit — get MP4s without touching a video editor.
+- **Multi-format out of one action:** landscape, square, portrait in a single render.
+- **API for automation:** POST endpoint for developers who want CI/CD or bot integration.
+- **Visual template editor:** canvas-based drag positioning, Google Fonts, device frames, per-object video entrance/exit animations.
+- **Branded:** custom templates, colors, logos, fonts.
+- **GitHub App (bonus):** zero-config trigger on release publish for teams that want full hands-off.
+**How we do it differently:** Built for the developer workflow — a fast UI when you want it, Claude when you're already there, API when you want to automate.
 **Why that's better:** No context switching, no design skills needed, no manual work per release.
-**Why customers choose us:** "I can just ship my release and the social images appear."
+**Why customers choose us:** "I can post release visuals in under a minute without opening Figma."
 
 ## Objections
 | Objection | Response |
@@ -72,7 +73,7 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 | "I can just use Canva" | You can — but will you do it for every release? brag.fast runs automatically. |
 | "The images won't match my brand" | Custom templates, brand colors, logos, and fonts ensure brand consistency. |
 | "I don't release often enough to justify it" | Start with 30 free credits. If you release monthly, even Starter covers you. |
-| "Video is too expensive in credits" | 5 credits per video slide per format. A 3-slide release in one format = 15 credits. Starter gives you 800/mo. |
+| "Video is too expensive in credits" | 5 credits per video per format. One video in all 3 formats = 15 credits. Starter gives you 800/mo. |
 
 **Anti-persona:** Non-technical marketers who want a drag-and-drop design tool. Teams that don't publish software releases. Companies that already have a dedicated design team producing release content.
 
@@ -96,10 +97,9 @@ Credits reset monthly, no rollover. All plans include video gen, custom template
 | Term | Meaning |
 |------|---------|
 | Cook | Generate images/video (API endpoint is `/api/v1/cook`) |
-| Credits | Usage units. Images: 1 credit per slide per format. Video: 5 credits per slide per format. |
+| Credits | Usage units. Images: 1 credit per image per format. Video: 5 credits per video per format. |
 | Brand kit | Saved brand configuration (colors, logo, fonts) |
 | Formats | Output dimensions: landscape (16:9), square (1:1), portrait (4:5) |
-| Slides | Individual images in a multi-image release |
 
 ## Brand Voice
 **Tone:** Casual, playful, confident
