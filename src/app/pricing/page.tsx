@@ -8,14 +8,14 @@ import { FEATURES, FeatureValue } from "@/lib/pricing-data";
 export const metadata: Metadata = {
   title: "Pricing | brag.fast",
   description:
-    "Simple, predictable pricing. Images: 1 credit per slide. Videos: 5 credits per slide. Start free, scale as you grow.",
+    "Simple pricing. Images: 1 credit. Videos: 5 credits. Start with 30 free credits, no card.",
   alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
   {
     q: "How do credits work?",
-    a: "Images cost 1 credit per slide per format. Videos cost 5 credits per slide per format. Example: 2 slides in 3 formats = 6 image credits or 30 video credits.",
+    a: "Images cost 1 credit per format. Videos cost 5 credits per format. Example: one release in all 3 formats = 3 image credits or 15 video credits.",
   },
   {
     q: "Do unused credits roll over?",
@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: "What happens when I run out of credits?",
-    a: "API calls will return a 429 error. Upgrade your plan or wait for the next billing cycle.",
+    a: "API calls return a 429 error. Upgrade your plan or wait for the next billing cycle.",
   },
   {
     q: "How long are images stored?",
@@ -57,35 +57,57 @@ export default function PricingPage() {
       <LandingNav />
 
       {/* Hero */}
-      <section className="px-4 pt-16 pb-12 md:pt-24 md:pb-16 md:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-[family-name:var(--font-press-start)] text-lg md:text-2xl leading-relaxed mb-4">
-            Your features look good. Make them look even better.
+      <section className="relative pt-16 pb-16 md:pt-24 md:pb-20 bg-white border-b-2 border-brand overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--color-brand) 1px, transparent 1px), linear-gradient(90deg, var(--color-brand) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+        <div className="relative mx-auto max-w-3xl px-4 md:px-8 text-center">
+          <div className="inline-flex items-center gap-2 border-2 border-brand bg-gold/20 px-2.5 py-1 mb-5">
+            <span className="w-1.5 h-1.5 bg-gold animate-pulse" />
+            <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider">
+              The menu
+            </span>
+          </div>
+          <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-5">
+            Simple <span className="text-gold">prices.</span> No surprises.
           </h1>
-          <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 mb-3">
-            Auto-generate branded images and videos from your releases. Via API, MCP, or admin.
+          <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto mb-2">
+            Images: 1 credit. Videos: 5 credits.
           </p>
-          <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/70 leading-relaxed max-w-xl mx-auto">
-            Images: 1 credit per slide. Videos: 5 credits per slide. Sign up and get{" "}
-            <strong className="text-brand">30 free credits</strong> to
-            try it out.{" "}
-            <strong className="text-brand">no credit card required</strong>.
+          <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 leading-relaxed max-w-xl mx-auto">
+            Sign up and get <strong className="text-brand">30 free credits</strong> to try it out. No card.
           </p>
         </div>
       </section>
 
-      {/* Pricing — Retro Menu Board */}
-      <section className="px-4 pb-16 md:pb-20 md:px-8">
-        <div className="mx-auto max-w-2xl">
+      {/* Pricing menu board */}
+      <section className="py-16 md:py-20 bg-surface border-b-2 border-brand">
+        <div className="mx-auto max-w-2xl px-4 md:px-8">
           <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
-            {/* Menu header bar */}
             <div className="bg-brand text-gold px-5 py-4 text-center">
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm">
+              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
                 brag.fast menu
               </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
+                Images: 1 credit each. Videos: 5 credits each.
+              </p>
             </div>
 
-            {/* Menu items */}
+            <div className="bg-gold/20 px-5 py-3 flex items-center gap-3 border-b-2 border-brand/10">
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] bg-gold text-brand px-1.5 py-0.5 border border-brand shrink-0">
+                Sign-up bonus
+              </span>
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-snug">
+                Every new account gets <strong>30 free credits</strong> to try the kitchen. No card, one-time.
+              </p>
+            </div>
+
             <div className="divide-y-2 divide-brand/10">
               {PAID_PLANS.map((plan) => (
                 <div
@@ -95,7 +117,7 @@ export default function PricingPage() {
                   }`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-[family-name:var(--font-press-start)] text-[10px]">
                         {plan.name}
                       </h3>
@@ -110,26 +132,17 @@ export default function PricingPage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    {plan.price === 0 ? (
-                      <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
-                        Free
-                      </span>
-                    ) : (
-                      <>
-                        <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
-                          ${plan.price}
-                        </span>
-                        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50">
-                          /mo
-                        </span>
-                      </>
-                    )}
+                    <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
+                      ${plan.price}
+                    </span>
+                    <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50">
+                      /mo
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Menu footer */}
             <div className="bg-surface px-5 py-4 text-center border-t-2 border-brand">
               <Link
                 href="/signup"
@@ -138,7 +151,7 @@ export default function PricingPage() {
                 Start with 30 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
-                No credit card required
+                No card. Upgrade when you outgrow the free plate.
               </p>
             </div>
           </div>
@@ -146,13 +159,17 @@ export default function PricingPage() {
       </section>
 
       {/* Feature Comparison */}
-      <section className="px-4 py-16 md:py-20 md:px-8 bg-white border-y-2 border-brand">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-10">
-            Compare plans
-          </h2>
+      <section className="py-16 md:py-20 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-4xl px-4 md:px-8">
+          <div className="text-center mb-10 md:mb-12">
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
+              Ingredients
+            </span>
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
+              Compare plans.
+            </h2>
+          </div>
 
-          {/* Desktop table */}
           <div className="hidden md:block border-2 border-brand shadow-[4px_4px_0_var(--color-brand)] overflow-hidden">
             <table className="w-full">
               <thead>
@@ -183,25 +200,22 @@ export default function PricingPage() {
                     <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
                       {feature.name}
                     </td>
-                    {(["starter", "pro", "scale"] as const).map(
-                      (planId) => (
-                        <td
-                          key={planId}
-                          className={`px-4 py-3 text-center ${
-                            planId === "pro" ? "bg-gold/10" : ""
-                          }`}
-                        >
-                          <FeatureValue value={feature[planId]} />
-                        </td>
-                      )
-                    )}
+                    {(["starter", "pro", "scale"] as const).map((planId) => (
+                      <td
+                        key={planId}
+                        className={`px-4 py-3 text-center ${
+                          planId === "pro" ? "bg-gold/10" : ""
+                        }`}
+                      >
+                        <FeatureValue value={feature[planId]} />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* Mobile: stacked cards */}
           <div className="md:hidden space-y-6">
             {PAID_PLANS.map((plan) => (
               <div
@@ -241,23 +255,41 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="px-4 py-16 md:py-20 md:px-8">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base text-center mb-10">
-            Frequently Asked Questions
-          </h2>
-          <dl className="space-y-6">
-            {FAQS.map((faq) => (
-              <div key={faq.q}>
-                <dt className="font-[family-name:var(--font-press-start)] text-[10px] md:text-xs mb-2">
-                  {faq.q}
-                </dt>
-                <dd className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
-                  {faq.a}
-                </dd>
-              </div>
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+        <div className="mx-auto max-w-3xl px-4 md:px-8">
+          <div className="text-center mb-12">
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
+              Before you sit down
+            </span>
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
+              Frequently asked.
+            </h2>
+          </div>
+          <div className="flex flex-col gap-4">
+            {FAQS.map((item, i) => (
+              <details
+                key={item.q}
+                className="group border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] open:shadow-[5px_5px_0_var(--color-brand)] transition-[box-shadow]"
+              >
+                <summary className="cursor-pointer list-none flex items-center gap-4 px-5 py-4 hover:bg-gold/10">
+                  <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40 shrink-0">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="font-[family-name:var(--font-press-start)] text-[11px] md:text-xs flex-1 leading-relaxed">
+                    {item.q}
+                  </span>
+                  <span className="font-[family-name:var(--font-press-start)] text-xs text-brand/60 shrink-0 group-open:rotate-45 transition-transform">
+                    +
+                  </span>
+                </summary>
+                <div className="px-5 pb-5 pt-0 pl-[4.5rem] border-t-2 border-brand/10">
+                  <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/80 leading-relaxed pt-4">
+                    {item.a}
+                  </p>
+                </div>
+              </details>
             ))}
-          </dl>
+          </div>
         </div>
         <script
           type="application/ld+json"
@@ -279,22 +311,40 @@ export default function PricingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="px-4 py-16 md:py-24 md:px-8 bg-gold border-t-2 border-brand">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-lg mb-4">
-            Start free. Upgrade when you&apos;re ready.
+      <section className="py-16 md:py-24 bg-gold border-b-2 border-brand relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--color-brand) 1px, transparent 1px), linear-gradient(90deg, var(--color-brand) 1px, transparent 1px)",
+            backgroundSize: "16px 16px",
+          }}
+        />
+        <div className="relative mx-auto max-w-3xl px-4 md:px-8 text-center">
+          <h2 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-[1.4] mb-5">
+            Start free. <span className="block md:inline">Upgrade when you&apos;re ready.</span>
           </h2>
-          <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/80 leading-relaxed mb-8">
-            30 free credits. No credit card required.
+          <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
+            30 free credits. No credit card. First render in under a minute.
           </p>
-          <Link
-            href="/signup"
-            className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-surface border-2 border-brand bg-brand shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-          >
-            Get 30 Free Credits
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/signup"
+              className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Start Cooking · Free
+            </Link>
+            <Link
+              href="/#mcp"
+              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] md:text-xs px-5 py-4 text-brand border-2 border-brand bg-transparent shadow-[3px_3px_0_var(--color-brand)] hover:bg-brand hover:text-gold hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Install MCP
+            </Link>
+          </div>
         </div>
       </section>
+
       {/* Footer */}
       <footer className="py-8 border-t-2 border-brand bg-surface">
         <div className="mx-auto max-w-5xl px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -310,7 +360,7 @@ export default function PricingPage() {
           <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60">
             Feed your audience
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap justify-center">
             <Link
               href="/docs"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
@@ -353,4 +403,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
