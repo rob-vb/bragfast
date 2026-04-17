@@ -1,16 +1,20 @@
 /**
- * Live API integration tests for POST /api/v1/cook
+ * Live API integration tests for POST /api/v1/cook/image and /api/v1/cook/video
  * Runs against the deployed endpoint — validation tests are free (no credits),
  * happy path tests consume credits.
  */
 import { describe, test, expect } from "vitest";
 
-const BASE_URL = "https://bragfast.vercel.app/api/v1/cook";
+const BASE = "https://bragfast.vercel.app/api/v1";
+const IMAGE_URL = `${BASE}/cook/image`;
+const VIDEO_URL = `${BASE}/cook/video`;
+const POLL_URL = `${BASE}/cook`;
 const API_KEY = "bf_YuSsx6h30p7w6bW0vOPz2FKn1sxm96y0HZuvuSeB";
 const VERCEL_JWT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJicmFnZmFzdC52ZXJjZWwuYXBwIiwic3ViIjoicHJvdGVjdGlvbi1ieXBhc3MtdXJsIiwiZXhwIjoxNzc0MzQ1NjczLCJieXBhc3MiOiJ6NjNHQmNSd0RaTEdSYkFoQTZ5OGVLaDcwT0JET0JZNiIsImlhdCI6MTc3NDI2Mjg3OX0.MQRuzcFt7WCkLsR2FM_Jun3aETQYE_MORzNNiQGKmUY";
 
-async function cookPost(
+async function post(
+  url: string,
   body: unknown,
   opts?: { headers?: Record<string, string>; rawBody?: string; skipAuth?: boolean }
 ) {
@@ -20,11 +24,27 @@ async function cookPost(
     Cookie: `_vercel_jwt=${VERCEL_JWT}`,
     ...opts?.headers,
   };
-  return fetch(BASE_URL, {
+  return fetch(url, {
     method: "POST",
     headers,
     body: opts?.rawBody ?? JSON.stringify(body),
   });
+}
+
+// Image route is the default for shared validation tests — video-specific tests
+// explicitly use postVideo below.
+async function cookPost(
+  body: unknown,
+  opts?: { headers?: Record<string, string>; rawBody?: string; skipAuth?: boolean }
+) {
+  return post(IMAGE_URL, body, opts);
+}
+
+async function cookPostVideo(
+  body: unknown,
+  opts?: { headers?: Record<string, string>; rawBody?: string; skipAuth?: boolean }
+) {
+  return post(VIDEO_URL, body, opts);
 }
 
 function minimalBody() {
@@ -251,12 +271,10 @@ describe.sequential("Format validation", () => {
 
 // ── 6. Video Validation ──────────────────────────────────────────
 
-describe.sequential("Video validation", () => {
+describe.sequential("Video validation (on /cook/video)", () => {
   test("video: true with too many slides exceeds 60s → 400", async () => {
-    // 5 slides per format × 5s default = 25s per format, but maxSlides = 5
-    // Use duration 15 with 5 slides = 75s > 60s
     const slides = Array.from({ length: 5 }, () => ({}));
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: { duration: 13 },
       formats: [{ name: "landscape", slides }],
     });
@@ -266,7 +284,7 @@ describe.sequential("Video validation", () => {
   });
 
   test("video duration below minimum (2s) → 400", async () => {
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: { duration: 2 },
       formats: [{ name: "landscape", slides: [{}] }],
     });
@@ -276,7 +294,7 @@ describe.sequential("Video validation", () => {
   });
 
   test("video duration above maximum (31s) → 400", async () => {
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: { duration: 31 },
       formats: [{ name: "landscape", slides: [{}] }],
     });
@@ -287,7 +305,7 @@ describe.sequential("Video validation", () => {
 
   test("video total duration exceeds 60s → 400", async () => {
     const slides = Array.from({ length: 5 }, () => ({}));
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: { duration: 15 },
       formats: [{ name: "landscape", slides }],
     });
@@ -296,14 +314,36 @@ describe.sequential("Video validation", () => {
     expect(data.error).toContain("exceeds 60s");
   });
 
-  test("video: invalid type → 400", async () => {
-    const res = await cookPost({
+  test("video: invalid type (string) → 400", async () => {
+    const res = await cookPostVideo({
       video: "yes",
       formats: [{ name: "landscape", slides: [{}] }],
     });
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toContain("video must be true or");
+  });
+});
+
+describe.sequential("Image route rejects video field", () => {
+  test("video: true on /cook/image → 400", async () => {
+    const res = await cookPost({
+      video: true,
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("video field is not allowed");
+  });
+
+  test("video: { duration: 5 } on /cook/image → 400", async () => {
+    const res = await cookPost({
+      video: { duration: 5 },
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("video field is not allowed");
   });
 });
 
@@ -458,9 +498,8 @@ describe.sequential("Image happy path", () => {
 // ── 9. Video Happy Path ─────────────────────────────────────────
 
 describe.sequential("Video happy path", () => {
-  test("video: true, 1 format, 1 slide → 202, output: video, credits: 5", async () => {
-    const res = await cookPost({
-      video: true,
+  test("video omitted, 1 format, 1 slide → 202, output: video, credits: 5", async () => {
+    const res = await cookPostVideo({
       formats: [{ name: "landscape", slides: [{}] }],
     });
     expect(res.status).toBe(202);
@@ -471,8 +510,19 @@ describe.sequential("Video happy path", () => {
     expect(data.credits_used).toBe(5);
   });
 
+  test("video: true → 202, credits: 5", async () => {
+    const res = await cookPostVideo({
+      video: true,
+      formats: [{ name: "landscape", slides: [{}] }],
+    });
+    expect(res.status).toBe(202);
+    const data = await res.json();
+    expect(data.output).toBe("video");
+    expect(data.credits_used).toBe(5);
+  });
+
   test("video with custom duration → 202, credits: 5", async () => {
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: { duration: 3 },
       formats: [{ name: "landscape", slides: [{}] }],
     });
@@ -483,7 +533,7 @@ describe.sequential("Video happy path", () => {
   });
 
   test("video with split-mobile template, 3 slides → 202, credits = 15", async () => {
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: { duration: 4 },
       template: "split-mobile",
       formats: [
@@ -504,7 +554,7 @@ describe.sequential("Video happy path", () => {
   });
 
   test("video with 2 formats, multiple slides → 202, credits = 25", async () => {
-    const res = await cookPost({
+    const res = await cookPostVideo({
       video: true,
       template: "hero",
       formats: [
@@ -537,14 +587,14 @@ describe.sequential("Metadata and webhook", () => {
 // ── 11. Edge Cases ───────────────────────────────────────────────
 
 describe.sequential("Edge cases", () => {
-  test("video: false → image mode", async () => {
+  test("video: false on /cook/image → 400 (any video field rejected)", async () => {
     const res = await cookPost({
       ...minimalBody(),
       video: false,
     });
-    expect(res.status).toBe(202);
+    expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.output).toBe("image");
+    expect(data.error).toContain("video field is not allowed");
   });
 
   test("slide with empty objects array → 202", async () => {
@@ -577,8 +627,8 @@ describe.sequential("Status polling", () => {
     expect(createRes.status).toBe(202);
     const { cook_id } = await createRes.json();
 
-    // Poll status
-    const statusRes = await fetch(`${BASE_URL}/${cook_id}`, {
+    // Poll status (unified /cook/[id] endpoint)
+    const statusRes = await fetch(`${POLL_URL}/${cook_id}`, {
       headers: {
         Authorization: `Bearer ${API_KEY}`,
         Cookie: `_vercel_jwt=${VERCEL_JWT}`,

@@ -8,13 +8,23 @@ import path from "path";
 // cookie) rather than validateApiKey() (which only accepts API keys). This
 // ensures admin users can generate images/videos without an API key.
 //
-// We verify the import statements in the route files — this is the minimal,
-// reliable approach for Next.js route handlers that can't be unit-tested
-// directly (they depend on Convex, next/server, etc.).
+// We verify the import/call chain in the route files — static inspection is
+// the minimal, reliable approach for Next.js route handlers that can't be
+// unit-tested directly (they depend on Convex, next/server, etc.).
 
-const COOK_ROUTE = path.resolve(
+const COOK_IMAGE_ROUTE = path.resolve(
   process.cwd(),
-  "src/app/api/v1/cook/route.ts"
+  "src/app/api/v1/cook/image/route.ts"
+);
+
+const COOK_VIDEO_ROUTE = path.resolve(
+  process.cwd(),
+  "src/app/api/v1/cook/video/route.ts"
+);
+
+const COOK_SHARED = path.resolve(
+  process.cwd(),
+  "src/app/api/v1/cook/_shared.ts"
 );
 
 const COOK_ID_ROUTE = path.resolve(
@@ -22,65 +32,88 @@ const COOK_ID_ROUTE = path.resolve(
   "src/app/api/v1/cook/[id]/route.ts"
 );
 
-function readRoute(filePath: string): string {
+function readFile(filePath: string): string {
   return readFileSync(filePath, "utf-8");
 }
 
-describe("POST /api/v1/cook — auth", () => {
-  it("imports authenticate from @/lib/auth/authenticate (not validateApiKey)", () => {
-    const src = readRoute(COOK_ROUTE);
+describe("cook route auth — shared helper", () => {
+  it("_shared.ts imports authenticate from @/lib/auth/authenticate", () => {
+    const src = readFile(COOK_SHARED);
     expect(src).toContain('import { authenticate } from "@/lib/auth/authenticate"');
   });
 
-  it("does not import from @/lib/auth/validate-api-key", () => {
-    const src = readRoute(COOK_ROUTE);
+  it("_shared.ts does not import validateApiKey directly", () => {
+    const src = readFile(COOK_SHARED);
     expect(src).not.toContain("validate-api-key");
   });
 
-  it("calls authenticate(request) at the top of the handler", () => {
-    const src = readRoute(COOK_ROUTE);
+  it("_shared.ts calls authenticate(request) in the pre-flight helper", () => {
+    const src = readFile(COOK_SHARED);
     expect(src).toContain("authenticate(request)");
+  });
+});
+
+describe("POST /api/v1/cook/image — auth", () => {
+  it("delegates auth to authenticateAndCheckRateLimit from _shared", () => {
+    const src = readFile(COOK_IMAGE_ROUTE);
+    expect(src).toContain("authenticateAndCheckRateLimit");
+    expect(src).toContain('from "../_shared"');
+  });
+
+  it("does not import from @/lib/auth/validate-api-key", () => {
+    const src = readFile(COOK_IMAGE_ROUTE);
+    expect(src).not.toContain("validate-api-key");
+  });
+});
+
+describe("POST /api/v1/cook/video — auth", () => {
+  it("delegates auth to authenticateAndCheckRateLimit from _shared", () => {
+    const src = readFile(COOK_VIDEO_ROUTE);
+    expect(src).toContain("authenticateAndCheckRateLimit");
+    expect(src).toContain('from "../_shared"');
+  });
+
+  it("does not import from @/lib/auth/validate-api-key", () => {
+    const src = readFile(COOK_VIDEO_ROUTE);
+    expect(src).not.toContain("validate-api-key");
   });
 });
 
 describe("GET /api/v1/cook/[id] — auth", () => {
   it("imports authenticate from @/lib/auth/authenticate (not validateApiKey)", () => {
-    const src = readRoute(COOK_ID_ROUTE);
+    const src = readFile(COOK_ID_ROUTE);
     expect(src).toContain('import { authenticate } from "@/lib/auth/authenticate"');
   });
 
   it("does not import from @/lib/auth/validate-api-key", () => {
-    const src = readRoute(COOK_ID_ROUTE);
+    const src = readFile(COOK_ID_ROUTE);
     expect(src).not.toContain("validate-api-key");
   });
 
   it("calls authenticate(request) at the top of the handler", () => {
-    const src = readRoute(COOK_ID_ROUTE);
+    const src = readFile(COOK_ID_ROUTE);
     expect(src).toContain("authenticate(request)");
   });
 });
 
 describe("authenticate() function — dual auth support", () => {
   it("authenticate.ts imports validateApiKey (API key path)", () => {
-    const authenticateSrc = readFileSync(
-      path.resolve(process.cwd(), "src/lib/auth/authenticate.ts"),
-      "utf-8"
+    const authenticateSrc = readFile(
+      path.resolve(process.cwd(), "src/lib/auth/authenticate.ts")
     );
     expect(authenticateSrc).toContain("validateApiKey");
   });
 
   it("authenticate.ts imports getSessionUser (session cookie path)", () => {
-    const authenticateSrc = readFileSync(
-      path.resolve(process.cwd(), "src/lib/auth/authenticate.ts"),
-      "utf-8"
+    const authenticateSrc = readFile(
+      path.resolve(process.cwd(), "src/lib/auth/authenticate.ts")
     );
     expect(authenticateSrc).toContain("getSessionUser");
   });
 
   it("authenticate.ts returns userId for both auth paths", () => {
-    const authenticateSrc = readFileSync(
-      path.resolve(process.cwd(), "src/lib/auth/authenticate.ts"),
-      "utf-8"
+    const authenticateSrc = readFile(
+      path.resolve(process.cwd(), "src/lib/auth/authenticate.ts")
     );
     // Both paths return { userId }
     const userIdMatches = (authenticateSrc.match(/userId/g) ?? []).length;
