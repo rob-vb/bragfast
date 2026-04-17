@@ -247,6 +247,24 @@ export default function Home() {
               </Link>
             </div>
           </div>
+
+          {/* Side dish: GitHub App bonus */}
+          <div className="mt-10 md:mt-12 flex justify-center">
+            <div className="inline-flex items-center gap-3 flex-wrap justify-center bg-brand text-surface/80 px-5 py-3 border-2 border-brand shadow-[3px_3px_0_var(--color-brand)]">
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider text-gold/80">
+                Side dish
+              </span>
+              <span className="font-[family-name:var(--font-geist-sans)] text-xs md:text-sm text-surface/70">
+                GitHub App. Releases self-announce.{" "}
+                <Link
+                  href="/docs"
+                  className="text-gold hover:underline underline-offset-2"
+                >
+                  Learn more →
+                </Link>
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
