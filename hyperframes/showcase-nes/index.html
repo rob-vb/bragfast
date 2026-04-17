@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>brag.fast — Ship a Release</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Geist:wght@400;500;600&display=block"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1080px;
+        overflow: hidden;
+        background: #fff8f0;
+        font-family: "Geist", sans-serif;
+        color: #4a3326;
+      }
+
+      [data-composition-id="showcase-nes"] {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      .scene-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 220px 100px 80px;
+        gap: 56px;
+        box-sizing: border-box;
+      }
+
+      /* Top-center badge */
+      .badge {
+        position: absolute;
+        top: 72px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .badge-logo {
+        width: 36px;
+        height: 36px;
+        display: block;
+      }
+      .badge-text {
+        font-family: "Press Start 2P", monospace;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: #4a3326;
+      }
+
+      /* Device */
+      .device-wrap {
+        position: relative;
+        width: 880px;
+        height: 540px;
+        flex: 0 0 auto;
+      }
+      .device-shadow {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 100%;
+        height: 100%;
+        background: #4a3326;
+        opacity: 0; /* snaps in via tl.set */
+      }
+      .device {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: #ffffff;
+        border: 2px solid #4a3326;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .chrome {
+        width: 100%;
+        height: 44px;
+        background: #fff8f0;
+        border-bottom: 2px solid #4a3326;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        background: #4a3326;
+        flex: 0 0 auto;
+      }
+      .url {
+        margin-left: 16px;
+        font-family: "Press Start 2P", monospace;
+        font-size: 10px;
+        color: #4a3326;
+        letter-spacing: 1px;
+        clip-path: inset(0 100% 0 0); /* revealed via tl */
+      }
+
+      .screens {
+        position: relative;
+        flex: 1 1 auto;
+        overflow: hidden;
+        background: #ffffff;
+      }
+      .screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        opacity: 0;
+      }
+
+      /* Text block */
+      .text-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+      .title-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+      }
+      .title {
+        font-family: "Press Start 2P", monospace;
+        font-size: 28px;
+        line-height: 1.1;
+        color: #4a3326;
+        letter-spacing: 1px;
+        text-align: center;
+        clip-path: inset(0 100% 0 0); /* revealed via tl */
+      }
+      .underline {
+        width: 280px;
+        height: 6px;
+        background: #f8af3c;
+        transform: scaleX(0);
+        transform-origin: left center;
+      }
+      .subtitle {
+        font-family: "Geist", sans-serif;
+        font-size: 24px;
+        font-weight: 500;
+        color: rgba(74, 51, 38, 0.82);
+        letter-spacing: 0.2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="showcase-nes"
+      data-start="0"
+      data-duration="8"
+      data-width="1080"
+      data-height="1080"
+    >
+      <div class="scene-content">
+        <div class="badge">
+          <img class="badge-logo" src="assets/bragfast-logo.png" alt="" />
+          <span class="badge-text">BRAG.FAST</span>
+        </div>
+
+        <div class="device-wrap">
+          <div class="device-shadow"></div>
+          <div class="device">
+            <div class="chrome">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="url">brag.fast/ship</div>
+            </div>
+            <div class="screens">
+              <img class="screen s1" src="assets/screen-1.jpg" alt="" />
+              <img class="screen s2" src="assets/screen-2.jpg" alt="" />
+              <img class="screen s3" src="assets/screen-3.jpg" alt="" />
+            </div>
+          </div>
+        </div>
+
+        <div class="text-block">
+          <div class="title-wrap">
+            <h1 class="title">Show off what you've built</h1>
+            <div class="underline"></div>
+          </div>
+          <p class="subtitle">Your build in public posts deserve better</p>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          const tl = gsap.timeline({ paused: true });
+
+          // Device rises into frame
+          tl.from(
+            ".device",
+            { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" },
+            0.2,
+          );
+
+          // Hard-offset shadow snaps in after device lands
+          tl.set(".device-shadow", { opacity: 1 }, 0.9);
+
+          // Traffic dots pop with back ease, staggered
+          tl.from(
+            ".dot",
+            {
+              scale: 0,
+              opacity: 0,
+              duration: 0.4,
+              ease: "back.out(1.7)",
+              stagger: 0.08,
+            },
+            0.5,
+          );
+
+          // URL bar types in via clip-path
+          tl.to(
+            ".url",
+            {
+              clipPath: "inset(0 0% 0 0)",
+              duration: 0.5,
+              ease: "power2.out",
+            },
+            0.9,
+          );
+
+          // Screen 1 fades + scales in
+          tl.fromTo(
+            ".s1",
+            { opacity: 0, scale: 0.98 },
+            {
+              opacity: 1,
+              scale: 1,
+              duration: 0.55,
+              ease: "power2.out",
+              transformOrigin: "center center",
+            },
+            1.25,
+          );
+
+          // Cycle to screen 2 — parallax swap
+          tl.to(".s1", { opacity: 0, duration: 0.4, ease: "power2.in" }, 2.6);
+          tl.fromTo(
+            ".s2",
+            { opacity: 0, y: 40 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            2.6,
+          );
+
+          // Cycle to screen 3
+          tl.to(".s2", { opacity: 0, duration: 0.4, ease: "power2.in" }, 3.8);
+          tl.fromTo(
+            ".s3",
+            { opacity: 0, y: 40 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            3.8,
+          );
+
+          // Title reveal via clip-path L→R (expo for snappy NES feel)
+          tl.to(
+            ".title",
+            {
+              clipPath: "inset(0 0% 0 0)",
+              duration: 0.8,
+              ease: "expo.out",
+            },
+            4.7,
+          );
+
+          // Gold underline swipe
+          tl.to(
+            ".underline",
+            { scaleX: 1, duration: 0.45, ease: "power2.out" },
+            5.45,
+          );
+
+          // Subtitle rises
+          tl.from(
+            ".subtitle",
+            { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" },
+            5.7,
+          );
+
+          // Ambient device bob — one gentle up-and-back (finite)
+          tl.to(
+            ".device-wrap",
+            {
+              y: -3,
+              duration: 0.7,
+              ease: "sine.inOut",
+              yoyo: true,
+              repeat: 1,
+            },
+            6.3,
+          );
+
+          // Final fade — single-scene comp allows exit fade
+          tl.to(
+            ".scene-content",
+            { opacity: 0.95, y: -4, duration: 0.5, ease: "power2.in" },
+            7.5,
+          );
+
+          window.__timelines["showcase-nes"] = tl;
+        })();
+      </script>
+    </div>
+  </body>
+</html>
