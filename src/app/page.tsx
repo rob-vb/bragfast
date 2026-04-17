@@ -175,20 +175,17 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            {/* Cook page — primary */}
-            <div className="border-[3px] border-brand bg-gold p-6 md:p-7 shadow-[6px_6px_0_var(--color-brand)] flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/70">
+            {/* Cook page */}
+            <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
+              <div className="mb-4">
+                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
                   Cook page
-                </span>
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider bg-brand text-gold px-2 py-1">
-                  Fastest
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
                 Open it. Drop. Hit Cook.
               </h3>
-              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-relaxed mb-6 flex-1">
+              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-6 flex-1">
                 Drop screenshots or screen recordings. Pick a template. Branded images and video out in under a minute.
               </p>
               <Link
@@ -210,7 +207,7 @@ export default function Home() {
                 Already in Claude? Just ask.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
-                Works in Claude Desktop and Claude Code. Paste the URL:
+                Works in Claude Desktop and Claude Code.
               </p>
               <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-brand bg-gold/30 border border-brand/30 px-2 py-1.5 select-all break-all mb-6">
                 https://mcp.brag.fast/mcp
