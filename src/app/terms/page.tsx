@@ -63,9 +63,9 @@ export default function TermsPage() {
                 </li>
                 <li>
                   <strong>Credits</strong> — units of usage. Images cost 1 credit
-                  per slide per format. Videos cost 5 credits per slide per
-                  format. For example, a release with 2 slides in 3 formats
-                  consumes 6 image credits or 30 video credits.
+                  per format. Videos cost 5 credits per format. For example, a
+                  release rendered in 3 formats consumes 3 image credits or 15
+                  video credits.
                 </li>
                 <li>
                   <strong>API Key</strong> — a secret token used to authenticate
@@ -96,8 +96,8 @@ export default function TermsPage() {
               <p>
                 Each subscription plan includes a monthly credit allocation.
                 Credits are consumed when images or videos are generated through
-                the API at a rate of 1 credit per slide per format for images
-                and 5 credits per slide per format for videos. Unused credits do
+                the API at a rate of 1 credit per format for images and 5
+                credits per format for videos. Unused credits do
                 not roll over to the next billing cycle.
               </p>
               <p>
@@ -194,7 +194,7 @@ export default function TermsPage() {
                 <li>Scale: 120 requests per minute</li>
               </ul>
               <p>
-                Additional restrictions: maximum 5 slides per format, maximum 3
+                Additional restrictions: maximum 5 images per format, maximum 3
                 formats per release (landscape, square, portrait).
               </p>
               <p>
