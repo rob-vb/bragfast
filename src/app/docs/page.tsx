@@ -24,9 +24,9 @@ export default function DocsPage() {
                 API Reference
               </h1>
               <p className="text-sm text-zinc-600 leading-relaxed max-w-lg">
-                brag.fast auto-generates branded social media images for your
-                product releases. Design a brand kit, POST your release details,
-                and receive images in multiple aspect ratios.
+                brag.fast turns your releases into branded images and video.
+                Set up a brand kit, POST your release, get back every format you
+                need to post. One call. Zero design work.
               </p>
               <div className="flex items-center gap-3 mt-4">
                 <CopyForLlmButton />

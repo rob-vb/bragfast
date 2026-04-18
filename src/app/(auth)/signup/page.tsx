@@ -146,7 +146,7 @@ export default function SignupPage() {
               disabled={loading}
               className="w-full bg-gold text-brand border-2 border-brand px-4 py-2.5 font-mono text-xs uppercase tracking-widest font-bold shadow-[3px_3px_0_var(--color-brand)] transition-all hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[1px] hover:translate-y-[1px] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             >
-              {loading ? "Creating account..." : "▸ Get started"}
+              {loading ? "Creating account..." : "▸ Start Cooking"}
             </button>
           </form>
 

@@ -15,7 +15,7 @@ function XCard({ videoUrl }: { videoUrl: string }) {
         </div>
       </div>
       <p className="font-[family-name:var(--font-geist-sans)] text-[10px] text-brand/70 leading-relaxed px-3 py-1.5">
-        I ship features all the time and never announce them. So I built brag.fast.
+        Started posting these. My launches stopped flopping.
       </p>
       <div className="mx-3 mb-2 rounded-xl overflow-hidden border border-brand/10">
         <video autoPlay muted loop playsInline className="w-full h-auto block">
@@ -43,7 +43,7 @@ function LinkedInCard({ videoUrl }: { videoUrl: string }) {
         </div>
       </div>
       <p className="font-[family-name:var(--font-geist-sans)] text-[10px] text-brand/70 leading-relaxed px-3 py-1.5">
-        Shipped something new. brag.fast made the announcement for me.
+        Looks like I hired a designer for this one. I didn&apos;t.
       </p>
       <div className="border-t border-brand/10">
         <video autoPlay muted loop playsInline className="w-full h-auto block">

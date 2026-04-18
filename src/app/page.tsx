@@ -58,12 +58,6 @@ export default function Home() {
         />
         <div className="relative mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 border-2 border-brand bg-gold/20 px-2.5 py-1 mb-5">
-              <span className="w-1.5 h-1.5 bg-gold animate-pulse" />
-              <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider">
-                Now serving · v2.1
-              </span>
-            </div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
               Cook branded release visuals <span className="text-gold">in seconds.</span>
             </h1>

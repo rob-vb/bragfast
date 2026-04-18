@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "API Reference | brag.fast",
   description:
-    "The full brag.fast API reference. Generate branded social media images with one POST request. Releases, brands, templates, fonts, and uploads.",
+    "Everything you need to turn releases into branded images and video. Endpoints, brands, templates, fonts. One API call, every format.",
   alternates: { canonical: "/docs" },
 }
 
