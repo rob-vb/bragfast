@@ -10,32 +10,36 @@ import { McpInstallInstructions } from "@/components/landing/mcp-install-instruc
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Cook branded release visuals in seconds",
+  title: "brag.fast | Show off your wins. Fast.",
   description:
-    "Drop screenshots. Hit Cook. Post. brag.fast turns your software releases into branded social images and videos. Landscape, square, portrait. Or ask Claude to do it for you.",
+    "Turn any win — a release, an MRR milestone, a marathon time — into branded social images and videos. You can do it, or your AI agent can. Under a minute.",
   alternates: { canonical: "/" },
 };
 
 const FAQ = [
   {
+    q: "What kind of wins work?",
+    a: "Anything brag-worthy. Software releases, MRR milestones, user-count screenshots, a marathon PR from Strava, launch-day numbers, a before/after. If you'd post about it, brag.fast dresses it up.",
+  },
+  {
     q: "Can't I just use Canva?",
-    a: "You can. Will you? Every release? brag.fast runs in under a minute. Or runs itself. Canva doesn't.",
+    a: "You can. Will you? Every time? brag.fast renders in under a minute — or your agent calls it for you. Canva doesn't do that.",
   },
   {
     q: "Will it match my brand?",
     a: "Upload your logo. Set colors and fonts. Every image out the door looks like you made it on purpose.",
   },
   {
-    q: "I don't ship that often.",
-    a: "Start free. 30 credits, no card. If you ship monthly, Toast covers you for $12.",
+    q: "Can an AI agent use this for me?",
+    a: "Yes. MCP works in Claude Desktop and Claude Code. REST API works with anything else. Agents send the data, brag.fast sends back branded visuals.",
   },
   {
-    q: "Is video going to eat all my credits?",
-    a: "5 credits per video per format. A landscape video = 5 credits. All three formats = 15. Toast gives you 200 a month.",
+    q: "Will video eat all my credits?",
+    a: "5 credits per video per format. One video in all three formats = 15. Toast gives you 200 a month.",
   },
   {
-    q: "What if the AI picks the wrong highlights?",
-    a: "Edit before cook. Or skip the AI and type the copy yourself. Your kitchen, your call.",
+    q: "What if the AI picks the wrong thing to highlight?",
+    a: "Edit before you render. Or skip the AI and write the copy yourself. Your call.",
   },
 ];
 
@@ -58,36 +62,22 @@ export default function Home() {
         />
         <div className="relative mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 border-2 border-brand bg-gold/20 px-2.5 py-1 mb-5">
-              <span className="w-1.5 h-1.5 bg-gold animate-pulse" />
-              <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider">
-                Now serving · v2.1
-              </span>
-            </div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Cook branded release visuals <span className="text-gold">in seconds.</span>
+              Show off your wins. <span className="text-gold">Fast.</span>
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Open the Cook page, drop your screenshots, pick a template. Branded
-              images and video come out in landscape, square, and portrait.
-              Or install the MCP and ask Claude to do it for you.
+              brag.fast turns any milestone — a release, a new MRR record, a marathon time, a user-count screenshot — into branded social images and videos. You can do it. Or your AI agent can.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Link
                 href="/signup"
                 className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start Cooking · 30 Free Credits
-              </Link>
-              <Link
-                href="#mcp"
-                className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-[10px] md:text-xs px-5 py-4 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Install MCP ↓
+                Start bragging — free
               </Link>
             </div>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-4">
-              No credit card. Ready in under a minute.
+              30 credits. No card required.
             </p>
           </div>
 
@@ -108,17 +98,17 @@ export default function Home() {
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-[3px] bg-gold" />
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  The Kitchen
+                  Live demo
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Drop it in.<br />Cook it.<br />Serve it.
+                Drop it in.<br />Hit go.<br />Post it.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Drop in screenshots or a screen recording. Pick a template and
-                brand. Hit Cook. Branded images <em>and</em> video come out in
-                every format you need. Landscape, square, portrait. No design
-                tool. No editor. No learning curve.
+                Drop in screenshots, stats, or a screen recording. Pick a
+                template and brand. Branded images <em>and</em> video come out
+                in every format you need — landscape, square, portrait. No
+                design tool, no editor, no learning curve.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
@@ -136,7 +126,7 @@ export default function Home() {
                 href="/signup"
                 className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Cook Your First Release
+                Make your first post
               </Link>
             </div>
             <div className="border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
@@ -167,32 +157,35 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <div className="flex flex-col items-center text-center mb-10 md:mb-14 gap-3">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50">
-              Order however you want
+              Humans or agents
             </span>
             <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-              Three ways to get on the menu.
+              Made for you. And your agents.
             </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/70 max-w-xl mt-2 leading-relaxed">
+              brag.fast is the visual layer for wins. Trigger it yourself, or let an AI agent do it over MCP or the API.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            {/* Cook page */}
+            {/* Web app */}
             <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
               <div className="mb-4">
                 <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
-                  Cook page
+                  Web app
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Open it. Drop. Hit Cook.
+                Open it. Drop. Post.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-6 flex-1">
-                Drop screenshots or screen recordings. Pick a template. Branded images and video out in under a minute.
+                Drop screenshots, stats, or a screen recording. Pick a template. Branded images and video out in under a minute.
               </p>
               <Link
                 href="/signup"
                 className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
               >
-                Start Cooking →
+                Start for free →
               </Link>
             </div>
 
@@ -200,14 +193,14 @@ export default function Home() {
             <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
               <div className="mb-4">
                 <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
-                  MCP
+                  MCP for agents
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Already in Claude? Just ask.
+                Your agent, on brag.fast.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
-                Works in Claude Desktop and Claude Code.
+                Works in Claude Desktop and Claude Code. Ask, it renders.
               </p>
               <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-brand bg-gold/30 border border-brand/30 px-2 py-1.5 select-all break-all mb-6">
                 https://mcp.brag.fast/mcp
@@ -228,10 +221,10 @@ export default function Home() {
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Wire it into CI/CD.
+                Wire it into anything.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
-                POST your release, get branded visuals back.
+                CI/CD, bots, your own app. POST the data, get branded visuals back.
               </p>
               <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-surface bg-brand px-2 py-1.5 break-all mb-6">
                 POST /api/v1/cook/image
@@ -278,11 +271,11 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <div className="text-center mb-10">
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5] mb-3">
-              Which post would you click?
+              Which post would you stop for?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/60 max-w-xl mx-auto">
-              Left: simple text post. Right: branded visual that makes people
-              stop scrolling.
+              Left: plain text. Right: a branded visual that cuts through the
+              feed.
             </p>
           </div>
           <BeforeAfter />
@@ -301,11 +294,11 @@ export default function Home() {
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
-                Design your own recipe.
+                Design it once. Reuse forever.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Drag objects. Set colors. Preview live. Every render uses your
-                recipe. No babysitting.
+                Drag objects. Set colors. Preview live. Every render follows
+                the layout you built. No babysitting.
               </p>
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
                 <LazyVideo
@@ -323,7 +316,7 @@ export default function Home() {
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
-                On-brand. Every plate.
+                On-brand. Every post.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
                 Upload your logo. Lock your colors and fonts. Every image comes
@@ -341,7 +334,7 @@ export default function Home() {
           <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
             <div className="bg-brand text-gold px-5 py-4 text-center">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
-                brag.fast menu
+                brag.fast plans
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
                 Images: 1 credit each. Videos: 5 credits each.
@@ -355,7 +348,7 @@ export default function Home() {
               </span>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-snug">
                 Every new account gets <strong>30 free credits</strong> to try
-                the kitchen. No card, one-time.
+                it out. No card, one-time.
               </p>
             </div>
 
@@ -403,7 +396,7 @@ export default function Home() {
                 Start with 30 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
-                No card. Upgrade when you outgrow the free plate.
+                No card. Upgrade when you need more.
               </p>
             </div>
           </div>
@@ -415,7 +408,7 @@ export default function Home() {
         <div className="mx-auto max-w-3xl px-4 md:px-8">
           <div className="text-center mb-12">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
-              Before you sit down
+              The details
             </span>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
               Frequently asked.
@@ -462,7 +455,7 @@ export default function Home() {
         />
         <div className="relative mx-auto max-w-3xl px-4 md:px-8 text-center">
           <h2 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-[1.4] mb-5">
-            Stop shipping features <span className="block md:inline">in silence.</span>
+            Stop sitting on <span className="block md:inline">your wins.</span>
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
             30 free credits. No credit card. First render in under a minute.
@@ -472,7 +465,7 @@ export default function Home() {
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Start Cooking · Free
+              Start for free
             </Link>
             <Link
               href="#mcp"
