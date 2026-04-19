@@ -42,6 +42,10 @@ export default defineSchema({
     isDefault: v.boolean(),
     config: v.any(),
     previewUrl: v.optional(v.string()),
+    // Metadata used by Haiku template picker when drafting brag posts.
+    // Backfilled for built-in templates via one-time migration; optional for custom.
+    tags: v.optional(v.array(v.string())),
+    description: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_userId", ["userId"])
@@ -169,6 +173,82 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_userId", ["userId"])
     .index("by_status_expires", ["status", "expiresAt"]),
+
+  // Agent-drafted brag posts. Daily cron picks a brag-worthy commit, Haiku drafts
+  // copy + image spec, row lands here with status="pending_review" for founder approval.
+  // Approval promotes the draft to a rendered `releases` row.
+  drafts: defineTable({
+    userId: v.string(),
+    source: v.union(
+      v.literal("cron-commit"),
+      v.literal("cron-release"),
+      v.literal("mcp-manual")
+    ),
+    // Denormalized dedup fields. Paired with by_dedup index so a single transactional
+    // mutation (insertDraftIfNew) can guard against retry-induced duplicates.
+    repoFullName: v.optional(v.string()),
+    windowStart: v.number(),
+    windowEnd: v.number(),
+    sourceCommitShas: v.optional(v.array(v.string())),
+    sourceReleaseId: v.optional(v.string()),
+
+    platform: v.literal("twitter"), // future: union when expanding
+    copy: v.string(),
+    originalCopy: v.string(),        // Haiku's initial draft — used for copyEditDistance metric
+    copyEditDistance: v.optional(v.number()),
+
+    suggestedTemplateId: v.string(),
+    suggestedFormat: v.union(
+      v.literal("landscape"),
+      v.literal("square"),
+      v.literal("portrait")
+    ),
+    aiContent: v.any(), // ObjectModifications[] — runtime-validated via Zod at insert
+
+    imageReleaseId: v.optional(v.id("releases")), // set on approveDraft
+    videoReleaseId: v.optional(v.id("releases")), // set on promoteDraftToVideo
+    uploadId: v.optional(v.string()),             // optional user-supplied screenshot
+
+    status: v.union(
+      v.literal("pending_review"),
+      v.literal("approved"),
+      v.literal("dismissed"),
+      v.literal("expired"),
+      v.literal("error")
+    ),
+    errorMessage: v.optional(v.string()),
+
+    postedAt: v.optional(v.number()), // user confirms "Posted? yes" — success-metric truth
+
+    expiresAt: v.number(), // drafts rot after 7 days by default
+    created_at: v.string(),
+    approved_at: v.optional(v.string()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_user_created", ["userId", "created_at"])
+    .index("by_dedup", ["userId", "repoFullName", "windowStart"]),
+
+  // Cron-run metadata for observability. One row per runDailyDraftJob execution
+  // per user. Admin dashboard reads latest row to show "last run" pulse; alert
+  // fires if no successful row in 2+ days.
+  cronRuns: defineTable({
+    job: v.literal("runDailyDraftJob"),
+    userId: v.string(),
+    startedAt: v.number(),
+    finishedAt: v.optional(v.number()),
+    outcome: v.union(
+      v.literal("success"),
+      v.literal("silent"), // ran, no draft worth posting
+      v.literal("error")
+    ),
+    draftsCreated: v.number(),
+    draftsSkippedDedup: v.number(),
+    draftsSkippedCollision: v.number(),
+    errorMessage: v.optional(v.string()),
+  })
+    .index("by_user_started", ["userId", "startedAt"])
+    .index("by_job_started", ["job", "startedAt"]),
 
   uploads: defineTable({
     userId: v.string(),
