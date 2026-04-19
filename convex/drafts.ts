@@ -1,6 +1,7 @@
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
+import { shouldInsertDraft } from "../src/lib/drafts/dedup";
 
 // Shared schema fragments
 const draftStatusLiterals = v.union(
@@ -262,46 +263,48 @@ export const insertDraftIfNew = internalMutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Dedup: same user + repo + window already has a draft?
-    if (args.repoFullName) {
-      const existing = await ctx.db
-        .query("drafts")
-        .withIndex("by_dedup", (q) =>
-          q
-            .eq("userId", args.userId)
-            .eq("repoFullName", args.repoFullName)
-            .eq("windowStart", args.windowStart),
-        )
-        .first();
-      if (existing) {
-        return { inserted: false as const, reason: "dedup" as const };
-      }
-    }
+    // Load rows needed for dedup + collision checks, then hand off to the pure
+    // predicate. Keeping that logic in src/lib/drafts/dedup.ts lets the
+    // regression test cover it without spinning up convex-test.
+    const existingDrafts = args.repoFullName
+      ? await ctx.db
+          .query("drafts")
+          .withIndex("by_dedup", (q) =>
+            q
+              .eq("userId", args.userId)
+              .eq("repoFullName", args.repoFullName)
+              .eq("windowStart", args.windowStart),
+          )
+          .collect()
+      : [];
 
-    // Collision: GitHub App webhook may have already minted a release for this
-    // commit/window. Don't create a draft if there's a release row covering the same SHAs.
-    if (args.sourceCommitShas && args.sourceCommitShas.length > 0 && args.repoFullName) {
-      const recentReleases = await ctx.db
-        .query("releases")
-        .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-        .order("desc")
-        .take(20);
+    const recentReleases = await ctx.db
+      .query("releases")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .take(20);
 
-      const repoPrefix = `"repoFullName":"${args.repoFullName}"`;
-      const shaSet = new Set(args.sourceCommitShas);
-      const hit = recentReleases.find((r) => {
-        if (!r.sourceMetadata || !r.sourceMetadata.includes(repoPrefix)) return false;
-        if (r.status !== "pending" && r.status !== "pending_review" && r.status !== "completed") return false;
-        try {
-          const meta = JSON.parse(r.sourceMetadata) as { commitShas?: string[] };
-          return meta.commitShas?.some((sha) => shaSet.has(sha));
-        } catch {
-          return false;
-        }
-      });
-      if (hit) {
-        return { inserted: false as const, reason: "collision" as const };
-      }
+    const decision = shouldInsertDraft({
+      input: {
+        userId: args.userId,
+        repoFullName: args.repoFullName,
+        windowStart: args.windowStart,
+        sourceCommitShas: args.sourceCommitShas,
+      },
+      existingDrafts: existingDrafts.map((d) => ({
+        userId: d.userId,
+        repoFullName: d.repoFullName,
+        windowStart: d.windowStart,
+      })),
+      recentReleases: recentReleases.map((r) => ({
+        userId: r.userId,
+        status: r.status,
+        sourceMetadata: r.sourceMetadata,
+      })),
+    });
+
+    if (!decision.inserted) {
+      return { inserted: false as const, reason: decision.reason };
     }
 
     const now = new Date().toISOString();
