@@ -35,6 +35,7 @@ export default async function DraftsPage() {
         created_at: d.created_at,
         approved_at: d.approved_at,
       }))} />
+      <div id="a11y-live" aria-live="polite" className="sr-only" />
     </div>
   );
 }

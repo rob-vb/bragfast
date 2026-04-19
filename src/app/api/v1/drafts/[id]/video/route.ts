@@ -2,10 +2,8 @@ import { authenticate } from "@/lib/auth/authenticate";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { after } from "next/server";
-import { renderReleaseAsync } from "@/lib/pipeline/render";
 import { calculateCredits } from "@/lib/types";
-import type { FormatEntry, ObjectModification, ReleaseRequest } from "@/lib/types";
+import type { FormatEntry, ObjectModification } from "@/lib/types";
 
 export const maxDuration = 60;
 
@@ -17,20 +15,14 @@ export async function POST(
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const body = (await request.json().catch(() => ({}))) as {
-    uploadId?: string;
-    editedCopy?: string;
-  };
 
-  // 1. Flip the draft + mint a placeholder release row. Mutation enforces
-  //    ownership + status invariants inside the transaction.
+  // 1. Mint a video release row off the approved draft. Mutation is idempotent
+  //    — re-calling returns the existing videoReleaseId instead of charging twice.
   let releaseRef: { releaseId: Id<"releases">; externalId: string };
   try {
-    releaseRef = await fetchMutation(api.drafts.approveDraft, {
+    releaseRef = await fetchMutation(api.drafts.promoteDraftToVideo, {
       userId: auth.userId,
       id: id as Id<"drafts">,
-      uploadId: body.uploadId,
-      editedCopy: body.editedCopy,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "failed";
@@ -38,30 +30,21 @@ export async function POST(
       ? 403
       : msg.includes("not found")
         ? 404
-        : msg.includes("already")
+        : msg.includes("approved")
           ? 409
           : 400;
     return Response.json({ error: msg }, { status });
   }
 
-  // 2. Load the draft so we can build a ReleaseRequest + reserve credits.
   const draft = await fetchQuery(api.drafts.getById, { id: id as Id<"drafts"> });
-  if (!draft) return Response.json({ error: "Draft missing after approve" }, { status: 500 });
+  if (!draft) return Response.json({ error: "Draft missing" }, { status: 500 });
 
   const objects = (draft.aiContent ?? []) as ObjectModification[];
   const formats: FormatEntry[] = [
     { name: draft.suggestedFormat, slides: [{ objects }] },
   ];
 
-  const releaseRequest: ReleaseRequest = {
-    template: draft.suggestedTemplateId,
-    formats,
-    // v1: fallback brand colors if user has no brand_id configured. Real brand
-    // resolution flows via brand_id when present on the user's default brand.
-    colors: { background: "#FFF8F0", text: "#4A3326", primary: "#F8AF3C" },
-  };
-
-  const creditsNeeded = calculateCredits({ formats });
+  const creditsNeeded = calculateCredits({ video: true, formats });
 
   try {
     await fetchMutation(api.userProfiles.reserve, {
@@ -76,16 +59,24 @@ export async function POST(
     throw err;
   }
 
-  // 3. Flip release pending_review → pending + stamp credits. Reuses the same
-  //    mutation the GitHub App approval path uses so the state machine stays
-  //    identical across source types.
   await fetchMutation(api.releases.approve, {
     externalId: releaseRef.externalId,
     userId: auth.userId,
     credits_used: creditsNeeded,
   });
 
-  after(() => renderReleaseAsync(releaseRef.externalId, releaseRequest, auth.userId));
+  // Video renders go through the Convex scheduler (Remotion Lambda) rather
+  // than next/after — matches existing /api/github/releases/[id]/approve path.
+  await fetchMutation(api.releases.scheduleVideoRender, {
+    cookId: releaseRef.externalId,
+    userId: auth.userId,
+    request: JSON.stringify({
+      template: draft.suggestedTemplateId,
+      formats,
+      colors: { background: "#FFF8F0", text: "#4A3326", primary: "#F8AF3C" },
+      video: { preset: "showcase" },
+    }),
+  });
 
   return Response.json({ ok: true, cook_id: releaseRef.externalId });
 }

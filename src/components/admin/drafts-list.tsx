@@ -177,6 +177,18 @@ function DraftCard({
     });
   }
 
+  function onMakeVideo() {
+    startTransition(async () => {
+      try {
+        await callRoute(`/api/v1/drafts/${draft.id}/video`);
+        const live = document.getElementById("a11y-live");
+        if (live) live.textContent = "Video render started";
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Video failed");
+      }
+    });
+  }
+
   if (draft.status === "error") {
     return (
       <PixelCard className="border-destructive/60">
@@ -253,6 +265,9 @@ function DraftCard({
             <>
               <PixelButton onClick={onCopyTweet} variant="primary">
                 Copy tweet
+              </PixelButton>
+              <PixelButton onClick={onMakeVideo} disabled={pending} variant="ghost">
+                Make video →
               </PixelButton>
               <span className="text-xs text-brand/70 mx-2">Posted?</span>
               <PostedToggle posted={Boolean(draft.postedAt)} onChange={onTogglePosted} disabled={pending} />

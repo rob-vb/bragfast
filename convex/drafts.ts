@@ -143,13 +143,16 @@ export const approveDraft = mutation({
     // For v1, we write the release row here and flip the draft to `approved`.
     const externalId = `rel_draft_${id.slice(-10)}_${Date.now()}`;
     const now = new Date().toISOString();
+    // Insert with pending_review so the existing releases.approve mutation can
+    // flip it → pending and set credits_used. Keeps draft-approval plumbing
+    // consistent with the GitHub App webhook's approve flow.
     const releaseId: Id<"releases"> = await ctx.db.insert("releases", {
       userId,
       externalId,
       template: draft.suggestedTemplateId,
-      status: "pending",
+      status: "pending_review",
       output: "image",
-      credits_used: 0, // will be charged at render-start per existing pipeline
+      credits_used: 0,
       source: "dashboard",
       sourceMetadata: JSON.stringify({
         draftId: id,
@@ -170,6 +173,49 @@ export const approveDraft = mutation({
       approved_at: now,
     });
 
+    return { releaseId, externalId };
+  },
+});
+
+/**
+ * Promote an approved draft to a showcase video. Creates a second pending_review
+ * release row referencing the same copy/template/content. The API route then
+ * runs the standard approve + scheduleVideoRender path.
+ */
+export const promoteDraftToVideo = mutation({
+  args: { userId: v.string(), id: v.id("drafts") },
+  handler: async (ctx, { userId, id }) => {
+    const draft = await ctx.db.get(id);
+    if (!draft) throw new Error("Draft not found");
+    if (draft.userId !== userId) throw new Error("Forbidden");
+    if (draft.status !== "approved") throw new Error("Draft must be approved first");
+    if (draft.videoReleaseId) {
+      // Idempotent: already promoted. Return existing reference instead of
+      // charging credits twice.
+      const existing = await ctx.db.get(draft.videoReleaseId);
+      if (existing) return { releaseId: draft.videoReleaseId, externalId: existing.externalId };
+    }
+
+    const externalId = `rel_video_${id.slice(-10)}_${Date.now()}`;
+    const now = new Date().toISOString();
+    const releaseId: Id<"releases"> = await ctx.db.insert("releases", {
+      userId,
+      externalId,
+      template: draft.suggestedTemplateId,
+      status: "pending_review",
+      output: "video",
+      credits_used: 0,
+      source: "dashboard",
+      sourceMetadata: JSON.stringify({
+        draftId: id,
+        promotedFrom: draft.imageReleaseId,
+      }),
+      aiContent: JSON.stringify({ slides: [{ objects: draft.aiContent }] }),
+      socialCopy: JSON.stringify({ twitter: draft.copy }),
+      created_at: now,
+    });
+
+    await ctx.db.patch(id, { videoReleaseId: releaseId });
     return { releaseId, externalId };
   },
 });
