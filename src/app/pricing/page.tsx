@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do credits work?",
-    a: "Images cost 1 credit per format. Videos cost 5 credits per format. Example: one release in all 3 formats = 3 image credits or 15 video credits.",
+    a: "Images cost 1 credit per format. Videos cost 5 credits per format. Example: one win rendered in all 3 formats = 3 image credits or 15 video credits.",
   },
   {
     q: "Do unused credits roll over?",
@@ -34,12 +34,12 @@ const FAQS = [
     a: "Images are hosted on our global CDN indefinitely. Hotlink them directly in your posts, blog, or app.",
   },
   {
-    q: "How does the MCP / AI integration work?",
-    a: "Add the brag.fast MCP to Claude and ask it to generate images from your release. It reads your notes, picks your brand, and cooks the visuals. You never leave the conversation.",
+    q: "How does the MCP / agent integration work?",
+    a: "Add the brag.fast MCP to Claude Desktop or Claude Code and the agent can generate images and video on your behalf — it reads your data, picks your brand, renders the visuals. Same thing over the REST API from any other agent or app.",
   },
   {
     q: "What does AI analysis do?",
-    a: "Our AI reads your changelog, categorizes changes into features, fixes, and breaking changes, and writes a summary for your images. Works with any release source. Available on all paid plans.",
+    a: "For software releases, our AI reads your changelog and categorizes changes into features, fixes, and breaking changes. For other inputs — stats, milestones, screenshots — you pass the copy directly. Available on all paid plans.",
   },
   {
     q: "Do you offer refunds?",
@@ -71,14 +71,15 @@ export default function PricingPage() {
           <div className="inline-flex items-center gap-2 border-2 border-brand bg-gold/20 px-2.5 py-1 mb-5">
             <span className="w-1.5 h-1.5 bg-gold animate-pulse" />
             <span className="font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider">
-              The menu
+              Plans
             </span>
           </div>
           <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-5">
             Simple <span className="text-gold">prices.</span> No surprises.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto mb-2">
-            Images: 1 credit. Videos: 5 credits.
+            Images: 1 credit. Videos: 5 credits. Same price whether you render
+            it yourself or your agent does.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/60 leading-relaxed max-w-xl mx-auto">
             Sign up and get <strong className="text-brand">30 free credits</strong> to try it out. No card.
@@ -92,7 +93,7 @@ export default function PricingPage() {
           <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
             <div className="bg-brand text-gold px-5 py-4 text-center">
               <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
-                brag.fast menu
+                brag.fast plans
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
                 Images: 1 credit each. Videos: 5 credits each.
@@ -104,7 +105,7 @@ export default function PricingPage() {
                 Sign-up bonus
               </span>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-snug">
-                Every new account gets <strong>30 free credits</strong> to try the kitchen. No card, one-time.
+                Every new account gets <strong>30 free credits</strong> to try it out. No card, one-time.
               </p>
             </div>
 
@@ -151,7 +152,7 @@ export default function PricingPage() {
                 Start with 30 Free Credits
               </Link>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
-                No card. Upgrade when you outgrow the free plate.
+                No card. Upgrade when you need more.
               </p>
             </div>
           </div>
@@ -163,7 +164,7 @@ export default function PricingPage() {
         <div className="mx-auto max-w-4xl px-4 md:px-8">
           <div className="text-center mb-10 md:mb-12">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
-              Ingredients
+              What&apos;s included
             </span>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
               Compare plans.
@@ -259,7 +260,7 @@ export default function PricingPage() {
         <div className="mx-auto max-w-3xl px-4 md:px-8">
           <div className="text-center mb-12">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
-              Before you sit down
+              The details
             </span>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
               Frequently asked.
@@ -333,7 +334,7 @@ export default function PricingPage() {
               href="/signup"
               className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Start Cooking · Free
+              Start for free
             </Link>
             <Link
               href="/#mcp"
