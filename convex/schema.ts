@@ -229,27 +229,6 @@ export default defineSchema({
     .index("by_user_created", ["userId", "created_at"])
     .index("by_dedup", ["userId", "repoFullName", "windowStart"]),
 
-  // Cron-run metadata for observability. One row per runDailyDraftJob execution
-  // per user. Admin dashboard reads latest row to show "last run" pulse; alert
-  // fires if no successful row in 2+ days.
-  cronRuns: defineTable({
-    job: v.literal("runDailyDraftJob"),
-    userId: v.string(),
-    startedAt: v.number(),
-    finishedAt: v.optional(v.number()),
-    outcome: v.union(
-      v.literal("success"),
-      v.literal("silent"), // ran, no draft worth posting
-      v.literal("error")
-    ),
-    draftsCreated: v.number(),
-    draftsSkippedDedup: v.number(),
-    draftsSkippedCollision: v.number(),
-    errorMessage: v.optional(v.string()),
-  })
-    .index("by_user_started", ["userId", "startedAt"])
-    .index("by_job_started", ["job", "startedAt"]),
-
   uploads: defineTable({
     userId: v.string(),
     externalId: v.string(),

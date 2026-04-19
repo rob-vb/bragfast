@@ -61,9 +61,9 @@ export const internalGetById = internalQuery({
   handler: async (ctx, { id }) => ctx.db.get(id),
 });
 
-// Reads used by cron action. Must live outside "use node" files
-// because Convex runs queries/mutations in the V8 runtime only.
-export const listWatchedReposForUser = internalQuery({
+// Reads used by API routes (Shape A + Shape B) and previously by cron.
+// Public so Next.js can call via fetchQuery; userId-scoped, auth at route layer.
+export const listWatchedReposForUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
     const installs = await ctx.db
@@ -87,7 +87,7 @@ export const listWatchedReposForUser = internalQuery({
   },
 });
 
-export const listTemplateCandidates = internalQuery({
+export const listTemplateCandidates = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
     // User's custom templates + built-ins (stored with userId="system").
@@ -291,7 +291,7 @@ function computeEditDistance(a: string, b: string): number {
  * collision within a single Convex mutation so retries do not create duplicates.
  * Returns `{ inserted: true, draftId }` or `{ inserted: false, reason }`.
  */
-export const insertDraftIfNew = internalMutation({
+export const insertDraftIfNew = mutation({
   args: {
     userId: v.string(),
     source: sourceLiterals,
@@ -379,36 +379,6 @@ export const insertDraftIfNew = internalMutation({
   },
 });
 
-export const recordDraftError = internalMutation({
-  args: {
-    userId: v.string(),
-    repoFullName: v.optional(v.string()),
-    windowStart: v.number(),
-    windowEnd: v.number(),
-    errorMessage: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const now = new Date().toISOString();
-    await ctx.db.insert("drafts", {
-      userId: args.userId,
-      source: "cron-commit",
-      repoFullName: args.repoFullName,
-      windowStart: args.windowStart,
-      windowEnd: args.windowEnd,
-      platform: "twitter",
-      copy: "",
-      originalCopy: "",
-      suggestedTemplateId: "",
-      suggestedFormat: "landscape",
-      aiContent: [],
-      status: "error",
-      errorMessage: args.errorMessage.slice(0, 2000),
-      expiresAt: Date.now() + DEFAULT_EXPIRY_MS,
-      created_at: now,
-    });
-  },
-});
-
 export const markExpired = internalMutation({
   args: { id: v.id("drafts") },
   handler: async (ctx, { id }) => {
@@ -420,27 +390,3 @@ export const markExpired = internalMutation({
   },
 });
 
-export const recordCronRun = internalMutation({
-  args: {
-    userId: v.string(),
-    startedAt: v.number(),
-    outcome: v.union(v.literal("success"), v.literal("silent"), v.literal("error")),
-    draftsCreated: v.number(),
-    draftsSkippedDedup: v.number(),
-    draftsSkippedCollision: v.number(),
-    errorMessage: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.insert("cronRuns", {
-      job: "runDailyDraftJob",
-      userId: args.userId,
-      startedAt: args.startedAt,
-      finishedAt: Date.now(),
-      outcome: args.outcome,
-      draftsCreated: args.draftsCreated,
-      draftsSkippedDedup: args.draftsSkippedDedup,
-      draftsSkippedCollision: args.draftsSkippedCollision,
-      errorMessage: args.errorMessage,
-    });
-  },
-});
