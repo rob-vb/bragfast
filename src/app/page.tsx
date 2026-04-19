@@ -66,7 +66,7 @@ export default function Home() {
               Show off your wins. <span className="text-gold">Fast.</span>
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast turns any milestone — a release, a new MRR record, a marathon time, a user-count screenshot — into branded social images and videos. You can do it. Or your AI agent can.
+              brag.fast turns any milestone — a release, a new MRR record, a user-count screenshot, you name it — into branded social images and videos. You can do it, or your AI agent can.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Link
@@ -87,73 +87,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S2: Cook Demo */}
-      <section
-        id="kitchen"
-        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
-      >
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
-          <div className="grid md:grid-cols-[0.9fr_1.1fr] gap-10 md:gap-14 items-center">
-            <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  Live demo
-                </span>
-              </div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Drop it in.<br />Hit go.<br />Post it.
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Drop in screenshots, stats, or a screen recording. Pick a
-                template and brand. Branded images <em>and</em> video come out
-                in every format you need — landscape, square, portrait. No
-                design tool, no editor, no learning curve.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
-                  (t) => (
-                    <span
-                      key={t}
-                      className="font-[family-name:var(--font-press-start)] text-[9px] px-2 py-1.5 border-2 border-brand bg-white"
-                    >
-                      {t}
-                    </span>
-                  ),
-                )}
-              </div>
-              <Link
-                href="/signup"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Make your first post
-              </Link>
-            </div>
-            <div className="border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
-              <div className="flex items-center justify-between border-b-2 border-brand/20 pb-2 mb-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-gold border border-brand" />
-                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
-                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
-                </div>
-                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-brand/50">
-                  brag.fast/admin/kitchen
-                </span>
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/50">
-                  00:43
-                </span>
-              </div>
-              <LazyVideo
-                src="/demo/bragfast_cook_demo.mp4"
-                className="w-full border border-brand"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* S3: Three Ways to Cook */}
-      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+      {/* S2: Three Ways to Cook */}
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <div className="flex flex-col items-center text-center mb-10 md:mb-14 gap-3">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50">
@@ -176,7 +111,7 @@ export default function Home() {
                 </span>
               </div>
               <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Open it. Drop. Post.
+                Cook it yourself
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-6 flex-1">
                 Drop screenshots, stats, or a screen recording. Pick a template. Branded images and video out in under a minute.
@@ -238,6 +173,71 @@ export default function Home() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* S3: Cook Demo */}
+      <section
+        id="kitchen"
+        className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
+      >
+        <div className="mx-auto max-w-5xl px-4 md:px-8">
+          <div className="grid md:grid-cols-[0.9fr_1.1fr] gap-10 md:gap-14 items-center">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  Web app
+                </span>
+              </div>
+              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+                Cook it yourself
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
+                Drop in screenshots, stats, or a screen recording. Pick a
+                template and brand. Branded images and video come out
+                in every format you need — landscape, square, portrait. No
+                design tool, no editor, no learning curve.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
+                  (t) => (
+                    <span
+                      key={t}
+                      className="font-[family-name:var(--font-press-start)] text-[9px] px-2 py-1.5 border-2 border-brand bg-white"
+                    >
+                      {t}
+                    </span>
+                  ),
+                )}
+              </div>
+              <Link
+                href="/signup"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Make your first post
+              </Link>
+            </div>
+            <div className="border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
+              <div className="flex items-center justify-between border-b-2 border-brand/20 pb-2 mb-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-gold border border-brand" />
+                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
+                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
+                </div>
+                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-brand/50">
+                  brag.fast/admin/kitchen
+                </span>
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/50">
+                  00:43
+                </span>
+              </div>
+              <LazyVideo
+                src="/demo/bragfast_cook_demo.mp4"
+                className="w-full border border-brand"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
