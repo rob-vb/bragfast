@@ -3,14 +3,30 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "convex/react";
 import { authClient } from "@/lib/auth-client";
+import { useUserId } from "@/hooks/use-user-id";
+import { api } from "@convex/_generated/api";
 
-const tabs = [
+const tabs: Array<{ label: string; href: string; badgeKey?: "drafts" }> = [
   { label: "Dashboard", href: "/admin" },
   { label: "Kitchen", href: "/admin/kitchen" },
+  { label: "Drafts", href: "/admin/drafts", badgeKey: "drafts" },
   { label: "History", href: "/admin/history" },
   { label: "Account", href: "/admin/account" },
 ];
+
+function PendingDraftsBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-[family-name:var(--font-press-start)] bg-red-500 text-white border border-brand"
+      aria-label={`${count} pending draft${count === 1 ? "" : "s"}`}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
 
 function PixelHamburger({
   open,
@@ -48,7 +64,18 @@ function PixelHamburger({
 export function AdminNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const userId = useUserId();
   const [open, setOpen] = useState(false);
+
+  // Lightweight read of the user's pending-review drafts. Convex is reactive,
+  // so the badge auto-updates when MCP/Shape A/Shape B writes a new draft.
+  const pendingDrafts = useQuery(api.drafts.listByUser, {
+    userId,
+    status: "pending_review",
+    limit: 100,
+  });
+  const pendingCount = pendingDrafts?.length ?? 0;
+  const badges = { drafts: pendingCount } as const;
 
   function handleLogout() {
     authClient.signOut().then(() => {
@@ -99,6 +126,7 @@ export function AdminNav() {
               `}
             >
               {tab.label}
+              {tab.badgeKey ? <PendingDraftsBadge count={badges[tab.badgeKey]} /> : null}
             </Link>
           );
         })}
@@ -166,6 +194,7 @@ export function AdminNav() {
                 }}
               >
                 {tab.label}
+                {tab.badgeKey ? <PendingDraftsBadge count={badges[tab.badgeKey]} /> : null}
               </Link>
             );
           })}
