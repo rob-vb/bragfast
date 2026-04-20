@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Press_Start_2P } from "next/font/google";
 import Script from "next/script";
 import { PostHogProvider } from "@/components/posthog-provider";
+import { WebMcpProvider } from "@/components/webmcp-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -74,6 +75,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} antialiased`}
       >
         <PostHogProvider>{children}</PostHogProvider>
+        <WebMcpProvider />
         <Script
           id="org-schema"
           type="application/ld+json"
