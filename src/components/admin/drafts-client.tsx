@@ -6,8 +6,20 @@ import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
+import { PixelButton } from "@/components/admin/pixel-button";
 import { derivePreviewTitle } from "@/lib/drafts/preview";
 import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Row = {
   id: string;
@@ -65,7 +77,6 @@ export function DraftsClient() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this draft?")) return;
     setDeleting((prev) => new Set(prev).add(id));
     try {
       const res = await fetch(`/api/v1/drafts/${id}`, { method: "DELETE" });
@@ -75,7 +86,6 @@ export function DraftsClient() {
       router.refresh();
     } catch (err) {
       console.error("Delete draft failed", err);
-      alert("Couldn't delete draft. Try again.");
     } finally {
       setDeleting((prev) => {
         const next = new Set(prev);
@@ -160,18 +170,43 @@ function DraftCard({
       `}
       aria-label={`Open draft: ${title}`}
     >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        className="absolute top-2 right-2 h-7 w-7 border-2 border-brand bg-white hover:bg-red-100 shadow-[2px_2px_0_var(--color-brand)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-[family-name:var(--font-press-start)] text-[10px] text-brand leading-none"
-        aria-label="Delete draft"
-        disabled={busy}
-      >
-        X
-      </button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-2 right-2 h-7 w-7 border-2 border-brand bg-white hover:bg-red-100 shadow-[2px_2px_0_var(--color-brand)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-[family-name:var(--font-press-start)] text-[10px] text-brand leading-none"
+            aria-label="Delete draft"
+            disabled={busy}
+          >
+            X
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete draft</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &ldquo;{title}&rdquo;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <PixelButton variant="ghost" onClick={(e) => e.stopPropagation()}>Cancel</PixelButton>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <PixelButton
+                variant="danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                Delete
+              </PixelButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="flex items-center gap-2 mb-3 pr-10">
         <SourceBadge source={row.source} />

@@ -280,6 +280,7 @@ export function CookPage({ templates }: CookPageProps) {
 
     return () => {
       cancelled = true;
+      hydratedDraftRef.current = null;
     };
   }, [draftParam, templates]);
 
