@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agentskills.io/schema/v0.2.0/index.json",
+  "skills": [
+    {
+      "name": "bragfast-mcp",
+      "type": "mcp",
+      "description": "Generate branded social media images and videos for product releases via the brag.fast MCP server.",
+      "url": "https://brag.fast/.well-known/agent-skills/bragfast-mcp/SKILL.md",
+      "sha256": "23012841acd3a1dd7dab4fc38d34fa3c0b8f7eedfb71c21786c3a46687467a7f"
+    }
+  ]
+}

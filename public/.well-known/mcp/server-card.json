@@ -1,0 +1,23 @@
+{
+  "serverInfo": {
+    "name": "brag.fast",
+    "version": "1.0.0",
+    "description": "Generate branded social media images and videos for product releases. One MCP call to produce landscape, square, and portrait assets from your release notes."
+  },
+  "transport": {
+    "type": "http",
+    "url": "https://mcp.brag.fast/mcp"
+  },
+  "capabilities": {
+    "tools": {}
+  },
+  "authentication": {
+    "type": "bearer",
+    "description": "Obtain an API key from https://brag.fast/keys after signing up."
+  },
+  "links": {
+    "homepage": "https://brag.fast",
+    "documentation": "https://brag.fast/docs",
+    "apiReference": "https://brag.fast/docs.md"
+  }
+}
