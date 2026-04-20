@@ -255,7 +255,7 @@ export default function Home() {
               </span>
             </div>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.4]">
-              One command. Then just ask Claude.
+              One command. Then just ask.
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
               Works in Claude Desktop, Claude Code, and any HTTP MCP client.
