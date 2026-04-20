@@ -12,6 +12,7 @@ import type * as account from "../account.js";
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
 import type * as brands from "../brands.js";
+import type * as drafts from "../drafts.js";
 import type * as githubInstallations from "../githubInstallations.js";
 import type * as githubRepoConfigs from "../githubRepoConfigs.js";
 import type * as githubSkippedReleases from "../githubSkippedReleases.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
   auth: typeof auth;
   brands: typeof brands;
+  drafts: typeof drafts;
   githubInstallations: typeof githubInstallations;
   githubRepoConfigs: typeof githubRepoConfigs;
   githubSkippedReleases: typeof githubSkippedReleases;
