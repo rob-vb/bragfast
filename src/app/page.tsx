@@ -258,8 +258,8 @@ export default function Home() {
               One command. Then just ask Claude.
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-              Works in Claude Desktop and Claude Code. Pick your client and
-              paste.
+              Works in Claude Desktop, Claude Code, and any HTTP MCP client.
+              Pick your client and paste.
             </p>
           </div>
           <McpInstallInstructions />
