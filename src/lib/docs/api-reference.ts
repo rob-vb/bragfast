@@ -645,6 +645,264 @@ data = response.json()`,
     ],
   },
 
+  // ─── Drafts ───────────────────────────────────────────────────────
+  {
+    title: "Drafts",
+    anchor: "drafts",
+    description:
+      "Drafts are saved cook configurations — a template, brand, content, and output type — queued up for a human to review and cook from the Kitchen. Agents POST drafts via the API; humans save them from the Kitchen UI. Both show up in the same Drafts queue at /admin/drafts.\n\nTo kick off a cook from a draft, pass its draft_id in the body of POST /api/v1/cook/image or /cook/video. On success the draft is consumed automatically.",
+    sampleObject: `{
+  "id": "drf_abc123",
+  "name": "v2.1 release",
+  "source": "agent",
+  "created_at": "2026-04-20T12:00:00.000Z",
+  "config": {
+    "output": "image",
+    "templateId": "standard-browser",
+    "brandId": "brand_abc123",
+    "formats": ["landscape", "square"],
+    "notes": "Ships dark mode and keyboard shortcuts."
+  }
+}`,
+    endpoints: [
+      {
+        method: "POST",
+        path: "/api/v1/drafts",
+        anchor: "create-draft",
+        title: "Create a draft",
+        description:
+          "Queues a cook configuration for later. Requests authenticated with an API key are tagged source: \"agent\". Returns 201 with the draft ID — pass it to POST /api/v1/cook/image or /cook/video when it's time to cook.",
+        params: [
+          {
+            name: "output",
+            type: '"image" | "video"',
+            required: true,
+            description: "Output type for the eventual cook.",
+          },
+          {
+            name: "name",
+            type: "string",
+            required: false,
+            description: "Optional display name. Shown in the Drafts queue. Falls back to the first bit of copy if omitted.",
+          },
+          {
+            name: "templateId",
+            type: "string",
+            required: false,
+            description: 'Template slug or custom ID, e.g. "standard-browser" or "tmpl_abc123".',
+          },
+          {
+            name: "brandId",
+            type: "string",
+            required: false,
+            description: "Brand kit ID to apply when cooking.",
+          },
+          {
+            name: "colors",
+            type: "object",
+            required: false,
+            description: "Inline brand colors. Ignored when brandId is set.",
+            children: [
+              { name: "background", type: "string", required: true, description: "Background hex color." },
+              { name: "text", type: "string", required: true, description: "Text hex color." },
+              { name: "primary", type: "string", required: true, description: "Accent hex color." },
+            ],
+          },
+          {
+            name: "formats",
+            type: 'Array<"landscape" | "square" | "portrait">',
+            required: false,
+            description: "Formats to generate. Defaults to all three if omitted.",
+          },
+          {
+            name: "objectContent",
+            type: "object",
+            required: false,
+            description: "Per-object content keyed by object ID. Each entry can have text, image_url, and/or video_url.",
+          },
+          {
+            name: "video",
+            type: 'object',
+            required: false,
+            description: 'Video options. Only relevant when output is "video". Accepts duration (seconds) and preset ("showcase", "3d-tilt-angles", or "simple-fade").',
+          },
+          {
+            name: "notes",
+            type: "string",
+            required: false,
+            description: "Free-form release notes. Stored with the draft and shown in the Kitchen when reviewed.",
+          },
+        ],
+        requestExample: {
+          curl: `curl -X POST https://brag.fast/api/v1/drafts \\
+  -H "Authorization: Bearer bf_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "output": "image",
+    "name": "v2.1 release",
+    "templateId": "standard-browser",
+    "brandId": "brand_abc123",
+    "formats": ["landscape", "square"],
+    "notes": "Ships dark mode and keyboard shortcuts."
+  }'`,
+          javascript: `const response = await fetch("https://brag.fast/api/v1/drafts", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer bf_your_api_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    output: "image",
+    name: "v2.1 release",
+    templateId: "standard-browser",
+    brandId: "brand_abc123",
+    formats: ["landscape", "square"],
+    notes: "Ships dark mode and keyboard shortcuts.",
+  }),
+})
+const data = await response.json()
+// data.draft_id — pass to /cook/image when ready`,
+          python: `import requests
+
+response = requests.post(
+    "https://brag.fast/api/v1/drafts",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+    json={
+        "output": "image",
+        "name": "v2.1 release",
+        "templateId": "standard-browser",
+        "brandId": "brand_abc123",
+        "formats": ["landscape", "square"],
+        "notes": "Ships dark mode and keyboard shortcuts.",
+    },
+)
+data = response.json()
+# data["draft_id"] — pass to /cook/image when ready`,
+        },
+        responseStatus: 201,
+        responseExample: `{
+  "draft_id": "drf_abc123",
+  "created_at": "2026-04-20T12:00:00.000Z"
+}`,
+      },
+      {
+        method: "GET",
+        path: "/api/v1/drafts",
+        anchor: "list-drafts",
+        title: "List drafts",
+        description: "Returns all pending drafts for the authenticated account, newest first.",
+        requestExample: {
+          curl: `curl https://brag.fast/api/v1/drafts \\
+  -H "Authorization: Bearer bf_your_api_key"`,
+          javascript: `const response = await fetch("https://brag.fast/api/v1/drafts", {
+  headers: { "Authorization": "Bearer bf_your_api_key" },
+})
+const { drafts } = await response.json()`,
+          python: `import requests
+
+response = requests.get(
+    "https://brag.fast/api/v1/drafts",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+)
+drafts = response.json()["drafts"]`,
+        },
+        responseStatus: 200,
+        responseExample: `{
+  "drafts": [
+    {
+      "id": "drf_abc123",
+      "name": "v2.1 release",
+      "source": "agent",
+      "created_at": "2026-04-20T12:00:00.000Z",
+      "preview": {
+        "title": "v2.1 release",
+        "output": "image",
+        "templateId": "standard-browser"
+      }
+    }
+  ]
+}`,
+      },
+      {
+        method: "GET",
+        path: "/api/v1/drafts/:id",
+        anchor: "retrieve-draft",
+        title: "Retrieve a draft",
+        description: "Returns a single draft with its full config. Returns 404 if the draft doesn't exist or belongs to another account.",
+        params: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "The draft ID (path parameter).",
+          },
+        ],
+        requestExample: {
+          curl: `curl https://brag.fast/api/v1/drafts/drf_abc123 \\
+  -H "Authorization: Bearer bf_your_api_key"`,
+          javascript: `const response = await fetch("https://brag.fast/api/v1/drafts/drf_abc123", {
+  headers: { "Authorization": "Bearer bf_your_api_key" },
+})
+const draft = await response.json()`,
+          python: `import requests
+
+response = requests.get(
+    "https://brag.fast/api/v1/drafts/drf_abc123",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+)
+draft = response.json()`,
+        },
+        responseStatus: 200,
+        responseExample: `{
+  "id": "drf_abc123",
+  "name": "v2.1 release",
+  "source": "agent",
+  "created_at": "2026-04-20T12:00:00.000Z",
+  "config": {
+    "output": "image",
+    "templateId": "standard-browser",
+    "brandId": "brand_abc123",
+    "formats": ["landscape", "square"],
+    "notes": "Ships dark mode and keyboard shortcuts."
+  }
+}`,
+      },
+      {
+        method: "DELETE",
+        path: "/api/v1/drafts/:id",
+        anchor: "delete-draft",
+        title: "Delete a draft",
+        description: "Permanently deletes a draft. Note: drafts are also deleted automatically when cooked via draft_id.",
+        params: [
+          {
+            name: "id",
+            type: "string",
+            required: true,
+            description: "The draft ID (path parameter).",
+          },
+        ],
+        requestExample: {
+          curl: `curl -X DELETE https://brag.fast/api/v1/drafts/drf_abc123 \\
+  -H "Authorization: Bearer bf_your_api_key"`,
+          javascript: `const response = await fetch("https://brag.fast/api/v1/drafts/drf_abc123", {
+  method: "DELETE",
+  headers: { "Authorization": "Bearer bf_your_api_key" },
+})
+// 204 No Content on success`,
+          python: `import requests
+
+response = requests.delete(
+    "https://brag.fast/api/v1/drafts/drf_abc123",
+    headers={"Authorization": "Bearer bf_your_api_key"},
+)
+# 204 No Content on success`,
+        },
+        responseStatus: 204,
+        responseExample: `// 204 No Content — empty response body`,
+      },
+    ],
+  },
+
   // ─── Brands ────────────────────────────────────────────────────────
   {
     title: "Brands",

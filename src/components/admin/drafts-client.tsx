@@ -112,8 +112,8 @@ export function DraftsClient() {
         <PixelEmptyState
           title="No drafts yet"
           description="Agents can POST to /api/v1/drafts to queue up releases for you. You can also save a draft from the Kitchen."
-          cta={{ label: "Read API Docs", href: "/docs" }}
-          secondaryCta={{ label: "Open Kitchen", href: "/admin/kitchen" }}
+          cta={{ label: "Go to Kitchen", href: "/admin/kitchen" }}
+          secondaryCta={{ label: "Read API Docs", href: "/docs" }}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
