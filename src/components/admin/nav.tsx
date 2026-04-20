@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 const tabs = [
   { label: "Dashboard", href: "/admin" },
   { label: "Kitchen", href: "/admin/kitchen" },
+  { label: "Drafts", href: "/admin/drafts" },
   { label: "History", href: "/admin/history" },
   { label: "Account", href: "/admin/account" },
 ];

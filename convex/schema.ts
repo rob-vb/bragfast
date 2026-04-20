@@ -170,6 +170,18 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_status_expires", ["status", "expiresAt"]),
 
+  drafts: defineTable({
+    userId: v.string(),
+    externalId: v.string(),          // "drf_*"
+    name: v.optional(v.string()),
+    source: v.union(v.literal("agent"), v.literal("user")),
+    createdBy: v.optional(v.string()), // apiKey externalId or "dashboard"
+    config: v.string(),               // JSON.stringify of DraftConfig
+    created_at: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_externalId", ["externalId"]),
+
   uploads: defineTable({
     userId: v.string(),
     externalId: v.string(),

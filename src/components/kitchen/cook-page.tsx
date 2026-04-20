@@ -1,6 +1,7 @@
 "use client";
 
 import { useReducer, useEffect, useCallback, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { KitchenScene3D } from "@/components/kitchen/kitchen-scene-3d";
@@ -12,10 +13,12 @@ import { IngredientsStep } from "@/components/kitchen/ingredients-step";
 import { PlatingStep } from "@/components/kitchen/plating-step";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { CookResults } from "@/components/kitchen/cook-results";
+import { SaveDraftDialog } from "@/components/kitchen/save-draft-dialog";
 import { useReleaseProgress } from "@/hooks/use-release-progress";
 import { useUserId } from "@/hooks/use-user-id";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry, Brand } from "@/lib/types";
+import type { DraftConfig } from "@/lib/drafts/types";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +74,7 @@ type CookAction =
   | { type: "SET_PROGRESS"; progress: number }
   | { type: "COOK_DONE"; results: ReleaseResult }
   | { type: "COOK_ERROR"; error: string }
+  | { type: "HYDRATE"; patch: Partial<CookState> }
   | { type: "RESET" };
 
 function cookReducer(state: CookState, action: CookAction): CookState {
@@ -161,6 +165,9 @@ function cookReducer(state: CookState, action: CookAction): CookState {
     case "COOK_ERROR":
       return { ...state, status: "error", error: action.error };
 
+    case "HYDRATE":
+      return { ...state, ...action.patch };
+
     case "RESET":
       return { ...INITIAL_STATE };
 
@@ -178,6 +185,15 @@ interface CookPageProps {
 export function CookPage({ templates }: CookPageProps) {
   const [state, dispatch] = useReducer(cookReducer, INITIAL_STATE);
   const userId = useUserId();
+  const searchParams = useSearchParams();
+  const draftParam = searchParams.get("draft");
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [draftMissingTemplate, setDraftMissingTemplate] = useState<string | null>(null);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const hydratedDraftRef = useRef<string | null>(null);
 
   // Progressive disclosure
   const hasTemplate = !!state.templateId;
@@ -201,6 +217,72 @@ export function CookPage({ templates }: CookPageProps) {
         font_family: userBrandsRaw[0].font_family,
       }
     : undefined;
+
+  // ── Draft hydration (runs once when templates load) ─────────────────────
+  useEffect(() => {
+    if (!draftParam) return;
+    if (hydratedDraftRef.current === draftParam) return;
+    if (templates.length === 0) return;
+    hydratedDraftRef.current = draftParam;
+
+    let cancelled = false;
+    setDraftLoading(true);
+    setDraftError(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/drafts/${encodeURIComponent(draftParam)}`);
+        if (!res.ok) {
+          setDraftError(res.status === 404 ? "Draft not found." : "Failed to load draft.");
+          return;
+        }
+        const data: { id: string; name: string | null; config: DraftConfig } = await res.json();
+        if (cancelled) return;
+
+        const cfg = data.config;
+
+        // Resolve template first (SELECT_TEMPLATE resets objectContent).
+        if (cfg.templateId) {
+          const match = templates.find((t) => t.id === cfg.templateId);
+          if (match) {
+            dispatch({ type: "SELECT_TEMPLATE", templateId: match.id, config: match.config });
+          } else {
+            setDraftMissingTemplate(cfg.templateId);
+          }
+        }
+
+        const patch: Partial<CookState> = {};
+        if (cfg.brandId) patch.brandId = cfg.brandId;
+        if (cfg.colors) patch.colors = cfg.colors;
+        if (cfg.formats && cfg.formats.length > 0) patch.formats = cfg.formats;
+        if (cfg.output) patch.outputType = cfg.output;
+        if (cfg.video?.preset) patch.animationPreset = cfg.video.preset;
+        if (cfg.objectContent) {
+          patch.objectContent = Object.fromEntries(
+            Object.entries(cfg.objectContent).map(([id, entry]) => [
+              id,
+              { id, ...entry },
+            ]),
+          );
+        }
+
+        if (Object.keys(patch).length > 0) {
+          dispatch({ type: "HYDRATE", patch });
+        }
+
+        setDraftId(draftParam);
+      } catch (err) {
+        console.error("Draft hydration failed", err);
+        if (!cancelled) setDraftError("Failed to load draft.");
+      } finally {
+        if (!cancelled) setDraftLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      hydratedDraftRef.current = null;
+    };
+  }, [draftParam, templates]);
 
   // ── Real-time release progress (replaces polling) ───────────────────────
   const releaseProgress = useReleaseProgress(state.cookId);
@@ -257,6 +339,7 @@ export function CookPage({ templates }: CookPageProps) {
       template: state.templateId,
       formats,
       ...(state.brandId ? { brand_id: state.brandId } : { colors: state.colors }),
+      ...(draftId ? { draft_id: draftId } : {}),
       source: "dashboard",
     };
 
@@ -317,8 +400,83 @@ export function CookPage({ templates }: CookPageProps) {
   // ── Render ────────────────────────────────────────────────────────────────
   const sceneStatus = state.status;
 
+  const handleSaveDraft = useCallback(
+    async (name: string) => {
+      const objectContent: Record<string, { text?: string; image_url?: string; video_url?: string }> = {};
+      for (const [id, mod] of Object.entries(state.objectContent)) {
+        const entry: { text?: string; image_url?: string; video_url?: string } = {};
+        if (mod.text) entry.text = mod.text;
+        if (mod.image_url) entry.image_url = mod.image_url;
+        if (mod.video_url) entry.video_url = mod.video_url;
+        if (Object.keys(entry).length > 0) objectContent[id] = entry;
+      }
+
+      const payload: Record<string, unknown> = {
+        output: state.outputType,
+      };
+      if (name) payload.name = name;
+      if (state.templateId) payload.templateId = state.templateId;
+      if (state.brandId) payload.brandId = state.brandId;
+      else payload.colors = state.colors;
+      if (state.formats.length > 0) payload.formats = state.formats;
+      if (Object.keys(objectContent).length > 0) payload.objectContent = objectContent;
+      if (state.outputType === "video" && state.animationPreset) {
+        payload.video = { preset: state.animationPreset };
+      }
+
+      const res = await fetch("/api/v1/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to save draft");
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    },
+    [state],
+  );
+
   const stepsContent = (
     <>
+      {/* Draft banners */}
+      {draftLoading && (
+        <div className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton px-4 py-3 mb-4">
+          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
+            Loading draft…
+          </p>
+        </div>
+      )}
+      {draftError && (
+        <div className="border-2 border-red-500 bg-red-50 px-4 py-3 mb-4">
+          <p className="font-[family-name:var(--font-geist-sans)] text-xs text-red-700">
+            {draftError}
+          </p>
+        </div>
+      )}
+      {draftMissingTemplate && (
+        <div className="border-2 border-brand bg-gold/20 px-4 py-3 mb-4 shadow-[3px_3px_0_var(--color-brand)]">
+          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand mb-1 uppercase">
+            ▸ Heads up
+          </p>
+          <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/80">
+            Draft referenced template <code className="font-[family-name:var(--font-geist-mono)]">{draftMissingTemplate}</code>{" "}
+            which no longer exists. Pick a new one in Recipe below.
+          </p>
+        </div>
+      )}
+      {saveSuccess && (
+        <div className="border-2 border-brand bg-white px-4 py-3 mb-4 shadow-[3px_3px_0_var(--color-brand)]">
+          <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
+            ✓ Draft saved
+          </p>
+        </div>
+      )}
+
       {/* Output type toggle — always visible above steps */}
       <div className="space-y-2 mb-4">
         <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/60 uppercase">
@@ -437,7 +595,7 @@ export function CookPage({ templates }: CookPageProps) {
       )}
 
       {/* Cook button */}
-      <div className="mt-6 sticky bottom-4 z-10">
+      <div className="mt-6 sticky bottom-4 z-10 space-y-3">
         <CookButton
           status={state.status}
           disabled={!canCook}
@@ -449,6 +607,17 @@ export function CookPage({ templates }: CookPageProps) {
           }
           onStartOver={() => { dispatch({ type: "RESET" }); setActiveStep("recipe"); }}
         />
+        {state.status === "idle" && hasTemplate && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setSaveDialogOpen(true)}
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-white text-brand hover:bg-gold/20 shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Save as Draft
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Results */}
@@ -464,18 +633,26 @@ export function CookPage({ templates }: CookPageProps) {
   );
 
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_420px] lg:gap-6">
-      {/* Left column: steps */}
-      <div className="space-y-0">
-        {stepsContent}
-      </div>
+    <>
+      <div className="lg:grid lg:grid-cols-[1fr_420px] lg:gap-6">
+        {/* Left column: steps */}
+        <div className="space-y-0">
+          {stepsContent}
+        </div>
 
-      {/* Right column: 3D kitchen scene (desktop only, sticky) */}
-      <div className="hidden lg:block">
-        <div className="sticky top-20">
-          <KitchenScene3D activeStep={activeStep} status={sceneStatus} />
+        {/* Right column: 3D kitchen scene (desktop only, sticky) */}
+        <div className="hidden lg:block">
+          <div className="sticky top-20">
+            <KitchenScene3D activeStep={activeStep} status={sceneStatus} />
+          </div>
         </div>
       </div>
-    </div>
+
+      <SaveDraftDialog
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+        onSave={handleSaveDraft}
+      />
+    </>
   );
 }

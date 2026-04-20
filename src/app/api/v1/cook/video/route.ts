@@ -76,8 +76,9 @@ export async function POST(request: Request) {
 
     // The Convex action requires a defined `video` field (see VideoRenderRequest
     // in convex/videoRender.ts). Inject the normalized value so downstream code
-    // never sees `undefined`.
-    const downstreamBody = { ...body, video };
+    // never sees `undefined`. Strip `draft_id` so it never hits the render pipeline.
+    const { draft_id: _draftIdIgnored, ...bodyWithoutDraft } = body;
+    const downstreamBody = { ...bodyWithoutDraft, video };
 
     // Atomic: insert release record + schedule the render action in one
     // transactional mutation so we can't end up with an orphaned pending
@@ -92,6 +93,13 @@ export async function POST(request: Request) {
       source: "api",
       request: JSON.stringify(downstreamBody),
     });
+
+    const draftId = typeof body.draft_id === "string" ? body.draft_id : undefined;
+    if (draftId) {
+      await fetchMutation(api.drafts.remove, { externalId: draftId, userId }).catch((err) => {
+        console.error(`[cook/video] Failed to delete draft ${draftId}:`, err);
+      });
+    }
 
     return Response.json(result, { status: 202 });
   } catch (err) {
