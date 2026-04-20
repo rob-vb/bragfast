@@ -25,7 +25,7 @@ function CopyButton({ text, onDark = false }: { text: string; onDark?: boolean }
   );
 }
 
-type Tab = "claude" | "claude-code";
+type Tab = "claude" | "claude-code" | "other";
 
 export function McpInstallInstructions() {
   const [activeTab, setActiveTab] = useState<Tab>("claude");
@@ -38,6 +38,7 @@ export function McpInstallInstructions() {
           [
             { id: "claude", label: "Claude" },
             { id: "claude-code", label: "Claude Code" },
+            { id: "other", label: "Other" },
           ] as { id: Tab; label: string }[]
         ).map((tab) => (
           <button
@@ -141,6 +142,56 @@ export function McpInstallInstructions() {
               <div className="text-gold">/mcp</div>
               <div className="text-emerald-400">&gt; select bragfast</div>
               <div className="text-emerald-400">&gt; Authenticate</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Other clients instructions */}
+      {activeTab === "other" && (
+        <div className="p-5 flex flex-col gap-4">
+          <p className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/50 uppercase tracking-wider">
+            HTTP Transport
+          </p>
+          <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-snug">
+            Any MCP client that supports HTTP transport can connect directly. Generate an API key from your{" "}
+            <a href="/account" className="font-semibold underline underline-offset-2">
+              dashboard
+            </a>{" "}
+            and use:
+          </p>
+          <div className="border-2 border-brand divide-y-2 divide-brand">
+            <div className="px-4 py-3 flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="font-[family-name:var(--font-press-start)] text-[7px] text-brand/40 uppercase tracking-wider">
+                  Endpoint
+                </span>
+                <code className="font-[family-name:var(--font-geist-mono)] text-xs text-brand break-all">
+                  {MCP_URL}
+                </code>
+              </div>
+              <CopyButton text={MCP_URL} />
+            </div>
+            <div className="px-4 py-3 flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="font-[family-name:var(--font-press-start)] text-[7px] text-brand/40 uppercase tracking-wider">
+                  Auth Header
+                </span>
+                <code className="font-[family-name:var(--font-geist-mono)] text-xs text-brand break-all">
+                  Authorization: Bearer YOUR_API_KEY
+                </code>
+              </div>
+              <CopyButton text="Authorization: Bearer YOUR_API_KEY" />
+            </div>
+            <div className="px-4 py-3">
+              <div className="flex flex-col gap-1">
+                <span className="font-[family-name:var(--font-press-start)] text-[7px] text-brand/40 uppercase tracking-wider">
+                  Transport
+                </span>
+                <code className="font-[family-name:var(--font-geist-mono)] text-xs text-brand">
+                  HTTP (Streamable HTTP)
+                </code>
+              </div>
             </div>
           </div>
         </div>
