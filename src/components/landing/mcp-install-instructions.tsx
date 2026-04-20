@@ -155,7 +155,7 @@ export function McpInstallInstructions() {
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-snug">
             Any MCP client that supports HTTP transport can connect directly. Generate an API key from your{" "}
-            <a href="/account" className="font-semibold underline underline-offset-2">
+            <a href="/admin/account" className="font-semibold underline underline-offset-2">
               dashboard
             </a>{" "}
             and use:
