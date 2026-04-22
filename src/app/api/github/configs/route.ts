@@ -39,16 +39,7 @@ export async function PUT(request: Request) {
     installationId: body.installationId,
     repoFullName: body.repoFullName,
     enabled: body.enabled,
-    brandId: body.brandId || undefined,
-    template: body.template || undefined,
-    formats: body.formats?.length ? body.formats : undefined,
-    skipPrereleases: body.skipPrereleases,
-    tagFilter: body.tagFilter || undefined,
-    webhookUrl: body.webhookUrl || undefined,
-    autoApprove: body.autoApprove,
-    maxSlides: body.maxSlides,
-    generateImages: body.generateImages,
-    generateVideo: body.generateVideo,
+    notifyOnPrMerge: body.notifyOnPrMerge,
   });
 
   return Response.json({ success: true });

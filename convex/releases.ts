@@ -11,21 +11,14 @@ export const create = mutation({
     metadata: v.optional(v.string()),
     webhook_url: v.optional(v.string()),
     source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
-    sourceMetadata: v.optional(v.string()),
     output: v.optional(v.union(v.literal("image"), v.literal("video"))),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("pending_review"),
-    )),
-    aiContent: v.optional(v.string()),
-    pendingConfig: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
     await ctx.db.insert("releases", {
       ...args,
       output: args.output ?? "image",
-      status: args.status ?? "pending",
+      status: "pending",
       created_at: now,
     });
   },
@@ -74,17 +67,6 @@ export const markCompleted = mutation({
   },
 });
 
-export const getBySourceMetadata = query({
-  args: { sourceMetadata: v.string() },
-  handler: async (ctx, { sourceMetadata }) =>
-    ctx.db
-      .query("releases")
-      .withIndex("by_sourceMetadata", (q) =>
-        q.eq("sourceMetadata", sourceMetadata)
-      )
-      .first(),
-});
-
 export const markFailed = mutation({
   args: { externalId: v.string() },
   handler: async (ctx, { externalId }) => {
@@ -97,45 +79,6 @@ export const markFailed = mutation({
       status: "failed",
       completed_at: new Date().toISOString(),
     });
-  },
-});
-
-export const approve = mutation({
-  args: {
-    externalId: v.string(),
-    userId: v.string(),
-    aiContent: v.optional(v.string()),
-    credits_used: v.number(),
-  },
-  handler: async (ctx, { externalId, userId, aiContent, credits_used }) => {
-    const r = await ctx.db
-      .query("releases")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first();
-    if (!r) throw new Error("Release not found");
-    if (r.userId !== userId) throw new Error("Not authorized");
-    if (r.status !== "pending_review") throw new Error("Release is not pending review");
-
-    const patch: Record<string, unknown> = { status: "pending", credits_used };
-    if (aiContent !== undefined) patch.aiContent = aiContent;
-    await ctx.db.patch(r._id, patch);
-  },
-});
-
-export const dismiss = mutation({
-  args: {
-    externalId: v.string(),
-    userId: v.string(),
-  },
-  handler: async (ctx, { externalId, userId }) => {
-    const r = await ctx.db
-      .query("releases")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first();
-    if (!r) throw new Error("Release not found");
-    if (r.userId !== userId) throw new Error("Not authorized");
-    if (r.status !== "pending_review") throw new Error("Release is not pending review");
-    await ctx.db.patch(r._id, { status: "dismissed" });
   },
 });
 
@@ -202,17 +145,5 @@ export const createAndScheduleVideo = mutation({
       userId: releaseArgs.userId,
       request,
     });
-  },
-});
-
-export const listPendingByUser = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
-    const all = await ctx.db
-      .query("releases")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .order("desc")
-      .collect();
-    return all.filter((r) => r.status === "pending_review");
   },
 });

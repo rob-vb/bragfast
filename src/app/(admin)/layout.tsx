@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
-import { AdminNav } from "@/components/admin/nav";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "@/components/convex-provider";
 import { UserIdProvider } from "@/hooks/use-user-id";
+import type { PlanId } from "@/lib/plans";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -20,24 +23,26 @@ export default async function AdminLayout({
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
+  const stats = await fetchQuery(api.userProfiles.getStats, {
+    userId: user._id,
+  });
+  const email = user.email ?? "";
+  const plan = (stats?.plan ?? "trial") as PlanId;
+
   return (
     <ConvexClientProvider>
       <UserIdProvider value={user._id}>
-        <div className="min-h-screen bg-surface">
-          {/* Top bar */}
-          <header className="sticky top-0 z-50 border-b-2 border-brand bg-surface" role="banner">
-            <div className="mx-auto flex max-w-6xl items-center gap-3 md:gap-6 px-4 py-3">
-              <Link href="/" className="flex shrink-0 items-center gap-2">
-                <Image src="/logo.svg" alt="brag.fast" width={120} height={30} className="h-6 md:h-8 w-auto" />
-              </Link>
-              <AdminNav />
-            </div>
-          </header>
-
-          {/* Content */}
-          <main className="mx-auto max-w-6xl px-4 py-8" role="main">
-            {children}
-          </main>
+        <SidebarProvider>
+          <AdminSidebar email={email} plan={plan} />
+          <SidebarInset>
+            <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+            </header>
+            <main className="flex-1 px-4 py-8 md:px-8" role="main">
+              <div className="mx-auto w-full max-w-6xl">{children}</div>
+            </main>
+          </SidebarInset>
 
           <Toaster
             position="bottom-center"
@@ -52,7 +57,7 @@ export default async function AdminLayout({
               },
             }}
           />
-        </div>
+        </SidebarProvider>
       </UserIdProvider>
     </ConvexClientProvider>
   );

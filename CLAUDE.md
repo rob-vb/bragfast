@@ -43,14 +43,14 @@ Next.js 16 App Router · Convex (DB + auth + Stripe) · Satori + Sharp (image ge
 | `src/lib/templates/canvas-types.ts` | CanvasTemplateConfig, TemplateObject, migrateConfig() |
 | `src/lib/templates/canvas-renderer.tsx` | Satori-compatible JSX renderer |
 | `src/lib/auth/authenticate.ts` | Dual auth: API key or session (Better Auth cookies) |
-| `src/lib/github/analyze-release.ts` | Claude Haiku → slide content from release notes |
+| `src/lib/github/pr-merge.ts` | PR-merge webhook → Sous-Chef draft (via Haiku) |
 | `src/lib/storage/r2.ts` | R2 via S3Client |
 | `src/lib/fonts.ts` | Font loading, in-process cache |
 | `src/lib/video/lambda.ts` | Remotion Lambda render + polling with retry |
 | `src/lib/pipeline/shared.ts` | resolveTemplate, resolveBrand, buildSlideDataMaps |
 | `convex/videoRender.ts` | Convex node action for video (`"use node"`) |
 | `src/remotion/VideoCanvasComposition.tsx` | Remotion composition |
-| `convex/schema.ts` | 10 tables: userProfiles, brands, templates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, githubSkippedReleases, uploads |
+| `convex/schema.ts` | Tables: userProfiles, brands, templates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, drafts, integrationSecrets, milestoneHits, uploadTokens, uploads |
 | `docs/solutions/` | Past bugs/solutions with YAML frontmatter |
 
 ## Dimensions
@@ -59,12 +59,12 @@ Landscape: 1200×675 · Square: 1080×1080 · Portrait: 1080×1350 · Video: sam
 
 ## GitHub App
 
-`release.published` → webhook → verify → map notes to slides → if `autoApprove`: render, else `pending_review` → admin approves. Per-repo config in `githubRepoConfigs`.
+Installations + per-repo config are managed on `/admin/sous-chef`. Webhook handles `pull_request` (closed+merged → Sous-Chef draft if `notifyOnPrMerge` is enabled) and `installation` (lifecycle). No release ingestion.
 
 ## API Routes
 
-`/api/v1/`: `cook/image`, `cook/video`, `cook/[id]` (poll/download/copy), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `guided-cook` — all Bearer auth.
-GitHub: `webhooks`, `callback`, `installations`, `repos`, `configs`, `releases/[id]/approve`
+`/api/v1/`: `cook/image`, `cook/video`, `cook/[id]` (poll/download/copy), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `drafts`, `sous-chef/integrations` — all Bearer auth.
+GitHub: `webhooks`, `callback`, `installations`, `repos`, `configs`
 
 ## Route Groups
 

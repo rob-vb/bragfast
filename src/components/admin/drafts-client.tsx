@@ -21,10 +21,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+type SourceSystem = "github" | "stripe" | "posthog" | "ga4";
+
 type Row = {
   id: string;
   name: string | null;
   source: DraftSource;
+  sourceSystem?: SourceSystem | null;
+  milestoneKey?: string | null;
   config: string;
   created_at: string;
 };
@@ -208,8 +212,14 @@ function DraftCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="flex items-center gap-2 mb-3 pr-10">
+      <div className="flex items-center gap-2 mb-3 pr-10 flex-wrap">
         <SourceBadge source={row.source} />
+        {row.sourceSystem ? (
+          <SourceSystemBadge
+            system={row.sourceSystem}
+            milestoneKey={row.milestoneKey ?? undefined}
+          />
+        ) : null}
         <OutputBadge output={config.output} />
       </div>
 
@@ -245,6 +255,29 @@ function SourceBadge({ source }: { source: DraftSource }) {
       `}
     >
       {isAgent ? "Agent" : "You"}
+    </span>
+  );
+}
+
+function SourceSystemBadge({
+  system,
+  milestoneKey,
+}: {
+  system: SourceSystem;
+  milestoneKey?: string;
+}) {
+  const label = {
+    github: "GitHub",
+    stripe: "Stripe",
+    posthog: "PostHog",
+    ga4: "GA4",
+  }[system];
+  return (
+    <span
+      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-surface text-brand"
+      title={milestoneKey ?? undefined}
+    >
+      {label}
     </span>
   );
 }

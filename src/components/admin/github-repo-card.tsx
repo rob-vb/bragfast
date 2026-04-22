@@ -3,68 +3,28 @@
 import { useState } from "react";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelCard } from "@/components/admin/pixel-card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-type Brand = { externalId: string; name: string };
-type Template = { externalId: string; name: string };
 
 type RepoConfig = {
   installationId: number;
   repoFullName: string;
   enabled: boolean;
-  brandId?: string;
-  template?: string;
-  formats?: string[];
-  skipPrereleases: boolean;
-  tagFilter?: string;
-  webhookUrl?: string;
-  autoApprove?: boolean;
-  maxSlides?: number;
-  generateImages?: boolean;
-  generateVideo?: boolean;
+  notifyOnPrMerge?: boolean;
 };
 
 type Props = {
   repo: { full_name: string; name: string; private: boolean; description: string | null };
   config: RepoConfig | null;
   installationId: number;
-  brands: Brand[];
-  templates: Template[];
   onSaved: () => void;
 };
 
-const FORMAT_OPTIONS = ["landscape", "square", "portrait"] as const;
-
-export function RepoConfigCard({ repo, config, installationId, brands, templates, onSaved }: Props) {
+export function RepoConfigCard({ repo, config, installationId, onSaved }: Props) {
   const [enabled, setEnabled] = useState(config?.enabled ?? false);
-  const [brandId, setBrandId] = useState(config?.brandId ?? "");
-  const [template, setTemplate] = useState(config?.template ?? "standard-browser");
-  const [formats, setFormats] = useState<string[]>(config?.formats ?? ["landscape"]);
-  const [skipPrereleases, setSkipPrereleases] = useState(config?.skipPrereleases ?? true);
-  const [tagFilter, setTagFilter] = useState(config?.tagFilter ?? "");
-  const [webhookUrl, setWebhookUrl] = useState(config?.webhookUrl ?? "");
-  const [autoApprove, setAutoApprove] = useState(config?.autoApprove ?? false);
-  const [maxSlides, setMaxSlides] = useState(config?.maxSlides ?? 1);
-  const [generateImages, setGenerateImages] = useState(config?.generateImages ?? true);
-  const [generateVideo, setGenerateVideo] = useState(config?.generateVideo ?? false);
+  const [notifyOnPrMerge, setNotifyOnPrMerge] = useState(config?.notifyOnPrMerge ?? false);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(!!config?.enabled);
-
-  function toggleFormat(f: string) {
-    setFormats((prev) =>
-      prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
-    );
-  }
 
   async function handleSave() {
     setSaving(true);
@@ -76,16 +36,7 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
           installationId,
           repoFullName: repo.full_name,
           enabled,
-          brandId: brandId || undefined,
-          template,
-          formats,
-          skipPrereleases,
-          tagFilter: tagFilter || undefined,
-          webhookUrl: webhookUrl || undefined,
-          autoApprove,
-          maxSlides,
-          generateImages,
-          generateVideo,
+          notifyOnPrMerge,
         }),
       });
       if (!res.ok) console.error("Save failed:", await res.text());
@@ -124,116 +75,18 @@ export function RepoConfigCard({ repo, config, installationId, brands, templates
             <p className="text-xs text-brand/50">{repo.description}</p>
           )}
 
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Brand</Label>
-            <Select value={brandId || "__none__"} onValueChange={(v) => setBrandId(v === "__none__" ? "" : v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">None (fallback colors)</SelectItem>
-                {brands.map((b) => (
-                  <SelectItem key={b.externalId} value={b.externalId}>{b.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Template</Label>
-            <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.map((t) => (
-                  <SelectItem key={t.externalId} value={t.externalId}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Output</Label>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-1.5">
-                <Checkbox
-                  id={`gen-images-${repo.full_name}`}
-                  checked={generateImages}
-                  onCheckedChange={(v) => setGenerateImages(!!v)}
-                />
-                <Label htmlFor={`gen-images-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Generate images</Label>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Checkbox
-                  id={`gen-video-${repo.full_name}`}
-                  checked={generateVideo}
-                  onCheckedChange={(v) => setGenerateVideo(!!v)}
-                />
-                <Label htmlFor={`gen-video-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Generate video</Label>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Formats</Label>
-            <div className="flex gap-3">
-              {FORMAT_OPTIONS.map((f) => (
-                <div key={f} className="flex items-center gap-1.5">
-                  <Checkbox
-                    id={`format-${f}-${repo.full_name}`}
-                    checked={formats.includes(f)}
-                    onCheckedChange={() => toggleFormat(f)}
-                  />
-                  <Label htmlFor={`format-${f}-${repo.full_name}`} className="text-xs text-brand cursor-pointer">{f}</Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Tag filter</Label>
-            <Input placeholder="v*" value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} />
-          </div>
-
           <div className="flex items-center gap-2">
             <Switch
-              id={`skip-prereleases-${repo.full_name}`}
-              checked={skipPrereleases}
-              onCheckedChange={setSkipPrereleases}
+              id={`notify-pr-merge-${repo.full_name}`}
+              checked={notifyOnPrMerge}
+              onCheckedChange={setNotifyOnPrMerge}
             />
-            <Label htmlFor={`skip-prereleases-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Skip pre-releases</Label>
+            <Label htmlFor={`notify-pr-merge-${repo.full_name}`} className="text-xs text-brand cursor-pointer">
+              Draft a brag post when a PR is merged to the default branch
+            </Label>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Webhook URL (optional)</Label>
-            <Input placeholder="https://your-app.com/webhooks/bragfast" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} />
-          </div>
-
-          {/* Auto-approve */}
-          <div className="flex items-center gap-2">
-            <Switch
-              id={`auto-approve-${repo.full_name}`}
-              checked={autoApprove}
-              onCheckedChange={setAutoApprove}
-            />
-            <Label htmlFor={`auto-approve-${repo.full_name}`} className="text-xs text-brand cursor-pointer">Auto-approve (skip manual review)</Label>
-          </div>
-
-          {/* Max slides */}
-          <div className="space-y-1">
-            <Label className="text-xs text-brand/60">Max slides per release</Label>
-            <Input
-              type="number"
-              min={1}
-              max={5}
-              className="max-w-20"
-              value={maxSlides}
-              onChange={(e) => setMaxSlides(Math.max(1, Math.min(5, Number(e.target.value))))}
-            />
-          </div>
-
-          <PixelButton onClick={handleSave} disabled={saving || formats.length === 0 || (!generateImages && !generateVideo)}>
+          <PixelButton onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : "Save"}
           </PixelButton>
         </div>

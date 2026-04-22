@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 const sourceSystem = v.union(
@@ -44,6 +44,9 @@ export const listByUser = query({
       id: r.externalId,
       name: r.name ?? null,
       source: r.source,
+      sourceSystem: r.sourceSystem ?? null,
+      milestoneKey: r.milestoneKey ?? null,
+      eventReference: r.eventReference ?? null,
       config: r.config,
       created_at: r.created_at,
     }));
@@ -62,6 +65,9 @@ export const getByExternalId = query({
       id: row.externalId,
       name: row.name ?? null,
       source: row.source,
+      sourceSystem: row.sourceSystem ?? null,
+      milestoneKey: row.milestoneKey ?? null,
+      eventReference: row.eventReference ?? null,
       config: row.config,
       created_at: row.created_at,
     };
@@ -71,7 +77,7 @@ export const getByExternalId = query({
 // Sous-Chef: idempotent draft insert paired with a milestoneHit.
 // Guards against webhook redelivery and cron overlap double-firing.
 // Callers build idempotencyKey via src/lib/drafts/idempotency-key.ts.
-export const insertDraftIfNew = mutation({
+export const insertDraftIfNew = internalMutation({
   args: {
     userId: v.string(),
     idempotencyKey: v.string(),

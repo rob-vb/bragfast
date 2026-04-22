@@ -9,7 +9,7 @@ type Release = {
   _id: string;
   externalId: string;
   template: string;
-  status: "completed" | "pending" | "pending_review" | "failed" | "dismissed";
+  status: "completed" | "pending" | "failed";
   output?: "image" | "video";
   images?: unknown;
   videos?: unknown;
@@ -20,7 +20,6 @@ type Release = {
   created_at: string;
   completed_at?: string;
   source?: "api" | "github" | "demo" | "dashboard";
-  sourceMetadata?: string;
 };
 
 function buildResponseBody(r: Release) {
@@ -36,9 +35,6 @@ function buildResponseBody(r: Release) {
     ...(r.metadata ? { metadata: r.metadata } : {}),
     ...(r.webhook_url ? { webhook_url: r.webhook_url } : {}),
     ...(r.source ? { source: r.source } : {}),
-    ...(r.sourceMetadata ? (() => {
-      try { return { sourceMetadata: JSON.parse(r.sourceMetadata) }; } catch { return {}; }
-    })() : {}),
   };
 }
 

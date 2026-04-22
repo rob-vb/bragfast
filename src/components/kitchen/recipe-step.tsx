@@ -38,7 +38,7 @@ export function RecipeStep({
       <PixelEmptyState
         title="No templates"
         description="No templates available yet."
-        cta={{ label: "Go to Templates", href: "/admin/kitchen?tab=templates" }}
+        cta={{ label: "Go to Templates", href: "/admin/templates" }}
       />
     );
   }
