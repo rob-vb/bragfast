@@ -3,6 +3,10 @@
 // Thresholds are in whole USD. Matches the milestone catalog in
 // docs/plans/2026-04-22-001-feat-sous-chef-milestone-agent-plan.md.
 
+import { detectCrossedThresholds as genericDetectCrossed } from "./thresholds";
+
+export { detectCrossedThresholds } from "./thresholds";
+
 export const MRR_THRESHOLDS_USD = [100, 500, 1000, 5000, 10000] as const;
 
 export type SubscriptionLike = {
@@ -59,19 +63,16 @@ function periodsPerMonth(
   }
 }
 
-// Thresholds crossed since the previous high-water mark. Never returns already-hit
-// thresholds (so cron reruns after a partial scan don't re-fire). Upward-only:
-// if MRR regressed, nothing fires.
-export function detectCrossedThresholds(
+// Convenience: detect crossed MRR thresholds with the canonical MRR catalog as default.
+export function detectCrossedMrrThresholds(
   currentMrrUsd: number,
   alreadyHitThresholds: ReadonlyArray<number>,
-  thresholds: ReadonlyArray<number> = MRR_THRESHOLDS_USD,
 ): number[] {
-  const hitSet = new Set(alreadyHitThresholds);
-  return thresholds
-    .filter((t) => !hitSet.has(t) && currentMrrUsd >= t)
-    .slice()
-    .sort((a, b) => a - b);
+  return genericDetectCrossed(
+    currentMrrUsd,
+    alreadyHitThresholds,
+    MRR_THRESHOLDS_USD,
+  );
 }
 
 // Returns true if the user has never fired a first_sale milestone AND there is

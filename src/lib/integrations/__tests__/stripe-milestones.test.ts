@@ -3,6 +3,7 @@ import {
   computeMrrUsd,
   lineItemMonthlyUsd,
   detectCrossedThresholds,
+  detectCrossedMrrThresholds,
   shouldFireFirstSale,
   MRR_THRESHOLDS_USD,
 } from "../stripe-milestones";
@@ -142,34 +143,45 @@ describe("lineItemMonthlyUsd", () => {
 });
 
 describe("detectCrossedThresholds", () => {
-  it("returns all thresholds ≤ currentMrr that aren't already hit", () => {
-    expect(detectCrossedThresholds(1500, [])).toEqual([100, 500, 1000]);
+  it("returns all thresholds ≤ current that aren't already hit", () => {
+    expect(
+      detectCrossedThresholds(1500, [], MRR_THRESHOLDS_USD),
+    ).toEqual([100, 500, 1000]);
   });
 
   it("skips already-hit thresholds", () => {
-    expect(detectCrossedThresholds(1500, [100, 500])).toEqual([1000]);
+    expect(
+      detectCrossedThresholds(1500, [100, 500], MRR_THRESHOLDS_USD),
+    ).toEqual([1000]);
   });
 
-  it("returns empty when currentMrr below the first threshold", () => {
-    expect(detectCrossedThresholds(50, [])).toEqual([]);
+  it("returns empty when current below the first threshold", () => {
+    expect(detectCrossedThresholds(50, [], MRR_THRESHOLDS_USD)).toEqual([]);
   });
 
-  it("returns empty when MRR regressed below the previous max", () => {
-    expect(detectCrossedThresholds(800, [100, 500, 1000])).toEqual([]);
+  it("returns empty when metric regressed below the previous max", () => {
+    expect(
+      detectCrossedThresholds(800, [100, 500, 1000], MRR_THRESHOLDS_USD),
+    ).toEqual([]);
   });
 
-  it("returns empty when currentMrr matches the previous max exactly", () => {
-    expect(detectCrossedThresholds(500, [100, 500])).toEqual([]);
-  });
-
-  it("uses MRR_THRESHOLDS_USD by default", () => {
-    const result = detectCrossedThresholds(7500, []);
-    expect(result).toEqual([100, 500, 1000, 5000]);
+  it("returns empty when current matches the previous max exactly", () => {
+    expect(
+      detectCrossedThresholds(500, [100, 500], MRR_THRESHOLDS_USD),
+    ).toEqual([]);
   });
 
   it("honors a custom thresholds array", () => {
     expect(detectCrossedThresholds(250, [], [100, 200, 500])).toEqual([
       100, 200,
+    ]);
+  });
+});
+
+describe("detectCrossedMrrThresholds (canonical catalog)", () => {
+  it("uses MRR_THRESHOLDS_USD", () => {
+    expect(detectCrossedMrrThresholds(7500, [])).toEqual([
+      100, 500, 1000, 5000,
     ]);
   });
 });

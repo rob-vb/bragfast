@@ -9,7 +9,7 @@ import { open } from "../../src/lib/crypto/secret-box";
 import {
   computeMrrUsd,
   lineItemMonthlyUsd,
-  detectCrossedThresholds,
+  detectCrossedMrrThresholds,
   shouldFireFirstSale,
   type SubscriptionLike,
 } from "../../src/lib/integrations/stripe-milestones";
@@ -103,7 +103,7 @@ export const scan = internalAction({
       const { stripe, alreadyHitMrr, alreadyHitFirstSale } = state;
       const { mrrUsd, hasSuccessfulCharge } = await readStripeSnapshot(stripe);
 
-      const newMrrThresholds = detectCrossedThresholds(mrrUsd, alreadyHitMrr);
+      const newMrrThresholds = detectCrossedMrrThresholds(mrrUsd, alreadyHitMrr);
       const fireFirstSale = shouldFireFirstSale({
         hasSuccessfulCharge,
         alreadyHitFirstSale,
@@ -155,7 +155,7 @@ export const seedFromCurrentState = internalAction({
     const { stripe } = state;
     const { mrrUsd, hasSuccessfulCharge } = await readStripeSnapshot(stripe);
 
-    const crossed = detectCrossedThresholds(mrrUsd, []);
+    const crossed = detectCrossedMrrThresholds(mrrUsd, []);
     for (const threshold of crossed) {
       await ctx.runMutation(api.milestoneHits.seedAlreadyHit, {
         userId,
