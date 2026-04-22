@@ -1,93 +1,54 @@
-/** Maps cook-page state → animation phase for the 3D kitchen scene. */
+import type { ChefPose, KitchenStation } from "./kitchen-scene-assets";
+
+/** Maps cook-page state to the upgraded kitchen scene. */
 
 export type CookStep = "recipe" | "seasoning" | "ingredients" | "plating";
 export type CookStatus = "idle" | "cooking" | "done" | "error";
 
-export type CookAnim = "idle" | "walk" | "action";
-
 export interface AnimPhase {
-  /** Target grid-column X for the cook sprite */
-  targetX: number;
-  /** Sprite animation to play */
-  cookAnim: CookAnim;
-  /** Show oven flames */
-  showFlames: boolean;
-  /** Show steam wisps */
-  showSteam: boolean;
-  /** Show "ORDER UP!" ticket */
-  showDone: boolean;
-  /** Show error X */
-  showError: boolean;
+  station: KitchenStation;
+  pose: ChefPose;
+  accent: "none" | "done" | "error" | "cooking";
 }
-
-// Named X positions (grid columns) for key kitchen landmarks
-// Grid is 240 cols wide at 2px/cell
-export const POS = {
-  FRIDGE: 20,
-  OVEN: 88,
-  SHELVES: 190,
-  CENTER: 110,
-  IDLE: 110,
-} as const;
 
 export function deriveAnimPhase(
   activeStep: CookStep | null,
   status: CookStatus,
 ): AnimPhase {
-  // Status overrides step-based positioning
   if (status === "cooking") {
     return {
-      targetX: POS.CENTER,
-      cookAnim: "action",
-      showFlames: true,
-      showSteam: false,
-      showDone: false,
-      showError: false,
+      station: "center",
+      pose: "cooking",
+      accent: "cooking",
     };
   }
 
   if (status === "done") {
     return {
-      targetX: POS.CENTER,
-      cookAnim: "idle",
-      showFlames: false,
-      showSteam: true,
-      showDone: true,
-      showError: false,
+      station: "center",
+      pose: "done",
+      accent: "done",
     };
   }
 
   if (status === "error") {
     return {
-      targetX: POS.OVEN,
-      cookAnim: "idle",
-      showFlames: false,
-      showSteam: false,
-      showDone: false,
-      showError: true,
+      station: "oven",
+      pose: "error",
+      accent: "error",
     };
   }
 
-  // Step-based positioning
-  const base: AnimPhase = {
-    targetX: POS.IDLE,
-    cookAnim: "idle",
-    showFlames: false,
-    showSteam: false,
-    showDone: false,
-    showError: false,
-  };
-
   switch (activeStep) {
     case "recipe":
-      return { ...base, targetX: POS.SHELVES };
+      return { station: "shelves", pose: "recipe", accent: "none" };
     case "seasoning":
-      return { ...base, targetX: POS.SHELVES, cookAnim: "action" };
+      return { station: "shelves", pose: "seasoning", accent: "none" };
     case "ingredients":
-      return { ...base, targetX: POS.FRIDGE, cookAnim: "action" };
+      return { station: "fridge", pose: "ingredients", accent: "none" };
     case "plating":
-      return { ...base, targetX: POS.OVEN };
+      return { station: "oven", pose: "plating", accent: "none" };
     default:
-      return base;
+      return { station: "center", pose: "idle", accent: "none" };
   }
 }

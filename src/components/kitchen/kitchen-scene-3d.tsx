@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { BASE_SCENE, COLS, ROWS, CELL, P, POSITIONS } from "./kitchen-scene-data";
 import { KitchenCookSprite } from "./kitchen-cook-sprite";
 import {
   deriveAnimPhase,
   type CookStep,
   type CookStatus,
 } from "./kitchen-animation-state";
-
-/**
- * KitchenScene3D — High-res NES-style pixel-art kitchen with animated cook.
- *
- * Base scene rendered via <canvas> (240×120 grid at 2px = 480×240px).
- * Overlay animations (flames, steam, ticket, error) are positioned divs.
- * Cook sprite walks between kitchen stations based on the active step.
- */
+import { KITCHEN_SCENE } from "./kitchen-scene-assets";
 
 interface KitchenScene3DProps {
   activeStep: CookStep | null;
@@ -24,323 +15,102 @@ interface KitchenScene3DProps {
 
 export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
   const phase = deriveAnimPhase(activeStep, status);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const w = COLS * CELL;
-  const h = ROWS * CELL;
-
-  // Draw static scene once on mount
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.imageSmoothingEnabled = false;
-
-    // Run-length optimized drawing: merge horizontal spans of same color
-    for (let r = 0; r < ROWS; r++) {
-      let runStart = 0;
-      let runColor = BASE_SCENE[r][0];
-      for (let c = 1; c <= COLS; c++) {
-        const color = c < COLS ? BASE_SCENE[r][c] : null;
-        if (color !== runColor) {
-          if (runColor) {
-            ctx.fillStyle = runColor;
-            ctx.fillRect(runStart * CELL, r * CELL, (c - runStart) * CELL, CELL);
-          }
-          runStart = c;
-          runColor = color;
-        }
-      }
-    }
-  }, []);
 
   return (
     <>
       <style>{`
-        .ks3-wrap {
+        .kitchen-scene-wrap {
           overflow: hidden;
           border: 2px solid var(--color-brand, #4A3326);
-          background: ${P.wall};
+          background: #f4e5c9;
           box-shadow: 4px 4px 0 var(--color-brand, #4A3326);
         }
-        .ks3-viewport {
+        .kitchen-scene-stage {
           position: relative;
           width: 100%;
-          aspect-ratio: ${w} / ${h};
+          aspect-ratio: ${KITCHEN_SCENE.width} / ${KITCHEN_SCENE.height};
+          background-image: url(${KITCHEN_SCENE.backgroundSrc});
+          background-size: cover;
+          background-position: center;
+          overflow: hidden;
         }
-        .ks3-scene {
+        .kitchen-scene-stage::after {
+          content: "";
           position: absolute;
-          inset: 0;
-          width: ${w}px;
-          height: ${h}px;
-          transform-origin: top left;
-          image-rendering: pixelated;
+          inset: auto 0 0;
+          height: 22%;
+          background: linear-gradient(to top, rgba(73, 51, 38, 0.12), rgba(73, 51, 38, 0));
+          pointer-events: none;
         }
-        .ks3-container {
-          container-type: inline-size;
+        .kitchen-scene-overlay {
+          position: absolute;
+          z-index: 4;
+          font-family: var(--font-press-start), monospace;
+          font-size: 10px;
+          line-height: 1.6;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #4A3326;
+          background: rgba(255, 248, 240, 0.92);
+          border: 2px solid #4A3326;
+          box-shadow: 3px 3px 0 rgba(74, 51, 38, 0.85);
+          padding: 8px 10px;
         }
-        @container (min-width: 0px) {
-          .ks3-scene { transform: scale(calc(100cqw / ${w})); }
+        @keyframes ticket-drop {
+          from { transform: translateY(-120%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
         }
-
-        /* ── Flame animation (2-frame alternating) ── */
-        @keyframes ks3-flame-a {
-          0%, 49.9% { opacity: 1; }
-          50%, 100% { opacity: 0; }
+        @keyframes cooking-dots {
+          0%,  24% { content: "";    }
+          25%, 49% { content: ".";   }
+          50%, 74% { content: "..";  }
+          75%,100% { content: "..."; }
         }
-        @keyframes ks3-flame-b {
-          0%, 49.9% { opacity: 0; }
-          50%, 100% { opacity: 1; }
+        .kitchen-scene-overlay--done {
+          top: 12%;
+          right: 8%;
+          animation: ticket-drop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
-
-        /* ── Steam rise ── */
-        @keyframes ks3-rise {
-          0% { opacity: 0.7; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-40px); }
+        .kitchen-scene-overlay--error {
+          top: 12%;
+          left: 8%;
+          color: #8f1d16;
+          border-color: #8f1d16;
+          box-shadow: 3px 3px 0 rgba(143, 29, 22, 0.75);
         }
-
-        /* ── Ticket drop ── */
-        @keyframes ks3-ticket-drop {
-          0% { opacity: 0; transform: translateY(-30px); }
-          15% { opacity: 1; transform: translateY(0); }
-          80% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(0); }
+        .kitchen-scene-overlay--cooking {
+          top: 10%;
+          right: 9%;
         }
-
-        /* ── Error pulse ── */
-        @keyframes ks3-err-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-
-        /* ── Reduced motion ── */
-        @media (prefers-reduced-motion: reduce) {
-          .ks3-anim { animation: none !important; }
+        .kitchen-scene-overlay--cooking::after {
+          content: "";
+          animation: cooking-dots 2.4s steps(1, end) infinite;
         }
       `}</style>
 
-      <div className="ks3-container">
-        <div className="ks3-wrap">
-          <div className="ks3-viewport">
-            <div className="ks3-scene">
-              {/* Base scene (static, rendered to canvas) */}
-              <canvas
-                ref={canvasRef}
-                width={w}
-                height={h}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: w,
-                  height: h,
-                  imageRendering: "pixelated",
-                }}
-              />
+      <div className="kitchen-scene-wrap">
+        <div className="kitchen-scene-stage" aria-hidden="true">
+          <KitchenCookSprite station={phase.station} pose={phase.pose} />
 
-              {/* Cook character */}
-              <KitchenCookSprite
-                targetX={phase.targetX}
-                anim={phase.cookAnim}
-                cellSize={CELL}
-                stationSide={phase.targetX < POSITIONS.CENTER ? "left" : "right"}
-              />
-
-              {/* ── Oven flames ── */}
-              {phase.showFlames && <OvenFlames />}
-
-              {/* ── Steam wisps ── */}
-              {phase.showSteam && <SteamWisps />}
-
-              {/* ── ORDER UP ticket ── */}
-              {phase.showDone && <OrderUpTicket />}
-
-              {/* ── Error X ── */}
-              {phase.showError && <ErrorX />}
+          {phase.accent === "cooking" ? (
+            <div className="kitchen-scene-overlay kitchen-scene-overlay--cooking">
+              Cooking
             </div>
-          </div>
+          ) : null}
+
+          {phase.accent === "done" ? (
+            <div className="kitchen-scene-overlay kitchen-scene-overlay--done">
+              Order Up!
+            </div>
+          ) : null}
+
+          {phase.accent === "error" ? (
+            <div className="kitchen-scene-overlay kitchen-scene-overlay--error">
+              Burned
+            </div>
+          ) : null}
         </div>
       </div>
     </>
-  );
-}
-
-// ── Overlay components ─────────────────────────────────────────────────────
-
-/** Two-frame alternating flames inside the oven glass area */
-function OvenFlames() {
-  // Oven glass: sx=68, ody=46, glass starts ~gy=54, inner at ~56
-  // Bottom of glass cavity for flames
-  const ox = 78;
-  const oy = 80; // near bottom of glass area in shorter oven
-
-  const flamePositions = [
-    // 4 flame clusters for fuller fire
-    { x: ox, y: oy, w: 4, h: 4, c: P.flameOuter },
-    { x: ox + 6, y: oy, w: 4, h: 4, c: P.flameOuter },
-    { x: ox + 12, y: oy, w: 4, h: 4, c: P.flameOuter },
-    { x: ox + 3, y: oy - 1, w: 4, h: 3, c: P.flameOuter },
-    // Mid flames (taller)
-    { x: ox + 1, y: oy - 3, w: 3, h: 3, c: P.flameMid },
-    { x: ox + 7, y: oy - 4, w: 3, h: 4, c: P.flameMid },
-    { x: ox + 13, y: oy - 3, w: 2, h: 3, c: P.flameMid },
-    { x: ox + 4, y: oy - 2, w: 2, h: 2, c: P.flameMid },
-    // Core tips
-    { x: ox + 2, y: oy - 5, w: 1, h: 2, c: P.flameCore },
-    { x: ox + 8, y: oy - 6, w: 2, h: 2, c: P.flameCore },
-    { x: ox + 13, y: oy - 5, w: 1, h: 2, c: P.flameCore },
-  ];
-
-  const flameBPositions = [
-    // Shifted flame clusters
-    { x: ox + 2, y: oy, w: 4, h: 4, c: P.flameOuter },
-    { x: ox + 8, y: oy, w: 4, h: 4, c: P.flameOuter },
-    { x: ox + 14, y: oy, w: 3, h: 4, c: P.flameOuter },
-    { x: ox + 5, y: oy - 1, w: 3, h: 3, c: P.flameOuter },
-    // Mid flames
-    { x: ox + 3, y: oy - 4, w: 3, h: 4, c: P.flameMid },
-    { x: ox + 9, y: oy - 3, w: 3, h: 3, c: P.flameMid },
-    { x: ox + 1, y: oy - 2, w: 2, h: 2, c: P.flameMid },
-    { x: ox + 14, y: oy - 2, w: 2, h: 2, c: P.flameMid },
-    // Core tips
-    { x: ox + 4, y: oy - 6, w: 1, h: 2, c: P.flameCore },
-    { x: ox + 10, y: oy - 5, w: 2, h: 2, c: P.flameCore },
-    { x: ox + 2, y: oy - 4, w: 1, h: 1, c: P.flameCore },
-  ];
-
-  return (
-    <>
-      <div className="ks3-anim" style={{ animation: "ks3-flame-a 0.3s steps(1) infinite", position: "absolute", inset: 0, zIndex: 10 }}>
-        {flamePositions.map((f, i) => (
-          <div key={i} style={{
-            position: "absolute",
-            left: f.x * CELL,
-            top: f.y * CELL,
-            width: f.w * CELL,
-            height: f.h * CELL,
-            backgroundColor: f.c,
-          }} />
-        ))}
-      </div>
-      <div className="ks3-anim" style={{ animation: "ks3-flame-b 0.3s steps(1) infinite", position: "absolute", inset: 0, zIndex: 10 }}>
-        {flameBPositions.map((f, i) => (
-          <div key={i} style={{
-            position: "absolute",
-            left: f.x * CELL,
-            top: f.y * CELL,
-            width: f.w * CELL,
-            height: f.h * CELL,
-            backgroundColor: f.c,
-          }} />
-        ))}
-      </div>
-    </>
-  );
-}
-
-/** Rising steam wisps above the pot on the stove */
-function SteamWisps() {
-  // Pot sits above oven at roughly x=75, y=22
-  const wisps = [
-    { x: 78, delay: 0 },
-    { x: 82, delay: 0.5 },
-    { x: 86, delay: 1.0 },
-  ];
-
-  return (
-    <>
-      {wisps.map((w, i) => (
-        <div
-          key={i}
-          className="ks3-anim"
-          style={{
-            position: "absolute",
-            left: w.x * CELL,
-            top: 18 * CELL,
-            width: 4 * CELL,
-            height: 4 * CELL,
-            borderRadius: "50%",
-            backgroundColor: P.steamLight,
-            animation: `ks3-rise 2s ease-out ${w.delay}s infinite`,
-            zIndex: 12,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-/** "ORDER UP!" ticket dropping from top */
-function OrderUpTicket() {
-  return (
-    <div
-      className="ks3-anim"
-      style={{
-        position: "absolute",
-        top: "15%",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 20,
-        padding: `${CELL}px ${CELL * 3}px`,
-        backgroundColor: P.brand,
-        border: `2px solid ${P.gold}`,
-        boxShadow: `3px 3px 0 ${P.brand}`,
-        animation: "ks3-ticket-drop 3s ease-out forwards",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "var(--font-press-start)",
-          fontSize: "10px",
-          color: P.gold,
-          whiteSpace: "nowrap",
-        }}
-      >
-        ORDER UP!
-      </span>
-    </div>
-  );
-}
-
-/** Pulsing red X over the oven area */
-function ErrorX() {
-  // Center on the oven door area
-  const ox = 82;
-  const oy = 40;
-  const size = 16;
-
-  const cells: { x: number; y: number; c: string }[] = [];
-  for (let i = 0; i < size; i++) {
-    cells.push({ x: ox + i, y: oy + i, c: P.errorRed });
-    cells.push({ x: ox + i + 1, y: oy + i, c: P.errorRed });
-    cells.push({ x: ox + size - 1 - i, y: oy + i, c: P.errorDark });
-    cells.push({ x: ox + size - i, y: oy + i, c: P.errorDark });
-  }
-
-  return (
-    <div
-      className="ks3-anim"
-      style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: 18,
-        animation: "ks3-err-pulse 1s ease-in-out infinite",
-      }}
-    >
-      {cells.map((c, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            left: c.x * CELL,
-            top: c.y * CELL,
-            width: CELL,
-            height: CELL,
-            backgroundColor: c.c,
-          }}
-        />
-      ))}
-    </div>
   );
 }
