@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 export const upsert = mutation({
@@ -112,6 +112,17 @@ export const listByUserId = query({
       .query("githubInstallations")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect(),
+});
+
+// Sous-Chef: fan-out source for the stars cron. Returns only enabled + active installations.
+export const listAllEnabled = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("githubInstallations").collect();
+    return rows
+      .filter((r) => r.enabled && r.status === "active" && r.userId)
+      .map((r) => ({ installationId: r.installationId, userId: r.userId }));
+  },
 });
 
 export const toggle = mutation({
