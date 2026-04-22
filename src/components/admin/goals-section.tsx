@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PixelButton } from "./pixel-button";
 import { PixelBadge } from "./pixel-badge";
 
@@ -179,6 +179,20 @@ const ADD_TITLES: Record<GoalProvider, string> = {
   github: "Add GitHub stars goal",
 };
 
+type GithubRepo = { full_name: string; name: string };
+
+function useGithubRepos(enabled: boolean) {
+  const [repos, setRepos] = useState<GithubRepo[]>([]);
+  useEffect(() => {
+    if (!enabled) return;
+    fetch("/api/github/repos")
+      .then((r) => r.json())
+      .then((d: { repos?: GithubRepo[] }) => setRepos(d.repos ?? []))
+      .catch(() => {});
+  }, [enabled]);
+  return repos;
+}
+
 function AddGoalDialog({
   provider,
   onClose,
@@ -197,6 +211,8 @@ function AddGoalDialog({
   const [label, setLabel] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const githubRepos = useGithubRepos(provider === "github");
 
   const needsTarget = metric !== "first_sale";
   const needsScope = metric === "stars";
@@ -278,16 +294,32 @@ function AddGoalDialog({
           {needsScope && (
             <label className="block">
               <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
-                Repository (owner/repo)
+                Repository
               </span>
-              <input
-                type="text"
-                value={scope}
-                onChange={(e) => setScope(e.target.value)}
-                required
-                placeholder="owner/repo"
-                className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
-              />
+              {githubRepos.length > 0 ? (
+                <select
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value)}
+                  required
+                  className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+                >
+                  <option value="">Select a repository…</option>
+                  {githubRepos.map((r) => (
+                    <option key={r.full_name} value={r.full_name}>
+                      {r.full_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value)}
+                  required
+                  placeholder="owner/repo"
+                  className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+                />
+              )}
             </label>
           )}
 
