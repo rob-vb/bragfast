@@ -4,7 +4,6 @@ import { useState } from "react";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { RepoConfigList } from "@/components/admin/github-repo-list";
-import { SkippedReleasesLog } from "@/components/admin/github-skipped-log";
 
 type Installation = {
   _id: string;
@@ -17,26 +16,13 @@ type Installation = {
   lastScanOkAt: string | null;
   lastScanError: string | null;
 };
-type Brand = { externalId: string; name: string };
-type Template = { externalId: string; name: string };
-type SkippedRelease = {
-  _id: string;
-  repoFullName: string;
-  releaseTag: string;
-  releaseName?: string;
-  reason: string;
-  created_at: string;
-};
 
 type Props = {
   installations: Installation[];
-  brands: Brand[];
-  templates: Template[];
-  skippedReleases: SkippedRelease[];
   appSlug: string;
 };
 
-export function GitHubSection({ installations, brands, templates, skippedReleases, appSlug }: Props) {
+export function GitHubSection({ installations, appSlug }: Props) {
   const active = installations.find((i) => i.status === "active");
   const [enabled, setEnabled] = useState(active?.enabled ?? false);
   const [toggling, setToggling] = useState(false);
@@ -57,7 +43,7 @@ export function GitHubSection({ installations, brands, templates, skippedRelease
     return (
       <div className="text-center py-6">
         <p className="text-sm text-brand/60 mb-4">
-          Connect your GitHub account to auto-generate images when you publish a release.
+          Connect GitHub to draft brag posts when PRs merge to your default branch.
         </p>
         <a
           href={`https://github.com/apps/${appSlug}/installations/new`}
@@ -108,14 +94,8 @@ export function GitHubSection({ installations, brands, templates, skippedRelease
       )}
 
       {enabled && (
-        <RepoConfigList
-          installationId={active.installationId}
-          brands={brands}
-          templates={templates}
-        />
+        <RepoConfigList installationId={active.installationId} />
       )}
-
-      <SkippedReleasesLog releases={skippedReleases} />
     </div>
   );
 }

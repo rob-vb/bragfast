@@ -8,23 +8,14 @@ type RepoConfig = {
   installationId: number;
   repoFullName: string;
   enabled: boolean;
-  brandId?: string;
-  template?: string;
-  formats?: string[];
-  skipPrereleases: boolean;
-  tagFilter?: string;
-  webhookUrl?: string;
+  notifyOnPrMerge?: boolean;
 };
-type Brand = { externalId: string; name: string };
-type Template = { externalId: string; name: string };
 
 type Props = {
   installationId: number;
-  brands: Brand[];
-  templates: Template[];
 };
 
-export function RepoConfigList({ installationId, brands, templates }: Props) {
+export function RepoConfigList({ installationId }: Props) {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [configs, setConfigs] = useState<RepoConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,8 +65,6 @@ export function RepoConfigList({ installationId, brands, templates }: Props) {
           repo={repo}
           config={configs.find((c) => c.repoFullName === repo.full_name) ?? null}
           installationId={installationId}
-          brands={brands}
-          templates={templates}
           onSaved={loadData}
         />
       ))}

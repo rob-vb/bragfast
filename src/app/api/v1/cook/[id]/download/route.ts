@@ -23,7 +23,7 @@ export async function GET(
     return Response.json({ error: "Release not found" }, { status: 404 });
   }
 
-  if (release.status === "pending" || release.status === "pending_review") {
+  if (release.status === "pending") {
     return Response.json(
       { error: "Images still cooking..." },
       { status: 400 }

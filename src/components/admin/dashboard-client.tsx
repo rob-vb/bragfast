@@ -9,7 +9,6 @@ import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
-import { PendingReviews } from "@/components/admin/pending-reviews";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import Link from "next/link";
 
@@ -18,10 +17,9 @@ export function DashboardClient() {
 
   const stats = useQuery(api.userProfiles.getStats, { userId });
   const releases = useQuery(api.releases.listByUser, { userId });
-  const pendingReleases = useQuery(api.releases.listPendingByUser, { userId });
 
   // Loading state — show nothing while subscriptions hydrate
-  if (!stats || !releases || !pendingReleases) {
+  if (!stats || !releases) {
     return (
       <div className="space-y-8">
         <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
@@ -65,11 +63,6 @@ export function DashboardClient() {
           </PixelCard>
         ))}
       </div>
-
-      {/* Pending Reviews */}
-      {pendingReleases.length > 0 && (
-        <PendingReviews releases={pendingReleases} />
-      )}
 
       {/* Recent releases */}
       <div>

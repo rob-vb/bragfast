@@ -70,10 +70,8 @@ export default defineSchema({
     template: v.string(),
     status: v.union(
       v.literal("pending"),
-      v.literal("pending_review"),
       v.literal("completed"),
-      v.literal("failed"),
-      v.literal("dismissed")
+      v.literal("failed")
     ),
     output: v.optional(v.union(v.literal("image"), v.literal("video"))),
     images: v.optional(v.any()),
@@ -84,17 +82,12 @@ export default defineSchema({
     webhook_url: v.optional(v.string()),
     progress: v.optional(v.number()), // 0-100 for video renders
     source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
-    sourceMetadata: v.optional(v.string()),
-    aiContent: v.optional(v.string()),
     socialCopy: v.optional(v.string()), // JSON string: { twitter: string, linkedin: string }
-    pendingConfig: v.optional(v.string()),
-    previewImages: v.optional(v.any()),
     created_at: v.string(),
     completed_at: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
-    .index("by_externalId", ["externalId"])
-    .index("by_sourceMetadata", ["sourceMetadata"]),
+    .index("by_externalId", ["externalId"]),
 
   githubInstallations: defineTable({
     userId: v.string(),
@@ -120,39 +113,12 @@ export default defineSchema({
     installationId: v.number(),
     repoFullName: v.string(),
     enabled: v.boolean(),
-    brandId: v.optional(v.string()),
-    template: v.optional(v.string()),
-    formats: v.optional(v.array(v.string())),
-    skipPrereleases: v.boolean(),
-    tagFilter: v.optional(v.string()),
-    webhookUrl: v.optional(v.string()),
-    autoApprove: v.optional(v.boolean()),
-    maxSlides: v.optional(v.number()),
-    generateImages: v.optional(v.boolean()),
-    generateVideo: v.optional(v.boolean()),
     notifyOnPrMerge: v.optional(v.boolean()), // Sous-Chef: draft on PR merge to default branch
     created_at: v.string(),
     updated_at: v.string(),
   })
     .index("by_installationId", ["installationId"])
     .index("by_repoFullName", ["repoFullName"]),
-
-  githubSkippedReleases: defineTable({
-    userId: v.string(),
-    repoFullName: v.string(),
-    releaseTag: v.string(),
-    releaseName: v.optional(v.string()),
-    reason: v.union(
-      v.literal("account_disabled"),
-      v.literal("repo_disabled"),
-      v.literal("insufficient_credits"),
-      v.literal("prerelease"),
-      v.literal("filtered"),
-      v.literal("duplicate"),
-      v.literal("rate_cap") // Sous-Chef PR-merge daily cap
-    ),
-    created_at: v.string(),
-  }).index("by_userId", ["userId"]),
 
   uploadTokens: defineTable({
     token: v.string(),           // "utk_" + 21-char random — primary lookup key

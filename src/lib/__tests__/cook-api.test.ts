@@ -692,7 +692,7 @@ describe.sequential("Status polling", () => {
     expect(statusRes.status).toBe(200);
     const data = await statusRes.json();
     expect(data.cook_id).toBe(cook_id);
-    expect(["pending", "completed", "failed", "pending_review", "dismissed"]).toContain(
+    expect(["pending", "completed", "failed"]).toContain(
       data.status
     );
   });

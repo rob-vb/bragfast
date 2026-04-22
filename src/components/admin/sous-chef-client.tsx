@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PixelButton } from "./pixel-button";
+import { PixelCard } from "./pixel-card";
+import { GitHubSection } from "./github-section";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +15,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+type GitHubInstallation = {
+  _id: string;
+  installationId: number;
+  accountLogin: string;
+  accountType: string;
+  enabled: boolean;
+  status: string;
+  lastScanAt: string | null;
+  lastScanOkAt: string | null;
+  lastScanError: string | null;
+};
+
+type GitHubPropShape = {
+  installations: GitHubInstallation[];
+  appSlug: string;
+};
 
 type Provider = "stripe" | "posthog" | "ga4";
 
@@ -36,7 +55,7 @@ const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
   ga4: "Rolling 30-day totalUsers: 100 / 1k / 10k / 100k / 1M.",
 };
 
-export function SousChefClient() {
+export function SousChefClient({ github }: { github: GitHubPropShape }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
 
@@ -95,14 +114,15 @@ export function SousChefClient() {
         />
       )}
 
-      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 max-w-prose">
-        GitHub is connected separately at{" "}
-        <a href="/admin/github-apps" className="underline">
-          /admin/github-apps
-        </a>
-        . Enable <code>notifyOnPrMerge</code> per repo there to draft on PR
-        merges.
-      </p>
+      <PixelCard>
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand mb-4">
+          GitHub
+        </h2>
+        <GitHubSection
+          installations={github.installations}
+          appSlug={github.appSlug}
+        />
+      </PixelCard>
     </div>
   );
 }

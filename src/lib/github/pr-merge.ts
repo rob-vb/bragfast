@@ -5,8 +5,7 @@ import {
   prMergedMilestoneKey,
 } from "../drafts/idempotency-key";
 
-// Minimum shape of a GitHub pull_request webhook payload. We intentionally
-// don't import from map-release.ts because the release payload shape differs.
+// Minimum shape of a GitHub pull_request webhook payload.
 export type GitHubPullRequestPayload = {
   action: string;
   installation?: { id: number };

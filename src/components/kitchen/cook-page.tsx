@@ -14,7 +14,6 @@ import { PlatingStep } from "@/components/kitchen/plating-step";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { CookResults } from "@/components/kitchen/cook-results";
 import { SaveDraftDialog } from "@/components/kitchen/save-draft-dialog";
-import { useReleaseProgress } from "@/hooks/use-release-progress";
 import { useUserId } from "@/hooks/use-user-id";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry, Brand } from "@/lib/types";
@@ -284,10 +283,13 @@ export function CookPage({ templates }: CookPageProps) {
     };
   }, [draftParam, templates]);
 
-  // ── Real-time release progress (replaces polling) ───────────────────────
-  const releaseProgress = useReleaseProgress(state.cookId);
-  const releaseStatus = releaseProgress?.status;
-  const releaseProgressPct = releaseProgress?.progress;
+  // ── Real-time release progress via Convex subscription ──────────────────
+  const releaseDoc = useQuery(
+    api.releases.getByExternalId,
+    state.cookId ? { externalId: state.cookId } : "skip",
+  );
+  const releaseStatus = releaseDoc?.status;
+  const releaseProgressPct = releaseDoc?.progress;
   const fetchingResultRef = useRef(false);
 
   useEffect(() => {

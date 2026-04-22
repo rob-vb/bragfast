@@ -90,7 +90,7 @@ export interface ReleaseRequest {
 export interface ReleaseResult {
   cook_id: string
   output: 'image' | 'video'
-  status: 'pending' | 'pending_review' | 'completed' | 'failed' | 'dismissed'
+  status: 'pending' | 'completed' | 'failed'
   images: Record<string, { slides: string[]; dimensions: string }> | null
   videos?: Record<string, { url: string; duration: number; dimensions: string }> | null
   credits_used: number
