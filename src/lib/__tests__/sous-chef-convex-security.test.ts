@@ -27,17 +27,23 @@ describe("Sous-Chef Convex security boundaries", () => {
     expect(milestoneHitsSrc).toContain("export const seedAlreadyHit = internalMutation");
   });
 
-  it("routes server-side callers through internal endpoints", () => {
+  it("routes server-side callers through public action wrappers (not internal functions)", () => {
     const integrationsRouteSrc = read("src/app/api/v1/sous-chef/integrations/route.ts");
     const githubWebhookSrc = read("src/app/api/github/webhooks/route.ts");
     const githubCallbackSrc = read("src/app/api/github/callback/route.ts");
 
-    expect(integrationsRouteSrc).toContain("internal.integrationSecrets.upsert");
-    expect(integrationsRouteSrc).toContain("internal.integrationSecrets.disconnect");
-    expect(integrationsRouteSrc).toContain("internal.sousChef.seed");
-    expect(githubWebhookSrc).toContain("internal.drafts.insertDraftIfNew");
-    expect(githubWebhookSrc).toContain("internal.githubInstallations.upsert");
-    expect(githubCallbackSrc).toContain("internal.githubInstallations.upsert");
+    // ConvexHttpClient cannot call internal.* — routes must use public action wrappers
+    expect(integrationsRouteSrc).not.toContain("internal.");
+    expect(githubWebhookSrc).not.toContain("internal.");
+    expect(githubCallbackSrc).not.toContain("internal.");
+
+    // Verify the correct public wrappers are used
+    expect(integrationsRouteSrc).toContain("api.integrationSecrets.upsertAction");
+    expect(integrationsRouteSrc).toContain("api.integrationSecrets.disconnectAction");
+    expect(integrationsRouteSrc).toContain("api.sousChef.seedAction");
+    expect(githubWebhookSrc).toContain("api.drafts.insertDraftIfNewAction");
+    expect(githubWebhookSrc).toContain("api.githubInstallations.upsertAction");
+    expect(githubCallbackSrc).toContain("api.githubInstallations.upsertAction");
     expect(githubCallbackSrc).toContain('provider: "github"');
   });
 });

@@ -18,15 +18,11 @@ vi.mock("@convex/_generated/api", () => ({
   api: {
     integrationSecrets: {
       listByUser: "api.integrationSecrets.listByUser",
-    },
-  },
-  internal: {
-    integrationSecrets: {
-      upsert: "internal.integrationSecrets.upsert",
-      disconnect: "internal.integrationSecrets.disconnect",
+      upsertAction: "api.integrationSecrets.upsertAction",
+      disconnectAction: "api.integrationSecrets.disconnectAction",
     },
     sousChef: {
-      seed: "internal.sousChef.seed",
+      seedAction: "api.sousChef.seedAction",
     },
   },
 }));
@@ -96,8 +92,9 @@ describe("/api/v1/sous-chef/integrations", () => {
   });
 
   it("disconnects and returns 502 when seeding fails after connect", async () => {
-    mutationMock.mockResolvedValueOnce({ created: true });
-    actionMock.mockRejectedValueOnce(new Error("seed blew up"));
+    actionMock.mockResolvedValueOnce({ created: true }); // upsertAction succeeds
+    actionMock.mockRejectedValueOnce(new Error("seed blew up")); // seedAction fails
+    actionMock.mockResolvedValueOnce(true); // disconnectAction
 
     const { POST } = await import("../integrations/route");
     const response = await POST(
@@ -109,27 +106,26 @@ describe("/api/v1/sous-chef/integrations", () => {
     );
 
     expect(response.status).toBe(502);
-    expect(mutationMock).toHaveBeenNthCalledWith(
+    expect(actionMock).toHaveBeenNthCalledWith(
       1,
-      "internal.integrationSecrets.upsert",
+      "api.integrationSecrets.upsertAction",
       expect.objectContaining({
         userId: "user_123",
         provider: "stripe",
       }),
     );
-    expect(actionMock).toHaveBeenCalledWith("internal.sousChef.seed", {
+    expect(actionMock).toHaveBeenNthCalledWith(2, "api.sousChef.seedAction", {
       userId: "user_123",
       provider: "stripe",
     });
-    expect(mutationMock).toHaveBeenNthCalledWith(
-      2,
-      "internal.integrationSecrets.disconnect",
+    expect(actionMock).toHaveBeenNthCalledWith(
+      3,
+      "api.integrationSecrets.disconnectAction",
       { userId: "user_123", provider: "stripe" },
     );
   });
 
   it("stores the secret and seeds successfully for an allowlisted PostHog host", async () => {
-    mutationMock.mockResolvedValue({ created: true });
     actionMock.mockResolvedValue({ seeded: [100] });
 
     const { POST } = await import("../integrations/route");
@@ -147,8 +143,8 @@ describe("/api/v1/sous-chef/integrations", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mutationMock).toHaveBeenCalledWith(
-      "internal.integrationSecrets.upsert",
+    expect(actionMock).toHaveBeenCalledWith(
+      "api.integrationSecrets.upsertAction",
       expect.objectContaining({
         userId: "user_123",
         provider: "posthog",
@@ -158,7 +154,7 @@ describe("/api/v1/sous-chef/integrations", () => {
         }),
       }),
     );
-    expect(actionMock).toHaveBeenCalledWith("internal.sousChef.seed", {
+    expect(actionMock).toHaveBeenCalledWith("api.sousChef.seedAction", {
       userId: "user_123",
       provider: "posthog",
     });

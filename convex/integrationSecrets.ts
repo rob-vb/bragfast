@@ -1,9 +1,11 @@
 import {
   mutation,
   query,
+  action,
   internalMutation,
   internalQuery,
 } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 const provider = v.union(
@@ -188,5 +190,28 @@ export const recordScanResult = internalMutation({
       lastScanError: args.ok ? undefined : args.error,
       updated_at: now,
     });
+  },
+});
+
+// Public action wrappers — ConvexHttpClient cannot call internalMutation directly.
+// These are called from Next.js API routes after the route authenticates the request.
+export const upsertAction = action({
+  args: {
+    userId: v.string(),
+    provider,
+    ciphertext: v.string(),
+    iv: v.string(),
+    tag: v.string(),
+    extra: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    await ctx.runMutation(internal.integrationSecrets.upsert, args);
+  },
+});
+
+export const disconnectAction = action({
+  args: { userId: v.string(), provider },
+  handler: async (ctx, args): Promise<boolean> => {
+    return ctx.runMutation(internal.integrationSecrets.disconnect, args);
   },
 });

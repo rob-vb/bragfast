@@ -1,23 +1,9 @@
 import { NextRequest } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
-import { api, internal } from "@convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-async function runInternalMutation<Args, Result>(
-  ref: unknown,
-  args: Args,
-): Promise<Result> {
-  return convex.mutation(ref as never, args as never);
-}
-
-async function runInternalAction<Args, Result>(
-  ref: unknown,
-  args: Args,
-): Promise<Result> {
-  return convex.action(ref as never, args as never);
-}
 
 export async function GET(request: NextRequest) {
   const user = await getSessionUser();
@@ -43,14 +29,13 @@ export async function GET(request: NextRequest) {
     );
 
     if (existing) {
-      // Update with user ID (was empty from webhook creation)
-      await runInternalMutation(internal.githubInstallations.upsert, {
+      await convex.action(api.githubInstallations.upsertAction, {
         installationId: Number(installationId),
         userId: user._id,
         accountLogin: existing.accountLogin,
         accountType: existing.accountType,
       });
-      await runInternalAction(internal.sousChef.seed, {
+      await convex.action(api.sousChef.seedAction, {
         userId: user._id,
         provider: "github",
         installationId: Number(installationId),
@@ -58,13 +43,13 @@ export async function GET(request: NextRequest) {
     } else {
       // Webhook hasn't arrived yet — create a placeholder.
       // The webhook handler will update it when it arrives.
-      await runInternalMutation(internal.githubInstallations.upsert, {
+      await convex.action(api.githubInstallations.upsertAction, {
         installationId: Number(installationId),
         userId: user._id,
-        accountLogin: "", // will be filled by webhook
+        accountLogin: "",
         accountType: "User",
       });
-      await runInternalAction(internal.sousChef.seed, {
+      await convex.action(api.sousChef.seedAction, {
         userId: user._id,
         provider: "github",
         installationId: Number(installationId),

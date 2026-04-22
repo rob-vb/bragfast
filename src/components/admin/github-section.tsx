@@ -83,7 +83,7 @@ export function GitHubSection({ installations, appSlug }: Props) {
       {(active.lastScanOkAt || active.lastScanError) && (
         <div className="space-y-1 font-mono text-xs text-brand/60">
           {active.lastScanOkAt && (
-            <p>Last GitHub stars OK: {new Date(active.lastScanOkAt).toLocaleString()}</p>
+            <p suppressHydrationWarning>Last GitHub stars OK: {new Date(active.lastScanOkAt).toLocaleString()}</p>
           )}
           {active.lastScanError && (
             <p className="break-all text-red-600">

@@ -1,4 +1,4 @@
-import { internalAction } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
@@ -73,5 +73,16 @@ export const scanNow = internalAction({
       default:
         return assertNever(prov);
     }
+  },
+});
+
+export const seedAction = action({
+  args: {
+    userId: v.string(),
+    provider: sousChefProvider,
+    installationId: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    await ctx.runAction(internal.sousChef.seed, args);
   },
 });

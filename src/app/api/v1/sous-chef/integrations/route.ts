@@ -1,5 +1,5 @@
 import { ConvexHttpClient } from "convex/browser";
-import { internal, api } from "@convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { authenticate } from "@/lib/auth/authenticate";
 import { seal } from "@/lib/crypto/secret-box";
 import { ALLOWED_POSTHOG_HOST_SET } from "@/lib/integrations/posthog-hosts";
@@ -19,20 +19,6 @@ type Ga4Body = {
   propertyId: string;
 };
 type Body = StripeBody | PostHogBody | Ga4Body;
-
-async function runInternalMutation<Args, Result>(
-  ref: unknown,
-  args: Args,
-): Promise<Result> {
-  return convex.mutation(ref as never, args as never);
-}
-
-async function runInternalAction<Args, Result>(
-  ref: unknown,
-  args: Args,
-): Promise<Result> {
-  return convex.action(ref as never, args as never);
-}
 
 export function validateBody(raw: unknown): Body | { error: string } {
   if (!raw || typeof raw !== "object") return { error: "invalid body" };
@@ -112,7 +98,7 @@ export async function POST(request: Request) {
         ? JSON.stringify({ propertyId: body.propertyId })
         : undefined;
 
-  await runInternalMutation(internal.integrationSecrets.upsert, {
+  await convex.action(api.integrationSecrets.upsertAction, {
     userId,
     provider: body.provider,
     ciphertext: sealed.ciphertext,
@@ -122,13 +108,13 @@ export async function POST(request: Request) {
   });
 
   try {
-    await runInternalAction(internal.sousChef.seed, {
+    await convex.action(api.sousChef.seedAction, {
       userId,
       provider: body.provider,
     });
   } catch (err) {
     console.error("[sous-chef] seed on connect failed:", err);
-    await runInternalMutation(internal.integrationSecrets.disconnect, {
+    await convex.action(api.integrationSecrets.disconnectAction, {
       userId,
       provider: body.provider,
     });
@@ -166,12 +152,9 @@ export async function DELETE(request: Request) {
   ) {
     return Response.json({ error: "invalid provider" }, { status: 400 });
   }
-  const removed = await runInternalMutation(
-    internal.integrationSecrets.disconnect,
-    {
-      userId: auth.userId,
-      provider: providerParam,
-    },
-  );
+  const removed = await convex.action(api.integrationSecrets.disconnectAction, {
+    userId: auth.userId,
+    provider: providerParam,
+  });
   return Response.json({ ok: removed });
 }

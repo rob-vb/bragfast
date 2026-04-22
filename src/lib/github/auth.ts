@@ -1,9 +1,10 @@
 import crypto from "crypto";
 
-const APP_ID = process.env.GITHUB_APP_ID!;
+const APP_ID = process.env.GITHUB_APP_ID;
 
 function getPrivateKey(): string {
-  const raw = process.env.GITHUB_APP_PRIVATE_KEY!;
+  const raw = process.env.GITHUB_APP_PRIVATE_KEY;
+  if (!raw) throw new Error("GITHUB_APP_PRIVATE_KEY env var is not set");
   // Support base64-encoded PEM (common for env vars with newlines)
   if (!raw.includes("-----BEGIN")) {
     return Buffer.from(raw, "base64").toString("utf-8");
