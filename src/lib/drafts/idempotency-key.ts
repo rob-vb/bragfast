@@ -40,3 +40,9 @@ export function visitorsMilestoneKey(
 export function starMilestoneKey(repoFullName: string, threshold: number): string {
   return `star:${threshold}:${repoFullName}`;
 }
+
+// Idempotency key component for goal-based milestone hits.
+// Shape: `goal:<goalExternalId>` — stable across target edits (delete+add gets new externalId).
+export function goalMilestoneKey(goalExternalId: string): string {
+  return `goal:${goalExternalId}`;
+}
