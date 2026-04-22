@@ -83,32 +83,3 @@ Local dev (`OUTPUT_LOCAL=true`): `.output/:id/`, `.brands/:id/`. Prod: Convex + 
 ## Brand & Design
 
 See `BRAND_VOICE.md` (diner metaphor, NES-retro) and `DESIGN.md` (color tokens, Press Start 2P + Geist, hard-offset shadows, zero border-radius). Light mode only.
-
-## Workflow
-
-1. **Plan first** — write `tasks/todo.md` for any task 3+ steps or with architectural decisions. Stop and re-plan if stuck.
-2. **Subagents** — offload research/exploration to keep main context clean. One task per subagent.
-3. **Self-improve** — after any correction: update `tasks/lessons.md`. Review lessons at session start.
-4. **Verify before done** — prove it works. "Would a staff engineer approve this?"
-5. **Elegance check** — non-trivial changes: ask if simpler exists. Skip for obvious fixes.
-6. **Bug reports** — just fix. No hand-holding.
-
-## Task Tracking
-
-1. Write plan → `tasks/todo.md` with checkable items; check in before implementing
-2. Mark items complete as you go; high-level summary each step
-3. Add review section when done; update `tasks/lessons.md` after corrections
-
-## Principles
-
-- **Simplicity first** — minimal code impact
-- **No laziness** — find root causes, no temp fixes, senior standards
-- **Minimal impact** — touch only what's necessary
-
-## Plan Mode
-
-Extremely concise — sacrifice grammar. End with list of unresolved questions, if any.
-
-## Model Tier
-
-Lookups on Opus = waste. Architecture on Sonnet = underpowered. Quick nudge, not a lecture.

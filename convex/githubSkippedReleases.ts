@@ -13,7 +13,8 @@ export const log = mutation({
       v.literal("insufficient_credits"),
       v.literal("prerelease"),
       v.literal("filtered"),
-      v.literal("duplicate")
+      v.literal("duplicate"),
+      v.literal("rate_cap")
     ),
   },
   handler: async (ctx, args) => {

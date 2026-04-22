@@ -1,11 +1,15 @@
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
+import { z } from "zod";
+import { callHaikuJson } from "../haiku-call";
 
 export interface SocialCopy {
   twitter: string;
   linkedin: string;
 }
+
+const SocialCopySchema = z.object({
+  twitter: z.string().transform((s) => s.slice(0, 280)),
+  linkedin: z.string().transform((s) => s.slice(0, 500)),
+});
 
 export async function generateSocialCopy(input: {
   releaseName: string;
@@ -39,31 +43,11 @@ ${input.releaseBody || "(empty)"}
 
 Generate the social copy JSON.`;
 
-  try {
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
-      system: systemMessage,
-      messages: [{ role: "user", content: userMessage }],
-    });
-
-    const text =
-      response.content[0].type === "text" ? response.content[0].text : "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON found in response");
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    return {
-      twitter:
-        typeof parsed.twitter === "string" ? parsed.twitter.slice(0, 280) : "",
-      linkedin:
-        typeof parsed.linkedin === "string"
-          ? parsed.linkedin.slice(0, 500)
-          : "",
-    };
-  } catch (err) {
-    console.error("Copy generation failed:", err);
-    // Return empty copy on failure -- not critical
-    return { twitter: "", linkedin: "" };
-  }
+  return callHaikuJson({
+    system: systemMessage,
+    user: userMessage,
+    schema: SocialCopySchema,
+    fallback: { twitter: "", linkedin: "" },
+    maxTokens: 512,
+  });
 }

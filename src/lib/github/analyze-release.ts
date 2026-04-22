@@ -1,7 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { callHaikuText } from "../haiku-call";
 import type { ObjectModification } from "../types";
-
-const anthropic = new Anthropic();
 
 type TemplateObjectSlot = {
   id: string;
@@ -123,15 +121,11 @@ export async function analyzeRelease(input: AnalysisInput): Promise<AnalysisResu
   const { systemMessage, userMessage } = buildAnalysisPrompt(input);
 
   try {
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
+    const text = await callHaikuText({
       system: systemMessage,
-      messages: [{ role: "user", content: userMessage }],
+      user: userMessage,
+      maxTokens: 1024,
     });
-
-    const text =
-      response.content[0].type === "text" ? response.content[0].text : "";
     return parseAnalysisResponse(text, input.maxSlides);
   } catch (err) {
     console.error("AI analysis failed, using fallback:", err);
