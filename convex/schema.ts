@@ -82,6 +82,7 @@ export default defineSchema({
     webhook_url: v.optional(v.string()),
     progress: v.optional(v.number()), // 0-100 for video renders
     source: v.optional(v.union(v.literal("api"), v.literal("dashboard"), v.literal("github"))),
+    sourceMetadata: v.optional(v.string()), // legacy JSON from removed github-release flow
     socialCopy: v.optional(v.string()), // JSON string: { twitter: string, linkedin: string }
     created_at: v.string(),
     completed_at: v.optional(v.string()),
