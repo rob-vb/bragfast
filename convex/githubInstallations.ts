@@ -1,9 +1,11 @@
 import {
+  action,
   mutation,
   query,
   internalMutation,
   internalQuery,
 } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 export const upsert = internalMutation({
@@ -97,6 +99,41 @@ export const unsuspend = internalMutation({
         updated_at: new Date().toISOString(),
       });
     }
+  },
+});
+
+// Public action wrappers — callable from Next.js webhook route (signature
+// already verified there). Internal mutations stay unreachable from outside.
+export const upsertAction = action({
+  args: {
+    installationId: v.number(),
+    userId: v.string(),
+    accountLogin: v.string(),
+    accountType: v.union(v.literal("User"), v.literal("Organization")),
+  },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(internal.githubInstallations.upsert, args);
+  },
+});
+
+export const removeAction = action({
+  args: { installationId: v.number() },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(internal.githubInstallations.remove, args);
+  },
+});
+
+export const suspendAction = action({
+  args: { installationId: v.number() },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(internal.githubInstallations.suspend, args);
+  },
+});
+
+export const unsuspendAction = action({
+  args: { installationId: v.number() },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(internal.githubInstallations.unsuspend, args);
   },
 });
 

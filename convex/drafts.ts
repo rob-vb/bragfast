@@ -1,4 +1,5 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { action, mutation, query, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 const sourceSystem = v.union(
@@ -127,6 +128,25 @@ export const insertDraftIfNew = internalMutation({
       draftExternalId: externalId,
     });
     return { created: true, id: externalId, created_at: now };
+  },
+});
+
+// Public action wrapper — callable from Next.js webhook route (which validates
+// the GitHub signature). Delegates to internal mutation so the mutation itself
+// is not directly reachable from the public Convex client.
+export const insertDraftIfNewAction = action({
+  args: {
+    userId: v.string(),
+    idempotencyKey: v.string(),
+    sourceSystem,
+    milestoneKey: v.string(),
+    eventReference: v.optional(v.string()),
+    name: v.optional(v.string()),
+    config: v.string(),
+    createdBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
   },
 });
 
