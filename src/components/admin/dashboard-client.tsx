@@ -75,7 +75,7 @@ export function DashboardClient() {
             description="Generate your first branded images via the API or MCP."
             cta={{ label: "Read the Docs", href: "/docs" }}
             secondaryCta={{ label: "Set up the MCP", href: "/docs#mcp" }}
-            extraCtas={[{ label: "Cook", href: "/admin/kitchen?tab=cook" }]}
+            extraCtas={[{ label: "Cook", href: "/admin/kitchen" }]}
             noPrimary
           />
         ) : (

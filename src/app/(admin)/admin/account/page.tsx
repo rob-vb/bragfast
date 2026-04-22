@@ -3,7 +3,6 @@ import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/admin/pixel-card";
-import { KeyManager } from "@/components/admin/key-manager";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
 import { ManageBillingButton } from "./manage-billing-button";
@@ -111,15 +110,7 @@ export default async function AccountPage() {
         </div>
       </PixelCard>
 
-      {/* Card 2 — API Keys */}
-      <PixelCard>
-        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand mb-4">
-          API Keys
-        </h2>
-        <KeyManager />
-      </PixelCard>
-
-      {/* Card 3 — Danger Zone */}
+      {/* Card 2 — Danger Zone */}
       <div className="border-2 border-red-700 bg-red-50/80 p-5 shadow-[4px_4px_0_var(--color-brand)]">
         <h2 className="font-[family-name:var(--font-press-start)] text-sm text-red-700 mb-2">
           Danger Zone
