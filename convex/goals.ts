@@ -1,4 +1,4 @@
-import { query, internalQuery, internalMutation } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { GoalProvider, GoalMetric } from "../src/lib/goals/types";
 import { isThresholdMetric, isScopedMetric } from "../src/lib/goals/types";
@@ -80,7 +80,7 @@ export const listEnabledByUserProvider = internalQuery({
   },
 });
 
-export const create = internalMutation({
+export const create = mutation({
   args: {
     userId: v.string(),
     provider: providerV,
@@ -120,7 +120,7 @@ export const create = internalMutation({
   },
 });
 
-export const remove = internalMutation({
+export const remove = mutation({
   args: { userId: v.string(), externalId: v.string() },
   handler: async (ctx, { userId, externalId }) => {
     const row = await ctx.db
@@ -134,7 +134,7 @@ export const remove = internalMutation({
   },
 });
 
-export const setEnabled = internalMutation({
+export const setEnabled = mutation({
   args: { userId: v.string(), externalId: v.string(), enabled: v.boolean() },
   handler: async (ctx, { userId, externalId, enabled }) => {
     const row = await ctx.db
