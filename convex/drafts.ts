@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 const sourceSystem = v.union(
@@ -77,7 +77,7 @@ export const getByExternalId = query({
 // Sous-Chef: idempotent draft insert paired with a milestoneHit.
 // Guards against webhook redelivery and cron overlap double-firing.
 // Callers build idempotencyKey via src/lib/drafts/idempotency-key.ts.
-export const insertDraftIfNew = mutation({
+export const insertDraftIfNew = internalMutation({
   args: {
     userId: v.string(),
     idempotencyKey: v.string(),

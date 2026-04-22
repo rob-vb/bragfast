@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@convex/_generated/api";
+import { api, internal } from "@convex/_generated/api";
 import { verifyWebhookSignature } from "@/lib/github/verify-webhook";
 import {
   mapReleaseToRequest,
@@ -24,6 +24,13 @@ import type { DraftConfig } from "@/lib/drafts/types";
 export const maxDuration = 60;
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+async function runInternalMutation<Args, Result>(
+  ref: unknown,
+  args: Args,
+): Promise<Result> {
+  return convex.mutation(ref as never, args as never);
+}
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -164,7 +171,7 @@ async function createPrMergeDraft(
       notes: `Sous-Chef: PR #${input.prNumber} merged to ${payload.repository.default_branch} in ${input.repoFullName}`,
     };
 
-    await convex.mutation(api.drafts.insertDraftIfNew, {
+    await runInternalMutation(internal.drafts.insertDraftIfNew, {
       userId,
       idempotencyKey: input.idempotencyKey,
       sourceSystem: "github",
@@ -191,22 +198,22 @@ async function handleInstallation(payload: {
   if (payload.action === "created") {
     // Installation created — store it without a userId for now.
     // The callback route links it to a user after OAuth redirect.
-    await convex.mutation(api.githubInstallations.upsert, {
+    await runInternalMutation(internal.githubInstallations.upsert, {
       installationId: installation.id,
       userId: "", // linked in callback
       accountLogin: installation.account.login,
       accountType: installation.account.type as "User" | "Organization",
     });
   } else if (payload.action === "deleted") {
-    await convex.mutation(api.githubInstallations.remove, {
+    await runInternalMutation(internal.githubInstallations.remove, {
       installationId: installation.id,
     });
   } else if (payload.action === "suspend") {
-    await convex.mutation(api.githubInstallations.suspend, {
+    await runInternalMutation(internal.githubInstallations.suspend, {
       installationId: installation.id,
     });
   } else if (payload.action === "unsuspend") {
-    await convex.mutation(api.githubInstallations.unsuspend, {
+    await runInternalMutation(internal.githubInstallations.unsuspend, {
       installationId: installation.id,
     });
   }

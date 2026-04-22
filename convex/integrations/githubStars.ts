@@ -76,7 +76,10 @@ export const scan = internalAction({
         }
         results.push({ repo: cfg.repoFullName, stars, fired: crossed });
       }
-
+      await ctx.runMutation(internal.githubInstallations.recordScanResult, {
+        installationId,
+        ok: true,
+      });
       return { ok: true, results };
     } catch (err) {
       console.error(
@@ -84,6 +87,11 @@ export const scan = internalAction({
         err,
       );
       const msg = err instanceof Error ? err.message : String(err);
+      await ctx.runMutation(internal.githubInstallations.recordScanResult, {
+        installationId,
+        ok: false,
+        error: msg.slice(0, 500),
+      });
       return { ok: false, error: msg };
     }
   },
@@ -104,7 +112,7 @@ export const seedFromCurrentState = internalAction({
       const stars = await fetchStarCount(token, cfg.repoFullName);
       const crossed = detectCrossedStarThresholds(stars, []);
       for (const threshold of crossed) {
-        await ctx.runMutation(api.milestoneHits.seedAlreadyHit, {
+        await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
           userId,
           sourceSystem: "github",
           milestoneKey: starMilestoneKey(cfg.repoFullName, threshold),
@@ -159,7 +167,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
-  await ctx.runMutation(api.drafts.insertDraftIfNew, {
+  await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
     sourceSystem: "github",

@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 const sourceSystem = v.union(
@@ -11,7 +11,7 @@ const sourceSystem = v.union(
 // Seed a milestone as already-fired without creating a draft.
 // Used on first-connect for Stripe/PostHog/GA4 so retroactively-satisfied
 // thresholds don't flood the user on day one.
-export const seedAlreadyHit = mutation({
+export const seedAlreadyHit = internalMutation({
   args: {
     userId: v.string(),
     sourceSystem,

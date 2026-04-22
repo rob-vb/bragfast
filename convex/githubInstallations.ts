@@ -1,7 +1,12 @@
-import { mutation, query, internalQuery } from "./_generated/server";
+import {
+  mutation,
+  query,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { v } from "convex/values";
 
-export const upsert = mutation({
+export const upsert = internalMutation({
   args: {
     installationId: v.number(),
     userId: v.string(),
@@ -23,6 +28,7 @@ export const upsert = mutation({
         accountType: args.accountType,
         status: "active",
         enabled: true,
+        lastScanError: undefined,
         updated_at: now,
       });
     } else {
@@ -37,7 +43,7 @@ export const upsert = mutation({
   },
 });
 
-export const remove = mutation({
+export const remove = internalMutation({
   args: { installationId: v.number() },
   handler: async (ctx, { installationId }) => {
     const inst = await ctx.db
@@ -56,7 +62,7 @@ export const remove = mutation({
   },
 });
 
-export const suspend = mutation({
+export const suspend = internalMutation({
   args: { installationId: v.number() },
   handler: async (ctx, { installationId }) => {
     const inst = await ctx.db
@@ -75,7 +81,7 @@ export const suspend = mutation({
   },
 });
 
-export const unsuspend = mutation({
+export const unsuspend = internalMutation({
   args: { installationId: v.number() },
   handler: async (ctx, { installationId }) => {
     const inst = await ctx.db
@@ -107,11 +113,18 @@ export const getByInstallationId = query({
 
 export const listByUserId = query({
   args: { userId: v.string() },
-  handler: async (ctx, { userId }) =>
-    ctx.db
+  handler: async (ctx, { userId }) => {
+    const rows = await ctx.db
       .query("githubInstallations")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect(),
+      .collect();
+    return rows.map((row) => ({
+      ...row,
+      lastScanAt: row.lastScanAt ?? null,
+      lastScanOkAt: row.lastScanOkAt ?? null,
+      lastScanError: row.lastScanError ?? null,
+    }));
+  },
 });
 
 // Sous-Chef: fan-out source for the stars cron. Returns only enabled + active installations.
@@ -144,6 +157,28 @@ export const toggle = mutation({
     await ctx.db.patch(inst._id, {
       enabled,
       updated_at: new Date().toISOString(),
+    });
+  },
+});
+
+export const recordScanResult = internalMutation({
+  args: {
+    installationId: v.number(),
+    ok: v.boolean(),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, { installationId, ok, error }) => {
+    const inst = await ctx.db
+      .query("githubInstallations")
+      .withIndex("by_installationId", (q) => q.eq("installationId", installationId))
+      .first();
+    if (!inst) return;
+    const now = new Date().toISOString();
+    await ctx.db.patch(inst._id, {
+      lastScanAt: now,
+      lastScanOkAt: ok ? now : inst.lastScanOkAt,
+      lastScanError: ok ? undefined : error,
+      updated_at: now,
     });
   },
 });

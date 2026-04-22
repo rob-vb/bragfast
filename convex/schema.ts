@@ -107,6 +107,9 @@ export default defineSchema({
       v.literal("suspended"),
       v.literal("removed")
     ),
+    lastScanAt: v.optional(v.string()),
+    lastScanOkAt: v.optional(v.string()),
+    lastScanError: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
   })

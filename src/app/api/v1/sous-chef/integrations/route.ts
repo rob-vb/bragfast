@@ -1,7 +1,8 @@
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@convex/_generated/api";
+import { internal, api } from "@convex/_generated/api";
 import { authenticate } from "@/lib/auth/authenticate";
 import { seal } from "@/lib/crypto/secret-box";
+import { ALLOWED_POSTHOG_HOST_SET } from "@/lib/integrations/posthog-hosts";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -19,7 +20,21 @@ type Ga4Body = {
 };
 type Body = StripeBody | PostHogBody | Ga4Body;
 
-function validateBody(raw: unknown): Body | { error: string } {
+async function runInternalMutation<Args, Result>(
+  ref: unknown,
+  args: Args,
+): Promise<Result> {
+  return convex.mutation(ref as never, args as never);
+}
+
+async function runInternalAction<Args, Result>(
+  ref: unknown,
+  args: Args,
+): Promise<Result> {
+  return convex.action(ref as never, args as never);
+}
+
+export function validateBody(raw: unknown): Body | { error: string } {
   if (!raw || typeof raw !== "object") return { error: "invalid body" };
   const b = raw as Record<string, unknown>;
   if (b.provider === "stripe") {
@@ -36,8 +51,8 @@ function validateBody(raw: unknown): Body | { error: string } {
       return { error: "apiKey required" };
     if (typeof b.projectId !== "string" || !b.projectId)
       return { error: "projectId required" };
-    if (typeof b.host !== "string" || !b.host.startsWith("http"))
-      return { error: "host required (https://...)" };
+    if (typeof b.host !== "string" || !ALLOWED_POSTHOG_HOST_SET.has(b.host))
+      return { error: "host must be a known PostHog cloud URL" };
     return {
       provider: "posthog",
       apiKey: b.apiKey,
@@ -97,7 +112,7 @@ export async function POST(request: Request) {
         ? JSON.stringify({ propertyId: body.propertyId })
         : undefined;
 
-  await convex.mutation(api.integrationSecrets.upsert, {
+  await runInternalMutation(internal.integrationSecrets.upsert, {
     userId,
     provider: body.provider,
     ciphertext: sealed.ciphertext,
@@ -106,16 +121,21 @@ export async function POST(request: Request) {
     extra,
   });
 
-  // Seed already-crossed thresholds so the first cron doesn't flood.
-  // Run in-line: if seeding fails, user still gets a clean integration row,
-  // but a next-day scan will fire historical milestones (acceptable fallback).
   try {
-    await convex.action(api.sousChef.seed, {
+    await runInternalAction(internal.sousChef.seed, {
       userId,
       provider: body.provider,
     });
   } catch (err) {
     console.error("[sous-chef] seed on connect failed:", err);
+    await runInternalMutation(internal.integrationSecrets.disconnect, {
+      userId,
+      provider: body.provider,
+    });
+    return Response.json(
+      { error: "seed failed, please retry" },
+      { status: 502 },
+    );
   }
 
   return Response.json({ ok: true, provider: body.provider });
@@ -146,9 +166,12 @@ export async function DELETE(request: Request) {
   ) {
     return Response.json({ error: "invalid provider" }, { status: 400 });
   }
-  const removed = await convex.mutation(api.integrationSecrets.disconnect, {
-    userId: auth.userId,
-    provider: providerParam,
-  });
+  const removed = await runInternalMutation(
+    internal.integrationSecrets.disconnect,
+    {
+      userId: auth.userId,
+      provider: providerParam,
+    },
+  );
   return Response.json({ ok: removed });
 }

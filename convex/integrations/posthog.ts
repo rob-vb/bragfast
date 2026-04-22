@@ -16,10 +16,11 @@ import {
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
+import { ALLOWED_POSTHOG_HOSTS } from "../../src/lib/integrations/posthog-hosts";
 
 type PostHogExtra = {
   projectId: string;
-  host: string; // e.g. https://us.posthog.com, https://eu.posthog.com, or self-hosted URL
+  host: string;
 };
 
 async function readState(ctx: ActionCtx, userId: string): Promise<{
@@ -135,7 +136,7 @@ export const seedFromCurrentState = internalAction({
     const visitors = await fetchUniqueVisitors30d(state.apiKey, state.extra);
     const crossed = detectCrossedVisitorThresholds(visitors, []);
     for (const threshold of crossed) {
-      await ctx.runMutation(api.milestoneHits.seedAlreadyHit, {
+      await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
         userId,
         sourceSystem: "posthog",
         milestoneKey: visitorsMilestoneKey("posthog", threshold),
@@ -181,7 +182,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
-  await ctx.runMutation(api.drafts.insertDraftIfNew, {
+  await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
     sourceSystem: "posthog",

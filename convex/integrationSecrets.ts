@@ -1,4 +1,9 @@
-import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
+import {
+  mutation,
+  query,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { v } from "convex/values";
 
 const provider = v.union(
@@ -84,7 +89,7 @@ export const listEnabledByProvider = internalQuery({
 // Upsert (create or replace) a sealed credential. Caller is responsible for encrypting
 // via src/lib/crypto/secret-box.ts BEFORE calling this mutation — the raw value must
 // never transit Convex as plaintext.
-export const upsert = mutation({
+export const upsert = internalMutation({
   args: {
     userId: v.string(),
     provider,
@@ -128,7 +133,7 @@ export const upsert = mutation({
   },
 });
 
-export const setEnabled = mutation({
+export const setEnabled = internalMutation({
   args: { userId: v.string(), provider, enabled: v.boolean() },
   handler: async (ctx, args) => {
     const row = await ctx.db
@@ -146,7 +151,7 @@ export const setEnabled = mutation({
   },
 });
 
-export const disconnect = mutation({
+export const disconnect = internalMutation({
   args: { userId: v.string(), provider },
   handler: async (ctx, args) => {
     const row = await ctx.db

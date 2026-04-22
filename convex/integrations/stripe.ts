@@ -60,28 +60,30 @@ async function readState(
 async function readStripeSnapshot(
   stripe: Stripe,
 ): Promise<{ mrrUsd: number; hasSuccessfulCharge: boolean }> {
-  const subsPage = await stripe.subscriptions.list({
+  const subs: SubscriptionLike[] = [];
+  for await (const s of stripe.subscriptions.list({
     status: "all",
     limit: 100,
     expand: ["data.items.data.price"],
-  });
-  const subs: SubscriptionLike[] = subsPage.data.map((s) => ({
-    status: s.status,
-    monthlyUsd: s.items.data.reduce((sum, item) => {
-      const price = item.price;
-      if (!price.recurring) return sum;
-      return (
-        sum +
-        lineItemMonthlyUsd({
-          unitAmountCents: price.unit_amount,
-          currency: price.currency,
-          interval: price.recurring.interval,
-          intervalCount: price.recurring.interval_count,
-          quantity: item.quantity ?? 1,
-        })
-      );
-    }, 0),
-  }));
+  })) {
+    subs.push({
+      status: s.status,
+      monthlyUsd: s.items.data.reduce((sum, item) => {
+        const price = item.price;
+        if (!price.recurring) return sum;
+        return (
+          sum +
+          lineItemMonthlyUsd({
+            unitAmountCents: price.unit_amount,
+            currency: price.currency,
+            interval: price.recurring.interval,
+            intervalCount: price.recurring.interval_count,
+            quantity: item.quantity ?? 1,
+          })
+        );
+      }, 0),
+    });
+  }
   const mrrUsd = computeMrrUsd(subs);
 
   const charges = await stripe.charges.list({ limit: 1 });
@@ -157,14 +159,14 @@ export const seedFromCurrentState = internalAction({
 
     const crossed = detectCrossedMrrThresholds(mrrUsd, []);
     for (const threshold of crossed) {
-      await ctx.runMutation(api.milestoneHits.seedAlreadyHit, {
+      await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
         userId,
         sourceSystem: "stripe",
         milestoneKey: mrrMilestoneKey(threshold),
       });
     }
     if (hasSuccessfulCharge) {
-      await ctx.runMutation(api.milestoneHits.seedAlreadyHit, {
+      await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
         userId,
         sourceSystem: "stripe",
         milestoneKey: firstSaleMilestoneKey(),
@@ -215,7 +217,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
-  await ctx.runMutation(api.drafts.insertDraftIfNew, {
+  await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
     sourceSystem: "stripe",

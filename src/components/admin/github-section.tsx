@@ -13,6 +13,9 @@ type Installation = {
   accountType: string;
   enabled: boolean;
   status: string;
+  lastScanAt: string | null;
+  lastScanOkAt: string | null;
+  lastScanError: string | null;
 };
 type Brand = { externalId: string; name: string };
 type Template = { externalId: string; name: string };
@@ -90,6 +93,19 @@ export function GitHubSection({ installations, brands, templates, skippedRelease
           </a>
         </div>
       </div>
+
+      {(active.lastScanOkAt || active.lastScanError) && (
+        <div className="space-y-1 font-mono text-xs text-brand/60">
+          {active.lastScanOkAt && (
+            <p>Last GitHub stars OK: {new Date(active.lastScanOkAt).toLocaleString()}</p>
+          )}
+          {active.lastScanError && (
+            <p className="break-all text-red-600">
+              Last GitHub stars error: {active.lastScanError}
+            </p>
+          )}
+        </div>
+      )}
 
       {enabled && (
         <RepoConfigList

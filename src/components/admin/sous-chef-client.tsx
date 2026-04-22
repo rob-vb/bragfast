@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PixelButton } from "./pixel-button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Provider = "stripe" | "posthog" | "ga4";
 
@@ -108,14 +119,19 @@ function IntegrationTile({
   onReload: () => void;
 }) {
   const connected = row !== null && row.enabled;
+  const [disconnecting, setDisconnecting] = useState(false);
 
   async function disconnect() {
-    if (!confirm(`Disconnect ${PROVIDER_LABELS[provider]}?`)) return;
-    const res = await fetch(
-      `/api/v1/sous-chef/integrations?provider=${provider}`,
-      { method: "DELETE" },
-    );
-    if (res.ok) onReload();
+    setDisconnecting(true);
+    try {
+      const res = await fetch(
+        `/api/v1/sous-chef/integrations?provider=${provider}`,
+        { method: "DELETE" },
+      );
+      if (res.ok) onReload();
+    } finally {
+      setDisconnecting(false);
+    }
   }
 
   return (
@@ -154,9 +170,34 @@ function IntegrationTile({
         {!connected ? (
           <PixelButton onClick={onConnect}>Connect</PixelButton>
         ) : (
-          <PixelButton variant="danger" onClick={disconnect}>
-            Disconnect
-          </PixelButton>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <PixelButton variant="danger" disabled={disconnecting}>
+                {disconnecting ? "Disconnecting..." : "Disconnect"}
+              </PixelButton>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Disconnect {PROVIDER_LABELS[provider]}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes the saved credential and stops future scans for this
+                  provider until you connect it again.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel asChild>
+                  <PixelButton variant="ghost">Cancel</PixelButton>
+                </AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <PixelButton variant="danger" onClick={disconnect}>
+                    Disconnect
+                  </PixelButton>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>

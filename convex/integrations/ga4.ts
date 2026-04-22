@@ -153,7 +153,7 @@ export const seedFromCurrentState = internalAction({
     const visitors = await fetchTotalUsers30d(state.creds, state.extra);
     const crossed = detectCrossedGa4Thresholds(visitors, []);
     for (const threshold of crossed) {
-      await ctx.runMutation(api.milestoneHits.seedAlreadyHit, {
+      await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
         userId,
         sourceSystem: "ga4",
         milestoneKey: visitorsMilestoneKey("ga4", threshold),
@@ -199,7 +199,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
-  await ctx.runMutation(api.drafts.insertDraftIfNew, {
+  await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
     sourceSystem: "ga4",

@@ -71,7 +71,7 @@ describe("pickTemplateByRules — pr_merged", () => {
       },
     });
     expect(result.templateId).toBe("standard-mobile");
-    expect(result.debug?.matchedKeyword?.toLowerCase()).toBe("iphone");
+    expect("debug" in result ? result.debug?.matchedKeyword?.toLowerCase() : undefined).toBe("iphone");
   });
 
   it("long body + Android keyword → split-mobile", () => {
