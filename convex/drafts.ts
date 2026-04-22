@@ -124,6 +124,109 @@ export const insertDraftIfNew = mutation({
   },
 });
 
+// Sous-Chef: count PR-merge drafts for a given repo since an ISO timestamp.
+// Used by the webhook handler to enforce the per-repo daily cap.
+// NOTE: scans all drafts for the user + filters in JS. Sized for founder-only v1
+// (<~200 drafts). Revisit with a compound index if scale grows.
+export const countRecentPrMergesByRepo = query({
+  args: {
+    userId: v.string(),
+    repoFullName: v.string(),
+    sinceIso: v.string(),
+  },
+  handler: async (ctx, { userId, repoFullName, sinceIso }) => {
+    const rows = await ctx.db
+      .query("drafts")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const prefix = `pr_merged:${repoFullName}#`;
+    return rows.filter(
+      (r) =>
+        r.created_at >= sinceIso &&
+        r.sourceSystem === "github" &&
+        (r.milestoneKey?.startsWith(prefix) ?? false),
+    ).length;
+  },
+});
+
+export const findRecentPrMergeForRepo = query({
+  args: {
+    userId: v.string(),
+    repoFullName: v.string(),
+    sinceIso: v.string(),
+  },
+  handler: async (ctx, { userId, repoFullName, sinceIso }) => {
+    const rows = await ctx.db
+      .query("drafts")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const prefix = `pr_merged:${repoFullName}#`;
+    const matches = rows
+      .filter(
+        (r) =>
+          r.created_at >= sinceIso &&
+          r.sourceSystem === "github" &&
+          (r.milestoneKey?.startsWith(prefix) ?? false),
+      )
+      .sort((a, b) => (a.created_at > b.created_at ? -1 : 1));
+    const first = matches[0];
+    if (!first) return null;
+    return {
+      id: first.externalId,
+      config: first.config,
+      milestoneKey: first.milestoneKey ?? null,
+      created_at: first.created_at,
+    };
+  },
+});
+
+// Append a new PR mention to an existing Sous-Chef draft's description.
+// Used to debounce-rollup rapid-fire merges (< 30 min apart) into a single draft.
+export const appendPrMergeRollup = mutation({
+  args: {
+    externalId: v.string(),
+    userId: v.string(),
+    prTitle: v.string(),
+    prNumber: v.number(),
+  },
+  handler: async (ctx, { externalId, userId, prTitle, prNumber }) => {
+    const row = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row || row.userId !== userId) return false;
+
+    let parsed: {
+      objectContent?: Record<string, { text?: string }>;
+      [k: string]: unknown;
+    };
+    try {
+      parsed = JSON.parse(row.config);
+    } catch {
+      return false;
+    }
+
+    const existingDesc =
+      parsed.objectContent?.description?.text ?? "";
+    const addition = `\n• Also merged: ${prTitle} (#${prNumber})`;
+    const nextDesc = (existingDesc + addition).slice(0, 600);
+
+    const nextConfig = {
+      ...parsed,
+      objectContent: {
+        ...(parsed.objectContent ?? {}),
+        description: {
+          ...(parsed.objectContent?.description ?? {}),
+          text: nextDesc,
+        },
+      },
+    };
+
+    await ctx.db.patch(row._id, { config: JSON.stringify(nextConfig) });
+    return true;
+  },
+});
+
 export const remove = mutation({
   args: { externalId: v.string(), userId: v.string() },
   handler: async (ctx, { externalId, userId }) => {
