@@ -45,8 +45,8 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      {/* Desktop editor */}
-      <div className="hidden md:block fixed inset-0 top-[57px] z-40">
+      {/* Desktop editor — absolute within SidebarInset (relative), below h-14 header */}
+      <div className="hidden md:block absolute inset-x-0 bottom-0 top-14 z-40">
         <TemplateEditor
           templateId={template.externalId}
           name={template.name}
