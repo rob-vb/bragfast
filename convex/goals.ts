@@ -40,10 +40,24 @@ function validateGoal(metric: GoalMetric, target: number | undefined, scope: str
 export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    const rows = await ctx.db
-      .query("goals")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect();
+    const [rows, hits] = await Promise.all([
+      ctx.db
+        .query("goals")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+      ctx.db
+        .query("milestoneHits")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect(),
+    ]);
+
+    const firedIds = new Set(
+      hits
+        .map((h) => h.milestoneKey)
+        .filter((k) => k.startsWith("goal:"))
+        .map((k) => k.slice("goal:".length)),
+    );
+
     return rows.map((r) => ({
       externalId: r.externalId,
       provider: r.provider as GoalProvider,
@@ -52,6 +66,7 @@ export const listByUser = query({
       scope: r.scope ?? null,
       label: r.label ?? null,
       enabled: r.enabled,
+      fired: firedIds.has(r.externalId),
       created_at: r.created_at,
       updated_at: r.updated_at,
     }));
@@ -131,6 +146,18 @@ export const remove = mutation({
     if (row.userId !== userId) throw new Error("Forbidden");
     await ctx.db.delete(row._id);
     return { deleted: true };
+  },
+});
+
+export const disableGoal = internalMutation({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const row = await ctx.db
+      .query("goals")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row) return;
+    await ctx.db.patch(row._id, { enabled: false, updated_at: new Date().toISOString() });
   },
 });
 

@@ -103,6 +103,7 @@ export default defineSchema({
     lastScanAt: v.optional(v.string()),
     lastScanOkAt: v.optional(v.string()),
     lastScanError: v.optional(v.string()),
+    lastSnapshotJson: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
   })
@@ -184,6 +185,7 @@ export default defineSchema({
     lastScanAt: v.optional(v.string()),
     lastScanOkAt: v.optional(v.string()),
     lastScanError: v.optional(v.string()),
+    lastSnapshotJson: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
   })

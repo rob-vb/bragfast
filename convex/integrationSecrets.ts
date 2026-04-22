@@ -71,6 +71,7 @@ export const listByUser = query({
       lastScanAt: r.lastScanAt ?? null,
       lastScanOkAt: r.lastScanOkAt ?? null,
       lastScanError: r.lastScanError ?? null,
+      lastSnapshotJson: r.lastSnapshotJson ?? null,
     }));
   },
 });
@@ -174,6 +175,7 @@ export const recordScanResult = internalMutation({
     provider,
     ok: v.boolean(),
     error: v.optional(v.string()),
+    snapshotJson: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const row = await ctx.db
@@ -188,6 +190,7 @@ export const recordScanResult = internalMutation({
       lastScanAt: now,
       lastScanOkAt: args.ok ? now : row.lastScanOkAt,
       lastScanError: args.ok ? undefined : args.error,
+      ...(args.snapshotJson !== undefined ? { lastSnapshotJson: args.snapshotJson } : {}),
       updated_at: now,
     });
   },

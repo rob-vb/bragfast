@@ -82,6 +82,7 @@ export const scan = internalAction({
       )) as StarGoal[];
 
       const results: Array<{ repo: string; stars: number; fired: number }> = [];
+      const starMap: Record<string, number> = {};
 
       for (const cfg of enabledRepos) {
         const repoGoals = goals.filter((g) => g.scope === cfg.repoFullName);
@@ -91,6 +92,7 @@ export const scan = internalAction({
         }
 
         const stars = await fetchStarCount(token, cfg.repoFullName);
+        starMap[cfg.repoFullName] = stars;
         let fired = 0;
         for (const goal of repoGoals) {
           if (firedGoalIds.has(goal.externalId)) continue;
@@ -104,6 +106,7 @@ export const scan = internalAction({
       await ctx.runMutation(internal.githubInstallations.recordScanResult, {
         installationId,
         ok: true,
+        snapshotJson: JSON.stringify(starMap),
       });
       return { ok: true, results };
     } catch (err) {
@@ -130,10 +133,9 @@ export const seedFromCurrentState = internalAction({
       api.githubRepoConfigs.listByInstallation,
       { installationId },
     )) as RepoConfig[];
-    const enabledRepos = configs.filter((c) => c.enabled);
 
-    // Seed default star goals for each enabled repo
-    const repoFullNames = enabledRepos.map((c) => c.repoFullName);
+    // Seed default star goals for each repo (enabled or not)
+    const repoFullNames = configs.map((c) => c.repoFullName);
     await ctx.runMutation(internal.goals.seedDefaultsForProvider, {
       userId,
       provider: "github",
@@ -145,12 +147,17 @@ export const seedFromCurrentState = internalAction({
       { userId, provider: "github" },
     )) as StarGoal[];
 
+    // Fetch stars for any repo that has a goal, regardless of repo enabled flag
+    const reposWithGoals = [...new Set(goals.map((g) => g.scope).filter(Boolean) as string[])];
+
     const seeded: Array<{ repo: string; goalIds: string[] }> = [];
-    for (const cfg of enabledRepos) {
-      const repoGoals = goals.filter((g) => g.scope === cfg.repoFullName);
+    const starMap: Record<string, number> = {};
+    for (const repoFullName of reposWithGoals) {
+      const repoGoals = goals.filter((g) => g.scope === repoFullName);
       if (repoGoals.length === 0) continue;
 
-      const stars = await fetchStarCount(token, cfg.repoFullName);
+      const stars = await fetchStarCount(token, repoFullName);
+      starMap[repoFullName] = stars;
       const goalIds: string[] = [];
       for (const goal of repoGoals) {
         if (stars < (goal.target ?? 0)) continue;
@@ -161,8 +168,15 @@ export const seedFromCurrentState = internalAction({
         });
         goalIds.push(goal.externalId);
       }
-      if (goalIds.length > 0) seeded.push({ repo: cfg.repoFullName, goalIds });
+      if (goalIds.length > 0) seeded.push({ repo: repoFullName, goalIds });
     }
+
+    await ctx.runMutation(internal.githubInstallations.recordScanResult, {
+      installationId,
+      ok: true,
+      snapshotJson: JSON.stringify(starMap),
+    });
+
     return { seeded };
   },
 });
@@ -234,4 +248,5 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
+  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
 }

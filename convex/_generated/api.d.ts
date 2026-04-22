@@ -23,6 +23,7 @@ import type * as integrations_ga4 from "../integrations/ga4.js";
 import type * as integrations_githubStars from "../integrations/githubStars.js";
 import type * as integrations_posthog from "../integrations/posthog.js";
 import type * as integrations_stripe from "../integrations/stripe.js";
+import type * as migrations from "../migrations.js";
 import type * as milestoneHits from "../milestoneHits.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as releases from "../releases.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   "integrations/githubStars": typeof integrations_githubStars;
   "integrations/posthog": typeof integrations_posthog;
   "integrations/stripe": typeof integrations_stripe;
+  migrations: typeof migrations;
   milestoneHits: typeof milestoneHits;
   rateLimit: typeof rateLimit;
   releases: typeof releases;

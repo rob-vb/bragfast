@@ -153,6 +153,7 @@ export const scan = internalAction({
 
       await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
         userId, provider: "ga4", ok: true,
+        snapshotJson: JSON.stringify({ visitors }),
       });
       return { ok: true, visitors, fired };
     } catch (err) {
@@ -197,6 +198,12 @@ export const seedFromCurrentState = internalAction({
       });
       seeded.push(goal.externalId);
     }
+
+    await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
+      userId, provider: "ga4", ok: true,
+      snapshotJson: JSON.stringify({ visitors }),
+    });
+
     return { seeded, visitors };
   },
 });
@@ -259,4 +266,5 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
+  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
 }

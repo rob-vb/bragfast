@@ -160,6 +160,7 @@ export const listByUserId = query({
       lastScanAt: row.lastScanAt ?? null,
       lastScanOkAt: row.lastScanOkAt ?? null,
       lastScanError: row.lastScanError ?? null,
+      lastSnapshotJson: row.lastSnapshotJson ?? null,
     }));
   },
 });
@@ -203,8 +204,9 @@ export const recordScanResult = internalMutation({
     installationId: v.number(),
     ok: v.boolean(),
     error: v.optional(v.string()),
+    snapshotJson: v.optional(v.string()),
   },
-  handler: async (ctx, { installationId, ok, error }) => {
+  handler: async (ctx, { installationId, ok, error, snapshotJson }) => {
     const inst = await ctx.db
       .query("githubInstallations")
       .withIndex("by_installationId", (q) => q.eq("installationId", installationId))
@@ -215,6 +217,7 @@ export const recordScanResult = internalMutation({
       lastScanAt: now,
       lastScanOkAt: ok ? now : inst.lastScanOkAt,
       lastScanError: ok ? undefined : error,
+      ...(snapshotJson !== undefined ? { lastSnapshotJson: snapshotJson } : {}),
       updated_at: now,
     });
   },

@@ -165,6 +165,7 @@ export const scan = internalAction({
 
       await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
         userId, provider: "stripe", ok: true,
+        snapshotJson: JSON.stringify(snapshot),
       });
       return { ok: true, fired, snapshot: { mrrUsd: snapshot.mrrUsd } };
     } catch (err) {
@@ -209,6 +210,11 @@ export const seedFromCurrentState = internalAction({
       });
       seeded.push(goal.externalId);
     }
+
+    await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
+      userId, provider: "stripe", ok: true,
+      snapshotJson: JSON.stringify(snapshot),
+    });
 
     return { seeded };
   },
@@ -274,6 +280,7 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
+  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
 }
 
 function buildComposeInput(goal: StripeGoal, snapshot: StripeSnapshot) {

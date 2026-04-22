@@ -49,14 +49,72 @@ function parseCreateBody(raw: unknown): GoalInput | { error: string } {
   return input;
 }
 
+type StripeSnap = { mrrUsd?: number; totalRevenueUsd?: number; activeSubscriberCount?: number };
+type VisitorSnap = { visitors?: number };
+
+function currentValueForGoal(
+  provider: string,
+  metric: string,
+  scope: string | null,
+  secretSnaps: Record<string, unknown>,
+  githubStarMap: Record<string, number>,
+): number | null {
+  if (provider === "stripe") {
+    const s = secretSnaps.stripe as StripeSnap | undefined;
+    if (!s) return null;
+    if (metric === "mrr") return s.mrrUsd ?? null;
+    if (metric === "total_revenue") return s.totalRevenueUsd ?? null;
+    if (metric === "subscribers") return s.activeSubscriberCount ?? null;
+    return null;
+  }
+  if (provider === "posthog") {
+    const s = secretSnaps.posthog as VisitorSnap | undefined;
+    return s?.visitors ?? null;
+  }
+  if (provider === "ga4") {
+    const s = secretSnaps.ga4 as VisitorSnap | undefined;
+    return s?.visitors ?? null;
+  }
+  if (provider === "github" && scope) {
+    return githubStarMap[scope] ?? null;
+  }
+  return null;
+}
+
 export async function GET(request: Request) {
   const auth = await authenticate(request);
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const goals = await fetchQuery(api.goals.listByUser, { userId: auth.userId });
-  return Response.json({ goals });
+  const [goals, integrations, installations] = await Promise.all([
+    fetchQuery(api.goals.listByUser, { userId: auth.userId }),
+    fetchQuery(api.integrationSecrets.listByUser, { userId: auth.userId }).catch(() => [] as never[]),
+    fetchQuery(api.githubInstallations.listByUserId, { userId: auth.userId }).catch(() => [] as never[]),
+  ]);
+
+  const secretSnaps: Record<string, unknown> = {};
+  for (const row of integrations) {
+    if (row.lastSnapshotJson) {
+      try { secretSnaps[row.provider] = JSON.parse(row.lastSnapshotJson); } catch { /* ignore */ }
+    }
+  }
+
+  const githubStarMap: Record<string, number> = {};
+  for (const inst of installations) {
+    if (inst.lastSnapshotJson) {
+      try {
+        Object.assign(githubStarMap, JSON.parse(inst.lastSnapshotJson) as Record<string, number>);
+      } catch { /* ignore */ }
+    }
+  }
+
+  const enriched = goals.map((g) => ({
+    ...g,
+    currentValue: currentValueForGoal(g.provider, g.metric, g.scope, secretSnaps, githubStarMap),
+  }));
+
+  return Response.json({ goals: enriched });
 }
 
 export async function POST(request: Request) {
