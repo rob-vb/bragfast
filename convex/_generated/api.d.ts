@@ -17,6 +17,8 @@ import type * as githubInstallations from "../githubInstallations.js";
 import type * as githubRepoConfigs from "../githubRepoConfigs.js";
 import type * as githubSkippedReleases from "../githubSkippedReleases.js";
 import type * as http from "../http.js";
+import type * as integrationSecrets from "../integrationSecrets.js";
+import type * as integrations_stripe from "../integrations/stripe.js";
 import type * as milestoneHits from "../milestoneHits.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as releases from "../releases.js";
@@ -45,6 +47,8 @@ declare const fullApi: ApiFromModules<{
   githubRepoConfigs: typeof githubRepoConfigs;
   githubSkippedReleases: typeof githubSkippedReleases;
   http: typeof http;
+  integrationSecrets: typeof integrationSecrets;
+  "integrations/stripe": typeof integrations_stripe;
   milestoneHits: typeof milestoneHits;
   rateLimit: typeof rateLimit;
   releases: typeof releases;
