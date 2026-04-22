@@ -1,13 +1,4 @@
 // Pure MRR math for Sous-Chef Stripe scans. Testable without the SDK.
-//
-// Thresholds are in whole USD. Matches the milestone catalog in
-// docs/plans/2026-04-22-001-feat-sous-chef-milestone-agent-plan.md.
-
-import { detectCrossedThresholds as genericDetectCrossed } from "./thresholds";
-
-export { detectCrossedThresholds } from "./thresholds";
-
-export const MRR_THRESHOLDS_USD = [100, 500, 1000, 5000, 10000] as const;
 
 export type SubscriptionLike = {
   status: string;
@@ -63,24 +54,3 @@ function periodsPerMonth(
   }
 }
 
-// Convenience: detect crossed MRR thresholds with the canonical MRR catalog as default.
-export function detectCrossedMrrThresholds(
-  currentMrrUsd: number,
-  alreadyHitThresholds: ReadonlyArray<number>,
-): number[] {
-  return genericDetectCrossed(
-    currentMrrUsd,
-    alreadyHitThresholds,
-    MRR_THRESHOLDS_USD,
-  );
-}
-
-// Returns true if the user has never fired a first_sale milestone AND there is
-// at least one successful charge on file. Caller checks the hit list + passes
-// a boolean sourced from a Stripe charges.list call.
-export function shouldFireFirstSale(input: {
-  hasSuccessfulCharge: boolean;
-  alreadyHitFirstSale: boolean;
-}): boolean {
-  return input.hasSuccessfulCharge && !input.alreadyHitFirstSale;
-}
