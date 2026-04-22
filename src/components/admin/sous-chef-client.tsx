@@ -55,6 +55,12 @@ const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
   ga4: "Rolling 30-day totalUsers: 100 / 1k / 10k / 100k / 1M.",
 };
 
+const PROVIDER_COMING_SOON: Record<Provider, boolean> = {
+  stripe: false,
+  posthog: true,
+  ga4: true,
+};
+
 export function SousChefClient({ github }: { github: GitHubPropShape }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
@@ -139,6 +145,7 @@ function IntegrationTile({
   onReload: () => void;
 }) {
   const connected = row !== null && row.enabled;
+  const comingSoon = PROVIDER_COMING_SOON[provider];
   const [disconnecting, setDisconnecting] = useState(false);
 
   async function disconnect() {
@@ -155,17 +162,25 @@ function IntegrationTile({
   }
 
   return (
-    <div className="border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)] space-y-3">
+    <div
+      className={`border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)] space-y-3 ${
+        comingSoon ? "opacity-60" : ""
+      }`}
+    >
       <div className="flex items-center justify-between">
         <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand">
           {PROVIDER_LABELS[provider]}
         </h3>
         <span
           className={`font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider ${
-            connected ? "bg-gold text-brand" : "bg-surface text-brand/60"
+            comingSoon
+              ? "bg-surface text-brand/60"
+              : connected
+                ? "bg-gold text-brand"
+                : "bg-surface text-brand/60"
           }`}
         >
-          {connected ? "Connected" : "Off"}
+          {comingSoon ? "Coming soon" : connected ? "Connected" : "Off"}
         </span>
       </div>
 
@@ -187,7 +202,9 @@ function IntegrationTile({
       )}
 
       <div className="flex gap-2">
-        {!connected ? (
+        {comingSoon ? (
+          <PixelButton disabled>Connect</PixelButton>
+        ) : !connected ? (
           <PixelButton onClick={onConnect}>Connect</PixelButton>
         ) : (
           <AlertDialog>
@@ -309,20 +326,21 @@ function StripeForm({
       }}
       className="space-y-3"
     >
-      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
-        Create a restricted key at{" "}
-        <a
-          href="https://dashboard.stripe.com/apikeys/create"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          dashboard.stripe.com/apikeys/create
-        </a>{" "}
-        with read-only permissions for:{" "}
-        <code>charges</code>, <code>customers</code>, <code>subscriptions</code>
-        , <code>invoices</code>.
-      </p>
+      <a
+        href="https://dashboard.stripe.com/apikeys/create?name=brag.fast&permissions%5B%5D=rak_charge_read&permissions%5B%5D=rak_customer_read&permissions%5B%5D=rak_subscription_read&permissions%5B%5D=rak_invoice_read"
+        target="_blank"
+        rel="noreferrer"
+        className="block border-2 border-brand bg-surface p-3 hover:bg-brand/5"
+      >
+        <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand font-medium">
+          Click here to create a read-only API key →
+        </p>
+        <ol className="mt-2 space-y-1 font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 list-decimal list-inside">
+          <li>Scroll down, click &quot;Create key&quot;</li>
+          <li>Don&apos;t change the permissions</li>
+          <li>Don&apos;t delete the key or we can&apos;t refresh revenue</li>
+        </ol>
+      </a>
       <label className="block">
         <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
           Restricted key (rk_...)
