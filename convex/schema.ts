@@ -209,6 +209,35 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_userId_sourceSystem", ["userId", "sourceSystem"]),
 
+  // Sous-Chef: user-defined goals that trigger draft creation when crossed.
+  goals: defineTable({
+    userId: v.string(),
+    externalId: v.string(),          // "goal_*"
+    provider: v.union(
+      v.literal("stripe"),
+      v.literal("posthog"),
+      v.literal("ga4"),
+      v.literal("github"),
+    ),
+    metric: v.union(
+      v.literal("mrr"),
+      v.literal("total_revenue"),
+      v.literal("subscribers"),
+      v.literal("first_sale"),
+      v.literal("visitors"),
+      v.literal("stars"),
+    ),
+    target: v.optional(v.number()),  // required for threshold metrics; omitted for first_sale
+    scope: v.optional(v.string()),   // owner/repo for stars
+    label: v.optional(v.string()),
+    enabled: v.boolean(),
+    created_at: v.string(),
+    updated_at: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_provider_enabled", ["userId", "provider", "enabled"])
+    .index("by_externalId", ["externalId"]),
+
   uploads: defineTable({
     userId: v.string(),
     externalId: v.string(),
