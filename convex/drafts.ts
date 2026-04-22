@@ -145,8 +145,8 @@ export const insertDraftIfNewAction = action({
     config: v.string(),
     createdBy: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    return await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
+  handler: async (ctx, args): Promise<void> => {
+    await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
   },
 });
 

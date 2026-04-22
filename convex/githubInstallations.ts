@@ -111,28 +111,28 @@ export const upsertAction = action({
     accountLogin: v.string(),
     accountType: v.union(v.literal("User"), v.literal("Organization")),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.githubInstallations.upsert, args);
   },
 });
 
 export const removeAction = action({
   args: { installationId: v.number() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.githubInstallations.remove, args);
   },
 });
 
 export const suspendAction = action({
   args: { installationId: v.number() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.githubInstallations.suspend, args);
   },
 });
 
 export const unsuspendAction = action({
   args: { installationId: v.number() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.githubInstallations.unsuspend, args);
   },
 });
