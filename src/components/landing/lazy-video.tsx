@@ -5,9 +5,11 @@ import { useEffect, useRef } from "react";
 export function LazyVideo({
   src,
   className,
+  poster,
 }: {
   src: string;
   className?: string;
+  poster?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -37,6 +39,7 @@ export function LazyVideo({
       muted
       loop
       playsInline
+      poster={poster}
       className={className}
     />
   );

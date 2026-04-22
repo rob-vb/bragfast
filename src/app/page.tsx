@@ -7,12 +7,13 @@ import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { McpInstallInstructions } from "@/components/landing/mcp-install-instructions";
+import { CtaLink } from "@/components/landing/cta-link";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "brag.fast | Show off your wins. Fast.",
   description:
-    "Turn any win — a release, an MRR milestone, a marathon time — into branded social images and videos. You can do it, or your AI agent can. Under a minute.",
+    "brag.fast turns your wins into branded images and video. Ship a release, hit an MRR milestone, gain stars, Sous-Chef drafts the post for you.",
   alternates: { canonical: "/" },
 };
 
@@ -23,7 +24,7 @@ const FAQ = [
   },
   {
     q: "Can't I just use Canva?",
-    a: "You can. Will you? Every time? brag.fast renders in under a minute — or your agent calls it for you. Canva doesn't do that.",
+    a: "You can. Will you? Every time? brag.fast renders in under a minute, or your agent calls it for you. Canva doesn't do that.",
   },
   {
     q: "Will it match my brand?",
@@ -41,6 +42,10 @@ const FAQ = [
     q: "What if the AI picks the wrong thing to highlight?",
     a: "Edit before you render. Or skip the AI and write the copy yourself. Your call.",
   },
+  {
+    q: "How does Sous-Chef know what to post?",
+    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, more coming. Sous-Chef scans them on a schedule, drafts a post when it spots a win, and waits for you to cook it. You approve every post. Disconnect any integration any time.",
+  },
 ];
 
 export default function Home() {
@@ -50,7 +55,6 @@ export default function Home() {
 
       {/* S1: Hero */}
       <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 bg-white border-b-2 border-brand overflow-hidden">
-        {/* Decorative pixel grid */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -66,15 +70,16 @@ export default function Home() {
               Show off your wins. <span className="text-gold">Fast.</span>
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              brag.fast turns any milestone — a release, a new MRR record, a user-count screenshot, you name it — into branded social images and videos. You can do it, or your AI agent can.
+              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef drafts it for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <Link
-                href="/signup"
+              <CtaLink
+                signedOutHref="/signup"
+                signedInHref="/admin"
                 className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start bragging — free
-              </Link>
+                Start bragging, free
+              </CtaLink>
             </div>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-4">
               30 credits. No card required.
@@ -87,103 +92,124 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S2: Three Ways to Cook */}
+      {/* Sous-Chef audience section */}
       <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
-          <div className="flex flex-col items-center text-center mb-10 md:mb-14 gap-3">
-            <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50">
-              Humans or agents
-            </span>
-            <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-              Made for you. And your agents.
-            </h2>
-            <p className="font-[family-name:var(--font-geist-sans)] text-sm md:text-base text-brand/70 max-w-xl mt-2 leading-relaxed">
-              brag.fast is the visual layer for wins. Trigger it yourself, or let an AI agent do it over MCP or the API.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            {/* Web app */}
-            <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
-              <div className="mb-4">
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
-                  Web app
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-center">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  Sous-Chef
                 </span>
               </div>
-              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Cook it yourself
-              </h3>
-              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-6 flex-1">
-                Drop screenshots, stats, or a screen recording. Pick a template. Branded images and video out in under a minute.
+              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+                Your agent spots the win. You hit post.
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
+                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.
               </p>
-              <Link
-                href="/signup"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
+              <CtaLink
+                signedOutHref="/signup"
+                signedInHref="/admin/sous-chef"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start for free →
-              </Link>
+                Connect an integration
+              </CtaLink>
             </div>
-
-            {/* MCP */}
-            <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
-              <div className="mb-4">
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
-                  MCP for agents
+            <div className="border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
+              <div className="flex items-center justify-between border-b-2 border-brand/20 pb-2 mb-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-gold border border-brand" />
+                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
+                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
+                </div>
+                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-brand/50">
+                  brag.fast/admin/sous-chef
+                </span>
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/50">
+                  live
                 </span>
               </div>
-              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Your agent, on brag.fast.
-              </h3>
-              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
-                Works in Claude Desktop and Claude Code. Ask, it renders.
-              </p>
-              <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-brand bg-gold/30 border border-brand/30 px-2 py-1.5 select-all break-all mb-6">
-                https://mcp.brag.fast/mcp
-              </code>
-              <Link
-                href="#mcp"
-                className="inline-block self-start mt-auto font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
-              >
-                Install MCP →
-              </Link>
-            </div>
-
-            {/* REST API */}
-            <div className="border-2 border-brand bg-white p-6 md:p-7 shadow-[4px_4px_0_var(--color-brand)] flex flex-col">
-              <div className="mb-4">
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] uppercase tracking-wider text-brand/60">
-                  REST API
-                </span>
-              </div>
-              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-base mb-3 leading-[1.5]">
-                Wire it into anything.
-              </h3>
-              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed mb-3">
-                CI/CD, bots, your own app. POST the data, get branded visuals back.
-              </p>
-              <code className="block font-[family-name:var(--font-geist-mono)] text-[11px] text-surface bg-brand px-2 py-1.5 break-all mb-6">
-                POST /api/v1/cook/image
-              </code>
-              <Link
-                href="/docs"
-                className="inline-block self-start mt-auto font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all whitespace-nowrap"
-              >
-                Read the docs →
-              </Link>
+              <LazyVideo
+                src="/demo/sous-chef_drafts_compressed.mp4"
+                poster="/demo/sous-chef_drafts_poster.jpg"
+                className="w-full border border-brand"
+              />
             </div>
           </div>
 
+          {/* Integration tiles */}
+          <div className="mt-12 md:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {/* GitHub PR merges */}
+            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-brand" aria-hidden>
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
+                GitHub<br />PR merges
+              </div>
+              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand bg-gold/30">
+                Live
+              </span>
+            </div>
+
+            {/* GitHub stars */}
+            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-brand" aria-hidden>
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
+                GitHub<br />stars
+              </div>
+              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand bg-gold/30">
+                Live
+              </span>
+            </div>
+
+            {/* Stripe milestones */}
+            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-brand" aria-hidden>
+                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
+              </svg>
+              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
+                Stripe<br />milestones
+              </div>
+              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand bg-gold/30">
+                Live
+              </span>
+            </div>
+
+            {/* PostHog + GA4 */}
+            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
+              <div className="flex items-center gap-2">
+                <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 px-1.5 py-1 border border-brand/30 bg-surface">
+                  PH
+                </span>
+                <span className="font-[family-name:var(--font-geist-sans)] text-brand/30 text-xs">+</span>
+                <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 px-1.5 py-1 border border-brand/30 bg-surface">
+                  GA4
+                </span>
+              </div>
+              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
+                PostHog<br />+ GA4
+              </div>
+              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand/40 text-brand/50 bg-surface">
+                Coming soon
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* S3: Cook Demo */}
+      {/* Cook it yourself section */}
       <section
         id="kitchen"
         className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
       >
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
-          <div className="grid md:grid-cols-[0.9fr_1.1fr] gap-10 md:gap-14 items-center">
-            <div className="flex flex-col gap-5">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 items-center">
+            <div className="md:order-2 flex flex-col gap-5">
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-[3px] bg-gold" />
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
@@ -191,13 +217,10 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Cook it yourself
+                Cook it yourself.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Drop in screenshots, stats, or a screen recording. Pick a
-                template and brand. Branded images and video come out
-                in every format you need — landscape, square, portrait. No
-                design tool, no editor, no learning curve.
+                Drop a screenshot, a stat, or a screen recording. Pick a template. Get landscape, square, portrait, and video back, on brand, in under a minute.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
@@ -211,14 +234,15 @@ export default function Home() {
                   ),
                 )}
               </div>
-              <Link
-                href="/signup"
+              <CtaLink
+                signedOutHref="/signup"
+                signedInHref="/admin/kitchen"
                 className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
                 Make your first post
-              </Link>
+              </CtaLink>
             </div>
-            <div className="border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
+            <div className="md:order-1 border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
               <div className="flex items-center justify-between border-b-2 border-brand/20 pb-2 mb-3">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-gold border border-brand" />
@@ -241,41 +265,92 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S4: MCP anchor */}
+      {/* Your AI as cook (MCP) section */}
       <section
         id="mcp"
-        className="scroll-mt-16 py-16 md:py-20 bg-surface border-b-2 border-brand"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
       >
-        <div className="mx-auto max-w-2xl px-4 md:px-8 flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-[3px] bg-gold" />
-              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                MCP Setup
-              </span>
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-start">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  MCP
+                </span>
+              </div>
+              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+                Your AI in the kitchen.
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
+                Works in Claude Desktop, Claude Code, Cursor, any HTTP MCP client. Your agent calls brag.fast, gets a branded image or video back, and keeps working.
+              </p>
+              <Link
+                href="/docs"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Read MCP docs
+              </Link>
             </div>
-            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.4]">
-              One command. Then just ask.
-            </h2>
-            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-              Works in Claude Desktop, Claude Code, and any HTTP MCP client.
-              Pick your client and paste.
-            </p>
+            <div>
+              <McpInstallInstructions />
+            </div>
           </div>
-          <McpInstallInstructions />
+        </div>
+      </section>
+
+      {/* Full control (REST API) section */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 items-center">
+            <div className="md:order-2 flex flex-col gap-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  REST API
+                </span>
+              </div>
+              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+                Wire it into anything.
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
+                Send your data to one endpoint. Get branded visuals back in every format. Drop it into CI, a bot, your own app, whatever you&apos;re building.
+              </p>
+              <Link
+                href="/docs"
+                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Read the docs
+              </Link>
+            </div>
+            <div className="md:order-1">
+              <pre className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm bg-brand text-surface p-5 border-2 border-brand shadow-[4px_4px_0_var(--color-brand)] overflow-x-auto leading-relaxed whitespace-pre">
+{`curl https://brag.fast/api/v1/cook/image \\
+  -H "Authorization: Bearer $KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "template": "standard-browser",
+    "brand": "brand_abc123",
+    "data": {
+      "headline": "v2.0 shipped",
+      "subhead": "30% faster renders"
+    }
+  }'`}
+              </pre>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* S5: Before/After */}
-      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <div className="text-center mb-10">
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5] mb-3">
               Which post would you stop for?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/60 max-w-xl mx-auto">
-              Left: plain text. Right: a branded visual that cuts through the
-              feed.
+              Left: plain text. Right: a branded visual that cuts through the feed.
             </p>
           </div>
           <BeforeAfter />
@@ -283,7 +358,7 @@ export default function Home() {
       </section>
 
       {/* S6: Templates + Brand Kits */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
         <div className="mx-auto max-w-5xl px-4 md:px-8">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16">
             <div className="flex flex-col gap-6">
@@ -297,8 +372,7 @@ export default function Home() {
                 Design it once. Reuse forever.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Drag objects. Set colors. Preview live. Every render follows
-                the layout you built. No babysitting.
+                Drag objects. Set colors. Preview live. Every render follows the layout you built. No babysitting.
               </p>
               <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
                 <LazyVideo
@@ -319,8 +393,7 @@ export default function Home() {
                 On-brand. Every post.
               </h3>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Upload your logo. Lock your colors and fonts. Every image comes
-                out looking like you made it on purpose.
+                Upload your logo. Lock your colors and fonts. Every image comes out looking like you made it on purpose.
               </p>
               <BrandKitMockup />
             </div>
@@ -338,17 +411,6 @@ export default function Home() {
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
                 Images: 1 credit each. Videos: 5 credits each.
-              </p>
-            </div>
-
-            {/* Signup bonus strip. One-time gift, not a plan. */}
-            <div className="bg-gold/20 px-5 py-3 flex items-center gap-3 border-b-2 border-brand/10">
-              <span className="font-[family-name:var(--font-press-start)] text-[8px] bg-gold text-brand px-1.5 py-0.5 border border-brand shrink-0">
-                Sign-up bonus
-              </span>
-              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 leading-snug">
-                Every new account gets <strong>30 free credits</strong> to try
-                it out. No card, one-time.
               </p>
             </div>
 
@@ -389,12 +451,13 @@ export default function Home() {
             </div>
 
             <div className="bg-surface px-5 py-4 text-center border-t-2 border-brand">
-              <Link
-                href="/signup"
+              <CtaLink
+                signedOutHref="/signup"
+                signedInHref="/admin/billing"
                 className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
                 Start with 30 Free Credits
-              </Link>
+              </CtaLink>
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
                 No card. Upgrade when you need more.
               </p>
@@ -403,7 +466,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S9: FAQ */}
+      {/* FAQ */}
       <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
         <div className="mx-auto max-w-3xl px-4 md:px-8">
           <div className="text-center mb-12">
@@ -442,7 +505,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S10: Final CTA */}
+      {/* Final CTA */}
       <section className="py-16 md:py-24 bg-gold border-b-2 border-brand relative overflow-hidden">
         <div
           aria-hidden
@@ -460,20 +523,13 @@ export default function Home() {
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
             30 free credits. No credit card. First render in under a minute.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/signup"
-              className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Start for free
-            </Link>
-            <Link
-              href="#mcp"
-              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] md:text-xs px-5 py-4 text-brand border-2 border-brand bg-transparent shadow-[3px_3px_0_var(--color-brand)] hover:bg-brand hover:text-gold hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Install MCP
-            </Link>
-          </div>
+          <CtaLink
+            signedOutHref="/signup"
+            signedInHref="/admin"
+            className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          >
+            Start for free
+          </CtaLink>
         </div>
       </section>
 
