@@ -111,3 +111,24 @@ export const toggle = mutation({
     }
   },
 });
+
+// Sous-Chef: opt a repo into PR-merge drafting. Separate from `enabled` (which
+// gates release.published rendering) so users can pick and choose per repo.
+export const setNotifyOnPrMerge = mutation({
+  args: {
+    repoFullName: v.string(),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, { repoFullName, enabled }) => {
+    const config = await ctx.db
+      .query("githubRepoConfigs")
+      .withIndex("by_repoFullName", (q) => q.eq("repoFullName", repoFullName))
+      .first();
+    if (!config) return false;
+    await ctx.db.patch(config._id, {
+      notifyOnPrMerge: enabled,
+      updated_at: new Date().toISOString(),
+    });
+    return true;
+  },
+});

@@ -44,6 +44,9 @@ export const listByUser = query({
       id: r.externalId,
       name: r.name ?? null,
       source: r.source,
+      sourceSystem: r.sourceSystem ?? null,
+      milestoneKey: r.milestoneKey ?? null,
+      eventReference: r.eventReference ?? null,
       config: r.config,
       created_at: r.created_at,
     }));
@@ -62,6 +65,9 @@ export const getByExternalId = query({
       id: row.externalId,
       name: row.name ?? null,
       source: row.source,
+      sourceSystem: row.sourceSystem ?? null,
+      milestoneKey: row.milestoneKey ?? null,
+      eventReference: row.eventReference ?? null,
       config: row.config,
       created_at: row.created_at,
     };

@@ -26,6 +26,7 @@ import type * as integrations_stripe from "../integrations/stripe.js";
 import type * as milestoneHits from "../milestoneHits.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as releases from "../releases.js";
+import type * as sousChef from "../sousChef.js";
 import type * as stripe from "../stripe.js";
 import type * as templates from "../templates.js";
 import type * as uploadTokens from "../uploadTokens.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   milestoneHits: typeof milestoneHits;
   rateLimit: typeof rateLimit;
   releases: typeof releases;
+  sousChef: typeof sousChef;
   stripe: typeof stripe;
   templates: typeof templates;
   uploadTokens: typeof uploadTokens;
