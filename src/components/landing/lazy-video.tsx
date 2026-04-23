@@ -22,6 +22,7 @@ export function LazyVideo({
         if (entry.isIntersecting) {
           video.src = src;
           video.load();
+          video.play().catch(() => {});
           observer.disconnect();
         }
       },

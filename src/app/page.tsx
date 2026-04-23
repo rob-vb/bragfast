@@ -66,7 +66,7 @@ export default function Home() {
               Automate your build in public posts
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you. <strong>You can focus on building</strong>.
+              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -89,10 +89,10 @@ export default function Home() {
       </section>
 
       {/* Sous-Chef audience section */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+      <section className="pt-16 md:pt-24 pb-0 bg-surface border-b-2 border-brand overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-center">
-            <div className="flex flex-col gap-5">
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14">
+            <div className="flex flex-col gap-5 pb-16 md:pb-24">
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-[3px] bg-gold" />
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
@@ -113,88 +113,17 @@ export default function Home() {
                 Connect an integration
               </CtaLink>
             </div>
-            <div className="border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
-              <div className="flex items-center justify-between border-b-2 border-brand/20 pb-2 mb-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-gold border border-brand" />
-                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
-                  <span className="w-2 h-2 bg-brand/20 border border-brand" />
-                </div>
-                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-brand/50">
-                  brag.fast/admin/sous-chef
-                </span>
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/50">
-                  live
-                </span>
-              </div>
-              <LazyVideo
-                src="/demo/sous-chef_drafts_compressed.mp4"
-                poster="/demo/sous-chef_drafts_poster.jpg"
-                className="w-full border border-brand"
+            <div className="relative self-stretch hidden md:block">
+              <Image
+                src="/cook/sous-chef.png"
+                alt="Sous-Chef"
+                width={418}
+                height={940}
+                className="absolute top-0 left-1/2 -translate-x-1/2 md:-translate-y-12 w-auto max-w-[240px] md:max-w-[300px] h-auto"
               />
             </div>
           </div>
 
-          {/* Integration tiles */}
-          <div className="mt-12 md:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {/* GitHub PR merges */}
-            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-brand" aria-hidden>
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-              </svg>
-              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
-                GitHub<br />PR merges
-              </div>
-              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand bg-gold/30">
-                Live
-              </span>
-            </div>
-
-            {/* GitHub stars */}
-            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-brand" aria-hidden>
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-              </svg>
-              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
-                GitHub<br />stars
-              </div>
-              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand bg-gold/30">
-                Live
-              </span>
-            </div>
-
-            {/* Stripe milestones */}
-            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-brand" aria-hidden>
-                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
-              </svg>
-              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
-                Stripe<br />milestones
-              </div>
-              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand bg-gold/30">
-                Live
-              </span>
-            </div>
-
-            {/* PostHog + GA4 */}
-            <div className="border-2 border-brand bg-white p-5 md:p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col items-start gap-3">
-              <div className="flex items-center gap-2">
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 px-1.5 py-1 border border-brand/30 bg-surface">
-                  PH
-                </span>
-                <span className="font-[family-name:var(--font-geist-sans)] text-brand/30 text-xs">+</span>
-                <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 px-1.5 py-1 border border-brand/30 bg-surface">
-                  GA4
-                </span>
-              </div>
-              <div className="font-[family-name:var(--font-press-start)] text-[10px] leading-[1.6]">
-                PostHog<br />+ GA4
-              </div>
-              <span className="font-[family-name:var(--font-press-start)] text-[7px] uppercase px-2 py-1 border border-brand/40 text-brand/50 bg-surface">
-                Coming soon
-              </span>
-            </div>
-          </div>
         </div>
       </section>
 
