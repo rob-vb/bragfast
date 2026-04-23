@@ -11,20 +11,16 @@ import { CtaLink } from "@/components/landing/cta-link";
 import { PAID_PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Show off your wins. Fast.",
+  title: "brag.fast | Automated Image and Video generation for your wins",
   description:
-    "brag.fast turns your wins into branded images and video. Ship a release, hit an MRR milestone, gain stars, Sous-Chef drafts the post for you.",
+    "brag.fast turns your wins into branded images and video. Ship a new feature for your app, hit an MRR milestone, gain Github stars, and your Sous-Chef (agent) drafts the post for you.",
   alternates: { canonical: "/" },
 };
 
 const FAQ = [
   {
     q: "What kind of wins work?",
-    a: "Anything brag-worthy. Software releases, MRR milestones, user-count screenshots, a marathon PR from Strava, launch-day numbers, a before/after. If you'd post about it, brag.fast dresses it up.",
-  },
-  {
-    q: "Can't I just use Canva?",
-    a: "You can. Will you? Every time? brag.fast renders in under a minute, or your agent calls it for you. Canva doesn't do that.",
+    a: "Anything brag-worthy. New features for your app, MRR milestones, user-count screenshots, launch-day numbers, a before/after. If you'd post about it, brag.fast dresses it up.",
   },
   {
     q: "Will it match my brand?",
@@ -40,11 +36,11 @@ const FAQ = [
   },
   {
     q: "What if the AI picks the wrong thing to highlight?",
-    a: "Edit before you render. Or skip the AI and write the copy yourself. Your call.",
+    a: "Edit before you render. Or skip the AI and write the copy yourself. We are constantly optimizing the agent to produce the best results though.",
   },
   {
-    q: "How does Sous-Chef know what to post?",
-    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, more coming. Sous-Chef scans them on a schedule, drafts a post when it spots a win, and waits for you to cook it. You approve every post. Disconnect any integration any time.",
+    q: "How does Sous-Chef (agent) know what to post?",
+    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef scans them on a schedule, drafts a post when it spots a win, and waits for you to cook it. You approve every post. Disconnect any integration any time.",
   },
 ];
 
@@ -64,13 +60,13 @@ export default function Home() {
             backgroundSize: "24px 24px",
           }}
         />
-        <div className="relative mx-auto max-w-5xl px-4 md:px-8 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
+        <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Show off your wins. <span className="text-gold">Fast.</span>
+              Automate your build in public posts
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef drafts it for you.
+              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you. <strong>You can focus on building</strong>.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -78,11 +74,11 @@ export default function Home() {
                 signedInHref="/admin"
                 className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Start bragging, free
+                Get Started for Free
               </CtaLink>
             </div>
-            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-4">
-              30 credits. No card required.
+            <p className="font-[family-name:var(--font-geist-sans)] text-md text-brand/50 mt-4">
+              30 credits. No credit card required.
             </p>
           </div>
 
@@ -104,7 +100,7 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your agent spots the win. You hit post.
+                Your agent spots your wins. You can focus on building.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
                 Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.
@@ -344,7 +340,7 @@ export default function Home() {
 
       {/* S5: Before/After */}
       <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-10">
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5] mb-3">
               Which post would you stop for?
@@ -359,7 +355,7 @@ export default function Home() {
 
       {/* S6: Templates + Brand Kits */}
       <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
-        <div className="mx-auto max-w-5xl px-4 md:px-8">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-2.5">
@@ -402,73 +398,85 @@ export default function Home() {
       </section>
 
       {/* S7: Pricing */}
-      <section className="py-16 md:py-20 bg-surface border-b-2 border-brand">
-        <div className="mx-auto max-w-2xl px-4 md:px-8">
-          <div className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
-            <div className="bg-brand text-gold px-5 py-4 text-center">
-              <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-base">
-                brag.fast plans
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-surface/60 mt-1">
-                Images: 1 credit each. Videos: 5 credits each.
-              </p>
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="mb-12 md:mb-16 text-center">
+            <div className="flex items-center justify-center gap-2.5 mb-5">
+              <div className="w-6 h-[3px] bg-gold" />
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                Pricing
+              </span>
             </div>
+            <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4] mb-3">
+              What are you having?
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
+              Images: 1 credit each. Videos: 5 credits each.
+            </p>
+          </div>
 
-            <div className="divide-y-2 divide-brand/10">
-              {PAID_PLANS.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`px-5 py-4 flex items-center gap-4 ${
-                    plan.id === "pro" ? "bg-gold/10" : "bg-white"
-                  }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-[family-name:var(--font-press-start)] text-[10px]">
-                        {plan.name}
-                      </h3>
-                      {plan.id === "pro" && (
-                        <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-brand text-gold px-1.5 py-0.5 border border-brand">
-                          Popular
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-0.5">
-                      {plan.label} &middot; {plan.credits.toLocaleString()}{" "}
-                      credits/mo
-                    </p>
+          <div className="grid md:grid-cols-3 gap-4">
+            {PAID_PLANS.map((plan) => {
+              const isPopular = plan.id === "pro";
+              return (
+                <div key={plan.id} className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col">
+                  <div className="bg-brand px-5 py-4 flex items-center justify-between min-h-[56px]">
+                    <span className="font-[family-name:var(--font-press-start)] text-[10px] text-gold">
+                      &#9656; {plan.name}
+                    </span>
+                    {isPopular && (
+                      <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-gold text-brand px-2 py-1 border border-gold/60">
+                        POPULAR
+                      </span>
+                    )}
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-[family-name:var(--font-press-start)] text-base md:text-lg">
-                      ${plan.price}
-                    </span>
-                    <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50">
-                      /mo
-                    </span>
+                  <div className="bg-white p-5 flex flex-col gap-5 flex-1">
+                    <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
+                      {plan.label}
+                    </p>
+                    <div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-[family-name:var(--font-press-start)] text-3xl">
+                          ${plan.price}
+                        </span>
+                        <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50">
+                          /mo
+                        </span>
+                      </div>
+                      <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 mt-1.5">
+                        {plan.credits.toLocaleString()} credits/mo
+                      </p>
+                    </div>
+                    <div className="border-t-2 border-brand/10 pt-4">
+                      <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40 leading-[2.2]">
+                        {plan.credits.toLocaleString()} images<br />
+                        or {(plan.credits / 5).toLocaleString()} videos
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
 
-            <div className="bg-surface px-5 py-4 text-center border-t-2 border-brand">
-              <CtaLink
-                signedOutHref="/signup"
-                signedInHref="/admin/billing"
-                className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Start with 30 Free Credits
-              </CtaLink>
-              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
-                No card. Upgrade when you need more.
-              </p>
-            </div>
+          <div className="mt-10 md:mt-14 text-center">
+            <CtaLink
+              signedOutHref="/signup"
+              signedInHref="/admin/billing"
+              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+            >
+              Start with 30 Free Credits
+            </CtaLink>
+            <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
+              No card. Upgrade when you need more.
+            </p>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
       <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
-        <div className="mx-auto max-w-3xl px-4 md:px-8">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-12">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
               The details
@@ -516,9 +524,9 @@ export default function Home() {
             backgroundSize: "16px 16px",
           }}
         />
-        <div className="relative mx-auto max-w-3xl px-4 md:px-8 text-center">
+        <div className="relative mx-auto max-w-6xl px-4 md:px-10 text-center">
           <h2 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-[1.4] mb-5">
-            Stop sitting on <span className="block md:inline">your wins.</span>
+            Start free. <span className="block md:inline">Upgrade when you&apos;re ready.</span>
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
             30 free credits. No credit card. First render in under a minute.
@@ -554,7 +562,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-8 border-t-2 border-brand bg-surface">
-        <div className="mx-auto max-w-5xl px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mx-auto max-w-6xl px-4 md:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/logo.svg"
