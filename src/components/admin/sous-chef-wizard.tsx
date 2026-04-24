@@ -94,8 +94,8 @@ export function SousChefWizard({ github, rows, goals, onReload, onComplete }: Pr
   return (
     <div className="border-2 border-brand bg-white shadow-[8px_8px_0_var(--color-brand)]">
       <div className="flex flex-col md:flex-row">
-        <div className="md:w-[200px] shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-brand/10 bg-surface flex items-center justify-center p-4">
-          <CookSprite pose={activePose} width={160} />
+        <div className="md:w-[160px] shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-brand/10 bg-surface flex items-center justify-center p-4">
+          <CookSprite pose={activePose} />
         </div>
 
         <div className="flex-1 p-4 md:p-6">
