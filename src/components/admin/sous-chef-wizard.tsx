@@ -295,36 +295,41 @@ function GoalsBody({
   onReload: () => Promise<void> | void;
   onNext: () => void;
 }) {
+  const groups: Array<{ provider: "github" | Provider; label: string; connected: boolean }> = [
+    { provider: "github", label: "GitHub", connected: github },
+    { provider: "stripe", label: "Stripe", connected: !!byProvider.get("stripe")?.enabled },
+    { provider: "posthog", label: "PostHog", connected: !!byProvider.get("posthog")?.enabled },
+    { provider: "ga4", label: "Google Analytics", connected: !!byProvider.get("ga4")?.enabled },
+  ];
+
   return (
     <div className="space-y-6 px-1">
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
         Pick milestones worth celebrating. Sous-Chef drafts a post when you hit one.
       </p>
 
-      <GoalsSection
-        provider="github"
-        connected={github}
-        goals={goals.filter((g) => g.provider === "github")}
-        onReload={() => onReload()}
-      />
-      <GoalsSection
-        provider="stripe"
-        connected={!!byProvider.get("stripe")?.enabled}
-        goals={goals.filter((g) => g.provider === "stripe")}
-        onReload={() => onReload()}
-      />
-      <GoalsSection
-        provider="posthog"
-        connected={!!byProvider.get("posthog")?.enabled}
-        goals={goals.filter((g) => g.provider === "posthog")}
-        onReload={() => onReload()}
-      />
-      <GoalsSection
-        provider="ga4"
-        connected={!!byProvider.get("ga4")?.enabled}
-        goals={goals.filter((g) => g.provider === "ga4")}
-        onReload={() => onReload()}
-      />
+      {groups.map((g) => (
+        <div key={g.provider} className="border-2 border-brand/20 p-3">
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand">
+              {g.label}
+            </h3>
+            <span
+              className={`font-[family-name:var(--font-press-start)] text-[9px] px-2 py-0.5 border-2 border-brand uppercase tracking-wider ${
+                g.connected ? "bg-gold text-brand" : "bg-surface text-brand/60"
+              }`}
+            >
+              {g.connected ? "Connected" : "Off"}
+            </span>
+          </div>
+          <GoalsSection
+            provider={g.provider}
+            connected={g.connected}
+            goals={goals.filter((goal) => goal.provider === g.provider)}
+            onReload={() => onReload()}
+          />
+        </div>
+      ))}
 
       <div className="pt-2">
         <PixelButton onClick={onNext}>Next</PixelButton>
