@@ -100,7 +100,7 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your agent spots your wins. You can focus on building.
+                Your Sous-Chef (agent) spots your wins so you can focus on building.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
                 Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.

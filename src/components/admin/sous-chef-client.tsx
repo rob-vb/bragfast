@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PixelButton } from "./pixel-button";
 import { PixelCard } from "./pixel-card";
 import { GitHubSection } from "./github-section";
 import { GoalsSection } from "./goals-section";
 import type { Goal } from "./goals-section";
-import { SousChefWizard } from "./sous-chef-wizard";
 import {
   ConnectDialog,
   PROVIDER_LABELS,
@@ -54,8 +53,6 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const wizardDecisionMade = useRef(false);
 
   const reload = useCallback(async () => {
     const [intRes, goalRes] = await Promise.all([
@@ -81,47 +78,9 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
     (i) => i.status === "active" && i.enabled,
   );
 
-  // Decide wizard visibility ONCE on first non-loading render (G2: freeze at mount).
-  // Prevents wizard collapsing mid-flight when a user connects their first integration.
-  useEffect(() => {
-    if (wizardDecisionMade.current) return;
-    if (rows === null) return;
-    wizardDecisionMade.current = true;
-    const nothingConnected = !githubConnected && rows.every((r) => !r.enabled) && goals.length === 0;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot decision guarded by ref
-    if (nothingConnected) setWizardOpen(true);
-  }, [rows, githubConnected, goals.length]);
-
   const byProvider = new Map<Provider, IntegrationRow>(
     (rows ?? []).map((r) => [r.provider, r]),
   );
-
-  if (wizardOpen) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-baseline justify-between gap-4">
-          <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
-            Sous-Chef
-          </h1>
-          <button
-            type="button"
-            onClick={() => setWizardOpen(false)}
-            className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/60 hover:text-brand underline"
-          >
-            Skip tour
-          </button>
-        </div>
-
-        <SousChefWizard
-          github={github}
-          rows={rows}
-          goals={goals}
-          onReload={reload}
-          onComplete={() => setWizardOpen(false)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -129,14 +88,9 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
         <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
           Sous-Chef
         </h1>
-        <div className="flex items-center gap-3">
-          <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-            Prepping tomorrow&apos;s post tonight
-          </span>
-          <PixelButton variant="ghost" onClick={() => setWizardOpen(true)}>
-            Show setup guide
-          </PixelButton>
-        </div>
+        <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
+          Prepping tomorrow&apos;s post tonight
+        </span>
       </div>
 
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 max-w-prose">

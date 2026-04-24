@@ -139,9 +139,9 @@ export function DraftsClient() {
       {drafts.length === 0 ? (
         <PixelEmptyState
           title="No drafts yet"
-          description="Agents can POST to /api/v1/drafts to queue up releases for you. You can also save a draft from the Kitchen."
+          description="Your Sous-Chef (agent) can create drafts for you. You can also save a draft from the Kitchen."
           cta={{ label: "Go to Kitchen", href: "/admin/kitchen" }}
-          secondaryCta={{ label: "Read API Docs", href: "/docs" }}
+          secondaryCta={{ label: "Check your sous-chef", href: "/admin/sous-chef" }}
         />
       ) : (
         <Masonry
