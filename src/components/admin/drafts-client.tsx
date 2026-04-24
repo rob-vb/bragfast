@@ -145,7 +145,7 @@ export function DraftsClient() {
         />
       ) : (
         <Masonry
-          breakpointCols={{ default: 3, 640: 2, 480: 1 }}
+          breakpointCols={{ default: 3, 1280: 2, 768: 1 }}
           className="flex -ml-4 w-auto"
           columnClassName="pl-4 space-y-4 bg-clip-padding"
         >
