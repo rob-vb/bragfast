@@ -7,7 +7,7 @@ import type { DraftConfig } from "@/lib/drafts/types";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS, migrateConfig } from "@/lib/templates/canvas-types";
 import { getCanvasDefaultConfig } from "@/lib/templates/canvas-defaults";
-import { buildDraftObjectData, buildBragfastSampleBrand } from "@/lib/preview-sample";
+import { buildDraftObjectData } from "@/lib/preview-sample";
 import type { Brand } from "@/lib/types";
 import { TemplatePreview } from "@/components/kitchen/template-preview";
 import { MotionPreview } from "@/components/editor/motion-preview";
@@ -76,12 +76,19 @@ export function DraftPreview({ config }: DraftPreviewProps) {
 
   const brandLoading = !!brandId && brandRecord === undefined;
 
+  const noBrand: Brand = useMemo(() => ({
+    name: "",
+    logoBase64: "",
+    website: "",
+    colors: config.colors ?? { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
+  }), [config.colors]);
+
   const brand: Brand = useMemo(() => {
-    if (!brandId) return buildBragfastSampleBrand();
-    if (brandRecord === undefined) return buildBragfastSampleBrand(); // not rendered (brandLoading guard below)
-    if (brandRecord === null) return buildBragfastSampleBrand();
+    if (!brandId) return noBrand;
+    if (brandRecord === undefined) return noBrand; // not rendered (brandLoading guard below)
+    if (brandRecord === null) return noBrand;
     return brandFromRecord(brandRecord);
-  }, [brandId, brandRecord]);
+  }, [brandId, brandRecord, noBrand]);
 
   const objectData = useMemo(() => {
     if (!templateConfig) return null;

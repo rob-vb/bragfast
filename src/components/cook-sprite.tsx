@@ -82,7 +82,7 @@ export function CookSprite({ pose, width = DEFAULT_WIDTH, className = "" }: Cook
       height={height}
       className={className}
       priority
-      unoptimized={false}
+      unoptimized
     />
   );
 }

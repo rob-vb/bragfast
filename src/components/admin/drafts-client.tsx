@@ -145,7 +145,7 @@ export function DraftsClient() {
         />
       ) : (
         <Masonry
-          breakpointCols={{ default: 3, 1024: 3, 640: 2, 0: 1 }}
+          breakpointCols={{ default: 3, 640: 2, 480: 1 }}
           className="flex -ml-4 w-auto"
           columnClassName="pl-4 space-y-4 bg-clip-padding"
         >
@@ -188,7 +188,6 @@ function DraftCard({
 
   const badgeRow = (
     <div className="flex items-center gap-2 mb-3 pr-10 flex-wrap">
-      <SourceBadge source={row.source} />
       {row.sourceSystem ? (
         <SourceSystemBadge
           system={row.sourceSystem}
@@ -310,21 +309,6 @@ function DraftCard({
       {titleBlock}
       {metaRow}
     </div>
-  );
-}
-
-function SourceBadge({ source }: { source: DraftSource }) {
-  const isAgent = source === "agent";
-  return (
-    <span
-      className={`
-        font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1
-        border-2 border-brand uppercase tracking-wider
-        ${isAgent ? "bg-gold text-brand" : "bg-white text-brand"}
-      `}
-    >
-      {isAgent ? "Agent" : "You"}
-    </span>
   );
 }
 
