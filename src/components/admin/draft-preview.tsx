@@ -74,9 +74,11 @@ export function DraftPreview({ config }: DraftPreviewProps) {
     [rawTemplate],
   );
 
+  const brandLoading = !!brandId && brandRecord === undefined;
+
   const brand: Brand = useMemo(() => {
     if (!brandId) return buildBragfastSampleBrand();
-    if (brandRecord === undefined) return buildBragfastSampleBrand(); // loading fallback (short window)
+    if (brandRecord === undefined) return buildBragfastSampleBrand(); // not rendered (brandLoading guard below)
     if (brandRecord === null) return buildBragfastSampleBrand();
     return brandFromRecord(brandRecord);
   }, [brandId, brandRecord]);
@@ -91,7 +93,7 @@ export function DraftPreview({ config }: DraftPreviewProps) {
     aspectRatio: `${dims.width} / ${dims.height}`,
   };
 
-  if (!templateConfig || !objectData) {
+  if (!templateConfig || !objectData || brandLoading) {
     return (
       <div
         className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"

@@ -197,32 +197,34 @@ function DraftCard({
     </div>
   );
 
-  const textBody = (
-    <>
-      <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
-        {title}
-      </h3>
-      <div className="flex items-center justify-between gap-2 font-[family-name:var(--font-geist-sans)] text-xs text-brand/60">
-        {config.templateId ? (
-          <span
-            className="font-[family-name:var(--font-geist-mono)] text-[11px] px-2 py-0.5 bg-surface border border-brand/30 truncate"
-            title={config.templateId}
-          >
-            {config.templateId}
-          </span>
-        ) : (
-          <span className="italic text-brand/40">no template</span>
-        )}
-        <span className="shrink-0">{formatRelative(row.created_at)}</span>
-      </div>
-    </>
+  const titleBlock = (
+    <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
+      {title}
+    </h3>
   );
 
-  const boundaryFallback = (
-    <div>
-      {badgeRow}
-      {textBody}
+  const metaRow = (
+    <div className="flex items-center justify-between gap-2 font-[family-name:var(--font-geist-sans)] text-xs text-brand/60">
+      {config.templateId ? (
+        <span
+          className="font-[family-name:var(--font-geist-mono)] text-[11px] px-2 py-0.5 bg-surface border border-brand/30 truncate"
+          title={config.templateId}
+        >
+          {config.templateId}
+        </span>
+      ) : (
+        <span className="italic text-brand/40">no template</span>
+      )}
+      <span className="shrink-0">{formatRelative(row.created_at)}</span>
     </div>
+  );
+
+  // Boundary fallback = pre-badge card body (badges rendered outside the boundary).
+  const boundaryFallback = (
+    <>
+      {titleBlock}
+      {metaRow}
+    </>
   );
 
   return (
@@ -287,7 +289,7 @@ function DraftCard({
       {badgeRow}
 
       <div className="mb-3" onClick={(e) => e.stopPropagation()}>
-        <DraftPreviewBoundary fallback={boundaryFallback}>
+        <DraftPreviewBoundary key={row.id} fallback={boundaryFallback}>
           <LazyMount
             rootMargin="200px"
             placeholder={
@@ -302,23 +304,8 @@ function DraftCard({
         </DraftPreviewBoundary>
       </div>
 
-      <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
-        {title}
-      </h3>
-
-      <div className="flex items-center justify-between gap-2 font-[family-name:var(--font-geist-sans)] text-xs text-brand/60">
-        {config.templateId ? (
-          <span
-            className="font-[family-name:var(--font-geist-mono)] text-[11px] px-2 py-0.5 bg-surface border border-brand/30 truncate"
-            title={config.templateId}
-          >
-            {config.templateId}
-          </span>
-        ) : (
-          <span className="italic text-brand/40">no template</span>
-        )}
-        <span className="shrink-0">{formatRelative(row.created_at)}</span>
-      </div>
+      {titleBlock}
+      {metaRow}
     </div>
   );
 }

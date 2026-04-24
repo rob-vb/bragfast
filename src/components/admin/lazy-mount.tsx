@@ -17,7 +17,7 @@ export function LazyMount({ rootMargin = "200px", placeholder, children }: LazyM
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || visible) return;
+    if (!el) return;
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -32,7 +32,7 @@ export function LazyMount({ rootMargin = "200px", placeholder, children }: LazyM
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [rootMargin, visible]);
+  }, [rootMargin]);
 
   return <div ref={ref}>{visible ? children : placeholder}</div>;
 }
