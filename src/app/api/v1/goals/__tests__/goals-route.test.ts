@@ -17,6 +17,12 @@ vi.mock("@convex/_generated/api", () => ({
       remove: "api.goals.remove",
       setEnabled: "api.goals.setEnabled",
     },
+    integrationSecrets: {
+      listByUser: "api.integrationSecrets.listByUser",
+    },
+    githubInstallations: {
+      listByUserId: "api.githubInstallations.listByUserId",
+    },
   },
 }));
 
@@ -41,7 +47,12 @@ describe("GET /api/v1/goals", () => {
   });
 
   it("returns goals list", async () => {
-    fetchQueryMock.mockResolvedValue([{ externalId: "goal_abc", metric: "mrr", target: 1000 }]);
+    fetchQueryMock.mockImplementation((ref: string) => {
+      if (ref === "api.goals.listByUser") {
+        return Promise.resolve([{ externalId: "goal_abc", provider: "stripe", metric: "mrr", scope: null, target: 1000 }]);
+      }
+      return Promise.resolve([]);
+    });
     const { GET } = await import("../route");
     const res = await GET(new Request("http://localhost/api/v1/goals"));
     expect(res.status).toBe(200);

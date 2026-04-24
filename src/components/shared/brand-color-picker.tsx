@@ -33,8 +33,15 @@ export function BrandColorPicker({
   useEffect(() => {
     fetch("/api/v1/brands")
       .then((r) => r.json())
-      .then((data) => setBrands(Array.isArray(data) ? data : data.brands || []))
+      .then((data) => {
+        const list: BrandOption[] = Array.isArray(data) ? data : data.brands || [];
+        setBrands(list);
+        if (!brandId && list.length > 0) {
+          onBrandChange(list[0].id, list[0].colors);
+        }
+      })
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleBrandChange(value: string) {

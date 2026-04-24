@@ -1,6 +1,7 @@
 import type { FormatKey, CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import type { ObjectDataMap } from "@/lib/templates/canvas-renderer";
 import type { Brand, AnimationPreset } from "@/lib/types";
+import type { DraftObjectContent } from "@/lib/drafts/types";
 
 // Per-preset default durations (mirrors render-video.ts logic)
 const PREVIEW_DEFAULT_DURATIONS: Partial<Record<AnimationPreset, number>> = {
@@ -34,6 +35,29 @@ export function buildSampleBrand(config: CanvasTemplateConfig): Brand {
     website: "",
     colors: config.colors,
   };
+}
+
+/** Populate an ObjectDataMap from a draft's object content, falling back to template previewText
+ *  when content is missing. Used by DraftPreview to render actual draft text inline. */
+export function buildDraftObjectData(
+  config: CanvasTemplateConfig,
+  objectContent: Record<string, DraftObjectContent> | undefined,
+  format: FormatKey,
+): ObjectDataMap {
+  const layout = config.formats[format] ?? config.formats.landscape;
+  const slide: ObjectDataMap = {};
+  for (const obj of layout.objects) {
+    const content = objectContent?.[obj.id];
+    if (obj.type === "text") {
+      slide[obj.id] = { text: content?.text ?? obj.previewText ?? "" };
+    } else if (content?.image_url) {
+      // CanvasRenderer accepts URLs in imageBase64 (client render path uses <img src>).
+      slide[obj.id] = { imageBase64: content.image_url };
+    } else if (content?.video_url) {
+      slide[obj.id] = { videoUrl: content.video_url };
+    }
+  }
+  return slide;
 }
 
 /** brag.fast-branded sample Brand for default-template previews and as fallback when the user has no brands yet.

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface CookSectionProps {
-  title: string;
+  title: React.ReactNode;
   locked?: boolean;
   defaultOpen?: boolean;
   /** Controlled open state (for accordion mode) */
@@ -35,7 +35,7 @@ export function CookSection({
     <div className={`border-b-2 border-brand/10 ${locked ? "opacity-40 pointer-events-none" : ""}`}>
       <button
         type="button"
-        className="w-full flex items-center justify-between py-3 px-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+        className="w-full flex items-center justify-between py-4 px-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         onClick={toggle}
         aria-expanded={open}
         disabled={locked}
