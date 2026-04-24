@@ -36,7 +36,9 @@ export function MotionPreview({
     : config;
 
   const dims = FORMAT_DIMENSIONS[format];
-  const duration = durationOverride ?? getPreviewDuration(previewConfig.animation_preset);
+  // Cap preview duration at 60s so a malformed draft with a huge duration can't freeze the page.
+  const rawDuration = durationOverride ?? getPreviewDuration(previewConfig.animation_preset);
+  const duration = Math.max(1, Math.min(60, rawDuration));
   const durationInFrames = Math.round(duration * 30);
 
   const resolvedSlides = slides && slides.length > 0 ? slides : [buildSampleSlide(previewConfig, format)];

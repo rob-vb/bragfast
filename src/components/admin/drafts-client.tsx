@@ -69,12 +69,15 @@ function isDraftEmpty(objectContent: Record<string, DraftObjectContent> | undefi
   return values.every((c) => !c?.text && !c?.image_url && !c?.video_url);
 }
 
+const VALID_FORMATS: FormatKey[] = ["landscape", "square", "portrait"];
+
 function primaryFormat(config: DraftConfig): FormatKey {
-  if (config.formats && config.formats.length > 0) {
-    if (config.formats.includes("landscape")) return "landscape";
-    return config.formats[0];
-  }
-  return "landscape";
+  const formats = config.formats ?? [];
+  if (formats.includes("landscape")) return "landscape";
+  const first = formats.find((f): f is FormatKey =>
+    VALID_FORMATS.includes(f as FormatKey),
+  );
+  return first ?? "landscape";
 }
 
 export function DraftsClient() {

@@ -57,7 +57,7 @@ export function CookSprite({ pose, width = 180, className = "" }: CookSpriteProp
       width={width}
       height={height}
       className={className}
-      style={{ imageRendering: "pixelated" }}
+      style={{ imageRendering: "auto" }}
     />
   );
 }
