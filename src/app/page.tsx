@@ -91,7 +91,7 @@ export default function Home() {
       {/* Sous-Chef audience section */}
       <section className="pt-16 md:pt-24 pb-0 bg-surface border-b-2 border-brand overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14">
+          <div className="grid grid-cols-[2fr_1fr] md:grid-cols-[1fr_1.1fr] gap-6 md:gap-14">
             <div className="flex flex-col gap-5 pb-16 md:pb-24">
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-[3px] bg-gold" />
@@ -100,10 +100,10 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your agent spots your wins. You can focus on building.
+                Your sous-chef (agent) spots your wins so you can focus on building.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.
+                The sous-chef watches your connected integrations. When a PR merges, a milestone hits, or GitHub stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.
               </p>
               <CtaLink
                 signedOutHref="/signup"
@@ -113,13 +113,13 @@ export default function Home() {
                 Connect an integration
               </CtaLink>
             </div>
-            <div className="relative self-stretch hidden md:block">
+            <div className="relative self-stretch overflow-hidden md:overflow-visible">
               <Image
                 src="/cook/sous-chef.png"
                 alt="Sous-Chef"
                 width={418}
                 height={940}
-                className="absolute top-0 left-1/2 -translate-x-1/2 md:-translate-y-12 w-auto max-w-[240px] md:max-w-[300px] h-auto"
+                className="absolute top-0 left-1/2 -translate-x-1/2 md:-translate-y-12 w-auto max-w-[160px] md:max-w-[300px] h-auto"
               />
             </div>
           </div>

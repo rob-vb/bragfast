@@ -12,6 +12,7 @@ export type ComposeCopyInput =
       title: string;
       body: string;
       repoFullName: string;
+      commits?: string[];
       brandName?: string;
       brandVoice?: string;
     }
@@ -105,8 +106,21 @@ async function composePrMerged(
 ): Promise<Copy> {
   const system = `${BASE_SYSTEM}
 You summarize a merged pull request into a shippable announcement.
-The title is a catchy headline (5-10 words) — not the raw PR title, and not a version number.
-The description explains what shipped and why users should care (1-3 sentences).`;
+Title: 8 words max, catchy headline — not the raw PR title, not a version number.
+
+For description, choose ONE format based on the PR:
+- SINGLE thing shipped: 1-2 sentences, max 300 chars.
+- MULTIPLE distinct features (2+): use EXACTLY this format in the JSON string value, with \\n as the separator character between lines:
+  "- [most impactful feature]\\n- [second feature]\\n- [third feature]\\n- And more ..."
+  Max 3 features. Add "- And more ..." only if there are more than 3. Max 300 chars total.
+
+IMPORTANT: When using the bullet format, the \\n must appear literally in the JSON string (as the two characters backslash and n), not as a real newline. Example JSON: {"title": "...", "description": "- Feature one\\n- Feature two\\n- And more ..."}
+`;
+
+  const commitSection =
+    input.commits && input.commits.length > 0
+      ? `\nCommit messages:\n${input.commits.map((m) => `- ${m}`).join("\n")}`
+      : "";
 
   const user = `Repo: ${input.repoFullName}
 ${brandLine(input)}
@@ -114,7 +128,7 @@ PR title: ${input.title}
 PR body:
 ---
 ${input.body.slice(0, 2000) || "(empty)"}
----
+---${commitSection}
 
 Write the brag post JSON.`;
 
@@ -126,7 +140,7 @@ Write the brag post JSON.`;
       title: input.title.slice(0, 140),
       description: "",
     },
-    maxTokens: 400,
+    maxTokens: 300,
   });
 }
 

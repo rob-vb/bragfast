@@ -48,6 +48,7 @@ export function buildPrMergeDraftInput(
   payload: GitHubPullRequestPayload,
   userId: string,
   brand?: { brandName?: string; brandVoice?: string },
+  commits?: string[],
 ): PrMergeDraftInput {
   const repoFullName = payload.repository.full_name;
   const prNumber = payload.pull_request.number;
@@ -70,6 +71,7 @@ export function buildPrMergeDraftInput(
       title,
       body,
       repoFullName,
+      commits,
       brandName: brand?.brandName,
       brandVoice: brand?.brandVoice,
     },

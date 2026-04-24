@@ -2,6 +2,7 @@ import { after } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { verifyWebhookSignature } from "@/lib/github/verify-webhook";
+import { getInstallationToken } from "@/lib/github/auth";
 import {
   shouldHandlePrMerge,
   buildPrMergeDraftInput,
@@ -121,12 +122,50 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
   return Response.json({ ok: true, mode: "draft_scheduled" });
 }
 
+async function fetchPrCommits(
+  installationId: number,
+  repoFullName: string,
+  prNumber: number,
+): Promise<string[]> {
+  try {
+    const token = await getInstallationToken(installationId);
+    const res = await fetch(
+      `https://api.github.com/repos/${repoFullName}/pulls/${prNumber}/commits?per_page=50`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data as Array<{ commit: { message: string } }>)
+      .map((c) => c.commit.message.split("\n")[0].trim())
+      .filter((m) => m && !m.startsWith("Merge"));
+  } catch {
+    return [];
+  }
+}
+
 async function createPrMergeDraft(
   payload: GitHubPullRequestPayload,
   userId: string,
 ) {
   try {
-    const input = buildPrMergeDraftInput(payload, userId);
+    const body = payload.pull_request.body ?? "";
+    const installationId = payload.installation?.id;
+    const commits =
+      body.trim().length < 30 && installationId
+        ? await fetchPrCommits(
+            installationId,
+            payload.repository.full_name,
+            payload.pull_request.number,
+          )
+        : undefined;
+
+    const input = buildPrMergeDraftInput(payload, userId, undefined, commits);
     const [pick, copy] = await Promise.all([
       pickTemplate(input.pickTemplateInput),
       composeCopy(input.composeCopyInput),
