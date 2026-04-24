@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 /**
- * Renders one chef pose from the `public/cook/chefs/` image set (18 PNGs, ~114×267 native, transparent BG).
+ * Renders one chef pose from the `public/cook/chefs/` image set.
  * Pose names map to specific chef_NN.png files — edit POSE_INDEX below to retarget any pose.
  */
 
@@ -36,8 +36,28 @@ const POSE_INDEX: Record<ChefPose, number> = {
   wave: 13,
 };
 
-const NATIVE_WIDTH = 114;
-const NATIVE_HEIGHT = 267;
+const POSE_DIMENSIONS: Record<number, { width: number; height: number }> = {
+  0: { width: 114, height: 267 },
+  1: { width: 123, height: 264 },
+  2: { width: 117, height: 264 },
+  3: { width: 127, height: 264 },
+  4: { width: 137, height: 259 },
+  5: { width: 135, height: 264 },
+  6: { width: 132, height: 261 },
+  7: { width: 124, height: 264 },
+  8: { width: 125, height: 264 },
+  9: { width: 141, height: 281 },
+  10: { width: 151, height: 271 },
+  11: { width: 162, height: 271 },
+  12: { width: 184, height: 268 },
+  13: { width: 168, height: 265 },
+  14: { width: 199, height: 264 },
+  15: { width: 202, height: 258 },
+  16: { width: 184, height: 259 },
+  17: { width: 161, height: 259 },
+};
+
+const DEFAULT_WIDTH = 114;
 
 interface CookSpriteProps {
   pose: ChefPose;
@@ -45,15 +65,18 @@ interface CookSpriteProps {
   className?: string;
 }
 
-// Default width matches NATIVE_WIDTH so the chef renders 1:1 — no upscale, no aliasing.
-export function CookSprite({ pose, width = NATIVE_WIDTH, className = "" }: CookSpriteProps) {
+// Default width keeps the chef visually consistent in the sidebar.
+export function CookSprite({ pose, width = DEFAULT_WIDTH, className = "" }: CookSpriteProps) {
   const idx = POSE_INDEX[pose];
-  const src = `/cook/chefs/chef_${idx.toString().padStart(2, "0")}.png`;
-  const height = Math.round((width * NATIVE_HEIGHT) / NATIVE_WIDTH);
+  const asset = {
+    src: `/cook/chefs/chef_${idx.toString().padStart(2, "0")}.png`,
+    ...POSE_DIMENSIONS[idx],
+  };
+  const height = Math.round((width * asset.height) / asset.width);
 
   return (
     <Image
-      src={src}
+      src={asset.src}
       alt={`Sous-Chef: ${pose}`}
       width={width}
       height={height}

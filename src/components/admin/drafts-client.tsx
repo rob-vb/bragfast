@@ -291,7 +291,7 @@ function DraftCard({
 
       {badgeRow}
 
-      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+      <div className="mb-3">
         <DraftPreviewBoundary key={row.id} fallback={boundaryFallback}>
           <LazyMount
             rootMargin="200px"
