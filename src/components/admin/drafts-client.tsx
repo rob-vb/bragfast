@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
+import Masonry from "react-masonry-css";
 import { useUserId } from "@/hooks/use-user-id";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { derivePreviewTitle } from "@/lib/drafts/preview";
-import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
+import type { DraftConfig, DraftObjectContent, DraftSource } from "@/lib/drafts/types";
+import type { FormatKey } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
+import { DraftPreview } from "./draft-preview";
+import { DraftPreviewBoundary } from "./draft-preview-boundary";
+import { LazyMount } from "./lazy-mount";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +60,21 @@ function parseConfig(raw: string): DraftConfig {
   } catch {
     return { output: "image" };
   }
+}
+
+function isDraftEmpty(objectContent: Record<string, DraftObjectContent> | undefined): boolean {
+  if (!objectContent) return true;
+  const values = Object.values(objectContent);
+  if (values.length === 0) return true;
+  return values.every((c) => !c?.text && !c?.image_url && !c?.video_url);
+}
+
+function primaryFormat(config: DraftConfig): FormatKey {
+  if (config.formats && config.formats.length > 0) {
+    if (config.formats.includes("landscape")) return "landscape";
+    return config.formats[0];
+  }
+  return "landscape";
 }
 
 export function DraftsClient() {
@@ -120,7 +141,11 @@ export function DraftsClient() {
           secondaryCta={{ label: "Read API Docs", href: "/docs" }}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Masonry
+          breakpointCols={{ default: 3, 1024: 3, 640: 2, 0: 1 }}
+          className="flex -ml-4 w-auto"
+          columnClassName="pl-4 space-y-4 bg-clip-padding"
+        >
           {drafts.map((row) => (
             <DraftCard
               key={row.id}
@@ -129,7 +154,7 @@ export function DraftsClient() {
               onDelete={() => handleDelete(row.id)}
             />
           ))}
-        </div>
+        </Masonry>
       )}
     </div>
   );
@@ -145,12 +170,60 @@ function DraftCard({
   onDelete: () => void;
 }) {
   const router = useRouter();
-  const config = parseConfig(row.config);
+  const config = useMemo(() => parseConfig(row.config), [row.config]);
   const title = derivePreviewTitle(config, row.name);
+  const empty = isDraftEmpty(config.objectContent);
+  const fmt = primaryFormat(config);
+  const dims = FORMAT_DIMENSIONS[fmt];
+  const aspectStyle: React.CSSProperties = {
+    aspectRatio: `${dims.width} / ${dims.height}`,
+  };
 
   function open() {
     router.push(`/admin/kitchen?draft=${encodeURIComponent(row.id)}`);
   }
+
+  const badgeRow = (
+    <div className="flex items-center gap-2 mb-3 pr-10 flex-wrap">
+      <SourceBadge source={row.source} />
+      {row.sourceSystem ? (
+        <SourceSystemBadge
+          system={row.sourceSystem}
+          milestoneKey={row.milestoneKey ?? undefined}
+        />
+      ) : null}
+      <OutputBadge output={config.output} />
+      {empty ? <EmptyBadge /> : null}
+    </div>
+  );
+
+  const textBody = (
+    <>
+      <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
+        {title}
+      </h3>
+      <div className="flex items-center justify-between gap-2 font-[family-name:var(--font-geist-sans)] text-xs text-brand/60">
+        {config.templateId ? (
+          <span
+            className="font-[family-name:var(--font-geist-mono)] text-[11px] px-2 py-0.5 bg-surface border border-brand/30 truncate"
+            title={config.templateId}
+          >
+            {config.templateId}
+          </span>
+        ) : (
+          <span className="italic text-brand/40">no template</span>
+        )}
+        <span className="shrink-0">{formatRelative(row.created_at)}</span>
+      </div>
+    </>
+  );
+
+  const boundaryFallback = (
+    <div>
+      {badgeRow}
+      {textBody}
+    </div>
+  );
 
   return (
     <div
@@ -167,8 +240,7 @@ function DraftCard({
         relative border-2 border-brand bg-white p-4
         shadow-[4px_4px_0_var(--color-brand)]
         hover:shadow-[2px_2px_0_var(--color-brand)]
-        hover:translate-x-[2px] hover:translate-y-[2px]
-        transition-all cursor-pointer
+        transition-shadow cursor-pointer
         focus:outline-2 focus:outline-offset-2 focus:outline-gold
         ${busy ? "opacity-50 pointer-events-none" : ""}
       `}
@@ -212,15 +284,22 @@ function DraftCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="flex items-center gap-2 mb-3 pr-10 flex-wrap">
-        <SourceBadge source={row.source} />
-        {row.sourceSystem ? (
-          <SourceSystemBadge
-            system={row.sourceSystem}
-            milestoneKey={row.milestoneKey ?? undefined}
-          />
-        ) : null}
-        <OutputBadge output={config.output} />
+      {badgeRow}
+
+      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+        <DraftPreviewBoundary fallback={boundaryFallback}>
+          <LazyMount
+            rootMargin="200px"
+            placeholder={
+              <div
+                className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"
+                style={aspectStyle}
+              />
+            }
+          >
+            <DraftPreview config={config} />
+          </LazyMount>
+        </DraftPreviewBoundary>
       </div>
 
       <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
@@ -292,6 +371,17 @@ function OutputBadge({ output }: { output: "image" | "video" }) {
       `}
     >
       {output}
+    </span>
+  );
+}
+
+function EmptyBadge() {
+  return (
+    <span
+      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-surface text-brand"
+      title="This draft has no content yet — preview shows template placeholder text."
+    >
+      Empty
     </span>
   );
 }

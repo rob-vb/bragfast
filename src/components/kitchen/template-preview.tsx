@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useRef, useState, useLayoutEffect, useEffect, memo } from "react";
-import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
+import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
+import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import type { Brand } from "@/lib/types";
-import { CanvasRenderer } from "@/lib/templates/canvas-renderer";
+import { CanvasRenderer, type ObjectDataMap } from "@/lib/templates/canvas-renderer";
 import { buildSampleSlide } from "@/lib/preview-sample";
 
 const injectedFonts = new Set<string>();
@@ -17,30 +18,31 @@ function injectGoogleFont(family: string) {
   document.head.appendChild(link);
 }
 
-// Landscape 1200×675 — matches aspect-video container used in RecipeStep thumbnail slot
-const PREVIEW_WIDTH = 1200;
-const PREVIEW_HEIGHT = 675;
-
 interface TemplatePreviewProps {
   config: CanvasTemplateConfig;
   brand: Brand;
+  format?: FormatKey;
+  objectData?: ObjectDataMap;
 }
 
 /**
  * Renders a live, scaled-down preview of a template.
- * Uses `transform: scale()` so the full 1200×675 CanvasRenderer fits inside whatever
- * parent container it's placed in (typically an aspect-video tile).
+ * Uses `transform: scale()` so the full-size CanvasRenderer fits inside whatever
+ * parent container it's placed in (parent sets aspect-ratio to match `format`).
  */
-export const TemplatePreview = memo(function TemplatePreview({ config, brand }: TemplatePreviewProps) {
+export const TemplatePreview = memo(function TemplatePreview({
+  config,
+  brand,
+  format = "landscape",
+  objectData,
+}: TemplatePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
+  const { width: previewWidth, height: previewHeight } = FORMAT_DIMENSIONS[format];
 
   useEffect(() => {
-    // Always load Plus Jakarta Sans (default font, not in app layout)
     injectGoogleFont("Plus Jakarta Sans");
-    // Load brand font
     if (brand.font_family) injectGoogleFont(brand.font_family);
-    // Load per-object fonts
     for (const fmt of Object.values(config.formats)) {
       for (const obj of fmt.objects) {
         if (obj.fontFamily) injectGoogleFont(obj.fontFamily);
@@ -53,7 +55,7 @@ export const TemplatePreview = memo(function TemplatePreview({ config, brand }: 
     if (!container) return;
 
     const update = () => {
-      setScale(container.clientWidth / PREVIEW_WIDTH);
+      setScale(container.clientWidth / previewWidth);
     };
 
     update();
@@ -61,25 +63,25 @@ export const TemplatePreview = memo(function TemplatePreview({ config, brand }: 
     const ro = new ResizeObserver(update);
     ro.observe(container);
     return () => ro.disconnect();
-  }, []);
+  }, [previewWidth]);
 
-  const objectData = buildSampleSlide(config, "landscape");
+  const slideData = objectData ?? buildSampleSlide(config, format);
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
       {scale > 0 && (
         <div
           style={{
-            width: PREVIEW_WIDTH,
-            height: PREVIEW_HEIGHT,
+            width: previewWidth,
+            height: previewHeight,
             transformOrigin: "top left",
             transform: `scale(${scale})`,
           }}
         >
           <CanvasRenderer
             config={config}
-            format="landscape"
-            objectData={objectData}
+            format={format}
+            objectData={slideData}
             brand={brand}
             showPlaceholders
           />

@@ -3,7 +3,8 @@ import dynamic from "next/dynamic";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import { VideoCanvasComposition } from "@/remotion/VideoCanvasComposition";
-import type { AnimationPreset } from "@/lib/types";
+import type { AnimationPreset, Brand } from "@/lib/types";
+import type { ObjectDataMap } from "@/lib/templates/canvas-renderer";
 import { getPreviewDuration, buildSampleSlide, buildSampleBrand } from "@/lib/preview-sample";
 
 // Dynamic import to avoid SSR issues with @remotion/player browser APIs
@@ -14,6 +15,10 @@ interface MotionPreviewProps {
   config: CanvasTemplateConfig;
   format?: FormatKey;
   presetOverride?: AnimationPreset;
+  durationOverride?: number;
+  slides?: ObjectDataMap[];
+  brand?: Brand;
+  /** When omitted, component fills its container (100%) and derives height from aspect. */
   width?: number;
 }
 
@@ -21,30 +26,38 @@ export function MotionPreview({
   config,
   format = "landscape",
   presetOverride,
-  width = 240,
+  durationOverride,
+  slides,
+  brand,
+  width,
 }: MotionPreviewProps) {
   const previewConfig: CanvasTemplateConfig = presetOverride
     ? { ...config, animation_preset: presetOverride }
     : config;
 
   const dims = FORMAT_DIMENSIONS[format];
-  const height = Math.round(width * dims.height / dims.width);
-
-  const duration = getPreviewDuration(previewConfig.animation_preset);
+  const duration = durationOverride ?? getPreviewDuration(previewConfig.animation_preset);
   const durationInFrames = Math.round(duration * 30);
 
-  const slide = buildSampleSlide(previewConfig, format);
-  const brand = buildSampleBrand(previewConfig);
+  const resolvedSlides = slides && slides.length > 0 ? slides : [buildSampleSlide(previewConfig, format)];
+  const resolvedBrand = brand ?? buildSampleBrand(previewConfig);
+
+  const fixedWidth = typeof width === "number" ? width : undefined;
+  const fixedHeight = fixedWidth ? Math.round((fixedWidth * dims.height) / dims.width) : undefined;
+
+  const style: React.CSSProperties = fixedWidth
+    ? { width: fixedWidth, height: fixedHeight }
+    : { width: "100%", aspectRatio: `${dims.width} / ${dims.height}` };
 
   return (
-    <div style={{ width, height, overflow: "hidden" }}>
+    <div style={{ ...style, overflow: "hidden" }}>
       <Player
         component={VideoCanvasComposition}
         inputProps={{
           config: previewConfig,
           format,
-          slides: [slide],
-          brand,
+          slides: resolvedSlides,
+          brand: resolvedBrand,
           slideDuration: duration,
           showPlaceholders: true,
         }}
@@ -52,7 +65,7 @@ export function MotionPreview({
         compositionWidth={dims.width}
         compositionHeight={dims.height}
         fps={30}
-        style={{ width, height }}
+        style={{ width: "100%", height: "100%" }}
         autoPlay={true}
         loop={true}
         controls={false}
