@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { KitchenScene3D } from "@/components/kitchen/kitchen-scene-3d";
-import { CookSection } from "@/components/kitchen/cook-section";
+import { CookSection } from "@/components/ui/cook-section";
 import type { CookStep } from "@/components/kitchen/kitchen-animation-state";
 import { RecipeStep, type TemplateItem } from "@/components/kitchen/recipe-step";
 import { SeasoningStep } from "@/components/kitchen/seasoning-step";
