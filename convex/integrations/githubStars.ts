@@ -6,13 +6,11 @@ import { internal, api } from "../_generated/api";
 import { v } from "convex/values";
 import { getInstallationToken } from "../../src/lib/github/auth";
 import {
-  parseStarMilestoneKeyForRepo,
-  detectCrossedStarThresholds,
-} from "../../src/lib/integrations/github-star-milestones";
-import {
   buildIdempotencyKey,
-  starMilestoneKey,
+  goalMilestoneKey,
 } from "../../src/lib/drafts/idempotency-key";
+import { typedMilestoneKey } from "../../src/lib/goals/types";
+import type { GoalMetric } from "../../src/lib/goals/types";
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
@@ -20,6 +18,15 @@ import type { DraftConfig } from "../../src/lib/drafts/types";
 type RepoConfig = {
   installationId: number;
   repoFullName: string;
+  enabled: boolean;
+};
+
+type StarGoal = {
+  externalId: string;
+  metric: GoalMetric;
+  target: number | null;
+  scope: string | null;
+  label: string | null;
   enabled: boolean;
 };
 
@@ -45,7 +52,7 @@ async function fetchStarCount(
 }
 
 // Per-user scan: walks each installation's enabled repos, polls star counts,
-// fires drafts for newly-crossed thresholds per repo.
+// fires drafts for newly-crossed goal thresholds per repo.
 export const scan = internalAction({
   args: { userId: v.string(), installationId: v.number() },
   handler: async (ctx, { userId, installationId }) => {
@@ -63,22 +70,43 @@ export const scan = internalAction({
         { userId, sourceSystem: "github" },
       )) as string[];
 
-      const results: Array<{ repo: string; stars: number; fired: number[] }> = [];
+      const firedGoalIds = new Set(
+        hitKeys
+          .filter((k) => k.startsWith("goal:"))
+          .map((k) => k.slice("goal:".length)),
+      );
+
+      const goals = (await ctx.runQuery(
+        internal.goals.listEnabledByUserProvider,
+        { userId, provider: "github" },
+      )) as StarGoal[];
+
+      const results: Array<{ repo: string; stars: number; fired: number }> = [];
+      const starMap: Record<string, number> = {};
 
       for (const cfg of enabledRepos) {
-        const stars = await fetchStarCount(token, cfg.repoFullName);
-        const alreadyHit = hitKeys
-          .map((k) => parseStarMilestoneKeyForRepo(k, cfg.repoFullName))
-          .filter((n): n is number => n !== null);
-        const crossed = detectCrossedStarThresholds(stars, alreadyHit);
-        for (const threshold of crossed) {
-          await fireDraft(ctx, userId, cfg.repoFullName, threshold);
+        const repoGoals = goals.filter((g) => g.scope === cfg.repoFullName);
+        if (repoGoals.length === 0) {
+          results.push({ repo: cfg.repoFullName, stars: 0, fired: 0 });
+          continue;
         }
-        results.push({ repo: cfg.repoFullName, stars, fired: crossed });
+
+        const stars = await fetchStarCount(token, cfg.repoFullName);
+        starMap[cfg.repoFullName] = stars;
+        let fired = 0;
+        for (const goal of repoGoals) {
+          if (firedGoalIds.has(goal.externalId)) continue;
+          if (stars < (goal.target ?? 0)) continue;
+          await fireDraft(ctx, userId, goal);
+          fired++;
+        }
+        results.push({ repo: cfg.repoFullName, stars, fired });
       }
+
       await ctx.runMutation(internal.githubInstallations.recordScanResult, {
         installationId,
         ok: true,
+        snapshotJson: JSON.stringify(starMap),
       });
       return { ok: true, results };
     } catch (err) {
@@ -105,21 +133,50 @@ export const seedFromCurrentState = internalAction({
       api.githubRepoConfigs.listByInstallation,
       { installationId },
     )) as RepoConfig[];
-    const enabledRepos = configs.filter((c) => c.enabled);
 
-    const seeded: Array<{ repo: string; thresholds: number[] }> = [];
-    for (const cfg of enabledRepos) {
-      const stars = await fetchStarCount(token, cfg.repoFullName);
-      const crossed = detectCrossedStarThresholds(stars, []);
-      for (const threshold of crossed) {
+    // Seed default star goals for each repo (enabled or not)
+    const repoFullNames = configs.map((c) => c.repoFullName);
+    await ctx.runMutation(internal.goals.seedDefaultsForProvider, {
+      userId,
+      provider: "github",
+      repoFullNames,
+    });
+
+    const goals = (await ctx.runQuery(
+      internal.goals.listEnabledByUserProvider,
+      { userId, provider: "github" },
+    )) as StarGoal[];
+
+    // Fetch stars for any repo that has a goal, regardless of repo enabled flag
+    const reposWithGoals = [...new Set(goals.map((g) => g.scope).filter(Boolean) as string[])];
+
+    const seeded: Array<{ repo: string; goalIds: string[] }> = [];
+    const starMap: Record<string, number> = {};
+    for (const repoFullName of reposWithGoals) {
+      const repoGoals = goals.filter((g) => g.scope === repoFullName);
+      if (repoGoals.length === 0) continue;
+
+      const stars = await fetchStarCount(token, repoFullName);
+      starMap[repoFullName] = stars;
+      const goalIds: string[] = [];
+      for (const goal of repoGoals) {
+        if (stars < (goal.target ?? 0)) continue;
         await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
           userId,
           sourceSystem: "github",
-          milestoneKey: starMilestoneKey(cfg.repoFullName, threshold),
+          milestoneKey: goalMilestoneKey(goal.externalId),
         });
+        goalIds.push(goal.externalId);
       }
-      seeded.push({ repo: cfg.repoFullName, thresholds: crossed });
+      if (goalIds.length > 0) seeded.push({ repo: repoFullName, goalIds });
     }
+
+    await ctx.runMutation(internal.githubInstallations.recordScanResult, {
+      installationId,
+      ok: true,
+      snapshotJson: JSON.stringify(starMap),
+    });
+
     return { seeded };
   },
 });
@@ -149,15 +206,29 @@ export const scanAll = internalAction({
 async function fireDraft(
   ctx: ActionCtx,
   userId: string,
-  repoFullName: string,
-  threshold: number,
+  goal: StarGoal,
 ): Promise<void> {
-  const milestoneKey = starMilestoneKey(repoFullName, threshold);
-  const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
+  const milestoneKey = typedMilestoneKey({
+    metric: goal.metric,
+    target: goal.target ?? undefined,
+    scope: goal.scope ?? undefined,
+    provider: "github",
+  });
+  const idempotencyKey = buildIdempotencyKey(
+    userId,
+    "github",
+    goalMilestoneKey(goal.externalId),
+  );
+
   const [pick, copy] = await Promise.all([
     pickTemplate({ milestoneKey }),
-    composeCopy({ type: "star", repoFullName, threshold }),
+    composeCopy({
+      type: "star",
+      repoFullName: goal.scope ?? "",
+      threshold: goal.target ?? 0,
+    }),
   ]);
+
   const draftConfig: DraftConfig = {
     output: "image",
     templateId: pick.templateId,
@@ -167,6 +238,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
+
   await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
@@ -176,4 +248,5 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
+  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
 }

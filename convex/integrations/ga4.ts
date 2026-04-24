@@ -7,13 +7,11 @@ import { internal, api } from "../_generated/api";
 import { v } from "convex/values";
 import { open } from "../../src/lib/crypto/secret-box";
 import {
-  parseGa4VisitorMilestoneKey,
-  detectCrossedGa4Thresholds,
-} from "../../src/lib/integrations/ga4-milestones";
-import {
   buildIdempotencyKey,
-  visitorsMilestoneKey,
+  goalMilestoneKey,
 } from "../../src/lib/drafts/idempotency-key";
+import { typedMilestoneKey } from "../../src/lib/goals/types";
+import type { GoalMetric } from "../../src/lib/goals/types";
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
@@ -27,10 +25,19 @@ type ServiceAccountKey = {
   private_key: string;
 };
 
+type VisitorGoal = {
+  externalId: string;
+  metric: GoalMetric;
+  target: number | null;
+  scope: string | null;
+  label: string | null;
+  enabled: boolean;
+};
+
 async function readState(ctx: ActionCtx, userId: string): Promise<{
   creds: ServiceAccountKey;
   extra: Ga4Extra;
-  alreadyHit: number[];
+  hitKeys: string[];
 } | null> {
   const sealed = await ctx.runQuery(
     internal.integrationSecrets.getSealedForScan,
@@ -59,15 +66,12 @@ async function readState(ctx: ActionCtx, userId: string): Promise<{
   }
   if (!extra.propertyId) return null;
 
-  const hitKeys = await ctx.runQuery(api.milestoneHits.listByUserSource, {
+  const hitKeys = (await ctx.runQuery(api.milestoneHits.listByUserSource, {
     userId,
     sourceSystem: "ga4",
-  });
-  const alreadyHit = (hitKeys as string[])
-    .map(parseGa4VisitorMilestoneKey)
-    .filter((n): n is number => n !== null);
+  })) as string[];
 
-  return { creds, extra, alreadyHit };
+  return { creds, extra, hitKeys };
 }
 
 async function fetchTotalUsers30d(
@@ -117,20 +121,41 @@ export const scan = internalAction({
     try {
       const state = await readState(ctx, userId);
       if (!state) return { skipped: "not_connected" };
-      const visitors = await fetchTotalUsers30d(state.creds, state.extra);
-      const newThresholds = detectCrossedGa4Thresholds(
-        visitors,
-        state.alreadyHit,
+
+      const { creds, extra, hitKeys } = state;
+      const firedGoalIds = new Set(
+        hitKeys
+          .filter((k) => k.startsWith("goal:"))
+          .map((k) => k.slice("goal:".length)),
       );
-      for (const threshold of newThresholds) {
-        await fireDraft(ctx, userId, threshold);
+
+      const goals = (await ctx.runQuery(
+        internal.goals.listEnabledByUserProvider,
+        { userId, provider: "ga4" },
+      )) as VisitorGoal[];
+
+      if (goals.length === 0) {
+        await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
+          userId, provider: "ga4", ok: true,
+        });
+        return { ok: true, fired: 0, reason: "no_goals" };
       }
+
+      const visitors = await fetchTotalUsers30d(creds, extra);
+
+      let fired = 0;
+      for (const goal of goals) {
+        if (firedGoalIds.has(goal.externalId)) continue;
+        if (visitors < (goal.target ?? 0)) continue;
+        await fireDraft(ctx, userId, goal, visitors);
+        fired++;
+      }
+
       await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
-        userId,
-        provider: "ga4",
-        ok: true,
+        userId, provider: "ga4", ok: true,
+        snapshotJson: JSON.stringify({ visitors }),
       });
-      return { ok: true, visitors, fired: newThresholds };
+      return { ok: true, visitors, fired };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
@@ -150,16 +175,36 @@ export const seedFromCurrentState = internalAction({
   handler: async (ctx, { userId }) => {
     const state = await readState(ctx, userId);
     if (!state) return { skipped: "not_connected" };
+
+    await ctx.runMutation(internal.goals.seedDefaultsForProvider, {
+      userId,
+      provider: "ga4",
+    });
+
     const visitors = await fetchTotalUsers30d(state.creds, state.extra);
-    const crossed = detectCrossedGa4Thresholds(visitors, []);
-    for (const threshold of crossed) {
+
+    const goals = (await ctx.runQuery(
+      internal.goals.listEnabledByUserProvider,
+      { userId, provider: "ga4" },
+    )) as VisitorGoal[];
+
+    const seeded: string[] = [];
+    for (const goal of goals) {
+      if (visitors < (goal.target ?? 0)) continue;
       await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
         userId,
         sourceSystem: "ga4",
-        milestoneKey: visitorsMilestoneKey("ga4", threshold),
+        milestoneKey: goalMilestoneKey(goal.externalId),
       });
+      seeded.push(goal.externalId);
     }
-    return { seeded: crossed, visitors };
+
+    await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
+      userId, provider: "ga4", ok: true,
+      snapshotJson: JSON.stringify({ visitors }),
+    });
+
+    return { seeded, visitors };
   },
 });
 
@@ -182,14 +227,26 @@ export const scanAll = internalAction({
 async function fireDraft(
   ctx: ActionCtx,
   userId: string,
-  threshold: number,
+  goal: VisitorGoal,
+  visitors: number,
 ): Promise<void> {
-  const milestoneKey = visitorsMilestoneKey("ga4", threshold);
-  const idempotencyKey = buildIdempotencyKey(userId, "ga4", milestoneKey);
+  const milestoneKey = typedMilestoneKey({
+    metric: goal.metric,
+    target: goal.target ?? undefined,
+    scope: goal.scope ?? undefined,
+    provider: "ga4",
+  });
+  const idempotencyKey = buildIdempotencyKey(
+    userId,
+    "ga4",
+    goalMilestoneKey(goal.externalId),
+  );
+
   const [pick, copy] = await Promise.all([
     pickTemplate({ milestoneKey }),
-    composeCopy({ type: "visitors", source: "ga4", threshold }),
+    composeCopy({ type: "visitors", source: "ga4", threshold: goal.target ?? visitors }),
   ]);
+
   const draftConfig: DraftConfig = {
     output: "image",
     templateId: pick.templateId,
@@ -199,6 +256,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
+
   await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
@@ -208,4 +266,5 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
+  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
 }

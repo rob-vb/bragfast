@@ -9,27 +9,40 @@ import { open } from "../../src/lib/crypto/secret-box";
 import {
   computeMrrUsd,
   lineItemMonthlyUsd,
-  detectCrossedMrrThresholds,
-  shouldFireFirstSale,
   type SubscriptionLike,
 } from "../../src/lib/integrations/stripe-milestones";
 import {
   buildIdempotencyKey,
-  mrrMilestoneKey,
-  firstSaleMilestoneKey,
+  goalMilestoneKey,
 } from "../../src/lib/drafts/idempotency-key";
+import { typedMilestoneKey } from "../../src/lib/goals/types";
+import type { GoalMetric } from "../../src/lib/goals/types";
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
 
-async function readState(
+type StripeGoal = {
+  externalId: string;
+  metric: GoalMetric;
+  target: number | null;
+  scope: string | null;
+  label: string | null;
+  enabled: boolean;
+};
+
+type StripeSnapshot = {
+  mrrUsd: number;
+  totalRevenueUsd: number;
+  activeSubscriberCount: number;
+  hasSuccessfulCharge: boolean;
+};
+
+const ACTIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
+
+async function readCredentials(
   ctx: ActionCtx,
   userId: string,
-): Promise<{
-  stripe: Stripe;
-  alreadyHitMrr: number[];
-  alreadyHitFirstSale: boolean;
-} | null> {
+): Promise<{ stripe: Stripe; hitKeys: string[] } | null> {
   const sealed = await ctx.runQuery(
     internal.integrationSecrets.getSealedForScan,
     { userId, provider: "stripe" },
@@ -43,24 +56,18 @@ async function readState(
   });
   const stripe = new Stripe(apiKey, { apiVersion: "2026-02-25.clover" });
 
-  const hitKeys = await ctx.runQuery(api.milestoneHits.listByUserSource, {
+  const hitKeys = (await ctx.runQuery(api.milestoneHits.listByUserSource, {
     userId,
     sourceSystem: "stripe",
-  });
+  })) as string[];
 
-  const alreadyHitMrr = (hitKeys as string[])
-    .filter((k: string) => k.startsWith("mrr:"))
-    .map((k: string) => parseInt(k.slice("mrr:".length), 10))
-    .filter((n: number) => Number.isFinite(n));
-  const alreadyHitFirstSale = (hitKeys as string[]).includes("first_sale");
-
-  return { stripe, alreadyHitMrr, alreadyHitFirstSale };
+  return { stripe, hitKeys };
 }
 
-async function readStripeSnapshot(
-  stripe: Stripe,
-): Promise<{ mrrUsd: number; hasSuccessfulCharge: boolean }> {
+async function readStripeSnapshot(stripe: Stripe): Promise<StripeSnapshot> {
   const subs: SubscriptionLike[] = [];
+  let activeSubscriberCount = 0;
+
   for await (const s of stripe.subscriptions.list({
     status: "all",
     limit: 100,
@@ -83,63 +90,88 @@ async function readStripeSnapshot(
         );
       }, 0),
     });
+    if (ACTIVE_STATUSES.has(s.status)) activeSubscriberCount++;
   }
+
   const mrrUsd = computeMrrUsd(subs);
 
-  const charges = await stripe.charges.list({ limit: 1 });
-  const hasSuccessfulCharge = charges.data.some(
+  let totalRevenueUsd = 0;
+  for await (const charge of stripe.charges.list({ limit: 100 })) {
+    if (charge.status === "succeeded") {
+      totalRevenueUsd += charge.amount / 100;
+    }
+  }
+
+  const recentCharges = await stripe.charges.list({ limit: 1 });
+  const hasSuccessfulCharge = recentCharges.data.some(
     (c) => c.status === "succeeded",
   );
 
-  return { mrrUsd, hasSuccessfulCharge };
+  return { mrrUsd, totalRevenueUsd, activeSubscriberCount, hasSuccessfulCharge };
 }
 
-// Daily scan for one user. Fans in from the cron job (Unit 11).
+function isGoalCrossed(goal: StripeGoal, snapshot: StripeSnapshot): boolean {
+  const target = goal.target ?? 0;
+  switch (goal.metric) {
+    case "mrr":
+      return snapshot.mrrUsd >= target;
+    case "total_revenue":
+      return snapshot.totalRevenueUsd >= target;
+    case "subscribers":
+      return snapshot.activeSubscriberCount >= target;
+    case "first_sale":
+      return snapshot.hasSuccessfulCharge;
+    default:
+      return false;
+  }
+}
+
+// Daily scan for one user.
 export const scan = internalAction({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
     try {
-      const state = await readState(ctx, userId);
-      if (!state) return { skipped: "not_connected" };
+      const creds = await readCredentials(ctx, userId);
+      if (!creds) return { skipped: "not_connected" };
 
-      const { stripe, alreadyHitMrr, alreadyHitFirstSale } = state;
-      const { mrrUsd, hasSuccessfulCharge } = await readStripeSnapshot(stripe);
+      const { stripe, hitKeys } = creds;
+      const firedGoalIds = new Set(
+        hitKeys
+          .filter((k) => k.startsWith("goal:"))
+          .map((k) => k.slice("goal:".length)),
+      );
 
-      const newMrrThresholds = detectCrossedMrrThresholds(mrrUsd, alreadyHitMrr);
-      const fireFirstSale = shouldFireFirstSale({
-        hasSuccessfulCharge,
-        alreadyHitFirstSale,
-      });
+      const goals = (await ctx.runQuery(
+        internal.goals.listEnabledByUserProvider,
+        { userId, provider: "stripe" },
+      )) as StripeGoal[];
 
-      for (const threshold of newMrrThresholds) {
-        await fireDraft(ctx, userId, mrrMilestoneKey(threshold), {
-          type: "mrr",
-          threshold,
+      if (goals.length === 0) {
+        await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
+          userId, provider: "stripe", ok: true,
         });
+        return { ok: true, fired: 0, reason: "no_goals" };
       }
-      if (fireFirstSale) {
-        await fireDraft(ctx, userId, firstSaleMilestoneKey(), {
-          type: "first_sale",
-        });
+
+      const snapshot = await readStripeSnapshot(stripe);
+
+      let fired = 0;
+      for (const goal of goals) {
+        if (firedGoalIds.has(goal.externalId)) continue;
+        if (!isGoalCrossed(goal, snapshot)) continue;
+        await fireDraft(ctx, userId, goal, snapshot);
+        fired++;
       }
 
       await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
-        userId,
-        provider: "stripe",
-        ok: true,
+        userId, provider: "stripe", ok: true,
+        snapshotJson: JSON.stringify(snapshot),
       });
-      return {
-        ok: true,
-        mrrUsd,
-        fired: { mrr: newMrrThresholds, firstSale: fireFirstSale },
-      };
+      return { ok: true, fired, snapshot: { mrrUsd: snapshot.mrrUsd } };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
-        userId,
-        provider: "stripe",
-        ok: false,
-        error: msg.slice(0, 500),
+        userId, provider: "stripe", ok: false, error: msg.slice(0, 500),
       });
       console.error(`[sous-chef] Stripe scan failed for ${userId}:`, err);
       return { ok: false, error: msg };
@@ -147,38 +179,48 @@ export const scan = internalAction({
   },
 });
 
-// Seed on first connect: record every currently-crossed threshold as already-fired
-// so users don't get flooded with "hit $100 MRR!" drafts for old state.
+// Seed on first connect: create default goals, then record every already-crossed
+// goal as already-fired so users don't get flooded with retroactive drafts.
 export const seedFromCurrentState = internalAction({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    const state = await readState(ctx, userId);
-    if (!state) return { skipped: "not_connected" };
-    const { stripe } = state;
-    const { mrrUsd, hasSuccessfulCharge } = await readStripeSnapshot(stripe);
+    const creds = await readCredentials(ctx, userId);
+    if (!creds) return { skipped: "not_connected" };
+    const { stripe } = creds;
 
-    const crossed = detectCrossedMrrThresholds(mrrUsd, []);
-    for (const threshold of crossed) {
+    await ctx.runMutation(internal.goals.seedDefaultsForProvider, {
+      userId,
+      provider: "stripe",
+    });
+
+    const snapshot = await readStripeSnapshot(stripe);
+
+    const goals = (await ctx.runQuery(
+      internal.goals.listEnabledByUserProvider,
+      { userId, provider: "stripe" },
+    )) as StripeGoal[];
+
+    const seeded: string[] = [];
+    for (const goal of goals) {
+      if (!isGoalCrossed(goal, snapshot)) continue;
       await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
         userId,
         sourceSystem: "stripe",
-        milestoneKey: mrrMilestoneKey(threshold),
+        milestoneKey: goalMilestoneKey(goal.externalId),
       });
+      seeded.push(goal.externalId);
     }
-    if (hasSuccessfulCharge) {
-      await ctx.runMutation(internal.milestoneHits.seedAlreadyHit, {
-        userId,
-        sourceSystem: "stripe",
-        milestoneKey: firstSaleMilestoneKey(),
-      });
-    }
-    return { seeded: { mrr: crossed, firstSale: hasSuccessfulCharge } };
+
+    await ctx.runMutation(internal.integrationSecrets.recordScanResult, {
+      userId, provider: "stripe", ok: true,
+      snapshotJson: JSON.stringify(snapshot),
+    });
+
+    return { seeded };
   },
 });
 
 // Fan out: schedule a per-user scan for every enabled Stripe integration.
-// Called by the cron job (Unit 11). Each per-user scan is isolated — one user's
-// auth error does not poison sibling users' scans.
 export const scanAll = internalAction({
   args: {},
   handler: async (ctx): Promise<{ scheduled: number }> => {
@@ -198,16 +240,27 @@ export const scanAll = internalAction({
 async function fireDraft(
   ctx: ActionCtx,
   userId: string,
-  milestoneKey: string,
-  composeInput:
-    | { type: "mrr"; threshold: number }
-    | { type: "first_sale" },
+  goal: StripeGoal,
+  snapshot: StripeSnapshot,
 ): Promise<void> {
-  const idempotencyKey = buildIdempotencyKey(userId, "stripe", milestoneKey);
+  const milestoneKey = typedMilestoneKey({
+    metric: goal.metric,
+    target: goal.target ?? undefined,
+    scope: goal.scope ?? undefined,
+    provider: "stripe",
+  });
+  const idempotencyKey = buildIdempotencyKey(
+    userId,
+    "stripe",
+    goalMilestoneKey(goal.externalId),
+  );
+
+  const composeInput = buildComposeInput(goal, snapshot);
   const [pick, copy] = await Promise.all([
     pickTemplate({ milestoneKey }),
     composeCopy(composeInput),
   ]);
+
   const draftConfig: DraftConfig = {
     output: "image",
     templateId: pick.templateId,
@@ -217,6 +270,7 @@ async function fireDraft(
     },
     notes: `Sous-Chef: ${milestoneKey}`,
   };
+
   await ctx.runMutation(internal.drafts.insertDraftIfNew, {
     userId,
     idempotencyKey,
@@ -226,4 +280,19 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
+  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
+}
+
+function buildComposeInput(goal: StripeGoal, snapshot: StripeSnapshot) {
+  switch (goal.metric) {
+    case "mrr":
+      return { type: "mrr" as const, threshold: goal.target ?? snapshot.mrrUsd };
+    case "total_revenue":
+      return { type: "total_revenue" as const, threshold: goal.target ?? snapshot.totalRevenueUsd };
+    case "subscribers":
+      return { type: "subscribers" as const, threshold: goal.target ?? snapshot.activeSubscriberCount };
+    case "first_sale":
+    default:
+      return { type: "first_sale" as const };
+  }
 }

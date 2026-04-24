@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { PixelButton } from "./pixel-button";
 import { PixelCard } from "./pixel-card";
 import { GitHubSection } from "./github-section";
+import { GoalsSection } from "./goals-section";
+import type { Goal } from "./goals-section";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,30 +48,33 @@ type IntegrationRow = {
 const PROVIDER_LABELS: Record<Provider, string> = {
   stripe: "Stripe",
   posthog: "PostHog",
-  ga4: "Google Analytics 4",
+  ga4: "Google Analytics",
 };
 
 const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
-  stripe: "First sale, $100 / $500 / $1k / $5k / $10k MRR.",
-  posthog: "Rolling 30-day unique visitors: 100 / 1k / 10k / 100k / 1M.",
-  ga4: "Rolling 30-day totalUsers: 100 / 1k / 10k / 100k / 1M.",
-};
-
-const PROVIDER_COMING_SOON: Record<Provider, boolean> = {
-  stripe: false,
-  posthog: true,
-  ga4: true,
+  stripe: "Track revenue milestones: MRR, total revenue, subscribers, and first sale.",
+  posthog: "Track visitor milestones from PostHog analytics (30-day rolling window).",
+  ga4: "Track visitor milestones from Google Analytics 4 (30-day rolling window).",
 };
 
 export function SousChefClient({ github }: { github: GitHubPropShape }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
 
   const reload = useCallback(async () => {
-    const res = await fetch("/api/v1/sous-chef/integrations");
-    if (!res.ok) return;
-    const data = (await res.json()) as { integrations: IntegrationRow[] };
-    setRows(data.integrations);
+    const [intRes, goalRes] = await Promise.all([
+      fetch("/api/v1/sous-chef/integrations"),
+      fetch("/api/v1/goals"),
+    ]);
+    if (intRes.ok) {
+      const data = (await intRes.json()) as { integrations: IntegrationRow[] };
+      setRows(data.integrations);
+    }
+    if (goalRes.ok) {
+      const data = (await goalRes.json()) as { goals: Goal[] };
+      setGoals(data.goals);
+    }
   }, []);
 
   useEffect(() => {
@@ -78,6 +83,10 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
 
   const byProvider = new Map<Provider, IntegrationRow>(
     (rows ?? []).map((r) => [r.provider, r]),
+  );
+
+  const githubConnected = github.installations.some(
+    (i) => i.status === "active" && i.enabled,
   );
 
   return (
@@ -97,17 +106,38 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
         catches the moments you&apos;d otherwise miss.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {(Object.keys(PROVIDER_LABELS) as Provider[]).map((provider) => (
-          <IntegrationTile
-            key={provider}
-            provider={provider}
-            row={byProvider.get(provider) ?? null}
-            onConnect={() => setActiveForm(provider)}
-            onReload={reload}
+      {/* GitHub */}
+      <PixelCard>
+        <div className="space-y-4">
+          <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+            GitHub
+          </h2>
+          <GitHubSection
+            installations={github.installations}
+            appSlug={github.appSlug}
           />
-        ))}
-      </div>
+          <div className="border-t-2 border-brand/20 pt-4">
+            <GoalsSection
+              provider="github"
+              connected={githubConnected}
+              goals={goals.filter((g) => g.provider === "github")}
+              onReload={reload}
+            />
+          </div>
+        </div>
+      </PixelCard>
+
+      {/* Stripe, PostHog, GA4 */}
+      {(["stripe", "posthog", "ga4"] as Provider[]).map((provider) => (
+        <IntegrationBlock
+          key={provider}
+          provider={provider}
+          row={byProvider.get(provider) ?? null}
+          goals={goals.filter((g) => g.provider === provider)}
+          onConnect={() => setActiveForm(provider)}
+          onReload={reload}
+        />
+      ))}
 
       {activeForm && (
         <ConnectDialog
@@ -119,33 +149,24 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
           }}
         />
       )}
-
-      <PixelCard>
-        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand mb-4">
-          GitHub
-        </h2>
-        <GitHubSection
-          installations={github.installations}
-          appSlug={github.appSlug}
-        />
-      </PixelCard>
     </div>
   );
 }
 
-function IntegrationTile({
+function IntegrationBlock({
   provider,
   row,
+  goals,
   onConnect,
   onReload,
 }: {
   provider: Provider;
   row: IntegrationRow | null;
+  goals: Goal[];
   onConnect: () => void;
   onReload: () => void;
 }) {
   const connected = row !== null && row.enabled;
-  const comingSoon = PROVIDER_COMING_SOON[provider];
   const [disconnecting, setDisconnecting] = useState(false);
 
   async function disconnect() {
@@ -162,82 +183,90 @@ function IntegrationTile({
   }
 
   return (
-    <div
-      className={`border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)] space-y-3 ${
-        comingSoon ? "opacity-60" : ""
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand">
-          {PROVIDER_LABELS[provider]}
-        </h3>
-        <span
-          className={`font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider ${
-            comingSoon
-              ? "bg-surface text-brand/60"
-              : connected
-                ? "bg-gold text-brand"
-                : "bg-surface text-brand/60"
-          }`}
-        >
-          {comingSoon ? "Coming soon" : connected ? "Connected" : "Off"}
-        </span>
-      </div>
-
-      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 min-h-[40px]">
-        {PROVIDER_DESCRIPTIONS[provider]}
-      </p>
-
-      {row && (
-        <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 space-y-1">
-          {row.lastScanOkAt && (
-            <div>Last OK: {new Date(row.lastScanOkAt).toLocaleString()}</div>
-          )}
-          {row.lastScanError && (
-            <div className="text-red-600 break-all">
-              Last error: {row.lastScanError}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        {comingSoon ? (
-          <PixelButton disabled>Connect</PixelButton>
-        ) : !connected ? (
-          <PixelButton onClick={onConnect}>Connect</PixelButton>
-        ) : (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <PixelButton variant="danger" disabled={disconnecting}>
-                {disconnecting ? "Disconnecting..." : "Disconnect"}
-              </PixelButton>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Disconnect {PROVIDER_LABELS[provider]}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  This removes the saved credential and stops future scans for this
-                  provider until you connect it again.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel asChild>
-                  <PixelButton variant="ghost">Cancel</PixelButton>
-                </AlertDialogCancel>
-                <AlertDialogAction asChild>
-                  <PixelButton variant="danger" onClick={disconnect}>
-                    Disconnect
+    <PixelCard>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+              {PROVIDER_LABELS[provider]}
+            </h2>
+            <span
+              className={`font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider ${
+                connected ? "bg-gold text-brand" : "bg-surface text-brand/60"
+              }`}
+            >
+              {connected ? "Connected" : "Off"}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            {!connected ? (
+              <PixelButton onClick={onConnect}>Connect</PixelButton>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <PixelButton variant="danger" disabled={disconnecting}>
+                    {disconnecting ? "Disconnecting..." : "Disconnect"}
                   </PixelButton>
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Disconnect {PROVIDER_LABELS[provider]}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This removes the saved credential and stops future scans
+                      for this provider until you reconnect.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel asChild>
+                      <PixelButton variant="ghost">Cancel</PixelButton>
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <PixelButton variant="danger" onClick={disconnect}>
+                        Disconnect
+                      </PixelButton>
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+          {PROVIDER_DESCRIPTIONS[provider]}
+        </p>
+
+        {/* Scan timestamps */}
+        {row && (row.lastScanOkAt || row.lastScanError) && (
+          <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 space-y-1">
+            {row.lastScanOkAt && (
+              <div suppressHydrationWarning>
+                Last OK: {new Date(row.lastScanOkAt).toLocaleString()}
+              </div>
+            )}
+            {row.lastScanError && (
+              <div className="text-red-600 break-all">
+                Error: {row.lastScanError}
+              </div>
+            )}
+          </div>
         )}
+
+        {/* Goals */}
+        <div className="border-t-2 border-brand/20 pt-4">
+          <GoalsSection
+            provider={provider}
+            connected={connected}
+            goals={goals}
+            onReload={onReload}
+          />
+        </div>
       </div>
-    </div>
+    </PixelCard>
   );
 }
 
@@ -263,7 +292,7 @@ function ConnectDialog({
         body: JSON.stringify({ provider, ...body }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? `Failed: ${res.status}`);
       }
       onDone();
@@ -284,7 +313,7 @@ function ConnectDialog({
           <button
             type="button"
             onClick={onClose}
-            className="font-[family-name:var(--font-press-start)] text-xs text-brand/60"
+            className="font-[family-name:var(--font-press-start)] text-xs text-brand/60 hover:text-brand"
           >
             ✕
           </button>

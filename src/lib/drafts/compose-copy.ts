@@ -39,6 +39,18 @@ export type ComposeCopyInput =
       threshold: number;
       brandName?: string;
       brandVoice?: string;
+    }
+  | {
+      type: "total_revenue";
+      threshold: number;
+      brandName?: string;
+      brandVoice?: string;
+    }
+  | {
+      type: "subscribers";
+      threshold: number;
+      brandName?: string;
+      brandVoice?: string;
     };
 
 const CopySchema = z.object({
@@ -81,6 +93,10 @@ export async function composeCopy(input: ComposeCopyInput): Promise<Copy> {
       return composeVisitors(input);
     case "star":
       return composeStar(input);
+    case "total_revenue":
+      return composeTotalRevenue(input);
+    case "subscribers":
+      return composeSubscribers(input);
   }
 }
 
@@ -181,6 +197,48 @@ Write the brag post JSON.`;
       title: `${n} visitors`,
       description: "",
     },
+    maxTokens: 200,
+  });
+}
+
+async function composeTotalRevenue(
+  input: Extract<ComposeCopyInput, { type: "total_revenue" }>,
+): Promise<Copy> {
+  const amount = formatThresholdUsd(input.threshold);
+  const system = `${BASE_SYSTEM}
+You celebrate a total revenue milestone. Title leads with the dollar amount. Description is one sentence of context or gratitude.`;
+
+  const user = `Milestone: ${amount} in total revenue
+${brandLine(input)}
+
+Write the brag post JSON.`;
+
+  return callHaikuJson({
+    system,
+    user,
+    schema: CopySchema,
+    fallback: { title: `${amount} in revenue`, description: "" },
+    maxTokens: 200,
+  });
+}
+
+async function composeSubscribers(
+  input: Extract<ComposeCopyInput, { type: "subscribers" }>,
+): Promise<Copy> {
+  const n = formatThresholdCount(input.threshold);
+  const system = `${BASE_SYSTEM}
+You celebrate a paying subscriber milestone. Title leads with the number. Description is one sentence of context or gratitude.`;
+
+  const user = `Milestone: ${n} paying subscribers
+${brandLine(input)}
+
+Write the brag post JSON.`;
+
+  return callHaikuJson({
+    system,
+    user,
+    schema: CopySchema,
+    fallback: { title: `${n} subscribers`, description: "" },
     maxTokens: 200,
   });
 }

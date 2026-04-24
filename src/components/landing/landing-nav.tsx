@@ -29,7 +29,7 @@ export function LandingNav() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b-2 border-brand bg-surface">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-10">
           {/* Logo */}
           <Link href="/">
             <Image

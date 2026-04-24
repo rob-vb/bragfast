@@ -2,10 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   computeMrrUsd,
   lineItemMonthlyUsd,
-  detectCrossedThresholds,
-  detectCrossedMrrThresholds,
-  shouldFireFirstSale,
-  MRR_THRESHOLDS_USD,
 } from "../stripe-milestones";
 
 describe("computeMrrUsd", () => {
@@ -142,81 +138,3 @@ describe("lineItemMonthlyUsd", () => {
   });
 });
 
-describe("detectCrossedThresholds", () => {
-  it("returns all thresholds ≤ current that aren't already hit", () => {
-    expect(
-      detectCrossedThresholds(1500, [], MRR_THRESHOLDS_USD),
-    ).toEqual([100, 500, 1000]);
-  });
-
-  it("skips already-hit thresholds", () => {
-    expect(
-      detectCrossedThresholds(1500, [100, 500], MRR_THRESHOLDS_USD),
-    ).toEqual([1000]);
-  });
-
-  it("returns empty when current below the first threshold", () => {
-    expect(detectCrossedThresholds(50, [], MRR_THRESHOLDS_USD)).toEqual([]);
-  });
-
-  it("returns empty when metric regressed below the previous max", () => {
-    expect(
-      detectCrossedThresholds(800, [100, 500, 1000], MRR_THRESHOLDS_USD),
-    ).toEqual([]);
-  });
-
-  it("returns empty when current matches the previous max exactly", () => {
-    expect(
-      detectCrossedThresholds(500, [100, 500], MRR_THRESHOLDS_USD),
-    ).toEqual([]);
-  });
-
-  it("honors a custom thresholds array", () => {
-    expect(detectCrossedThresholds(250, [], [100, 200, 500])).toEqual([
-      100, 200,
-    ]);
-  });
-});
-
-describe("detectCrossedMrrThresholds (canonical catalog)", () => {
-  it("uses MRR_THRESHOLDS_USD", () => {
-    expect(detectCrossedMrrThresholds(7500, [])).toEqual([
-      100, 500, 1000, 5000,
-    ]);
-  });
-});
-
-describe("shouldFireFirstSale", () => {
-  it("fires when there's a charge and the milestone hasn't fired", () => {
-    expect(
-      shouldFireFirstSale({
-        hasSuccessfulCharge: true,
-        alreadyHitFirstSale: false,
-      }),
-    ).toBe(true);
-  });
-
-  it("does not fire when already hit", () => {
-    expect(
-      shouldFireFirstSale({
-        hasSuccessfulCharge: true,
-        alreadyHitFirstSale: true,
-      }),
-    ).toBe(false);
-  });
-
-  it("does not fire without a charge", () => {
-    expect(
-      shouldFireFirstSale({
-        hasSuccessfulCharge: false,
-        alreadyHitFirstSale: false,
-      }),
-    ).toBe(false);
-  });
-});
-
-describe("MRR_THRESHOLDS_USD", () => {
-  it("matches the plan catalog (100/500/1000/5000/10000)", () => {
-    expect(MRR_THRESHOLDS_USD).toEqual([100, 500, 1000, 5000, 10000]);
-  });
-});
