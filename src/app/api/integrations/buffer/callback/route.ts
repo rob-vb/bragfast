@@ -10,7 +10,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 function errorRedirect(request: NextRequest, code: string): Response {
   return Response.redirect(
-    new URL(`/admin/account?error=${code}`, request.url).toString(),
+    new URL(`/admin/sous-chef?error=${code}`, request.url).toString(),
   );
 }
 
@@ -26,7 +26,7 @@ function errorRedirect(request: NextRequest, code: string): Response {
  *      state binding victim's account to attacker's Buffer.
  *
  * On success: seals tokens, stores them via upsertAction, probes org+channels,
- * redirects to /admin/account?connected=buffer.
+ * redirects to /admin/sous-chef?connected=buffer.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -137,6 +137,6 @@ export async function GET(request: NextRequest) {
   }
 
   return Response.redirect(
-    new URL("/admin/account?connected=buffer", request.url).toString(),
+    new URL("/admin/sous-chef?connected=buffer", request.url).toString(),
   );
 }

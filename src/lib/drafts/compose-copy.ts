@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { callHaikuJson } from "../haiku-call";
 
-// Text-only draft copy for Sous-Chef. Title + description sized for
-// the smallest template text slots (hero title ~140 chars, split-*
-// description ~600 chars before the font forces truncation).
+// Text-only draft copy for Sous-Chef. Keep this intentionally short:
+// drafts are starting points for social cards, not changelog summaries.
 export type Copy = { title: string; description: string };
 
 export type ComposeCopyInput =
@@ -54,8 +53,8 @@ export type ComposeCopyInput =
     };
 
 const CopySchema = z.object({
-  title: z.string().transform((s) => s.slice(0, 140)),
-  description: z.string().transform((s) => s.slice(0, 600)),
+  title: z.string().transform((s) => s.slice(0, 80)),
+  description: z.string().transform((s) => s.slice(0, 220)),
 });
 
 function brandLine(input: { brandName?: string; brandVoice?: string }): string {
@@ -67,7 +66,9 @@ function brandLine(input: { brandName?: string; brandVoice?: string }): string {
 
 const BASE_SYSTEM = `You write short, honest brag posts for indie makers.
 Output JSON only: {"title": "...", "description": "..."}. No markdown.
-Keep titles punchy (one line). Description is 1-3 short sentences. Avoid hype stock phrases ("game-changing", "revolutionary").`;
+Keep titles punchy (one line, usually 3-6 words). Description is usually one short sentence, two only when needed.
+Pick the one thing worth announcing. Ignore implementation details, refactors, polish, tests, dependency bumps, and minor bug fixes unless they are the main user-facing win.
+Avoid hype stock phrases ("game-changing", "revolutionary").`;
 
 function formatThresholdUsd(n: number): string {
   if (n >= 1000) return `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
@@ -105,8 +106,9 @@ async function composePrMerged(
 ): Promise<Copy> {
   const system = `${BASE_SYSTEM}
 You summarize a merged pull request into a shippable announcement.
-The title is a catchy headline (5-10 words) — not the raw PR title, and not a version number.
-The description explains what shipped and why users should care (1-3 sentences).`;
+The title is a plain benefit or feature headline — not the raw PR title, not a version number, and not a changelog headline.
+The description should say what users can now do. Do not list everything in the PR.
+If the PR contains one real feature plus cleanup/fixes, announce only the feature.`;
 
   const user = `Repo: ${input.repoFullName}
 ${brandLine(input)}
@@ -123,10 +125,10 @@ Write the brag post JSON.`;
     user,
     schema: CopySchema,
     fallback: {
-      title: input.title.slice(0, 140),
+      title: input.title.slice(0, 80),
       description: "",
     },
-    maxTokens: 400,
+    maxTokens: 250,
   });
 }
 
