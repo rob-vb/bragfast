@@ -1,6 +1,6 @@
 # Product Marketing Context
 
-*Last updated: 2026-04-19*
+*Last updated: 2026-04-26*
 
 ## Product Overview
 **One-liner:** brag.fast turns any win into branded social images and videos — for you, or for your AI agent.
@@ -59,17 +59,19 @@ Two equally valid entry points:
 | **Agent Builder** | Engineer integrating brag.fast into an AI workflow | A reliable tool call that returns a branded image/video | Image/video generation inside agent flows is fiddly | One MCP or API integration, predictable branded output |
 
 ## Problems & Pain Points
-**Core problem:** People have brag-worthy moments — a shipped release, a revenue milestone, a marathon time, a 10k-user screenshot — and know they *should* post about it. But building a branded visual for every one is tedious, and most tools assume a human opening a design canvas. Meanwhile, AI agents that want to produce visual content as part of a workflow have no clean, branded, multi-format way to do it.
+**Core problem:** Builders love building — but they hate (or just never get around to) stopping to reflect on, document, or celebrate what they built. Shipping is the fun part. Announcing it isn't. So wins pile up unshared, audiences stay quiet, and momentum goes to waste.
+
+brag.fast solves this by removing the "you have to decide to do this" step entirely. Sous-Chef — the AI agent — watches GitHub and other integrations, notices when something worth bragging about happened, and drafts the post automatically. The user doesn't have to initiate anything.
 
 **Why alternatives fall short:**
-- Generic design tools (Canva, Figma) require manual effort per post and aren't callable by agents
-- Hiring a designer doesn't scale and doesn't fit agent workflows
+- Generic design tools (Canva, Figma) require a human to open them, start from scratch, and care enough to finish
+- Manual social posting depends on willpower and awareness — two things builders reliably sacrifice when deep in a project
 - Image/video generation APIs (Bannerbear and similar) are template-fill tools for humans wiring up Zapier, not a clean agent-callable surface
-- DIY scripts are fragile and produce inconsistent results
+- Nothing else watches your activity and drafts the brag for you
 
-**What it costs them:** Wins go unposted, audiences stay quiet, agents can't emit visual output, and brand consistency suffers.
+**What it costs them:** Real wins go uncelebrated, the audience never grows, and the builder never gets credit for what they shipped.
 
-**Emotional tension:** "I should be posting about this, but I'm not going to open Canva again." / "I want my agent to just produce the image."
+**Emotional tension:** "I know I should post about this but I'm already onto the next thing." / "Sitting down to write a tweet about a PR merge just isn't how my brain works." / "I wish someone would just do it for me."
 
 ## Competitive Landscape
 **Direct:** Bannerbear ($49/mo for 1,000 images) — general-purpose image/video generation API with template designer. Falls short for our audience: no AI-native agent surface (no MCP), no conversational entry point, template-heavy setup, not positioned for the "show off" use case.
@@ -104,21 +106,23 @@ Two equally valid entry points:
 **Anti-persona:** Non-technical marketers looking for a full drag-and-drop design suite. Teams that don't post to social. Designers who want a creative tool, not a generate-and-ship pipeline.
 
 ## Switching Dynamics
-**Push:** "I keep meaning to post about my wins but never get around to it" / "I'm building an agent and need branded visuals and there's nothing clean for that"
-**Pull:** Automated, branded, multi-format images and video from a single call — human or agent.
-**Habit:** "I've been getting by without posting" / "We already have a Canva workflow"
-**Anxiety:** "Will the output look on-brand?" / "Will the AI misread my inputs?"
+**Push:** "I shipped something great and never posted about it" / "I don't have the mental energy to context-switch from building mode to marketing mode"
+**Pull:** Sous-Chef watches what you build, drafts the post, all you do is approve it. And the whole thing looks like it was actually fun to build.
+**Habit:** "I've been getting by without posting" / "I'll do it later" (later never comes)
+**Anxiety:** "Will the output look on-brand?" / "Will it actually sound like me?"
 
 ## Customer Language
 **How they describe the problem:**
-- "I never get around to making a post about this"
+- "I shipped something great and never posted about it"
+- "I love building, I hate marketing"
+- "I know I should post more but I just don't"
+- "By the time I think about writing a post I'm already three things deep into the next thing"
 - "I don't have design skills"
-- "I want my agent to just produce the image"
-- "I hit a milestone and want something to share"
 **How they describe us:**
+- "It watches my GitHub and drafts the post for me"
+- "I just approve it and it's done"
 - "It turns my wins into branded posts"
 - "I paste stuff in, it gives me a shareable"
-- "My agent calls it and gets back an image"
 
 **Words to use:** show off, win, milestone, brag, ship, release, branded, agent, MCP, API, formats, post.
 **Words to avoid:** content creation platform, marketing suite, design tool, no-code, "AI-powered" (vague).
@@ -134,9 +138,9 @@ Two equally valid entry points:
 | Formats | Output dimensions: landscape (16:9), square (1:1), portrait (4:5) |
 
 ## Brand Voice
-**Tone:** Casual, confident, a little cheeky. Fun without being arrogant — the "show off in a cool way, not a bragging-douchebag way" line.
+**Tone:** Casual, confident, a little cheeky. Fun without being arrogant — the "show off in a cool way, not a bragging-douchebag way" line. The retro NES gaming aesthetic reinforces this: bragging should feel like *playing a game*, not doing marketing work.
 **Style:** Short punchy sentences. Honest, specific, no AI slop. No overclaiming ("zero effort" is off the table — there's *some* work, we're honest about it). Light diner/food hints only in plan names; headlines and body copy stay metaphor-light.
-**Personality:** Playful, direct, action-oriented, builder-friendly, no-nonsense.
+**Personality:** Playful, direct, action-oriented, builder-friendly, no-nonsense. The product should feel like a reward for shipping — not another chore.
 
 ## Proof Points
 **Metrics:** (to be added as available)
