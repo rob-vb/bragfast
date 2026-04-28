@@ -216,9 +216,34 @@ export const disconnect = internalMutation({
       .first();
     if (!row) return false;
     await ctx.db.delete(row._id);
-    // TODO(U10): cascade to routingDefaults — call
-    //   ctx.runMutation(internal.routingDefaults.clearChannelsForProvider, { userId: args.userId, provider: args.provider })
-    // here (only for "buffer" | "postiz") so stale routing entries are pruned on disconnect.
+
+    // Cascade: clear routingDefaults entries for buffer/postiz on disconnect.
+    // Inlined here (rather than via ctx.runMutation) because Convex mutations
+    // cannot schedule other mutations — we share the transaction by using
+    // ctx.db directly.
+    if (args.provider === "buffer" || args.provider === "postiz") {
+      const routingRows = await ctx.db
+        .query("routingDefaults")
+        .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+        .collect();
+
+      for (const rRow of routingRows) {
+        const filtered = rRow.channels.filter(
+          (ch) => ch.provider !== args.provider,
+        );
+        if (filtered.length !== rRow.channels.length) {
+          if (filtered.length === 0) {
+            await ctx.db.delete(rRow._id);
+          } else {
+            await ctx.db.patch(rRow._id, {
+              channels: filtered,
+              updated_at: new Date().toISOString(),
+            });
+          }
+        }
+      }
+    }
+
     return true;
   },
 });

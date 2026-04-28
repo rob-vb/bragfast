@@ -94,11 +94,15 @@ export const clearChannelsForProvider = internalMutation({
     for (const row of rows) {
       const filtered = row.channels.filter((ch) => ch.provider !== provider);
       if (filtered.length !== row.channels.length) {
-        await ctx.db.patch(row._id, {
-          channels: filtered,
-          updated_at: new Date().toISOString(),
-        });
         clearedCount += row.channels.length - filtered.length;
+        if (filtered.length === 0) {
+          await ctx.db.delete(row._id);
+        } else {
+          await ctx.db.patch(row._id, {
+            channels: filtered,
+            updated_at: new Date().toISOString(),
+          });
+        }
       }
     }
     return { clearedCount };
@@ -137,10 +141,14 @@ export const pruneMissingChannels = internalMutation({
         }
       }
       if (kept.length !== row.channels.length) {
-        await ctx.db.patch(row._id, {
-          channels: kept,
-          updated_at: new Date().toISOString(),
-        });
+        if (kept.length === 0) {
+          await ctx.db.delete(row._id);
+        } else {
+          await ctx.db.patch(row._id, {
+            channels: kept,
+            updated_at: new Date().toISOString(),
+          });
+        }
       }
     }
 

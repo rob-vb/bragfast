@@ -55,6 +55,26 @@ export const refreshAllChannels = internalAction({
             provider,
             extra: result.extra,
           });
+
+          // Prune routingDefaults entries for channels no longer present.
+          // TODO(post-MVP): surface stale-channel pruning to user via toast on next page load.
+          const parsed = JSON.parse(result.extra) as {
+            channels?: Array<{ id: string }>;
+          };
+          const validChannelIds = Array.isArray(parsed.channels)
+            ? parsed.channels.map((ch) => ch.id)
+            : [];
+
+          const pruned = await ctx.runMutation(
+            internal.routingDefaults.pruneMissingChannels,
+            { userId, provider, validChannelIds },
+          );
+
+          if (pruned.length > 0) {
+            console.info(
+              `[refresh-channels:${userId}:${provider}] pruned ${pruned.length} stale routing entries: ${JSON.stringify(pruned)}`,
+            );
+          }
         } else {
           if (result.errorClass === "auth") {
             // 401 — revoked token. Disable the integration so it surfaces in UI.
