@@ -32,4 +32,12 @@ crons.daily(
   internal.integrations.githubStars.scanAll,
 );
 
+// Refresh the cached channel list for all enabled Buffer + Postiz integrations.
+// Staggered 15 minutes after the sous-chef scans to avoid a CPU spike.
+crons.daily(
+  "channel-refresh: Buffer + Postiz",
+  { hourUTC: 15, minuteUTC: 30 },
+  internal.refreshChannelsAction.refreshAllChannels,
+);
+
 export default crons;

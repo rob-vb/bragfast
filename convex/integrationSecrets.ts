@@ -157,6 +157,54 @@ export const setEnabled = internalMutation({
   },
 });
 
+/**
+ * Update only the `extra` JSON field for an integration row.
+ * Used by the channel-refresh cron to persist the latest channel list without
+ * touching the sealed credential payload.
+ */
+export const updateExtra = internalMutation({
+  args: { userId: v.string(), provider, extra: v.string() },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row) return false;
+    await ctx.db.patch(row._id, {
+      extra: args.extra,
+      updated_at: new Date().toISOString(),
+    });
+    return true;
+  },
+});
+
+/**
+ * Return all enabled integration rows across every provider.
+ * Used by the daily channel-refresh cron sweep.
+ */
+export const listAllEnabled = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    // Buffer and Postiz are the only posting providers with channel caches.
+    const providers = ["buffer", "postiz"] as const;
+    const results: Array<{ userId: string; provider: "buffer" | "postiz" }> = [];
+    for (const prov of providers) {
+      const rows = await ctx.db
+        .query("integrationSecrets")
+        .withIndex("by_provider_enabled", (q) =>
+          q.eq("provider", prov).eq("enabled", true),
+        )
+        .collect();
+      for (const r of rows) {
+        results.push({ userId: r.userId, provider: prov });
+      }
+    }
+    return results;
+  },
+});
+
 export const disconnect = internalMutation({
   args: { userId: v.string(), provider },
   handler: async (ctx, args) => {

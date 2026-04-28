@@ -27,6 +27,7 @@ import type * as migrations from "../migrations.js";
 import type * as milestoneHits from "../milestoneHits.js";
 import type * as oauthState from "../oauthState.js";
 import type * as rateLimit from "../rateLimit.js";
+import type * as refreshChannelsAction from "../refreshChannelsAction.js";
 import type * as releases from "../releases.js";
 import type * as sousChef from "../sousChef.js";
 import type * as stripe from "../stripe.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   milestoneHits: typeof milestoneHits;
   oauthState: typeof oauthState;
   rateLimit: typeof rateLimit;
+  refreshChannelsAction: typeof refreshChannelsAction;
   releases: typeof releases;
   sousChef: typeof sousChef;
   stripe: typeof stripe;
