@@ -1,7 +1,7 @@
 ---
 title: "feat: Carousel Explainer Template Family"
 type: feat
-status: active
+status: completed
 date: 2026-04-27
 origin: ~/.claude/plans/i-want-to-ce-brainstorm-swift-sundae.md
 ---
