@@ -1,7 +1,7 @@
 ---
 title: "feat: Buffer + Postiz BYO posting"
 type: feat
-status: active
+status: completed
 date: 2026-04-28
 origin: docs/brainstorms/2026-04-28-buffer-postiz-byo-posting-requirements.md
 supersedes: docs/plans/2026-04-28-001-feat-postiz-posting-backbone-plan.md
