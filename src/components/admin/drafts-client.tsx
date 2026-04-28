@@ -15,6 +15,7 @@ import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import { DraftPreview } from "./draft-preview";
 import { DraftPreviewBoundary } from "./draft-preview-boundary";
 import { LazyMount } from "./lazy-mount";
+import { ApproveDraftModal } from "./approve-draft-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,11 +81,42 @@ function primaryFormat(config: DraftConfig): FormatKey {
   return first ?? "landscape";
 }
 
+type ApproveModalState = {
+  draftId: string;
+  title: string;
+  description: string;
+  draftFormats: Format[];
+};
+
+type Format =
+  | "square"
+  | "landscape"
+  | "portrait"
+  | "video-square"
+  | "video-landscape"
+  | "video-portrait";
+
+const ALL_POSTING_FORMATS: Format[] = [
+  "square",
+  "landscape",
+  "portrait",
+  "video-square",
+  "video-landscape",
+  "video-portrait",
+];
+
+function isDraftFormat(f: string): f is Format {
+  return (ALL_POSTING_FORMATS as string[]).includes(f);
+}
+
 export function DraftsClient() {
   const userId = useUserId();
   const router = useRouter();
   const drafts = useQuery(api.drafts.listByUser, { userId });
+  const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
+  const routingRows = useQuery(api.routingDefaults.listByUser, { userId });
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
+  const [approveModal, setApproveModal] = useState<ApproveModalState | null>(null);
 
   if (!drafts) {
     return (
@@ -123,6 +155,20 @@ export function DraftsClient() {
     }
   }
 
+  function handleOpenApprove(row: Row) {
+    const config = parseConfig(row.config);
+    // Derive title + description from draft config (use name or first text content)
+    const title = row.name ?? (Object.values(config.objectContent ?? {}).find(c => c?.text)?.text ?? "Untitled draft").slice(0, 80);
+    const description = Object.values(config.objectContent ?? {}).slice(1).find(c => c?.text)?.text?.slice(0, 220) ?? "";
+    const draftFormats = (config.formats ?? ["landscape"]).filter(isDraftFormat);
+    setApproveModal({
+      draftId: row.id,
+      title,
+      description,
+      draftFormats: draftFormats.length > 0 ? draftFormats : ["landscape"],
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-baseline justify-between gap-4">
@@ -155,9 +201,23 @@ export function DraftsClient() {
               row={row as Row}
               busy={deleting.has(row.id)}
               onDelete={() => handleDelete(row.id)}
+              onApprove={() => handleOpenApprove(row as Row)}
             />
           ))}
         </Masonry>
+      )}
+
+      {approveModal && (
+        <ApproveDraftModal
+          draftId={approveModal.draftId}
+          userId={userId}
+          initialTitle={approveModal.title}
+          initialDescription={approveModal.description}
+          draftFormats={approveModal.draftFormats}
+          routingRows={routingRows ?? []}
+          integrations={integrations ?? []}
+          onClose={() => setApproveModal(null)}
+        />
       )}
     </div>
   );
@@ -167,10 +227,12 @@ function DraftCard({
   row,
   busy,
   onDelete,
+  onApprove,
 }: {
   row: Row;
   busy: boolean;
   onDelete: () => void;
+  onApprove: () => void;
 }) {
   const router = useRouter();
   const config = useMemo(() => parseConfig(row.config), [row.config]);
@@ -187,7 +249,7 @@ function DraftCard({
   }
 
   const badgeRow = (
-    <div className="flex items-center gap-2 mb-3 pr-10 flex-wrap">
+    <div className="flex items-center gap-2 mb-3 px-10 flex-wrap">
       {row.sourceSystem ? (
         <SourceSystemBadge
           system={row.sourceSystem}
@@ -250,6 +312,20 @@ function DraftCard({
       `}
       aria-label={`Open draft: ${title}`}
     >
+      {/* Approve button — top-left corner, NES pixel style */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onApprove();
+        }}
+        className="absolute top-2 left-2 h-7 px-2 border-2 border-brand bg-gold hover:bg-gold/70 shadow-[2px_2px_0_var(--color-brand)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-[family-name:var(--font-press-start)] text-[8px] text-brand leading-none"
+        aria-label="Approve draft"
+        disabled={busy}
+      >
+        OK
+      </button>
+
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <button
