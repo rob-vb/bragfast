@@ -315,6 +315,11 @@ function renderObjectPreview(
   onTextChange: (text: string) => void,
   onBlur: () => void,
 ) {
+  const bgFill = obj.backgroundColorRole ? colors[obj.backgroundColorRole] : obj.backgroundColor;
+  const padX = obj.paddingX ?? 0;
+  const padY = obj.paddingY ?? 0;
+  const radius = getObjectBorderRadius(obj);
+
   const textStyle: React.CSSProperties = {
     fontFamily: `"${obj.fontFamily || "Plus Jakarta Sans"}", sans-serif`,
     fontSize: obj.fontSize || 24,
@@ -334,17 +339,30 @@ function renderObjectPreview(
 
   if (obj.type === "text") {
     const text = obj.previewText || "Text goes here";
-    if (isEditing) {
-      return (
-        <textarea
-          autoFocus
-          defaultValue={text}
-          onBlur={(e) => { onTextChange(e.target.value); onBlur(); }}
-          style={{ ...textStyle, border: "none", outline: "none", resize: "none", background: "transparent", padding: 0 }}
-        />
-      );
-    }
-    return <AutoFitText obj={obj} text={text} style={textStyle} />;
+    const wrapperStyle: React.CSSProperties = {
+      width: "100%",
+      height: "100%",
+      background: bgFill,
+      borderRadius: radius || undefined,
+      paddingLeft: padX || undefined,
+      paddingRight: padX || undefined,
+      paddingTop: padY || undefined,
+      paddingBottom: padY || undefined,
+      boxSizing: "border-box",
+      overflow: "hidden",
+    };
+    const innerStyle: React.CSSProperties = { ...textStyle, width: "100%", height: "100%" };
+    const inner = isEditing ? (
+      <textarea
+        autoFocus
+        defaultValue={text}
+        onBlur={(e) => { onTextChange(e.target.value); onBlur(); }}
+        style={{ ...innerStyle, border: "none", outline: "none", resize: "none", background: "transparent", padding: 0 }}
+      />
+    ) : (
+      <AutoFitText obj={obj} text={text} style={innerStyle} />
+    );
+    return bgFill || radius || padX || padY ? <div style={wrapperStyle}>{inner}</div> : inner;
   }
 
   if (obj.type === "visual") {

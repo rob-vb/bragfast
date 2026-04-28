@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { CopyButton } from "@/components/admin/copy-button";
+import { TemplatePreview } from "@/components/kitchen/template-preview";
+import { buildSampleBrand } from "@/lib/preview-sample";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +25,7 @@ export interface TemplateCardProps {
   isDefault: boolean;
   previewUrl?: string;
   isV2?: boolean;
+  config?: CanvasTemplateConfig;
   onClone: (id: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -31,7 +35,9 @@ export function TemplateCard({
   displayId,
   name,
   isDefault,
+  previewUrl,
   isV2 = true,
+  config,
   onClone,
   onDelete,
 }: TemplateCardProps) {
@@ -39,6 +45,28 @@ export function TemplateCard({
 
   return (
     <PixelCard className="flex flex-col gap-3">
+      {/* Thumbnail */}
+      <div className="relative w-full aspect-[16/9] overflow-hidden border-2 border-brand bg-cream">
+        {previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewUrl}
+            alt={name}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : config && isV2 ? (
+          <TemplatePreview
+            config={config}
+            brand={buildSampleBrand(config)}
+            format="landscape"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center font-[family-name:var(--font-press-start)] text-[10px] text-brand/40">
+            No preview
+          </div>
+        )}
+      </div>
+
       {/* Name + badge */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="font-[family-name:var(--font-press-start)] text-xs text-brand truncate">

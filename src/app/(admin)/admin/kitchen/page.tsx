@@ -11,10 +11,7 @@ const defaultDisplayIds: Record<string, string> = {
   "split-browser": "split-browser",
   "split-mobile": "split-mobile",
   hero: "hero",
-  "carousel-cover": "carousel-cover",
-  "carousel-content-text": "carousel-content-text",
-  "carousel-content-image": "carousel-content-image",
-  "carousel-outro": "carousel-outro",
+  "carousel-slide": "carousel-slide",
 };
 
 export default async function KitchenPage() {

@@ -97,8 +97,6 @@ export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
 export type FormatKey = "landscape" | "square" | "portrait";
-export type CarouselShape = "blob1" | "blob2" | "circle" | "wave";
-
 export interface TemplateObject {
   id: string;
   type: ObjectType;
@@ -134,8 +132,6 @@ export interface TemplateObject {
 
   // Visual-only
   background?: boolean;
-  /** Decorative shape variant for carousel templates. */
-  shape?: CarouselShape;
   src?: string; // Static image URL — baked into template, not overridable by API
   video_url?: string; // Optional video URL — preferred over image for video renders
   visualFrame?: VisualFrame;

@@ -1,6 +1,11 @@
 import { isR2Url, keyFromUrl, getImageBuffer } from "./storage/r2"
+import { getSiteUrl } from "./site-url"
 
 export async function fetchImageAsBase64(url: string): Promise<string> {
+  // Absolutize site-relative URLs (e.g. "/templates/carousel/arc-rings-tl.png")
+  // so server-side renders (Satori, Remotion Lambda) can fetch them.
+  if (url.startsWith("/")) url = `${getSiteUrl()}${url}`
+
   // For R2 URLs, try S3 direct read first to bypass Cloudflare CDN
   if (isR2Url(url)) {
     const key = keyFromUrl(url)

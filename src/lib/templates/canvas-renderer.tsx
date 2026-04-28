@@ -4,7 +4,6 @@ import type { Brand } from "../types";
 import { FORMAT_DIMENSIONS, getObjectBorderRadius, resolveTextColor } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
-import { CarouselShapeSVG } from "./components/CarouselShapes";
 import { resolveBackground } from "./mesh-gradient";
 
 const ACCENT_RE = /\*([^*\n]+)\*/g;
@@ -99,8 +98,6 @@ export function CanvasRenderer({ config, format, objectData, brand, backgroundIm
         if (obj.type === "logo") return true;
         // Image objects with a static src are always shown
         if (obj.type === "visual" && obj.src) return true;
-        // Decorative shape visuals always shown — they carry no per-slide data
-        if (obj.type === "visual" && obj.shape) return true;
         return !!objectData[obj.id];
       })
     : sortedObjects;
@@ -228,7 +225,9 @@ export function renderObject(
 
   switch (obj.type) {
     case "text": {
-      const rawText = data?.text || obj.previewText || "Text";
+      // Both missing → render nothing (e.g. carousel eyebrow/cta with previewText:"" and no slide data).
+      if (!data?.text && !obj.previewText) return null;
+      const rawText = data?.text || obj.previewText || "";
       const useAccent = obj.accentMarkup === true;
       const plainText = useAccent ? stripAccentMarkers(rawText) : rawText;
       const resolvedFont = data?.fontFamily || fontFamily;
@@ -329,23 +328,10 @@ export function renderObject(
     }
 
     case "visual": {
-      // Decorative shape variant: pure SVG, no image/video. Tinted by colorRole or color.
-      if (obj.shape) {
-        const fill = data?.color
-          || (obj.colorRole ? colors[obj.colorRole] : undefined)
-          || obj.color
-          || colors.primary;
-        return (
-          <CarouselShapeSVG
-            shape={obj.shape}
-            width={obj.width}
-            height={obj.height}
-            fill={fill}
-            opacity={1}
-          />
-        );
-      }
-      const imgSrc = data?.imageBase64;
+      // Pipeline pre-fetches obj.src into data.imageBase64 for server renders.
+      // Client-only previews (TemplatePreview) skip prefetch — fall back to obj.src so
+      // browser <img> loads the asset directly.
+      const imgSrc = data?.imageBase64 || obj.src;
       const videoUrl = data?.videoUrl;
       const VideoEl = options.VideoComponent;
       const useVideo = !!(videoUrl && VideoEl);

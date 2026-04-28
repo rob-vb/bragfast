@@ -16,57 +16,67 @@ function layoutFor(templateId: string, format: FormatKey) {
   return cfg.formats[format] ?? cfg.formats.landscape;
 }
 
-describe("carousel templates registry", () => {
-  it.each([
-    ["carousel-cover"],
-    ["carousel-content-text"],
-    ["carousel-content-image"],
-    ["carousel-outro"],
-  ])("registers %s with all 3 formats", (id) => {
-    const cfg = getCanvasDefaultConfig(id);
+describe("carousel-slide template", () => {
+  it("registers in all 3 formats", () => {
+    const cfg = getCanvasDefaultConfig("carousel-slide");
     expect(cfg).not.toBeNull();
     expect(cfg!.formats.landscape.objects.length).toBeGreaterThan(0);
     expect(cfg!.formats.square.objects.length).toBeGreaterThan(0);
     expect(cfg!.formats.portrait.objects.length).toBeGreaterThan(0);
   });
 
-  it("each carousel template has signature_avatar + signature_name + signature_title in portrait", () => {
-    const ids = ["carousel-cover", "carousel-content-text", "carousel-content-image", "carousel-outro"];
-    for (const id of ids) {
-      const objIds = layoutFor(id, "portrait").objects.map((o) => o.id);
+  it.each(["landscape", "square", "portrait"] as FormatKey[])(
+    "carries signature_avatar + signature_name + signature_title in %s",
+    (format) => {
+      const objIds = layoutFor("carousel-slide", format).objects.map((o) => o.id);
       expect(objIds).toContain("signature_avatar");
       expect(objIds).toContain("signature_name");
       expect(objIds).toContain("signature_title");
-    }
+    },
+  );
+
+  it("exposes hook/content/outro role objects: eyebrow, badge, heading, body, cta_text", () => {
+    const objIds = layoutFor("carousel-slide", "portrait").objects.map((o) => o.id);
+    expect(objIds).toContain("eyebrow");
+    expect(objIds).toContain("badge");
+    expect(objIds).toContain("heading");
+    expect(objIds).toContain("body");
+    expect(objIds).toContain("cta_text");
   });
 
-  it("cover and outro carry accentMarkup on the title", () => {
-    const cover = layoutFor("carousel-cover", "portrait").objects.find((o) => o.id === "title")!;
-    const outro = layoutFor("carousel-outro", "portrait").objects.find((o) => o.id === "title")!;
-    expect(cover.accentMarkup).toBe(true);
-    expect(outro.accentMarkup).toBe(true);
+  it("heading carries accentMarkup with primary accent role", () => {
+    const heading = layoutFor("carousel-slide", "portrait").objects.find((o) => o.id === "heading")!;
+    expect(heading.accentMarkup).toBe(true);
+    expect(heading.accentColorRole).toBe("primary");
   });
 
-  it("content templates carry accentMarkup on heading and a badge with bg fill", () => {
-    for (const id of ["carousel-content-text", "carousel-content-image"]) {
-      const objs = layoutFor(id, "portrait").objects;
-      const heading = objs.find((o) => o.id === "heading")!;
-      const badge = objs.find((o) => o.id === "badge")!;
-      expect(heading.accentMarkup).toBe(true);
-      expect(badge.backgroundColorRole).toBe("primary");
-    }
+  it("badge renders as outline ring asset with primary-colored numeral", () => {
+    const objs = layoutFor("carousel-slide", "portrait").objects;
+    const badge = objs.find((o) => o.id === "badge")!;
+    const ring = objs.find((o) => o.id === "badge_ring")!;
+    expect(badge.colorRole).toBe("primary");
+    expect(ring.src).toBe("/templates/carousel/badge-ring.png");
   });
 
-  it("content-image carries side_image visual", () => {
-    const objs = layoutFor("carousel-content-image", "portrait").objects;
-    const side = objs.find((o) => o.id === "side_image")!;
-    expect(side.type).toBe("visual");
+  it("cta_text is a pill with primary fill, padding, and large radius", () => {
+    const cta = layoutFor("carousel-slide", "portrait").objects.find((o) => o.id === "cta_text")!;
+    expect(cta.backgroundColorRole).toBe("primary");
+    expect(cta.paddingX).toBeGreaterThan(0);
+    expect(cta.paddingY).toBeGreaterThan(0);
+    expect(cta.borderRadius).toBeGreaterThanOrEqual(999);
+  });
+
+  it("dropped slugs no longer resolve", () => {
+    expect(getCanvasDefaultConfig("carousel-cover")).toBeNull();
+    expect(getCanvasDefaultConfig("carousel-content-text")).toBeNull();
+    expect(getCanvasDefaultConfig("carousel-content-image")).toBeNull();
+    expect(getCanvasDefaultConfig("carousel-outro")).toBeNull();
   });
 });
 
 describe("applySignatureDefaults", () => {
   it("fills signature_avatar from brand.logoBase64 when slide has no override", () => {
-    const layout = layoutFor("carousel-cover", "portrait");
+    const layout = layoutFor("carousel-slide", "portrait");
     const dataMap: Record<string, { text?: string; imageBase64?: string }> = {};
     applySignatureDefaults(dataMap, layout, brand);
     expect(dataMap.signature_avatar?.imageBase64).toBe("data:image/png;base64,FAKE");
@@ -76,7 +86,7 @@ describe("applySignatureDefaults", () => {
   });
 
   it("preserves slide override when present", () => {
-    const layout = layoutFor("carousel-cover", "portrait");
+    const layout = layoutFor("carousel-slide", "portrait");
     const dataMap: Record<string, { text?: string; imageBase64?: string }> = {
       signature_name: { text: "Custom Author" },
       signature_avatar: { imageBase64: "data:image/png;base64,SLIDE" },
@@ -95,7 +105,7 @@ describe("applySignatureDefaults", () => {
   });
 
   it("skips avatar when brand has no logoBase64", () => {
-    const layout = layoutFor("carousel-cover", "portrait");
+    const layout = layoutFor("carousel-slide", "portrait");
     const dataMap: Record<string, { text?: string; imageBase64?: string }> = {};
     applySignatureDefaults(dataMap, layout, { ...brand, logoBase64: "" });
     expect(dataMap.signature_avatar).toBeUndefined();
