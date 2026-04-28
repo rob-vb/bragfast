@@ -27,6 +27,26 @@ export async function resolveTemplate(
   throw new Error(`Invalid template: ${templateName}`);
 }
 
+/** Resolve every unique template referenced by a release (format-level + per-slide overrides). */
+export async function resolveAllTemplates(
+  baseTemplate: string,
+  formats: Array<{ slides: Array<{ templateId?: string }> }>,
+  userId: string,
+  convex: ConvexHttpClient
+): Promise<Map<string, CanvasTemplateConfig>> {
+  const names = new Set<string>([baseTemplate]);
+  for (const f of formats) {
+    for (const s of f.slides) {
+      if (s.templateId) names.add(s.templateId);
+    }
+  }
+  const map = new Map<string, CanvasTemplateConfig>();
+  for (const name of names) {
+    map.set(name, await resolveTemplate(name, userId, convex));
+  }
+  return map;
+}
+
 export async function resolveBrand(
   request: { brand_id?: string; name?: string; logo_url?: string; colors?: BrandColors; font_family?: string },
   fallbackColors: BrandColors,
@@ -138,3 +158,5 @@ export function injectStaticImages(
     }
   }
 }
+
+export { applySignatureDefaults } from "./signature";

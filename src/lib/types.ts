@@ -64,6 +64,8 @@ export interface FormatEntry {
   name: FormatKey
   slides: Array<{
     objects?: ObjectModification[]
+    /** Optional per-slide template override. Falls back to ReleaseRequest.template when absent. */
+    templateId?: TemplateName
   }>
 }
 

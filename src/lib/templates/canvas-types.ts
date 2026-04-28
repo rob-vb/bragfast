@@ -97,6 +97,7 @@ export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
 export type FormatKey = "landscape" | "square" | "portrait";
+export type CarouselShape = "blob1" | "blob2" | "circle" | "wave";
 
 export interface TemplateObject {
   id: string;
@@ -120,9 +121,21 @@ export interface TemplateObject {
   textAlign?: TextAlign;
   verticalAlign?: VerticalAlign;
   textFit?: boolean;
+  /** Optional solid bg color for text wrapper (badges, CTA pills). Hex. */
+  backgroundColor?: string;
+  /** Role-based fill, takes precedence over backgroundColor. */
+  backgroundColorRole?: ColorRole;
+  paddingX?: number;
+  paddingY?: number;
+  /** Parse `*word*` segments and render in accent color. */
+  accentMarkup?: boolean;
+  /** Color role for accent segments. Defaults to "primary". */
+  accentColorRole?: ColorRole;
 
   // Visual-only
   background?: boolean;
+  /** Decorative shape variant for carousel templates. */
+  shape?: CarouselShape;
   src?: string; // Static image URL — baked into template, not overridable by API
   video_url?: string; // Optional video URL — preferred over image for video renders
   visualFrame?: VisualFrame;

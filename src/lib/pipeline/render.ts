@@ -10,7 +10,7 @@ import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types"
 import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { uploadImage } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
-import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { resolveTemplate, resolveAllTemplates, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages, applySignatureDefaults } from "./shared";
 import { collectUploadKeys, cleanupUploads } from "./cleanup";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
@@ -81,16 +81,25 @@ export async function renderReleaseAsync(
   try {
     const templateName = request.template || "standard-browser";
 
-    const templateConfig = await resolveTemplate(templateName, userId, convex);
+    const templates = await resolveAllTemplates(templateName, request.formats, userId, convex);
+    const baseConfig = templates.get(templateName)!;
+    const resolveSlideConfig = (slide: { templateId?: string }) =>
+      templates.get(slide.templateId ?? templateName) ?? baseConfig;
 
-    validateImageOutputSources(request, templateConfig);
+    validateImageOutputSources(request, resolveSlideConfig);
 
-    const brand = await resolveBrand(request, templateConfig.colors, convex);
+    const brand = await resolveBrand(request, baseConfig.colors, convex);
 
     const images: Record<string, { slides: string[]; dimensions: string }> = {};
 
-    // Collect all static image src URLs across all formats (fetch once)
-    const { srcMap, backgroundImageBase64 } = await prefetchStaticImages(templateConfig);
+    // Collect static image srcs across every unique template referenced
+    const aggregateSrcMap: Record<string, string> = {};
+    const bgPerTemplate = new Map<string, string | undefined>();
+    for (const [name, cfg] of templates) {
+      const { srcMap, backgroundImageBase64 } = await prefetchStaticImages(cfg);
+      Object.assign(aggregateSrcMap, srcMap);
+      bgPerTemplate.set(name, backgroundImageBase64);
+    }
 
     for (const formatEntry of request.formats) {
       const format = formatEntry.name;
@@ -109,12 +118,26 @@ export async function renderReleaseAsync(
         }
       }
 
-      // Inject static images for this format
-      const formatLayout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
-      injectStaticImages(slideDataMaps, formatLayout, srcMap);
+      // Inject static images and propagate brand-default signature data per slide
+      formatEntry.slides.forEach((slide, idx) => {
+        const cfg = resolveSlideConfig(slide);
+        const layout = cfg.formats[format as FormatKey] ?? cfg.formats.landscape;
+        injectStaticImages([slideDataMaps[idx]], layout, aggregateSrcMap);
+        applySignatureDefaults(slideDataMaps[idx], layout, brand);
+      });
 
-      // Font loading
-      let fonts = await loadFontsForObjects(formatLayout.objects);
+      // Font loading: aggregate over every layout used by this format's slides
+      const seenLayouts = new Set<string>();
+      let fonts: Awaited<ReturnType<typeof loadFontsForObjects>> = [];
+      for (const slide of formatEntry.slides) {
+        const cfg = resolveSlideConfig(slide);
+        const layout = cfg.formats[format as FormatKey] ?? cfg.formats.landscape;
+        const key = slide.templateId ?? templateName;
+        if (seenLayouts.has(key)) continue;
+        seenLayouts.add(key);
+        const layoutFonts = await loadFontsForObjects(layout.objects);
+        fonts = [...fonts, ...layoutFonts];
+      }
       if (brand.font_family) {
         const brandFonts = await loadFontsForFamily(brand.font_family);
         fonts = [...fonts, ...brandFonts];
@@ -135,12 +158,15 @@ export async function renderReleaseAsync(
 
       // Render slides
       for (let i = 0; i < slideDataMaps.length; i++) {
+        const slide = formatEntry.slides[i];
+        const slideConfig = resolveSlideConfig(slide);
+        const slideTemplateName = slide.templateId ?? templateName;
         const jsx = CanvasRenderer({
-          config: templateConfig,
+          config: slideConfig,
           format: format as FormatKey,
           objectData: slideDataMaps[i],
           brand,
-          backgroundImageBase64,
+          backgroundImageBase64: bgPerTemplate.get(slideTemplateName),
           skipEmpty: true,
         });
         const svg = await satori(jsx, { width, height, fonts });
@@ -214,17 +240,18 @@ export async function renderReleaseAsync(
  *  static src (on the template). Fail fast if a visual was given only video_url. */
 function validateImageOutputSources(
   request: ReleaseRequest,
-  templateConfig: CanvasTemplateConfig
+  resolveSlideConfig: (slide: { templateId?: string }) => CanvasTemplateConfig
 ): void {
   for (const formatEntry of request.formats) {
     const format = formatEntry.name;
-    const layout = templateConfig.formats[format as FormatKey] ?? templateConfig.formats.landscape;
-    const templateStaticSrc = new Map<string, string | undefined>();
-    for (const obj of layout.objects) {
-      if (obj.type === "visual") templateStaticSrc.set(obj.id, obj.src);
-    }
     formatEntry.slides.forEach((slide, i) => {
       if (!slide.objects) return;
+      const cfg = resolveSlideConfig(slide);
+      const layout = cfg.formats[format as FormatKey] ?? cfg.formats.landscape;
+      const templateStaticSrc = new Map<string, string | undefined>();
+      for (const obj of layout.objects) {
+        if (obj.type === "visual") templateStaticSrc.set(obj.id, obj.src);
+      }
       for (const mod of slide.objects) {
         if (!mod.video_url || mod.image_url) continue;
         if (!templateStaticSrc.has(mod.id)) continue; // not a visual in this template — ignore
