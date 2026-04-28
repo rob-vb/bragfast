@@ -29,6 +29,7 @@ import type * as oauthState from "../oauthState.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as refreshChannelsAction from "../refreshChannelsAction.js";
 import type * as releases from "../releases.js";
+import type * as routingDefaults from "../routingDefaults.js";
 import type * as sousChef from "../sousChef.js";
 import type * as stripe from "../stripe.js";
 import type * as templates from "../templates.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   rateLimit: typeof rateLimit;
   refreshChannelsAction: typeof refreshChannelsAction;
   releases: typeof releases;
+  routingDefaults: typeof routingDefaults;
   sousChef: typeof sousChef;
   stripe: typeof stripe;
   templates: typeof templates;

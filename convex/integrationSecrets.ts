@@ -216,6 +216,9 @@ export const disconnect = internalMutation({
       .first();
     if (!row) return false;
     await ctx.db.delete(row._id);
+    // TODO(U10): cascade to routingDefaults — call
+    //   ctx.runMutation(internal.routingDefaults.clearChannelsForProvider, { userId: args.userId, provider: args.provider })
+    // here (only for "buffer" | "postiz") so stale routing entries are pruned on disconnect.
     return true;
   },
 });
