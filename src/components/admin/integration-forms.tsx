@@ -140,6 +140,61 @@ export function PostHogForm({ onSubmit, submitting }: FormProps) {
   );
 }
 
+export function PostizForm({ onSubmit, submitting }: FormProps) {
+  const [instanceUrl, setInstanceUrl] = useState("https://api.postiz.com");
+  const [apiKey, setApiKey] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({ instanceUrl, apiKey });
+      }}
+      className="space-y-3"
+    >
+      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+        Generate an API key in{" "}
+        <a
+          href="https://app.postiz.com/settings"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Postiz Settings
+        </a>
+        . For self-hosted instances, paste your custom URL below.
+      </p>
+      <label className="block">
+        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
+          Instance URL
+        </span>
+        <input
+          type="url"
+          value={instanceUrl}
+          onChange={(e) => setInstanceUrl(e.target.value)}
+          required
+          placeholder="https://api.postiz.com"
+          className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+        />
+      </label>
+      <label className="block">
+        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
+          API key
+        </span>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          required
+          className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+        />
+      </label>
+      <PixelButton type="submit" disabled={submitting || !apiKey || !instanceUrl}>
+        {submitting ? "Connecting..." : "Connect"}
+      </PixelButton>
+    </form>
+  );
+}
+
 export function Ga4Form({ onSubmit, submitting }: FormProps) {
   const [serviceAccountJson, setServiceAccountJson] = useState("");
   const [propertyId, setPropertyId] = useState("");
@@ -247,6 +302,7 @@ export function ConnectDialog({ provider, onClose, onDone }: ConnectDialogProps)
         {provider === "stripe" && <StripeForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "posthog" && <PostHogForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "ga4" && <Ga4Form onSubmit={handleSubmit} submitting={submitting} />}
+        {provider === "postiz" && <PostizForm onSubmit={handleSubmit} submitting={submitting} />}
 
         {error && (
           <p className="font-[family-name:var(--font-geist-mono)] text-xs text-red-600 break-words">
@@ -294,6 +350,7 @@ export function InlineIntegrationForm({ provider, onDone }: InlineFormProps) {
       {provider === "stripe" && <StripeForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "posthog" && <PostHogForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "ga4" && <Ga4Form onSubmit={handleSubmit} submitting={submitting} />}
+      {provider === "postiz" && <PostizForm onSubmit={handleSubmit} submitting={submitting} />}
       {error && (
         <p className="font-[family-name:var(--font-geist-mono)] text-xs text-red-600 break-words">
           {error}
