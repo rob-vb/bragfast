@@ -179,8 +179,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 940, y: -80, width: 360, height: 360, opacity: 0.18, zIndex: 1, shape: "blob1", colorRole: "primary" },
-            { id: "bg_blob_2", type: "visual", name: "blob 2", x: -80, y: 480, width: 320, height: 320, opacity: 0.14, zIndex: 1, shape: "blob2", colorRole: "primary" },
             { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 80, width: 1040, height: 36, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 24, fontWeight: 600, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", colorRole: "primary", previewText: "Learn how to" },
             { id: "title", type: "text", name: "title", x: 80, y: 140, width: 1040, height: 280, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 84, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "top", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Turn an *idea* into a success", textFit: false },
             { id: "subhead", type: "text", name: "subhead", x: 80, y: 440, width: 1040, height: 100, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, lineHeight: 1.4, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "A field guide for builders" },
@@ -192,8 +190,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         square: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 820, y: -80, width: 380, height: 380, opacity: 0.18, zIndex: 1, shape: "blob1", colorRole: "primary" },
-            { id: "bg_blob_2", type: "visual", name: "blob 2", x: -100, y: 760, width: 360, height: 360, opacity: 0.14, zIndex: 1, shape: "blob2", colorRole: "primary" },
             { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 120, width: 920, height: 40, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 600, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", colorRole: "primary", previewText: "Learn how to" },
             { id: "title", type: "text", name: "title", x: 80, y: 200, width: 920, height: 380, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 96, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "top", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Turn an *idea* into a success", textFit: false },
             { id: "subhead", type: "text", name: "subhead", x: 80, y: 620, width: 920, height: 160, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 36, fontWeight: 400, lineHeight: 1.4, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "A field guide for builders" },
@@ -205,8 +201,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 820, y: -100, width: 400, height: 400, opacity: 0.18, zIndex: 1, shape: "blob1", colorRole: "primary" },
-            { id: "bg_blob_2", type: "visual", name: "blob 2", x: -100, y: 980, width: 380, height: 380, opacity: 0.14, zIndex: 1, shape: "blob2", colorRole: "primary" },
             { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 160, width: 920, height: 40, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 600, lineHeight: 1.2, textAlign: "left", verticalAlign: "top", colorRole: "primary", previewText: "Learn how to" },
             { id: "title", type: "text", name: "title", x: 80, y: 240, width: 920, height: 460, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 100, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "top", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Turn an *idea* into a success", textFit: false },
             { id: "subhead", type: "text", name: "subhead", x: 80, y: 740, width: 920, height: 180, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 38, fontWeight: 400, lineHeight: 1.4, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "A field guide for builders" },
@@ -227,7 +221,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 1000, y: -60, width: 280, height: 280, opacity: 0.14, zIndex: 1, shape: "blob1", colorRole: "primary" },
             { id: "badge", type: "text", name: "badge", x: 80, y: 80, width: 80, height: 80, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 36, fontWeight: 800, textAlign: "center", verticalAlign: "center", color: "#FFFFFF", backgroundColorRole: "primary", borderRadius: 16, previewText: "1" },
             { id: "heading", type: "text", name: "heading", x: 180, y: 80, width: 940, height: 120, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 56, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "center", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Pick the *right* problem", textFit: false },
             { id: "body", type: "text", name: "body", x: 80, y: 240, width: 1040, height: 320, opacity: 0.9, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 400, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "Body paragraph goes here. Keep it conversational and scannable." },
@@ -238,7 +231,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         square: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 880, y: -80, width: 320, height: 320, opacity: 0.14, zIndex: 1, shape: "blob1", colorRole: "primary" },
             { id: "badge", type: "text", name: "badge", x: 80, y: 120, width: 96, height: 96, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 44, fontWeight: 800, textAlign: "center", verticalAlign: "center", color: "#FFFFFF", backgroundColorRole: "primary", borderRadius: 20, previewText: "1" },
             { id: "heading", type: "text", name: "heading", x: 200, y: 120, width: 800, height: 96, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 64, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "center", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Pick the *right* problem", textFit: false },
             { id: "body", type: "text", name: "body", x: 80, y: 280, width: 920, height: 600, opacity: 0.9, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "Body paragraph goes here." },
@@ -249,7 +241,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 880, y: -80, width: 320, height: 320, opacity: 0.14, zIndex: 1, shape: "blob1", colorRole: "primary" },
             { id: "badge", type: "text", name: "badge", x: 80, y: 160, width: 104, height: 104, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 48, fontWeight: 800, textAlign: "center", verticalAlign: "center", color: "#FFFFFF", backgroundColorRole: "primary", borderRadius: 20, previewText: "1" },
             { id: "heading", type: "text", name: "heading", x: 208, y: 160, width: 792, height: 104, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 64, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "center", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Pick the *right* problem", textFit: false },
             { id: "body", type: "text", name: "body", x: 80, y: 320, width: 920, height: 800, opacity: 0.9, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 34, fontWeight: 400, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "Body paragraph goes here." },
@@ -311,8 +302,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       formats: {
         landscape: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 920, y: -60, width: 360, height: 360, opacity: 0.18, zIndex: 1, shape: "blob1", colorRole: "primary" },
-            { id: "bg_blob_2", type: "visual", name: "blob 2", x: -80, y: 440, width: 320, height: 320, opacity: 0.14, zIndex: 1, shape: "blob2", colorRole: "primary" },
             { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 80, width: 1040, height: 36, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 24, fontWeight: 600, textAlign: "left", verticalAlign: "top", colorRole: "primary", previewText: "Let's get started!" },
             { id: "title", type: "text", name: "title", x: 80, y: 140, width: 1040, height: 220, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 80, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "top", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Ready to *ship*?", textFit: false },
             { id: "cta_paragraph", type: "text", name: "paragraph", x: 80, y: 380, width: 1040, height: 140, opacity: 0.9, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 400, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "Follow for more like this." },
@@ -324,8 +313,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         square: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 800, y: -80, width: 380, height: 380, opacity: 0.18, zIndex: 1, shape: "blob1", colorRole: "primary" },
-            { id: "bg_blob_2", type: "visual", name: "blob 2", x: -100, y: 740, width: 360, height: 360, opacity: 0.14, zIndex: 1, shape: "blob2", colorRole: "primary" },
             { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 120, width: 920, height: 40, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 600, textAlign: "left", verticalAlign: "top", colorRole: "primary", previewText: "Let's get started!" },
             { id: "title", type: "text", name: "title", x: 80, y: 200, width: 920, height: 320, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 88, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "top", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Ready to *ship*?", textFit: false },
             { id: "cta_paragraph", type: "text", name: "paragraph", x: 80, y: 560, width: 920, height: 200, opacity: 0.9, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "Follow for more like this." },
@@ -337,8 +324,6 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
         },
         portrait: {
           objects: [
-            { id: "bg_blob_1", type: "visual", name: "blob 1", x: 800, y: -100, width: 400, height: 400, opacity: 0.18, zIndex: 1, shape: "blob1", colorRole: "primary" },
-            { id: "bg_blob_2", type: "visual", name: "blob 2", x: -100, y: 960, width: 380, height: 380, opacity: 0.14, zIndex: 1, shape: "blob2", colorRole: "primary" },
             { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 160, width: 920, height: 40, opacity: 0.85, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 28, fontWeight: 600, textAlign: "left", verticalAlign: "top", colorRole: "primary", previewText: "Let's get started!" },
             { id: "title", type: "text", name: "title", x: 80, y: 240, width: 920, height: 380, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 96, fontWeight: 800, lineHeight: 1.1, textAlign: "left", verticalAlign: "top", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Ready to *ship*?", textFit: false },
             { id: "cta_paragraph", type: "text", name: "paragraph", x: 80, y: 660, width: 920, height: 220, opacity: 0.9, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 34, fontWeight: 400, lineHeight: 1.5, textAlign: "left", verticalAlign: "top", colorRole: "text", previewText: "Follow for more like this." },
