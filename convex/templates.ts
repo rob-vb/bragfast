@@ -223,7 +223,15 @@ export const seedDefaults = mutation({
   handler: async (ctx) => {
     const now = new Date().toISOString();
 
-    const slugs = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
+    const slugs = [
+      "standard-browser",
+      "standard-mobile",
+      "split-browser",
+      "split-mobile",
+      "hero",
+      "carousel-slide",
+    ];
+    const slugSet = new Set(slugs);
     const defaults = slugs.map((slug) => ({
       userId: "",
       externalId: slug,
@@ -254,14 +262,15 @@ export const seedDefaults = mutation({
       }
     }
 
-    // Clean up old tmpl_* default records
+    // Clean up default rows whose slug is no longer in the seed list
+    // (covers both legacy tmpl_* rows and orphaned slugs from removed defaults)
     const allDefaults = await ctx.db
       .query("templates")
       .filter((q) => q.eq(q.field("isDefault"), true))
       .collect();
     let deleted = 0;
     for (const tmpl of allDefaults) {
-      if (tmpl.externalId.startsWith("tmpl_")) {
+      if (!slugSet.has(tmpl.externalId)) {
         await ctx.db.delete(tmpl._id);
         deleted++;
       }

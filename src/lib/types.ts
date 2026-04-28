@@ -64,6 +64,8 @@ export interface FormatEntry {
   name: FormatKey
   slides: Array<{
     objects?: ObjectModification[]
+    /** Optional per-slide template override. Falls back to ReleaseRequest.template when absent. */
+    templateId?: TemplateName
   }>
 }
 
@@ -103,7 +105,7 @@ export interface ReleaseResult {
   socialCopy?: { twitter: string; linkedin: string } | null
 }
 
-export type TemplateName = 'standard-browser' | 'standard-mobile' | 'split-browser' | 'split-mobile' | 'hero' | (string & {})
+export type TemplateName = 'standard-browser' | 'standard-mobile' | 'split-browser' | 'split-mobile' | 'hero' | 'carousel-slide' | (string & {})
 
 export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   landscape: { width: 1200, height: 675 },

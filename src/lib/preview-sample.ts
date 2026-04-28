@@ -21,6 +21,10 @@ export function buildSampleSlide(config: CanvasTemplateConfig, format: FormatKey
   const slide: ObjectDataMap = {};
   for (const obj of layout.objects) {
     if (obj.type === "text") {
+      // Explicit empty string ("") = deliberate hide (e.g. carousel eyebrow/cta with no
+      // default copy). Undefined = no previewText set → fall back to "Sample text" so
+      // legacy templates (description, etc.) keep showing placeholder copy.
+      if (obj.previewText === "") continue;
       slide[obj.id] = { text: obj.previewText ?? "Sample text" };
     }
     // visual and logo: leave empty; visual objects with obj.src render their static image

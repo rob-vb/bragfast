@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TemplateCard } from "@/components/admin/template-card";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelCard } from "@/components/admin/pixel-card";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 interface TemplateItem {
   id: string;
@@ -13,6 +14,7 @@ interface TemplateItem {
   isDefault: boolean;
   previewUrl?: string;
   isV2?: boolean;
+  config?: CanvasTemplateConfig;
 }
 
 interface TemplateListClientProps {
@@ -41,6 +43,7 @@ export function TemplateListClient({
         isDefault: false,
         previewUrl: data.preview_url ?? undefined,
         isV2: data.config?.version === 2,
+        config: data.config?.version === 2 ? (data.config as CanvasTemplateConfig) : undefined,
       };
       setUserTemplates((prev) => [...prev, newTemplate]);
     } catch (err) {
@@ -118,6 +121,7 @@ export function TemplateListClient({
                 name={t.name}
                 isDefault={t.isDefault}
                 previewUrl={t.previewUrl}
+                config={t.config}
                 onClone={handleClone}
               />
             ))}
@@ -150,6 +154,7 @@ export function TemplateListClient({
                 isDefault={t.isDefault}
                 previewUrl={t.previewUrl}
                 isV2={t.isV2}
+                config={t.config}
                 onClone={handleClone}
                 onDelete={handleDelete}
               />

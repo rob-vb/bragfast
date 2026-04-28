@@ -171,6 +171,60 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
       },
     },
   },
+  "carousel-slide": {
+    name: "Carousel Slide",
+    config: {
+      version: 2,
+      colors: { background: "#FFF8F0", text: "#1A1A1A", primary: "#F8AF3C" },
+      formats: {
+        landscape: {
+          objects: [
+            { id: "bg_arcs_tl", type: "visual", name: "arcs (top-left)", x: -40, y: -40, width: 320, height: 320, opacity: 0.35, zIndex: 0, src: "/templates/carousel/arc-rings-tl.png", objectFit: "contain" },
+            { id: "bg_arcs_br", type: "visual", name: "arcs (bottom-right)", x: 920, y: 395, width: 320, height: 320, opacity: 0.35, zIndex: 0, src: "/templates/carousel/arc-rings-br.png", objectFit: "contain" },
+            { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 36, width: 1040, height: 28, opacity: 0.8, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 20, fontWeight: 600, letterSpacing: 1.2, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", colorRole: "primary", previewText: "" },
+            { id: "badge_ring", type: "visual", name: "badge ring", x: 565, y: 110, width: 70, height: 70, opacity: 1, zIndex: 3, src: "/templates/carousel/badge-ring.png", objectFit: "contain" },
+            { id: "badge", type: "text", name: "badge", x: 565, y: 110, width: 70, height: 70, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 30, fontWeight: 400, lineHeight: 1, textAlign: "center", verticalAlign: "center", colorRole: "primary", previewText: "1" },
+            { id: "heading", type: "text", name: "heading", x: 80, y: 200, width: 1040, height: 160, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 68, fontWeight: 400, lineHeight: 1.1, letterSpacing: 0, textAlign: "center", verticalAlign: "center", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Title goes *here*", textFit: false },
+            { id: "body", type: "text", name: "body", x: 200, y: 380, width: 800, height: 140, opacity: 0.92, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 26, fontWeight: 400, lineHeight: 1.5, textAlign: "center", verticalAlign: "top", colorRole: "text", previewText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim." },
+            { id: "cta_text", type: "text", name: "cta", x: 460, y: 540, width: 280, height: 56, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 22, fontWeight: 700, lineHeight: 1, textAlign: "center", verticalAlign: "center", color: "#FFFFFF", backgroundColorRole: "primary", borderRadius: 999, paddingX: 24, paddingY: 12, previewText: "" },
+            { id: "signature_avatar", type: "visual", name: "avatar", x: 80, y: 590, width: 56, height: 56, opacity: 1, zIndex: 5, borderRadius: 28, objectFit: "cover" },
+            { id: "signature_name", type: "text", name: "name", x: 152, y: 590, width: 400, height: 26, opacity: 1, zIndex: 5, fontFamily: "Plus Jakarta Sans", fontSize: 18, fontWeight: 700, textAlign: "left", verticalAlign: "top", colorRole: "text" },
+            { id: "signature_title", type: "text", name: "title", x: 152, y: 620, width: 400, height: 22, opacity: 0.65, zIndex: 5, fontFamily: "Plus Jakarta Sans", fontSize: 14, fontWeight: 400, textAlign: "left", verticalAlign: "top", colorRole: "text" },
+          ],
+        },
+        square: {
+          objects: [
+            { id: "bg_arcs_tl", type: "visual", name: "arcs (top-left)", x: -50, y: -50, width: 460, height: 460, opacity: 0.35, zIndex: 0, src: "/templates/carousel/arc-rings-tl.png", objectFit: "contain" },
+            { id: "bg_arcs_br", type: "visual", name: "arcs (bottom-right)", x: 670, y: 670, width: 460, height: 460, opacity: 0.35, zIndex: 0, src: "/templates/carousel/arc-rings-br.png", objectFit: "contain" },
+            { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 80, width: 920, height: 32, opacity: 0.8, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 22, fontWeight: 600, letterSpacing: 1.2, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", colorRole: "primary", previewText: "" },
+            { id: "badge_ring", type: "visual", name: "badge ring", x: 495, y: 200, width: 90, height: 90, opacity: 1, zIndex: 3, src: "/templates/carousel/badge-ring.png", objectFit: "contain" },
+            { id: "badge", type: "text", name: "badge", x: 495, y: 200, width: 90, height: 90, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 38, fontWeight: 400, lineHeight: 1, textAlign: "center", verticalAlign: "center", colorRole: "primary", previewText: "1" },
+            { id: "heading", type: "text", name: "heading", x: 80, y: 320, width: 920, height: 240, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 86, fontWeight: 400, lineHeight: 1.1, textAlign: "center", verticalAlign: "center", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Title goes *here*", textFit: false },
+            { id: "body", type: "text", name: "body", x: 130, y: 600, width: 820, height: 200, opacity: 0.92, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 32, fontWeight: 400, lineHeight: 1.5, textAlign: "center", verticalAlign: "top", colorRole: "text", previewText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim." },
+            { id: "cta_text", type: "text", name: "cta", x: 380, y: 840, width: 320, height: 64, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 24, fontWeight: 700, lineHeight: 1, textAlign: "center", verticalAlign: "center", color: "#FFFFFF", backgroundColorRole: "primary", borderRadius: 999, paddingX: 28, paddingY: 14, previewText: "" },
+            { id: "signature_avatar", type: "visual", name: "avatar", x: 80, y: 950, width: 64, height: 64, opacity: 1, zIndex: 5, borderRadius: 32, objectFit: "cover" },
+            { id: "signature_name", type: "text", name: "name", x: 160, y: 952, width: 600, height: 30, opacity: 1, zIndex: 5, fontFamily: "Plus Jakarta Sans", fontSize: 20, fontWeight: 700, textAlign: "left", verticalAlign: "top", colorRole: "text" },
+            { id: "signature_title", type: "text", name: "title", x: 160, y: 986, width: 600, height: 26, opacity: 0.65, zIndex: 5, fontFamily: "Plus Jakarta Sans", fontSize: 16, fontWeight: 400, textAlign: "left", verticalAlign: "top", colorRole: "text" },
+          ],
+        },
+        portrait: {
+          objects: [
+            { id: "bg_arcs_tl", type: "visual", name: "arcs (top-left)", x: -40, y: -40, width: 540, height: 540, opacity: 0.35, zIndex: 0, src: "/templates/carousel/arc-rings-tl.png", objectFit: "contain" },
+            { id: "bg_arcs_br", type: "visual", name: "arcs (bottom-right)", x: 580, y: 850, width: 540, height: 540, opacity: 0.35, zIndex: 0, src: "/templates/carousel/arc-rings-br.png", objectFit: "contain" },
+            { id: "eyebrow", type: "text", name: "eyebrow", x: 80, y: 96, width: 920, height: 32, opacity: 0.8, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 22, fontWeight: 600, letterSpacing: 1.4, lineHeight: 1.2, textAlign: "center", verticalAlign: "top", colorRole: "primary", previewText: "" },
+            { id: "badge_ring", type: "visual", name: "badge ring", x: 490, y: 380, width: 100, height: 100, opacity: 1, zIndex: 3, src: "/templates/carousel/badge-ring.png", objectFit: "contain" },
+            { id: "badge", type: "text", name: "badge", x: 490, y: 380, width: 100, height: 100, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 44, fontWeight: 400, lineHeight: 1, textAlign: "center", verticalAlign: "center", colorRole: "primary", previewText: "1" },
+            { id: "heading", type: "text", name: "heading", x: 80, y: 520, width: 920, height: 280, opacity: 1, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 96, fontWeight: 400, lineHeight: 1.1, textAlign: "center", verticalAlign: "center", colorRole: "text", accentMarkup: true, accentColorRole: "primary", previewText: "Title goes *here*", textFit: false },
+            { id: "body", type: "text", name: "body", x: 130, y: 850, width: 820, height: 200, opacity: 0.92, zIndex: 3, fontFamily: "Plus Jakarta Sans", fontSize: 34, fontWeight: 400, lineHeight: 1.5, textAlign: "center", verticalAlign: "top", colorRole: "text", previewText: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim." },
+            { id: "cta_text", type: "text", name: "cta", x: 370, y: 1090, width: 340, height: 72, opacity: 1, zIndex: 4, fontFamily: "Plus Jakarta Sans", fontSize: 26, fontWeight: 700, lineHeight: 1, textAlign: "center", verticalAlign: "center", color: "#FFFFFF", backgroundColorRole: "primary", borderRadius: 999, paddingX: 30, paddingY: 16, previewText: "" },
+            { id: "signature_avatar", type: "visual", name: "avatar", x: 80, y: 1230, width: 72, height: 72, opacity: 1, zIndex: 5, borderRadius: 36, objectFit: "cover" },
+            { id: "signature_name", type: "text", name: "name", x: 168, y: 1234, width: 700, height: 32, opacity: 1, zIndex: 5, fontFamily: "Plus Jakarta Sans", fontSize: 22, fontWeight: 700, textAlign: "left", verticalAlign: "top", colorRole: "text" },
+            { id: "signature_title", type: "text", name: "title", x: 168, y: 1272, width: 700, height: 28, opacity: 0.65, zIndex: 5, fontFamily: "Plus Jakarta Sans", fontSize: 18, fontWeight: 400, textAlign: "left", verticalAlign: "top", colorRole: "text" },
+          ],
+        },
+      },
+    },
+  },
 };
 
 export function getCanvasDefaultConfig(name: string): CanvasTemplateConfig | null {

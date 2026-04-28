@@ -6,11 +6,12 @@ import { KitchenClient } from "./kitchen-client";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 const defaultDisplayIds: Record<string, string> = {
-  tmpl_standard_browser: "standard-browser",
-  tmpl_standard_mobile: "standard-mobile",
-  tmpl_split_browser: "split-browser",
-  tmpl_split_mobile: "split-mobile",
-  tmpl_hero: "hero",
+  "standard-browser": "standard-browser",
+  "standard-mobile": "standard-mobile",
+  "split-browser": "split-browser",
+  "split-mobile": "split-mobile",
+  hero: "hero",
+  "carousel-slide": "carousel-slide",
 };
 
 export default async function KitchenPage() {

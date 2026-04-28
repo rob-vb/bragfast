@@ -1,10 +1,59 @@
 // src/lib/templates/canvas-renderer.tsx
-import type { CanvasTemplateConfig, TemplateObject, FormatKey } from "./canvas-types";
+import type { CanvasTemplateConfig, TemplateObject, FormatKey, ColorRole } from "./canvas-types";
 import type { Brand } from "../types";
 import { FORMAT_DIMENSIONS, getObjectBorderRadius, resolveTextColor } from "./canvas-types";
 import { BrowserFrame } from "./components/BrowserFrame";
 import { MobileFrame } from "./components/MobileFrame";
 import { resolveBackground } from "./mesh-gradient";
+
+const ACCENT_RE = /\*([^*\n]+)\*/g;
+
+/** Remove `*…*` accent markers, keeping inner content. Used to feed plain text to autoFitFontSize. */
+export function stripAccentMarkers(text: string): string {
+  return text.replace(ACCENT_RE, "$1");
+}
+
+export interface AccentSegment {
+  text: string;
+  accent: boolean;
+}
+
+/** Split a single line into accent / non-accent segments. Unbalanced `*` are kept literal. */
+export function parseAccentSegments(line: string): AccentSegment[] {
+  const segments: AccentSegment[] = [];
+  let lastIndex = 0;
+  ACCENT_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = ACCENT_RE.exec(line)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: line.slice(lastIndex, match.index), accent: false });
+    }
+    segments.push({ text: match[1], accent: true });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < line.length) {
+    segments.push({ text: line.slice(lastIndex), accent: false });
+  }
+  if (segments.length === 0) segments.push({ text: line, accent: false });
+  return segments;
+}
+
+function resolveBackgroundFill(
+  obj: TemplateObject,
+  colors: { background: string; text: string; primary: string },
+): string | undefined {
+  if (obj.backgroundColorRole) return colors[obj.backgroundColorRole];
+  return obj.backgroundColor;
+}
+
+function resolveColorRole(
+  role: ColorRole | undefined,
+  fallback: string,
+  colors: { background: string; text: string; primary: string },
+): string {
+  if (role) return colors[role];
+  return fallback;
+}
 
 // Object data keyed by object ID — values are resolved (URLs already fetched to base64)
 export interface ObjectDataMap {
@@ -176,17 +225,47 @@ export function renderObject(
 
   switch (obj.type) {
     case "text": {
-      const text = data?.text || obj.previewText || "Text";
+      // Both missing → render nothing (e.g. carousel eyebrow/cta with previewText:"" and no slide data).
+      if (!data?.text && !obj.previewText) return null;
+      const rawText = data?.text || obj.previewText || "";
+      const useAccent = obj.accentMarkup === true;
+      const plainText = useAccent ? stripAccentMarkers(rawText) : rawText;
       const resolvedFont = data?.fontFamily || fontFamily;
       const resolvedWeight = data?.fontWeight || obj.fontWeight || 400;
       const resolvedColor = data?.color || resolveTextColor(obj, colors);
+      const accentColor = resolveColorRole(obj.accentColorRole ?? "primary", colors.primary, colors);
+      const bgFill = resolveBackgroundFill(obj, colors);
+      const padX = obj.paddingX ?? 0;
+      const padY = obj.paddingY ?? 0;
+      const radius = getObjectBorderRadius(obj);
+      const innerW = Math.max(1, obj.width - padX * 2);
+      const innerH = Math.max(1, obj.height - padY * 2);
       const fontSize = autoFitFontSize(
-        text, obj.fontSize || 24, obj.width, obj.height,
+        plainText, obj.fontSize || 24, innerW, innerH,
         resolvedWeight, obj.lineHeight || 1.2, obj.letterSpacing || 0,
         obj.textFit ?? false,
       );
-      const lines = text.split("\n");
-      return (
+      const lines = useAccent ? rawText.split("\n") : plainText.split("\n");
+      const alignItems = obj.textAlign === "center" ? "center"
+                       : obj.textAlign === "right" ? "flex-end" : "flex-start";
+      const justify = obj.verticalAlign === "center" ? "center"
+                    : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start";
+
+      const renderLine = (line: string, i: number) => {
+        if (!useAccent) return <div key={i}>{line}</div>;
+        const segs = parseAccentSegments(line);
+        return (
+          <div key={i} style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
+            {segs.map((s, j) => (
+              <span key={j} style={{ color: s.accent ? accentColor : resolvedColor, whiteSpace: "pre" }}>
+                {s.text}
+              </span>
+            ))}
+          </div>
+        );
+      };
+
+      const textBlock = (
         <div style={{
           fontFamily: resolvedFont,
           fontSize,
@@ -199,14 +278,36 @@ export function renderObject(
           wordWrap: "break-word",
           display: "flex",
           flexDirection: "column",
-          alignItems: obj.textAlign === "center" ? "center"
-                    : obj.textAlign === "right" ? "flex-end" : "flex-start",
+          alignItems,
         }}>
-          {lines.length > 1
-            ? lines.map((line, i) => <div key={i}>{line}</div>)
-            : text}
+          {lines.length > 1 || useAccent
+            ? lines.map(renderLine)
+            : plainText}
         </div>
       );
+
+      if (bgFill || radius || padX || padY) {
+        return (
+          <div style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems,
+            justifyContent: justify,
+            backgroundColor: bgFill,
+            borderRadius: radius,
+            paddingLeft: padX,
+            paddingRight: padX,
+            paddingTop: padY,
+            paddingBottom: padY,
+            boxSizing: "border-box",
+          }}>
+            {textBlock}
+          </div>
+        );
+      }
+      return textBlock;
     }
 
     case "logo": {
@@ -227,7 +328,10 @@ export function renderObject(
     }
 
     case "visual": {
-      const imgSrc = data?.imageBase64;
+      // Pipeline pre-fetches obj.src into data.imageBase64 for server renders.
+      // Client-only previews (TemplatePreview) skip prefetch — fall back to obj.src so
+      // browser <img> loads the asset directly.
+      const imgSrc = data?.imageBase64 || obj.src;
       const videoUrl = data?.videoUrl;
       const VideoEl = options.VideoComponent;
       const useVideo = !!(videoUrl && VideoEl);

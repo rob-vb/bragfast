@@ -97,7 +97,6 @@ export type ObjectFit = "cover" | "contain";
 export type AnchorX = "left" | "center" | "right";
 export type AnchorY = "top" | "center" | "bottom";
 export type FormatKey = "landscape" | "square" | "portrait";
-
 export interface TemplateObject {
   id: string;
   type: ObjectType;
@@ -120,6 +119,16 @@ export interface TemplateObject {
   textAlign?: TextAlign;
   verticalAlign?: VerticalAlign;
   textFit?: boolean;
+  /** Optional solid bg color for text wrapper (badges, CTA pills). Hex. */
+  backgroundColor?: string;
+  /** Role-based fill, takes precedence over backgroundColor. */
+  backgroundColorRole?: ColorRole;
+  paddingX?: number;
+  paddingY?: number;
+  /** Parse `*word*` segments and render in accent color. */
+  accentMarkup?: boolean;
+  /** Color role for accent segments. Defaults to "primary". */
+  accentColorRole?: ColorRole;
 
   // Visual-only
   background?: boolean;
