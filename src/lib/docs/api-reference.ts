@@ -242,7 +242,7 @@ while True:
             type: "string",
             required: false,
             description:
-              'Template to use: "standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero", or a custom template ID (e.g. "tmpl_abc123"). Defaults to "standard-browser".',
+              'Template to use: "standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero", "carousel-cover", "carousel-content-text", "carousel-content-image", "carousel-outro", or a custom template ID (e.g. "tmpl_abc123"). Defaults to "standard-browser". Each slide may also carry its own templateId to mix templates within a single render (see slides[].templateId).',
           },
           {
             name: "formats",
@@ -263,6 +263,13 @@ while True:
                 required: true,
                 description: "1–5 slides for this format. Each slide becomes one image.",
                 children: [
+                  {
+                    name: "templateId",
+                    type: "string",
+                    required: false,
+                    description:
+                      "Optional per-slide template override. Falls back to the top-level template when omitted. Useful for carousel families — e.g. slide 1 uses \"carousel-cover\", slides 2–4 use \"carousel-content-text\", slide 5 uses \"carousel-outro\".",
+                  },
                   {
                     name: "objects",
                     type: "array",

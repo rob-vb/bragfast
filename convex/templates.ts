@@ -223,7 +223,17 @@ export const seedDefaults = mutation({
   handler: async (ctx) => {
     const now = new Date().toISOString();
 
-    const slugs = ["standard-browser", "standard-mobile", "split-browser", "split-mobile", "hero"];
+    const slugs = [
+      "standard-browser",
+      "standard-mobile",
+      "split-browser",
+      "split-mobile",
+      "hero",
+      "carousel-cover",
+      "carousel-content-text",
+      "carousel-content-image",
+      "carousel-outro",
+    ];
     const defaults = slugs.map((slug) => ({
       userId: "",
       externalId: slug,

@@ -5,11 +5,15 @@ import { redirect } from "next/navigation";
 import { TemplateListClient } from "./template-list-client";
 
 const defaultDisplayIds: Record<string, string> = {
-  tmpl_standard_browser: "standard-browser",
-  tmpl_standard_mobile: "standard-mobile",
-  tmpl_split_browser: "split-browser",
-  tmpl_split_mobile: "split-mobile",
-  tmpl_hero: "hero",
+  "standard-browser": "standard-browser",
+  "standard-mobile": "standard-mobile",
+  "split-browser": "split-browser",
+  "split-mobile": "split-mobile",
+  hero: "hero",
+  "carousel-cover": "carousel-cover",
+  "carousel-content-text": "carousel-content-text",
+  "carousel-content-image": "carousel-content-image",
+  "carousel-outro": "carousel-outro",
 };
 
 export default async function TemplatesPage() {
