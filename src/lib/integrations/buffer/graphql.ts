@@ -22,6 +22,23 @@ export class BufferGraphQLError extends Error {
   }
 }
 
+export class BufferRateLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BufferRateLimitError";
+  }
+}
+
+export class BufferHttpError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "BufferHttpError";
+  }
+}
+
 const GRAPHQL_ENDPOINT = "https://api.buffer.com/graphql";
 
 export async function bufferGraphQL<T = unknown>(
@@ -44,8 +61,17 @@ export async function bufferGraphQL<T = unknown>(
     );
   }
 
+  if (res.status === 429) {
+    throw new BufferRateLimitError(
+      `Buffer API rate limited (HTTP 429): ${res.statusText}`,
+    );
+  }
+
   if (!res.ok) {
-    throw new Error(`Buffer GraphQL HTTP ${res.status}: ${res.statusText}`);
+    throw new BufferHttpError(
+      `Buffer GraphQL HTTP ${res.status}: ${res.statusText}`,
+      res.status,
+    );
   }
 
   const json = (await res.json()) as {

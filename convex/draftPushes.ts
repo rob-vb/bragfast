@@ -14,7 +14,7 @@
  * during fanout (either polling the cook result or triggering a fresh render).
  * This keeps U7 narrow and avoids coupling approve to the render pipeline.
  */
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
@@ -210,6 +210,144 @@ export const approveDraft = mutation({
       pushIds: pushIds as string[],
       skipped,
     };
+  },
+});
+
+// ── Internal queries and mutations used by pushFanout ─────────────────────────
+
+const pushStateValidator = v.union(
+  v.literal("pending"),
+  v.literal("in_flight"),
+  v.literal("queued"),
+  v.literal("drafted"),
+  v.literal("failed"),
+);
+
+const errorClassValidator = v.union(
+  v.literal("auth"),
+  v.literal("channel_gone"),
+  v.literal("rate_limit"),
+  v.literal("media"),
+  v.literal("transient"),
+  v.literal("unknown"),
+);
+
+/**
+ * Return all pending rows for a draft. Used by pushFanout to find work.
+ */
+export const getPendingForDraft = internalQuery({
+  args: { draftId: v.string() },
+  handler: async (ctx, { draftId }) => {
+    const rows = await ctx.db
+      .query("draftPushes")
+      .withIndex("by_draftId", (q) => q.eq("draftId", draftId))
+      .collect();
+    return rows.filter((r) => r.state === "pending");
+  },
+});
+
+/**
+ * Return the sealed integrationSecrets row for a user + provider, or null if
+ * not found / disabled. Home here (rather than integrationSecrets.ts) because
+ * this query shape is tightly coupled to the U8 fanout claim cycle.
+ */
+export const getSealedForUser = internalQuery({
+  args: {
+    userId: v.string(),
+    provider: v.union(v.literal("buffer"), v.literal("postiz")),
+  },
+  handler: async (ctx, { userId, provider }) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", userId).eq("provider", provider),
+      )
+      .first();
+    if (!row || !row.enabled) return null;
+    return {
+      _id: row._id,
+      ciphertext: row.ciphertext,
+      iv: row.iv,
+      tag: row.tag,
+      extra: row.extra ?? null,
+      // Buffer lease fields — needed for refresh-lease check in fanout
+      refreshInProgress: row.refreshInProgress ?? false,
+      leaseUntil: row.leaseUntil ?? null,
+      // Buffer token expiry is embedded in the extra JSON but NOT stored separately —
+      // the fanout decodes the sealed payload to get expiresAt.
+    };
+  },
+});
+
+/**
+ * Atomically claim a pending row by transitioning it to in_flight.
+ * Returns true if the claim succeeded (row was still pending).
+ * Returns false if the row was already claimed by another invocation (state != pending).
+ *
+ * Convex's serialized mutation lane ensures no two mutations can both observe
+ * state=pending for the same row.
+ */
+export const claimPush = internalMutation({
+  args: { rowId: v.id("draftPushes") },
+  handler: async (ctx, { rowId }) => {
+    const row = await ctx.db.get(rowId);
+    if (!row || row.state !== "pending") return false;
+    await ctx.db.patch(rowId, {
+      state: "in_flight",
+      updated_at: new Date().toISOString(),
+    });
+    return true;
+  },
+});
+
+/**
+ * Set a row to a terminal or final state after dispatch.
+ * Used for success (queued/drafted) and non-retryable failures (failed).
+ */
+export const finalizePush = internalMutation({
+  args: {
+    rowId: v.id("draftPushes"),
+    state: pushStateValidator,
+    providerPostId: v.optional(v.string()),
+    errorClass: v.optional(errorClassValidator),
+    errorMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, { rowId, state, providerPostId, errorClass, errorMessage }) => {
+    const row = await ctx.db.get(rowId);
+    if (!row) return;
+    await ctx.db.patch(rowId, {
+      state,
+      attempts: row.attempts + 1,
+      lastAttemptAt: Date.now(),
+      ...(providerPostId !== undefined ? { providerPostId } : {}),
+      ...(errorClass !== undefined ? { errorClass } : {}),
+      ...(errorMessage !== undefined ? { errorMessage } : {}),
+      updated_at: new Date().toISOString(),
+    });
+  },
+});
+
+/**
+ * Reset a retryable row back to pending so the next scheduled fanout pick-up
+ * can reclaim it. Increments attempts and stores the last-error breadcrumb.
+ */
+export const scheduleRetry = internalMutation({
+  args: {
+    rowId: v.id("draftPushes"),
+    errorClass: errorClassValidator,
+    errorMessage: v.string(),
+  },
+  handler: async (ctx, { rowId, errorClass, errorMessage }) => {
+    const row = await ctx.db.get(rowId);
+    if (!row) return;
+    await ctx.db.patch(rowId, {
+      state: "pending", // reset so the next scheduled action can claim it
+      attempts: row.attempts + 1,
+      lastAttemptAt: Date.now(),
+      errorClass,
+      errorMessage,
+      updated_at: new Date().toISOString(),
+    });
   },
 });
 
