@@ -167,31 +167,111 @@ export default defineSchema({
     .index("by_externalId", ["externalId"])
     .index("by_idempotencyKey", ["idempotencyKey"]),
 
-  // Sous-Chef: encrypted third-party credentials per user per provider.
+  // Sous-Chef + posting backbone: encrypted third-party credentials per user per provider.
   // Raw key is never stored — only sealed via src/lib/crypto/secret-box.ts.
   integrationSecrets: defineTable({
     userId: v.string(),
     provider: v.union(
       v.literal("stripe"),
       v.literal("posthog"),
-      v.literal("ga4")
+      v.literal("ga4"),
+      v.literal("buffer"),
+      v.literal("postiz"),
     ),
     ciphertext: v.string(),
     iv: v.string(),
     tag: v.string(),
-    // Provider-specific non-secret config (JSON): projectId/host for PostHog, propertyId for GA4, etc.
+    // Provider-specific non-secret config (JSON): projectId/host for PostHog, propertyId
+    // for GA4, organizationId/channels/expiresAt for Buffer, instanceUrl/channels for Postiz.
     extra: v.optional(v.string()),
     enabled: v.boolean(),
     lastScanAt: v.optional(v.string()),
     lastScanOkAt: v.optional(v.string()),
     lastScanError: v.optional(v.string()),
     lastSnapshotJson: v.optional(v.string()),
+    // Buffer refresh-lease: prevents concurrent /token calls from racing rotated refresh tokens.
+    refreshInProgress: v.optional(v.boolean()),
+    leaseUntil: v.optional(v.number()),
     created_at: v.string(),
     updated_at: v.string(),
   })
     .index("by_userId", ["userId"])
     .index("by_userId_provider", ["userId", "provider"])
     .index("by_provider_enabled", ["provider", "enabled"]),
+
+  // Posting backbone: per-user per-format default channel selection across providers.
+  routingDefaults: defineTable({
+    userId: v.string(),
+    format: v.union(
+      v.literal("square"),
+      v.literal("landscape"),
+      v.literal("portrait"),
+      v.literal("video-square"),
+      v.literal("video-landscape"),
+      v.literal("video-portrait"),
+    ),
+    channels: v.array(
+      v.object({
+        provider: v.union(v.literal("buffer"), v.literal("postiz")),
+        channelId: v.string(),
+      }),
+    ),
+    updated_at: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_format", ["userId", "format"]),
+
+  // Posting backbone: one row per (draft, format, provider, channel) push attempt.
+  draftPushes: defineTable({
+    draftId: v.string(),                  // drafts.externalId ("drf_*")
+    userId: v.string(),
+    format: v.string(),                   // "square" | "landscape" | ... (matches routingDefaults.format)
+    provider: v.union(v.literal("buffer"), v.literal("postiz")),
+    channelId: v.string(),
+    channelLabel: v.optional(v.string()), // denormalized at create-time for status panel
+    state: v.union(
+      v.literal("pending"),
+      v.literal("in_flight"),
+      v.literal("queued"),
+      v.literal("drafted"),
+      v.literal("failed"),
+    ),
+    postState: v.union(v.literal("queue"), v.literal("draft")), // user choice at approve time
+    providerPostId: v.optional(v.string()),
+    errorClass: v.optional(
+      v.union(
+        v.literal("auth"),
+        v.literal("channel_gone"),
+        v.literal("rate_limit"),
+        v.literal("media"),
+        v.literal("transient"),
+        v.literal("unknown"),
+      ),
+    ),
+    errorMessage: v.optional(v.string()),
+    mediaUrl: v.string(),                 // R2 URL of the rendered asset for this format
+    title: v.string(),
+    description: v.string(),
+    attempts: v.number(),
+    lastAttemptAt: v.optional(v.number()),
+    clientNonce: v.optional(v.string()),  // approve-time idempotency
+    created_at: v.string(),
+    updated_at: v.string(),
+  })
+    .index("by_draftId", ["draftId"])
+    .index("by_userId_state", ["userId", "state"])
+    .index("by_clientNonce", ["clientNonce"]),
+
+  // Posting backbone: short-lived OAuth state nonces for Buffer connect flow CSRF defense.
+  oauthStates: defineTable({
+    userId: v.string(),
+    provider: v.union(v.literal("buffer")),
+    state: v.string(),
+    expiresAt: v.number(),
+    created_at: v.string(),
+  })
+    .index("by_state", ["state"])
+    .index("by_expires", ["expiresAt"]),
 
   // Sous-Chef: per-user record of milestones already fired, for idempotency.
   milestoneHits: defineTable({

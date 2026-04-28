@@ -148,7 +148,9 @@ export async function DELETE(request: Request) {
   if (
     providerParam !== "stripe" &&
     providerParam !== "posthog" &&
-    providerParam !== "ga4"
+    providerParam !== "ga4" &&
+    providerParam !== "buffer" &&
+    providerParam !== "postiz"
   ) {
     return Response.json({ error: "invalid provider" }, { status: 400 });
   }

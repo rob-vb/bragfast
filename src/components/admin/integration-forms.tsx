@@ -3,18 +3,22 @@
 import { useState } from "react";
 import { PixelButton } from "./pixel-button";
 
-export type Provider = "stripe" | "posthog" | "ga4";
+export type Provider = "stripe" | "posthog" | "ga4" | "buffer" | "postiz";
 
 export const PROVIDER_LABELS: Record<Provider, string> = {
   stripe: "Stripe",
   posthog: "PostHog",
   ga4: "Google Analytics",
+  buffer: "Buffer",
+  postiz: "Postiz",
 };
 
 export const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
   stripe: "Track revenue milestones: MRR, total revenue, subscribers, and first sale.",
   posthog: "Track visitor milestones from PostHog analytics (30-day rolling window).",
   ga4: "Track visitor milestones from Google Analytics 4 (30-day rolling window).",
+  buffer: "Push approved drafts to your Buffer queue or drafts.",
+  postiz: "Push approved drafts to your Postiz instance (cloud or self-hosted).",
 };
 
 interface FormProps {

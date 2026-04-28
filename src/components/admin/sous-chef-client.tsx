@@ -41,6 +41,8 @@ type GitHubPropShape = {
   appSlug: string;
 };
 
+type SousChefProvider = Exclude<Provider, "buffer" | "postiz">;
+
 type IntegrationRow = {
   provider: Provider;
   enabled: boolean;
@@ -121,7 +123,7 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
       </PixelCard>
 
       {/* Stripe, PostHog, GA4 */}
-      {(["stripe", "posthog", "ga4"] as Provider[]).map((provider) => (
+      {(["stripe", "posthog", "ga4"] as SousChefProvider[]).map((provider) => (
         <IntegrationBlock
           key={provider}
           provider={provider}
@@ -153,7 +155,7 @@ function IntegrationBlock({
   onConnect,
   onReload,
 }: {
-  provider: Provider;
+  provider: SousChefProvider;
   row: IntegrationRow | null;
   goals: Goal[];
   onConnect: () => void;

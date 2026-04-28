@@ -12,6 +12,8 @@ const provider = v.union(
   v.literal("stripe"),
   v.literal("posthog"),
   v.literal("ga4"),
+  v.literal("buffer"),
+  v.literal("postiz"),
 );
 
 export const getByUserProvider = query({
@@ -68,6 +70,7 @@ export const listByUser = query({
     return rows.map((r) => ({
       provider: r.provider,
       enabled: r.enabled,
+      extra: r.extra ?? null,
       lastScanAt: r.lastScanAt ?? null,
       lastScanOkAt: r.lastScanOkAt ?? null,
       lastScanError: r.lastScanError ?? null,
