@@ -199,6 +199,114 @@ export const recordScanResult = internalMutation({
   },
 });
 
+const REFRESH_LEASE_TTL_MS = 30 * 1000; // 30 seconds
+
+/**
+ * Atomic CAS for the Buffer refresh-lease pattern.
+ * If no lease is held (or the existing lease has expired), claims the lease and
+ * returns { owned: true, currentSealed: { ciphertext, iv, tag } }.
+ * If another thread holds a valid lease, returns { owned: false }.
+ *
+ * Only one thread should call /token at a time — Buffer rotates the refresh token
+ * on every call, so two concurrent requests will revoke the entire grant.
+ */
+export const claimRefreshLease = internalMutation({
+  args: { userId: v.string(), provider },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row || !row.enabled) return { owned: false as const };
+
+    const now = Date.now();
+    const leaseActive =
+      row.refreshInProgress === true &&
+      row.leaseUntil !== undefined &&
+      row.leaseUntil > now;
+
+    if (leaseActive) return { owned: false as const };
+
+    await ctx.db.patch(row._id, {
+      refreshInProgress: true,
+      leaseUntil: now + REFRESH_LEASE_TTL_MS,
+      updated_at: new Date(now).toISOString(),
+    });
+
+    return {
+      owned: true as const,
+      currentSealed: {
+        ciphertext: row.ciphertext,
+        iv: row.iv,
+        tag: row.tag,
+        extra: row.extra ?? null,
+      },
+    };
+  },
+});
+
+/**
+ * Commit a completed token refresh — store the new sealed payload and clear the lease.
+ * Only the owner thread (claimRefreshLease returned owned=true) should call this.
+ */
+export const commitRefresh = internalMutation({
+  args: {
+    userId: v.string(),
+    provider,
+    ciphertext: v.string(),
+    iv: v.string(),
+    tag: v.string(),
+    extra: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row) return false;
+
+    await ctx.db.patch(row._id, {
+      ciphertext: args.ciphertext,
+      iv: args.iv,
+      tag: args.tag,
+      extra: args.extra,
+      refreshInProgress: false,
+      leaseUntil: undefined,
+      updated_at: new Date().toISOString(),
+    });
+    return true;
+  },
+});
+
+/**
+ * Internal query: returns the current sealed payload without exposing it to clients.
+ * Used by non-owner threads polling for the freshly-committed token after a refresh.
+ */
+export const getSealed = internalQuery({
+  args: { userId: v.string(), provider },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row || !row.enabled) return null;
+    return {
+      ciphertext: row.ciphertext,
+      iv: row.iv,
+      tag: row.tag,
+      extra: row.extra ?? null,
+      refreshInProgress: row.refreshInProgress ?? false,
+      leaseUntil: row.leaseUntil ?? null,
+    };
+  },
+});
+
 // Public action wrappers — ConvexHttpClient cannot call internalMutation directly.
 // These are called from Next.js API routes after the route authenticates the request.
 export const upsertAction = action({

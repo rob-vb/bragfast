@@ -25,6 +25,7 @@ import type * as integrations_posthog from "../integrations/posthog.js";
 import type * as integrations_stripe from "../integrations/stripe.js";
 import type * as migrations from "../migrations.js";
 import type * as milestoneHits from "../milestoneHits.js";
+import type * as oauthState from "../oauthState.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as releases from "../releases.js";
 import type * as sousChef from "../sousChef.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "integrations/stripe": typeof integrations_stripe;
   migrations: typeof migrations;
   milestoneHits: typeof milestoneHits;
+  oauthState: typeof oauthState;
   rateLimit: typeof rateLimit;
   releases: typeof releases;
   sousChef: typeof sousChef;
