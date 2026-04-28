@@ -363,3 +363,59 @@ export const listByDraft = query({
     return rows.filter((r) => r.userId === userId);
   },
 });
+
+// ── retryPush mutation ────────────────────────────────────────────────────────
+
+/**
+ * User-initiated retry for a failed push row.
+ *
+ * Design rationale:
+ * - A row reaching `failed` state means the fanout exhausted its automatic retry
+ *   budget (3 attempts with exponential backoff). The failure may be transient
+ *   (network blip, provider hiccup) or permanent (auth expired, channel gone).
+ *   We give the user an explicit escape hatch rather than letting the row sit
+ *   forever in `failed`.
+ * - Attempts is reset to 0: a user-initiated retry is an intentional action,
+ *   so it deserves a fresh 3-attempt budget rather than inheriting exhausted
+ *   attempts. This prevents a single permanent failure from eating all retries
+ *   before a transient cause is even debugged.
+ * - Only `failed` rows may be retried (not pending/in_flight/queued/drafted).
+ *   Retrying a success state makes no sense, and retrying in_flight could
+ *   duplicate the push.
+ * - userId ownership is verified server-side before any mutation is applied.
+ */
+export const retryPush = mutation({
+  args: {
+    rowId: v.id("draftPushes"),
+    userId: v.string(),
+  },
+  handler: async (ctx, { rowId, userId }) => {
+    const row = await ctx.db.get(rowId);
+    if (!row) {
+      return { ok: false as const, error: "not_found" as const };
+    }
+    if (row.userId !== userId) {
+      return { ok: false as const, error: "forbidden" as const };
+    }
+    if (row.state !== "failed") {
+      return { ok: false as const, error: "not_failed" as const };
+    }
+
+    const now = new Date().toISOString();
+    await ctx.db.patch(rowId, {
+      state: "pending",
+      attempts: 0, // fresh retry budget (see rationale above)
+      errorClass: undefined,
+      errorMessage: undefined,
+      updated_at: now,
+    });
+
+    // Re-schedule fanout — it will pick up this row (now pending) and dispatch.
+    await ctx.scheduler.runAfter(0, internal.pushFanout.run, {
+      draftId: row.draftId,
+      userId,
+    });
+
+    return { ok: true as const };
+  },
+});

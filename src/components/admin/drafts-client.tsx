@@ -16,6 +16,7 @@ import { DraftPreview } from "./draft-preview";
 import { DraftPreviewBoundary } from "./draft-preview-boundary";
 import { LazyMount } from "./lazy-mount";
 import { ApproveDraftModal } from "./approve-draft-modal";
+import { PushStatusPanel } from "./push-status-panel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -199,6 +200,7 @@ export function DraftsClient() {
             <DraftCard
               key={row.id}
               row={row as Row}
+              userId={userId}
               busy={deleting.has(row.id)}
               onDelete={() => handleDelete(row.id)}
               onApprove={() => handleOpenApprove(row as Row)}
@@ -225,11 +227,13 @@ export function DraftsClient() {
 
 function DraftCard({
   row,
+  userId,
   busy,
   onDelete,
   onApprove,
 }: {
   row: Row;
+  userId: string;
   busy: boolean;
   onDelete: () => void;
   onApprove: () => void;
@@ -381,6 +385,8 @@ function DraftCard({
           </LazyMount>
         </DraftPreviewBoundary>
       </div>
+
+      <PushStatusPanel draftId={row.id} userId={userId} />
 
       {titleBlock}
       {metaRow}
