@@ -172,7 +172,7 @@ export function AdminSidebar({
                         {showBadge ? (
                           <span
                             aria-label={`${unseenDrafts} new drafts`}
-                            className="ml-auto inline-flex min-w-5 items-center justify-center border-2 border-brand bg-gold px-1 font-[family-name:var(--font-press-start)] text-[9px] leading-none text-brand shadow-[2px_2px_0_var(--color-brand)] group-data-[collapsible=icon]:hidden"
+                            className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-medium leading-none text-white group-data-[collapsible=icon]:hidden"
                           >
                             {unseenDrafts > 99 ? "99+" : unseenDrafts}
                           </span>
