@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import Masonry from "react-masonry-css";
 import { useUserId } from "@/hooks/use-user-id";
@@ -116,8 +116,16 @@ export function DraftsClient() {
   const drafts = useQuery(api.drafts.listByUser, { userId });
   const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
   const routingRows = useQuery(api.routingDefaults.listByUser, { userId });
+  const markSeen = useMutation(api.drafts.markSeen);
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
   const [approveModal, setApproveModal] = useState<ApproveModalState | null>(null);
+
+  // Stamp last-visit time so the sidebar "new drafts" badge clears.
+  // Re-fires when drafts arrive while the page is open.
+  useEffect(() => {
+    if (!userId || drafts === undefined) return;
+    void markSeen({ userId });
+  }, [userId, drafts?.length, markSeen]);
 
   if (!drafts) {
     return (

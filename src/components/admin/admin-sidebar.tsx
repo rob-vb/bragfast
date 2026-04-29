@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 
+import { useUserId } from "@/hooks/use-user-id";
 import {
   Sidebar,
   SidebarContent,
@@ -81,6 +84,8 @@ export function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const planConfig = PLANS[plan];
+  const userId = useUserId();
+  const unseenDrafts = useQuery(api.drafts.unseenCount, { userId }) ?? 0;
   const [portalPending, setPortalPending] = useState(false);
 
   function handleLogout() {
@@ -148,16 +153,30 @@ export function AdminSidebar({
             <SidebarMenu>
               {mainNav.map((item) => {
                 const active = isItemActive(pathname, item.href);
+                const showBadge =
+                  item.href === "/admin/drafts" && unseenDrafts > 0;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
                       isActive={active}
-                      tooltip={item.label}
+                      tooltip={
+                        showBadge
+                          ? `${item.label} (${unseenDrafts} new)`
+                          : item.label
+                      }
                     >
                       <Link href={item.href}>
                         <item.icon />
                         <span>{item.label}</span>
+                        {showBadge ? (
+                          <span
+                            aria-label={`${unseenDrafts} new drafts`}
+                            className="ml-auto inline-flex min-w-5 items-center justify-center border-2 border-brand bg-gold px-1 font-[family-name:var(--font-press-start)] text-[9px] leading-none text-brand shadow-[2px_2px_0_var(--color-brand)] group-data-[collapsible=icon]:hidden"
+                          >
+                            {unseenDrafts > 99 ? "99+" : unseenDrafts}
+                          </span>
+                        ) : null}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

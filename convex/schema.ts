@@ -13,6 +13,7 @@ export default defineSchema({
       v.literal("pro"),
       v.literal("scale")
     ),
+    lastDraftsVisitAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),
