@@ -118,7 +118,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser signs up + installs → dashboard load shows pre-rendered draft.
 - Deps: S2.1, S2.2, S0.6.
 
-### S2.5 — Org-pending detection on install · S
+### S2.5 — Org-pending detection on install · S [x] 2026-04-30
 - Goal: GitHub callback detects org-admin-pending state; surface "Send admin install request?" + personal-repo fallback option.
 - Acceptance: agent-browser triggers org-pending callback (mocked) → fallback UI visible. PostHog `github_app_install_blocked{block_reason}` fires.
 - Deps: S0.3.

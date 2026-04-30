@@ -14,6 +14,27 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 16 — S2.5 — org-pending detection on install
+
+**Attempted:**
+- `src/app/api/github/callback/route.ts`: detect `setup_action=request` (GitHub's signal that a non-admin tried to install on an org). Redirect to `/admin/sous-chef?install_state=pending` and fire `captureServer({ event: "github_app_install_blocked", properties: { block_reason: "org_admin_required" } })` against the user's distinctId. Falls through to the existing `missing_installation_id` branch only when `setup_action` is absent.
+- `src/components/admin/org-pending-banner.tsx` (new): client banner that renders only when `?install_state=pending`. Shows "Install on personal repo" + "Re-send admin request" CTAs (both link back to the install URL — admin-request resend just reopens the same flow). `data-testid="org-pending-banner"` for agent-browser.
+- Mounted above the GitHub `PixelCard` in `sous-chef-client.tsx`.
+
+**Verified by agent-browser:** Pending — needs a fresh run that hits `?setup_action=request` to confirm redirect + banner + PostHog event. Unit tests cover the redirect and event emission shape; live verification deferred.
+
+**Tests:** 4 tests in `src/app/api/github/__tests__/callback.test.ts` — happy redirect, PostHog payload shape, unauthenticated → /login, missing-installation-id passthrough. ConvexHttpClient mocked as a class to satisfy the constructor call at module load.
+
+**Deferred / why:**
+- "Re-send" CTA currently points at the same install URL — GitHub doesn't expose a programmatic resend endpoint. Sufficient for now; revisit if friends-test feedback shows confusion.
+- No PostHog person-property update on block (e.g., `last_install_block_reason`). Not in PRD §13 event list; can add if analytics needs it.
+
+**Open questions for user:** none net-new.
+
+**Next session start:** S2.6 — Watermark + low-quality preview pipeline (large; needs pre-session plan per sessions.md).
+
+---
+
 ## 2026-04-30 — Session 15 — S2.4 — retro PR rendering on signup
 
 **Attempted:**

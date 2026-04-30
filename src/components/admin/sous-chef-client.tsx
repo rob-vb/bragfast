@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PixelButton } from "./pixel-button";
 import { PixelCard } from "./pixel-card";
 import { GitHubSection } from "./github-section";
+import { OrgPendingBanner } from "./org-pending-banner";
 import { GoalsSection } from "./goals-section";
 import type { Goal } from "./goals-section";
 import {
@@ -396,6 +397,8 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
         posts automatically. You still approve every post — Sous-Chef just
         catches the moments you&apos;d otherwise miss.
       </p>
+
+      <OrgPendingBanner appSlug={github.appSlug} />
 
       {/* GitHub */}
       <PixelCard>
