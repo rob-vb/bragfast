@@ -6,15 +6,14 @@ import { BeforeAfter } from "@/components/landing/before-after";
 import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
-import { McpInstallInstructions } from "@/components/landing/mcp-install-instructions";
 import { CtaLink } from "@/components/landing/cta-link";
 import { PAID_PLANS } from "@/lib/plans";
 import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Automated Image and Video generation for your wins",
+  title: "brag.fast | Build-in-public posts on autopilot",
   description:
-    "brag.fast turns your wins into branded images and video. Ship a new feature for your app, hit an MRR milestone, gain Github stars, and your Sous-Chef (agent) drafts the post for you.",
+    "brag.fast turns your wins into branded posts. Ship a feature, hit an MRR milestone, gain GitHub stars — your Sous-Chef drafts the post, you approve it, it goes out.",
   alternates: { canonical: "/" },
 };
 
@@ -26,10 +25,6 @@ const FAQ = [
   {
     q: "Will it match my brand?",
     a: "Upload your logo. Set colors and fonts. Every image out the door looks like you made it on purpose.",
-  },
-  {
-    q: "Can an AI agent use this for me?",
-    a: "Yes. MCP works in Claude Desktop and Claude Code. REST API works with anything else. Agents send the data, brag.fast sends back branded visuals.",
   },
   {
     q: "Will video eat all my credits?",
@@ -186,83 +181,6 @@ export default function Home() {
                 src="/demo/bragfast_cook_demo.mp4"
                 className="w-full border border-brand"
               />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Your AI as cook (MCP) section */}
-      <section
-        id="mcp"
-        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
-      >
-        <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-start">
-            <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  MCP
-                </span>
-              </div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your AI in the kitchen.
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Works in Claude Desktop, Claude Code, Cursor, any HTTP MCP client. Your agent calls brag.fast, gets a branded image or video back, and keeps working.
-              </p>
-              <Link
-                href="/docs"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Read MCP docs
-              </Link>
-            </div>
-            <div>
-              <McpInstallInstructions />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Full control (REST API) section */}
-      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
-        <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 items-center">
-            <div className="md:order-2 flex flex-col gap-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  REST API
-                </span>
-              </div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Wire it into anything.
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Send your data to one endpoint. Get branded visuals back in every format. Drop it into CI, a bot, your own app, whatever you&apos;re building.
-              </p>
-              <Link
-                href="/docs"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Read the docs
-              </Link>
-            </div>
-            <div className="md:order-1">
-              <pre className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm bg-brand text-surface p-5 border-2 border-brand shadow-[4px_4px_0_var(--color-brand)] overflow-x-auto leading-relaxed whitespace-pre">
-{`curl https://brag.fast/api/v1/cook/image \\
-  -H "Authorization: Bearer $KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "template": "standard-browser",
-    "brand": "brand_abc123",
-    "data": {
-      "headline": "v2.0 shipped",
-      "subhead": "30% faster renders"
-    }
-  }'`}
-              </pre>
             </div>
           </div>
         </div>
