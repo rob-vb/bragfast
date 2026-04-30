@@ -183,7 +183,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser flows through warning → install → callback.
 - Deps: S0.5, S3.2.
 
-### S3.4 — Repo picker (single repo) · M
+### S3.4 — Repo picker (single repo) · M  [x] 2026-04-30
 - Goal: Post-install screen: list repos from installation, single selection, store in user profile.
 - Acceptance: agent-browser picks repo → moves to retro-render step.
 - Deps: S3.3, S2.4.

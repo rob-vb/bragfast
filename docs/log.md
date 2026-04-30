@@ -14,6 +14,25 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 25 — S3.4 — repo picker (single repo)
+
+**Attempted:**
+- `src/app/welcome/pick-repo/page.tsx`: server shell, renders client picker.
+- `src/app/welcome/pick-repo/pick-repo-client.tsx`: fetches `/api/github/installations` + `/api/github/repos` in parallel, single-radio selection, sorted alphabetically, private badge. Submit PUTs `/api/github/configs` with `notifyOnPrMerge=true`. Triggers existing off→on retro-PR-merge pipeline (`runRetroPrMergeDraft`) — feeds S3.5. Redirect to `/admin` on success.
+- No PostHog event added — `repo_picked` not in the 14 launch events (PRD §13). Selection counted via existing `github_app_installed` (`repo_count` prop) at install callback.
+
+**Verified by agent-browser:**
+- `/welcome/pick-repo` lists 3 repos for the test user (brag-test, bragfast, barber-app), private badge renders, radio selection enables "Watch this repo" button.
+- Submit not exercised — would fire retro draft on real install.
+
+**Deferred / why:** Live submit + redirect path skipped to avoid mutating prod-ish data. Follow up by exercising in S3.5 verification.
+
+**Open questions for user:** None.
+
+**Next session start:** S3.5 — retro draft + approval UI on dashboard load.
+
+---
+
 ## 2026-04-30 — Session 24 — S3.3 — pre-install warning + install callback
 
 **Attempted:**
