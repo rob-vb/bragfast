@@ -20,7 +20,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: none.
 - **Result:** Branch live; `src/lib/launch-mode.ts` + `data-launch-mode` attribute on homepage root. Verified via curl. `.env.example` edit blocked (tool permission); helper defaults to `legacy`, safe.
 
-### S0.2 — Naming conventions doc · S
+### S0.2 — Naming conventions doc · S — `[x]` 2026-04-30
 - Goal: `docs/conventions.md` codifying PRD §13 (events `snake_case` past-tense, properties `snake_case`, no PII, identify-before-capture, autocapture off).
 - Acceptance: file committed; referenced from CLAUDE.md.
 - Deps: none.
