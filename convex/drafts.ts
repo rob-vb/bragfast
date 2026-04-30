@@ -315,8 +315,14 @@ export const markSeen = mutation({
 });
 
 export const remove = mutation({
-  args: { externalId: v.string(), userId: v.string() },
-  handler: async (ctx, { externalId, userId }) => {
+  // S6.3: optional `reason` lets the drafts UI capture *why* the user skipped
+  // — surfaced on the Sous-Chef history feed as the trigger event's reason.
+  args: {
+    externalId: v.string(),
+    userId: v.string(),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, { externalId, userId, reason }) => {
     const row = await ctx.db
       .query("drafts")
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
@@ -326,11 +332,13 @@ export const remove = mutation({
     // dismissing a Sous-Chef trigger. User-created drafts aren't trigger events.
     if (row.source === "agent") {
       const triggerType = row.milestoneKey?.split(":")[0] ?? "manual";
+      const trimmedReason = reason?.trim().slice(0, 200);
       await insertTriggerEvent(ctx, {
         userId,
         sourceSystem: row.sourceSystem ?? "manual",
         triggerType,
         decision: "user_skipped",
+        reason: trimmedReason ? trimmedReason : undefined,
         confidence: row.confidence ?? undefined,
         sourceReference: row.eventReference ?? undefined,
         draftExternalId: externalId,

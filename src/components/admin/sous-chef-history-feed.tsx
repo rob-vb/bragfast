@@ -1,7 +1,10 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import posthog from "posthog-js";
+import { toast } from "sonner";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 
@@ -28,6 +31,18 @@ const DECISION_LABEL: Record<Decision, string> = {
   ignored_48h: "IGNORED",
 };
 
+// S6.3: only auto-skip reasons where a suppressed draft exists can be overridden
+// in-place. Content-filter / rate-cap paths produce no draft, so override would
+// require re-running the picker — out of scope for this iteration.
+const OVERRIDABLE_REASONS = new Set(["low_confidence"]);
+
+const OVERRIDE_ERROR_COPY: Record<string, string> = {
+  not_found: "Trigger event not found",
+  not_skipped: "Already drafted",
+  no_reference: "No source reference on this event",
+  no_draft: "No suppressed draft exists for this trigger",
+};
+
 function formatTimestamp(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString();
@@ -35,6 +50,8 @@ function formatTimestamp(iso: string): string {
 
 export function SousChefHistoryFeed() {
   const events = useQuery(api.triggerEvents.listByUser, { limit: 200 });
+  const overrideEvent = useMutation(api.triggerEvents.overrideAutoSkippedEvent);
+  const [pending, setPending] = useState<Set<string>>(new Set());
 
   if (!events) {
     return (
@@ -53,6 +70,35 @@ export function SousChefHistoryFeed() {
     );
   }
 
+  async function handleOverride(eventId: string, reason: string | null) {
+    setPending((prev) => new Set(prev).add(eventId));
+    try {
+      const result = await overrideEvent({ externalId: eventId });
+      if (result.ok) {
+        posthog.capture("trigger_event_overridden", {
+          event_id: eventId,
+          reason: reason ?? "unknown",
+          draft_id: result.draftExternalId,
+        });
+        toast.success("Draft restored — review it on the Drafts page.");
+      } else {
+        toast.error(
+          OVERRIDE_ERROR_COPY[result.error] ??
+            `Override failed: ${result.error}`,
+        );
+      }
+    } catch (err) {
+      console.error("[sous-chef] override failed", err);
+      toast.error("Override failed");
+    } finally {
+      setPending((prev) => {
+        const next = new Set(prev);
+        next.delete(eventId);
+        return next;
+      });
+    }
+  }
+
   return (
     <div data-testid="trigger-event-feed" className="border-2 border-brand bg-surface">
       <table className="w-full text-sm">
@@ -64,11 +110,17 @@ export function SousChefHistoryFeed() {
             <th className="px-3 py-2 text-left">Reason</th>
             <th className="px-3 py-2 text-left">Confidence</th>
             <th className="px-3 py-2 text-left">Reference</th>
+            <th className="px-3 py-2 text-left">Action</th>
           </tr>
         </thead>
         <tbody>
           {events.map((e) => {
             const decision = e.decision as Decision;
+            const canOverride =
+              decision === "auto_skipped" &&
+              e.reason != null &&
+              OVERRIDABLE_REASONS.has(e.reason);
+            const isPending = pending.has(e.id);
             return (
               <tr
                 key={e.id}
@@ -112,6 +164,21 @@ export function SousChefHistoryFeed() {
                     )
                   ) : (
                     "—"
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  {canOverride ? (
+                    <button
+                      type="button"
+                      data-testid={`trigger-event-override-${e.id}`}
+                      onClick={() => handleOverride(e.id, e.reason)}
+                      disabled={isPending}
+                      className="font-[family-name:var(--font-press-start)] text-[9px] px-2 py-1 border-2 border-brand bg-gold text-brand shadow-[2px_2px_0_var(--color-brand)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all disabled:opacity-50"
+                    >
+                      {isPending ? "..." : "Draft anyway"}
+                    </button>
+                  ) : (
+                    <span className="text-brand/30">—</span>
                   )}
                 </td>
               </tr>

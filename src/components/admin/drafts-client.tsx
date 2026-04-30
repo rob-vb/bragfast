@@ -4,7 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import posthog from "posthog-js";
 import Masonry from "react-masonry-css";
+import { Textarea } from "@/components/ui/textarea";
 import { useUserId } from "@/hooks/use-user-id";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { PixelButton } from "@/components/admin/pixel-button";
@@ -117,13 +119,21 @@ export function DraftsClient() {
     );
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, reason?: string) {
     setDeleting((prev) => new Set(prev).add(id));
     try {
-      const res = await fetch(`/api/v1/drafts/${id}`, { method: "DELETE" });
+      const url = reason
+        ? `/api/v1/drafts/${id}?reason=${encodeURIComponent(reason)}`
+        : `/api/v1/drafts/${id}`;
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok && res.status !== 404) {
         throw new Error(`Delete failed: ${res.status}`);
       }
+      // S6.3: surface user-skip reason capture in analytics.
+      posthog.capture("draft_dismissed", {
+        draft_id: id,
+        has_reason: Boolean(reason && reason.trim()),
+      });
       router.refresh();
     } catch (err) {
       console.error("Delete draft failed", err);
@@ -168,7 +178,7 @@ export function DraftsClient() {
               row={row as Row}
               userId={userId}
               busy={deleting.has(row.id) || overriding.has(row.id)}
-              onDelete={() => handleDelete(row.id)}
+              onDelete={(reason) => handleDelete(row.id, reason)}
               onOverride={async () => {
                 setOverriding((prev) => new Set(prev).add(row.id));
                 try {
@@ -199,11 +209,13 @@ function DraftCard({
   row: Row;
   userId: string;
   busy: boolean;
-  onDelete: () => void;
+  onDelete: (reason?: string) => void;
   onOverride: () => void;
 }) {
   const router = useRouter();
   const config = useMemo(() => parseConfig(row.config), [row.config]);
+  const isAgent = row.source === "agent";
+  const [skipReason, setSkipReason] = useState("");
   const title = derivePreviewTitle(config, row.name);
   const empty = isDraftEmpty(config.objectContent);
   const fmt = primaryFormat(config);
@@ -296,13 +308,33 @@ function DraftCard({
             X
           </button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete draft</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete &ldquo;{title}&rdquo;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {/* S6.3: capture skip reason for agent-fired drafts so the Sous-Chef
+              feed shows *why* the user dismissed. Optional. */}
+          {isAgent ? (
+            <div className="space-y-2">
+              <label
+                htmlFor={`skip-reason-${row.id}`}
+                className="block font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase tracking-wider"
+              >
+                Reason (optional)
+              </label>
+              <Textarea
+                id={`skip-reason-${row.id}`}
+                value={skipReason}
+                onChange={(e) => setSkipReason(e.target.value)}
+                placeholder="e.g. off-brand, too soon, already shared"
+                maxLength={200}
+                className="text-sm"
+              />
+            </div>
+          ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel asChild>
               <PixelButton variant="ghost" onClick={(e) => e.stopPropagation()}>Cancel</PixelButton>
@@ -312,7 +344,7 @@ function DraftCard({
                 variant="danger"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete();
+                  onDelete(skipReason.trim() || undefined);
                 }}
               >
                 Delete

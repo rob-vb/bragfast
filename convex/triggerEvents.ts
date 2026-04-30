@@ -14,6 +14,7 @@
 import {
   action,
   internalMutation,
+  mutation,
   query,
   type MutationCtx,
 } from "./_generated/server";
@@ -105,6 +106,57 @@ export const recordAction = action({
   args: recordArgs,
   handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.triggerEvents.record, args);
+  },
+});
+
+// S6.3: override an auto_skipped trigger event. Finds a suppressed draft
+// previously created for the same eventReference, flips its `suppressed` flag,
+// and records a new "drafted / user_override" trigger event so the feed shows
+// the user's intent. If no suppressed draft exists (e.g. content_filter or
+// rate_cap path produced no draft at all), returns an error so the caller
+// surfaces it — we don't silently re-run the original picker here.
+export const overrideAutoSkippedEvent = mutation({
+  args: { externalId: v.string() },
+  handler: async (
+    ctx,
+    { externalId },
+  ): Promise<
+    | { ok: true; draftExternalId: string }
+    | { ok: false; error: "not_found" | "not_skipped" | "no_draft" | "no_reference" }
+  > => {
+    const userId = await requireAuthedUser(ctx);
+    const event = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("externalId"), externalId))
+      .first();
+    if (!event) return { ok: false, error: "not_found" };
+    if (event.decision !== "auto_skipped")
+      return { ok: false, error: "not_skipped" };
+    if (!event.sourceReference)
+      return { ok: false, error: "no_reference" };
+
+    const drafts = await ctx.db
+      .query("drafts")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const match = drafts.find(
+      (d) => d.eventReference === event.sourceReference && d.suppressed,
+    );
+    if (!match) return { ok: false, error: "no_draft" };
+
+    await ctx.db.patch(match._id, { suppressed: false });
+    await insertTriggerEvent(ctx, {
+      userId,
+      sourceSystem: event.sourceSystem,
+      triggerType: event.triggerType,
+      decision: "drafted",
+      reason: "user_override",
+      confidence: event.confidence,
+      sourceReference: event.sourceReference,
+      draftExternalId: match.externalId,
+    });
+    return { ok: true, draftExternalId: match.externalId };
   },
 });
 

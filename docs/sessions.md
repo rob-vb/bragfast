@@ -275,10 +275,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S6.1.
 - Result: Sous-Chef (sources + goals) promoted to Main group between Dashboard and Drafts. New "Developers" sidebar group holds Kitchen + API Keys. Configure group now Templates + Brands only. Kitchen route untouched — still reachable, just demoted from primary path. tsc clean.
 
-### S6.3 — History feed entry override path · M
+### S6.3 — History feed entry override path · M — [x] 2026-04-30
 - Goal: Auto-skipped entries get "Draft anyway" override. User-skipped entries get reason capture (modal).
 - Acceptance: agent-browser overrides a suppressed entry → new draft created. PostHog event fires.
 - Deps: S2.3.
+- Result: New `triggerEvents.overrideAutoSkippedEvent` mutation finds the suppressed draft by `eventReference`, flips it visible, records a `drafted/user_override` trigger event. Sous-Chef history feed shows a "Draft anyway" button on auto_skipped rows where reason is overridable (currently `low_confidence`); content_filter / rate_cap deferred since no draft exists. PostHog `trigger_event_overridden` fires on success. Drafts page delete dialog now offers an optional reason textarea for agent drafts → threads through `DELETE /api/v1/drafts/[id]?reason=` to `drafts.remove` → trigger event reason. PostHog `draft_dismissed` fires with `has_reason`. tsc clean, touched tests pass.
 
 ---
 

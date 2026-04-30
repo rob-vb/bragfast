@@ -838,3 +838,22 @@ Template:
 **Open questions:** none.
 
 **Next session start:** S6.3 (History feed entry override path) or another Phase 6 item.
+
+## 2026-04-30 — S6.3 history feed override path + skip reason
+
+**Attempted:**
+- `convex/triggerEvents.ts`: new `overrideAutoSkippedEvent` mutation. Auth-gates by user, finds the trigger event by externalId, locates the suppressed draft via `eventReference` match, unsuppresses it, and records a follow-up `drafted/user_override` trigger event. Returns structured `{ ok, error }` so the UI can map specific failures.
+- `src/components/admin/sous-chef-history-feed.tsx`: rewritten with an Action column. Rows where `decision === "auto_skipped"` and `reason ∈ {"low_confidence"}` get a "Draft anyway" button. PostHog `trigger_event_overridden` fires on success. Content-filter / rate-cap rows show "—" since no draft exists to unsuppress.
+- `convex/drafts.ts` `remove` mutation: optional `reason` arg, threaded into the `user_skipped` trigger event (trimmed to 200 chars).
+- `src/app/api/v1/drafts/[id]/route.ts` DELETE: reads `?reason=` query param, passes to `drafts.remove`.
+- `src/components/admin/drafts-client.tsx`: agent drafts now render a Textarea inside the delete confirm dialog. PostHog `draft_dismissed` fires with `has_reason: bool`.
+
+**Verified:** tsc clean. `vitest src/app/api/v1/drafts convex/__tests__/triggerEvents.test.ts` green. agent-browser end-to-end (override surfaces a draft, posthog fires) deferred to S5.x e2e sweep.
+
+**Deferred / why:**
+- Override for content_filter / rate_cap auto_skips — requires re-running the picker since no draft was ever created. Out of scope; would re-trigger Haiku spend on every override click.
+- Predefined skip reason chips ("off-brand", "off-topic", "too soon") — free-text textarea is fine for founder scale; chips can come later if reason taxonomy stabilizes.
+
+**Open questions:** none.
+
+**Next session start:** S7+ or another Phase 6 item.
