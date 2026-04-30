@@ -34,10 +34,16 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Goal: Walk every Convex query/mutation, confirm `userId` enforcement; written audit summary in `docs/audit.md`.
 - Outcome: audit done in `docs/audit.md` §M. Enforcement is missing system-wide — split into S0.4a–d below. Original "cross-tenant test" acceptance moved to S0.4d (post-enforcement).
 
-### S0.4a — Convex auth enforcement: data reads/writes · M
-- Goal: replace client-supplied `userId` args with `authComponent.getAuthUser(ctx)` across all RISKY functions in `docs/audit.md` §M. Add `requireAuthedUser(ctx)` helper in `convex/auth.ts`. Update call sites to drop redundant `userId` arg.
-- Acceptance: every RISKY function listed in audit §M now derives userId from auth; typecheck + existing tests green.
+### S0.4a — Convex auth enforcement: data reads/writes · M (split into 5 sub-sessions)
+- Goal: replace client-supplied `userId` args with `requireAuthedUser(ctx)` across all RISKY functions in `docs/audit.md` §M.
+- Acceptance: every RISKY function listed in audit §M derives userId from auth; typecheck + existing tests green.
 - Deps: S0.4 (audit).
+- Sub-sessions:
+  - S0.4a.1 — wire `ConvexBetterAuthProvider` so browser carries Better Auth tokens to Convex. `[x]` 2026-04-30
+  - S0.4a.2 — add `requireAuthedUser(ctx)` helper in `convex/auth.ts` (subject-based). `[x]` 2026-04-30
+  - S0.4a.3 — convert browser-only RISKY: `drafts.unseenCount`, `drafts.markSeen`, `draftPushes.{approveDraft,listByDraft,retryPush}`. `[x]` 2026-04-30
+  - S0.4a.4 — server-side auth bridge: route Next.js `fetchQuery`/`fetchMutation`/`ConvexHttpClient` calls through `convexBetterAuthNextJs` so they carry Better Auth tokens. **TODO**
+  - S0.4a.5 — convert MIXED RISKY: `brands.listByUser`, `drafts.listByUser`, `githubInstallations.listByUserId`, `integrationSecrets.listByUser`, `releases.{getByExternalId,listByUser}`, `routingDefaults.listByUser`, `userProfiles.{getBalance,getStats,refund}`. **Blocked on S0.4a.4.**
 
 ### S0.4b — OAuth state issue/consume hardening · S
 - Goal: gate `oauthState.issueStateAction` / `consumeStateAction` behind authed entry; remove the forgery surface where any caller can mint a CSRF state for any userId.
