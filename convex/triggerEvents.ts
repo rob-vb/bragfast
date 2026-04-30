@@ -276,7 +276,11 @@ export const aggregateForUserBetween = internalQuery({
 export const listByUser = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit }) => {
-    const userId = await requireAuthedUser(ctx);
+    // History page mounts before auth resolves on first paint; return [] instead
+    // of throwing so the feed silently hides until session is established.
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
     const rows = await ctx.db
       .query("triggerEvents")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
