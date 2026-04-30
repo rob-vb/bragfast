@@ -51,10 +51,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S0.4a.
 - Result: `issueStateAction` drops client-supplied `userId` arg; binds nonce to `requireAuthedUser(ctx)`. `consumeStateAction` now requires auth and throws `OAuth state mismatch` when the row's userId differs from the caller, so a foreign session that intercepts a nonce cannot complete the flow under their own account. Internal mutations (`issueState`, `consumeState`) preserved as dormant infra per Buffer-pivot decision (kept for future OAuth-bearing providers). New `convex/__tests__/oauthState.test.ts` covers anon-rejection, cross-user forge-fail, single-use replay, happy path. tsc clean. 5/5 tests pass.
 
-### S0.4c — `githubRepoConfigs` ownership scope · S
+### S0.4c — `githubRepoConfigs` ownership scope · S — `[x]` 2026-04-30
 - Goal: every `githubRepoConfigs` mutation/query verifies the caller's installation ownership. Drop reliance on `repoFullName`/`installationId` alone.
 - Acceptance: caller cannot toggle another user's repo config.
 - Deps: S0.4a.
+- Result: split public surface (ownership-checked, requires `userId` arg) from `internal*` surface (server-trusted, used by webhook + stars cron). New `assertOwnsInstallation(ctx, userId, installationId)` helper looks up the installation, verifies `userId` match and `status === "active"`. Public `upsert` / `getByRepo` / `listByInstallation` / `toggle` / `setNotifyOnPrMerge` all gated. Defense-in-depth: existing config rows must also match the asserted `installationId` before patching. Webhook computes `userId` from `installation.userId` and uses public `getByRepo` (signature is the trust boundary). Stars cron (`scan`, `seedFromCurrentState`) uses new `internalListByInstallation`. Configs route already passes `user._id`. Auth bridge (S0.4a.4 deferred) means `userId` is still client-supplied — ownership check at minimum drops the prior repoFullName-or-installationId-alone exfil path. tsc clean. 78/78 convex tests pass.
 
 ### S0.4d — Cross-tenant integration test · S
 - Goal: vitest test creates two users, attempts cross-tenant reads/writes on drafts, releases, integrationSecrets, goals; asserts every attempt fails.

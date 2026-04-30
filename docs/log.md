@@ -878,3 +878,26 @@ Template:
 **Open questions:** none.
 
 **Next session start:** open — pick S7+, S0.4c, or another Phase 0/6 item.
+
+---
+
+## 2026-04-30 — S0.4c githubRepoConfigs ownership scope
+
+**What shipped:** Public `githubRepoConfigs` surface now requires a `userId` arg and verifies the caller's installation ownership before any read or write. Trusted internal callers (webhook, stars cron) use new `internal*` variants that skip the per-call check (their trust boundary is upstream — webhook signature, scheduler context).
+
+**Files touched:**
+- `convex/githubRepoConfigs.ts` — added `assertOwnsInstallation(ctx, userId, installationId)` helper; gated `upsert`, `getByRepo`, `listByInstallation`, `toggle`, `setNotifyOnPrMerge`; added `internalGetByRepo`, `internalListByInstallation`, dormant `internalUpsert`. Defense-in-depth: existing rows must match asserted `installationId`.
+- `src/app/api/github/configs/route.ts` — already passing `user._id` from prior work; verified.
+- `src/app/api/github/webhooks/route.ts` — passes `userId` (from `installation.userId`) to `getByRepo`. Webhook signature is the trust boundary; deriving `userId` from the installation lookup keeps the webhook on the public ownership-checked surface.
+- `convex/integrations/githubStars.ts` — `scan` and `seedFromCurrentState` switched to `internal.githubRepoConfigs.internalListByInstallation`.
+- `docs/sessions.md` — S0.4c marked `[x]` with Result block.
+
+**Verified:** tsc clean. `vitest convex/__tests__` PASS 78/78.
+
+**Deferred / known gap:**
+- S0.4a.4 auth bridge (Convex identity carried through Next.js `fetchQuery`/`fetchMutation`) still deferred. `userId` remains a client-supplied arg on the public surface — the ownership check is defense-in-depth that drops the prior repoFullName/installationId-alone exfil path, but does not yet enforce that the caller's session matches `userId`. S0.4a.4 closes that gap.
+- S0.4d (cross-tenant integration test) still queued.
+
+**Open questions:** none.
+
+**Next session start:** S0.4d or jump to S7+ (cook pipeline reuse) — user's call.

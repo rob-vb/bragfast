@@ -78,6 +78,7 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
   const userId = installation.userId;
   const repoFullName = payload.repository.full_name;
   const repoConfig = await convex.query(api.githubRepoConfigs.getByRepo, {
+    userId,
     installationId,
     repoFullName,
   });

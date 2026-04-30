@@ -60,7 +60,7 @@ export const scan = internalAction({
       const token = await getInstallationToken(installationId);
 
       const configs = (await ctx.runQuery(
-        api.githubRepoConfigs.listByInstallation,
+        internal.githubRepoConfigs.internalListByInstallation,
         { installationId },
       )) as RepoConfig[];
       const enabledRepos = configs.filter((c) => c.enabled);
@@ -130,7 +130,7 @@ export const seedFromCurrentState = internalAction({
   handler: async (ctx, { userId, installationId }) => {
     const token = await getInstallationToken(installationId);
     const configs = (await ctx.runQuery(
-      api.githubRepoConfigs.listByInstallation,
+      internal.githubRepoConfigs.internalListByInstallation,
       { installationId },
     )) as RepoConfig[];
 

@@ -16,6 +16,7 @@ export async function GET() {
   if (!active) return Response.json([]);
 
   const configs = await fetchQuery(api.githubRepoConfigs.listByInstallation, {
+    userId: user._id,
     installationId: active.installationId,
   });
   return Response.json(configs);
@@ -40,6 +41,7 @@ export async function PUT(request: Request) {
 
   // Detect transition from off → on so we only fire the retro pipeline once.
   const prior = await fetchQuery(api.githubRepoConfigs.getByRepo, {
+    userId: user._id,
     installationId: body.installationId,
     repoFullName: body.repoFullName,
   });
@@ -47,6 +49,7 @@ export async function PUT(request: Request) {
   const willBeOn = body.notifyOnPrMerge === true;
 
   await fetchMutation(api.githubRepoConfigs.upsert, {
+    userId: user._id,
     installationId: body.installationId,
     repoFullName: body.repoFullName,
     enabled: body.enabled,
