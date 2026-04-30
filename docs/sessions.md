@@ -123,11 +123,40 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser triggers org-pending callback (mocked) → fallback UI visible. PostHog `github_app_install_blocked{block_reason}` fires.
 - Deps: S0.3.
 
-### S2.6 — Watermark + low-quality preview pipeline · L (split)
-- Goal: New unauthenticated route `/preview` accepts public repo URL → fetches latest PR → low-quality watermarked render (single format, no video) → returns inline SVG/JPEG. Per-IP rate limit. `bragfast.txt` opt-out.
-- Acceptance: agent-browser pastes a URL → preview renders with watermark + sub-text. `bragfast.txt` repo blocks. Rate-limit kicks in after threshold.
-- Deps: S0.6.
-- **Pre-session plan needed:** decide preview render path (Satori-vs-cached) and rate-limit storage.
+### S2.6 — Watermark + low-quality preview pipeline · L (split into S2.6a–e)
+
+**Pre-session decisions (2026-04-30):**
+- **Render path:** reuse Satori + Sharp pipeline with a watermark composite step. Single format (square 1080×1080), JPEG quality 60, no video. Skip Haiku — preview uses raw PR title as headline (no copy-gen).
+- **Cache:** R2 key = `preview/sha256(repoFullName + ":" + prNumber).jpg`. Public read. Lifecycle policy 7d TTL. Cache hit → 302 to R2 URL; miss → render synchronously then upload.
+- **Rate limit:** existing `rateLimits` Convex table. Key = `preview:ip:{ip}`. Window: 10/hour, 50/day. IP from `x-forwarded-for` first hop with same trust as Better Auth uses.
+- **GitHub fetch:** unauthenticated REST (`api.github.com/repos/{r}/pulls?state=closed&base={default}`). 60/IP/hr is GitHub's cap — when exhausted, return 503 with retry-after. No installation token (preview is public).
+- **`bragfast.txt` opt-out:** raw GitHub `https://raw.githubusercontent.com/{repo}/{default}/bragfast.txt`. Existence alone blocks (no parsing). 1h cache in Convex `previewBlocks` table or in-memory LRU.
+- **Watermark:** Sharp composite — bottom-right corner, "brag.fast preview" text on semi-transparent dark bar, full image width across bottom 40px. Sub-text "sign up to remove watermark" under the brag bar.
+
+#### S2.6a — Preview API scaffold + URL parser + rate limit · M
+- Goal: `POST /api/preview` accepts `{ repoUrl: string }`. Parse `github.com/{owner}/{name}` (any URL form). Validate. Hit rateLimits. Return `{ status, error? }` shape. No render yet.
+- Acceptance: invalid URL → 400. Rate-limit exceeded → 429 with retry-after. Valid URL → 200 with stub `{ status: "ok" }`.
+- Deps: S0.1.
+
+#### S2.6b — `bragfast.txt` opt-out check · S
+- Goal: helper `isRepoOptedOut(repoFullName)` fetches raw `bragfast.txt`, caches result 1h. Wired into preview API before render.
+- Acceptance: opt-out repo returns 403 with `reason: "opted_out"`. Vitest covers cache behavior.
+- Deps: S2.6a.
+
+#### S2.6c — Unauth PR fetch · S
+- Goal: helper `fetchPublicLatestPr(repoFullName)` reuses `retro-pr.ts` shape but skips installation token. Handles 404 (private/missing) and 403 (rate-limited by GitHub) distinctly.
+- Acceptance: public repo returns latest merged PR. Private repo → 404 surface. Rate-limit → 503.
+- Deps: S2.6a.
+
+#### S2.6d — Low-quality watermarked render + R2 upload · M
+- Goal: new `renderPreview(pr, repoFullName)` — single square format, raw PR title + `repoFullName` body, watermark composite via Sharp, JPEG quality 60. Upload to R2 with 7d TTL key. Returns public URL.
+- Acceptance: render output ≤80KB; watermark visible bottom-bar; cache key deterministic per `(repo, prNumber)`.
+- Deps: S2.6a.
+
+#### S2.6e — Cache lookup + wire end-to-end · S
+- Goal: preview API checks R2 HEAD before rendering. Cache hit → return cached URL. Cache miss → run b → c → d → return URL.
+- Acceptance: agent-browser pastes URL → first call renders, second call returns same URL <200ms (cache hit). Layer 1 content filter still gates render (PR title with secret → 422).
+- Deps: S2.6a–d, S0.6.
 
 ### S2.7 — Plan accounting refactor: posts/month + format/platform/video gating · L (split)
 - Goal: New `userProfiles.postsRemainingThisMonth` (subscription tiers) + `userProfiles.postsLifetime` (free tier). Per-tier format/platform/video caps enforced at approval time. Stripe webhook resets `postsRemainingThisMonth` on `invoice.paid`. Credits stay only on `/api/v1` cook routes (legacy paths).
