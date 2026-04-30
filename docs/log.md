@@ -35,6 +35,30 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 12 — S2.1 — confidence scoring + suppression
+
+**Attempted:**
+- `composeCopy` now returns `{ title, description, confidence }`; system prompts updated with a conservative confidence rubric.
+- All seven trigger fallbacks return `confidence: 0` so SDK failures land suppressed.
+- `drafts` table gained `confidence` + `suppressed` (both optional). Schema updated; `listByUser` and `getByExternalId` expose them.
+- `insertDraftIfNew{,Action}` accept the new fields. New `unsuppressDraft` mutation (auth-gated via `requireAuthedUser`) flips suppressed → false.
+- PR-merge webhook (`src/app/api/github/webhooks/route.ts`) computes `suppressed = confidence < 0.5`, persists, and fires `draft_generated` to PostHog with `confidence_score` + `was_suppressed`.
+- New `src/lib/analytics/posthog-server.ts` — minimal fetch-based capture (no posthog-node dep). Fire-and-forget; failures logged.
+- Drafts UI: suppressed cards render dimmed with a "Low conf · 0.20" badge and a "Draft anyway" button wired to the new mutation.
+- Tests: 5 new compose-copy confidence tests; new `convex/__tests__/drafts.test.ts` with 5 cases covering owner override, cross-tenant rejection, unauthenticated rejection, and listByUser exposing the new fields. Total 739 pass; typecheck clean; lint clean for touched files.
+
+**Verified by agent-browser:** pending — pairs with future end-of-phase sweep.
+
+**Deferred / why:**
+- Other Sous-Chef integrations (Stripe, GA4, PostHog, GitHub stars) still call `insertDraftIfNew` without `confidence`. Milestones are inherently brag-worthy; passing through is mechanical and can land alongside S2.3 when the event log forces a unified shape.
+- `draft_generated` only fires from PR-merge today. Will broaden when other integrations get the same treatment.
+
+**Open questions for user:** none new.
+
+**Next session start:** S2.2 — per-platform copy generation (X + LinkedIn).
+
+---
+
 ## 2026-04-30 — Session 11 — S1.4 — README rewrite; GH App + X bio queued
 
 **Attempted:**

@@ -98,7 +98,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 2 — Backend capabilities (unblock new UX)
 
-### S2.1 — Confidence scoring on Haiku · M
+### S2.1 — Confidence scoring on Haiku · M [x] 2026-04-30
 - Goal: Extend `composeCopy` to return `confidence: 0..1`. Persist on `drafts` row. Suppress drafts below 0.5 with override path (history-feed entry shows score + "Draft anyway").
 - Acceptance: agent-browser triggers a low-confidence simulated PR → history shows skipped entry; clicking override creates draft. PostHog `draft_generated{was_suppressed:true}` fires.
 - Deps: S0.3, S0.6.
