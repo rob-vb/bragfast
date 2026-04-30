@@ -18,12 +18,13 @@ vi.mock("@/lib/crypto/secret-box", () => ({
   seal: (pt: string) => ({ ciphertext: pt, iv: "iv", tag: "tag" }),
 }));
 
-// Buffer oauth helper
-vi.mock("@/lib/integrations/buffer/oauth", async (importOriginal) => {
-  const orig = await importOriginal<typeof import("@/lib/integrations/buffer/oauth")>();
+// Buffer client (API-key flow)
+vi.mock("@/lib/integrations/buffer/client", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("@/lib/integrations/buffer/client")>();
   return {
     ...orig,
-    fetchOrgAndChannels: vi.fn(),
+    validateApiKey: vi.fn(),
+    fetchChannels: vi.fn(),
   };
 });
 
@@ -46,10 +47,15 @@ import {
   refreshPostizChannels,
   classifyError,
 } from "../refresh-channels";
-import { fetchOrgAndChannels, BufferAuthError } from "../buffer/oauth";
+import {
+  validateApiKey,
+  fetchChannels,
+  BufferAuthError,
+} from "../buffer/client";
 import { listIntegrations, PostizAuthError } from "../postiz/client";
 
-const mockFetchOrgAndChannels = vi.mocked(fetchOrgAndChannels);
+const mockValidateApiKey = vi.mocked(validateApiKey);
+const mockFetchChannels = vi.mocked(fetchChannels);
 const mockListIntegrations = vi.mocked(listIntegrations);
 
 // ---------------------------------------------------------------------------
@@ -70,44 +76,49 @@ function makeSealed(plaintext: string): SealedSecret {
 
 describe("refreshBufferChannels", () => {
   beforeEach(() => {
-    mockFetchOrgAndChannels.mockReset();
+    mockValidateApiKey.mockReset();
+    mockFetchChannels.mockReset();
   });
 
   it("happy path: updates organizationId and channels in extra", async () => {
-    mockFetchOrgAndChannels.mockResolvedValueOnce({
+    mockValidateApiKey.mockResolvedValueOnce({
       organizationId: "org-123",
-      channels: [
-        { id: "ch-1", name: "Twitter", service: "twitter", serviceType: "profile" },
-        { id: "ch-2", name: "LinkedIn", service: "linkedin", serviceType: "profile" },
-      ],
+      organizations: [{ id: "org-123", name: "Acme" }],
     });
+    mockFetchChannels.mockResolvedValueOnce([
+      { id: "ch-1", name: "Twitter", service: "twitter" },
+      { id: "ch-2", name: "LinkedIn", service: "linkedin" },
+    ]);
 
-    const sealed = makeSealed(JSON.stringify({ accessToken: "tok-abc", refreshToken: "rtok", expiresAt: 9999999 }));
+    const sealed = makeSealed("api-key-abc");
     const result = await refreshBufferChannels(sealed, null);
-    const parsed = JSON.parse(result) as { organizationId: string; channels: unknown[] };
+    const parsed = JSON.parse(result) as {
+      organizationId: string;
+      channels: unknown[];
+    };
 
     expect(parsed.organizationId).toBe("org-123");
     expect(parsed.channels).toHaveLength(2);
     expect(parsed.channels[0]).toMatchObject({ id: "ch-1", service: "twitter" });
+    expect(mockFetchChannels).toHaveBeenCalledWith("api-key-abc", "org-123");
   });
 
   it("new channel appears in extra after refresh", async () => {
-    // First call: 1 channel
     const initialExtra = JSON.stringify({
       organizationId: "org-123",
-      channels: [{ id: "ch-1", name: "Twitter", service: "twitter", serviceType: "profile" }],
+      channels: [{ id: "ch-1", name: "Twitter", service: "twitter" }],
     });
 
-    // Second call: 2 channels (new channel added in Buffer)
-    mockFetchOrgAndChannels.mockResolvedValueOnce({
+    mockValidateApiKey.mockResolvedValueOnce({
       organizationId: "org-123",
-      channels: [
-        { id: "ch-1", name: "Twitter", service: "twitter", serviceType: "profile" },
-        { id: "ch-2", name: "LinkedIn Page", service: "linkedin", serviceType: "profile" },
-      ],
+      organizations: [{ id: "org-123", name: "Acme" }],
     });
+    mockFetchChannels.mockResolvedValueOnce([
+      { id: "ch-1", name: "Twitter", service: "twitter" },
+      { id: "ch-2", name: "LinkedIn Page", service: "linkedin" },
+    ]);
 
-    const sealed = makeSealed(JSON.stringify({ accessToken: "tok-abc", refreshToken: "rtok", expiresAt: 9999999 }));
+    const sealed = makeSealed("api-key-abc");
     const result = await refreshBufferChannels(sealed, initialExtra);
     const parsed = JSON.parse(result) as { channels: Array<{ id: string }> };
 
@@ -116,12 +127,13 @@ describe("refreshBufferChannels", () => {
   });
 
   it("empty channel list stored without error", async () => {
-    mockFetchOrgAndChannels.mockResolvedValueOnce({
+    mockValidateApiKey.mockResolvedValueOnce({
       organizationId: "org-123",
-      channels: [],
+      organizations: [{ id: "org-123", name: "Acme" }],
     });
+    mockFetchChannels.mockResolvedValueOnce([]);
 
-    const sealed = makeSealed(JSON.stringify({ accessToken: "tok-abc", refreshToken: "rtok", expiresAt: 9999999 }));
+    const sealed = makeSealed("api-key-abc");
     const result = await refreshBufferChannels(sealed, null);
     const parsed = JSON.parse(result) as { channels: unknown[] };
 
@@ -129,24 +141,25 @@ describe("refreshBufferChannels", () => {
   });
 
   it("preserves existing extra fields not owned by channel refresh", async () => {
-    mockFetchOrgAndChannels.mockResolvedValueOnce({
+    mockValidateApiKey.mockResolvedValueOnce({
       organizationId: "org-123",
-      channels: [],
+      organizations: [{ id: "org-123", name: "Acme" }],
     });
+    mockFetchChannels.mockResolvedValueOnce([]);
 
     const existingExtra = JSON.stringify({
       organizationId: "org-old",
       channels: [],
-      expiresAt: 1234567890,
       someOtherField: "keep-me",
     });
 
-    const sealed = makeSealed(JSON.stringify({ accessToken: "tok-abc", refreshToken: "rtok", expiresAt: 9999999 }));
+    const sealed = makeSealed("api-key-abc");
     const result = await refreshBufferChannels(sealed, existingExtra);
     const parsed = JSON.parse(result) as Record<string, unknown>;
 
     expect(parsed.someOtherField).toBe("keep-me");
-    expect(parsed.expiresAt).toBe(1234567890);
+    // organizationId is owned by refresh — gets overwritten with the fresh one.
+    expect(parsed.organizationId).toBe("org-123");
   });
 });
 
@@ -229,21 +242,23 @@ describe("refreshPostizChannels", () => {
 
 describe("refreshChannelsForProvider", () => {
   beforeEach(() => {
-    mockFetchOrgAndChannels.mockReset();
+    mockValidateApiKey.mockReset();
+    mockFetchChannels.mockReset();
     mockListIntegrations.mockReset();
   });
 
   it("Buffer: returns ok=true with channelCount and extra on success", async () => {
-    mockFetchOrgAndChannels.mockResolvedValueOnce({
+    mockValidateApiKey.mockResolvedValueOnce({
       organizationId: "org-x",
-      channels: [
-        { id: "c1", name: "TW", service: "twitter", serviceType: "profile" },
-        { id: "c2", name: "IG", service: "instagram", serviceType: "profile" },
-        { id: "c3", name: "LI", service: "linkedin", serviceType: "profile" },
-      ],
+      organizations: [{ id: "org-x", name: "Acme" }],
     });
+    mockFetchChannels.mockResolvedValueOnce([
+      { id: "c1", name: "TW", service: "twitter" },
+      { id: "c2", name: "IG", service: "instagram" },
+      { id: "c3", name: "LI", service: "linkedin" },
+    ]);
 
-    const sealed = makeSealed(JSON.stringify({ accessToken: "tok", refreshToken: "rt", expiresAt: 99 }));
+    const sealed = makeSealed("api-key");
     const result = await refreshChannelsForProvider(sealed, "buffer", null);
 
     expect(result.ok).toBe(true);
@@ -273,11 +288,11 @@ describe("refreshChannelsForProvider", () => {
   });
 
   it("Buffer: 401 → ok=false, errorClass=auth", async () => {
-    mockFetchOrgAndChannels.mockRejectedValueOnce(
-      new BufferAuthError("Buffer API returned 401 — token may be expired or revoked."),
+    mockValidateApiKey.mockRejectedValueOnce(
+      new BufferAuthError("Buffer API returned 401 — key may be revoked."),
     );
 
-    const sealed = makeSealed(JSON.stringify({ accessToken: "expired", refreshToken: "rt", expiresAt: 0 }));
+    const sealed = makeSealed("expired-key");
     const result = await refreshChannelsForProvider(sealed, "buffer", null);
 
     expect(result.ok).toBe(false);

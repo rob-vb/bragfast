@@ -1,8 +1,9 @@
 ---
 title: "feat: Buffer + Postiz BYO posting"
 type: feat
-status: completed
+status: revising
 date: 2026-04-28
+revised: 2026-04-29
 origin: docs/brainstorms/2026-04-28-buffer-postiz-byo-posting-requirements.md
 supersedes: docs/plans/2026-04-28-001-feat-postiz-posting-backbone-plan.md
 ---
@@ -11,9 +12,13 @@ supersedes: docs/plans/2026-04-28-001-feat-postiz-posting-backbone-plan.md
 
 ## Overview
 
-Add a BYO (bring-your-own) posting backbone to bragfast. Users connect their existing Buffer (OAuth 2.0) and/or Postiz (API key + instance URL) account in Settings → Integrations. Routing defaults map each render format (Square / Landscape / Portrait + video equivalents) to a default set of channels per provider. On Approve, an Approve modal lets the user confirm/override provider, format→channel grid, and `Add to queue` vs `Save as draft`. The backend fans out one push per (format × channel × provider) tuple via a Convex `"use node"` `internalAction`. Each push is a row in a new `draftPushes` table; status, errors, and retries are visible per row in the draft detail view.
+Add a BYO (bring-your-own) posting backbone to bragfast. Users connect their existing Buffer (API key) and/or Postiz (API key + instance URL) account in Settings → Integrations. Routing defaults map each render format (Square / Landscape / Portrait + video equivalents) to a default set of channels per provider. On Approve, an Approve modal lets the user confirm/override provider, format→channel grid, and `Add to queue` vs `Save as draft`. The backend fans out one push per (format × channel × provider) tuple via a Convex `"use node"` `internalAction`. Each push is a row in a new `draftPushes` table; status, errors, and retries are visible per row in the draft detail view.
 
-bragfast holds only the user's Buffer OAuth tokens and Postiz API key — never platform tokens (X, LinkedIn, etc.). Provider hosting (Postiz) is the user's problem, not ours.
+bragfast holds only the user's Buffer API key and Postiz API key — never platform tokens (X, LinkedIn, etc.). Provider hosting (Postiz) is the user's problem, not ours.
+
+## Changelog
+
+- **2026-04-29 — Buffer pivot from OAuth to API key.** Original plan locked Buffer OAuth 2.0 (Authorization Code + refresh tokens). Reality: Buffer no longer issues new OAuth developer apps. Their current public API is GraphQL at `https://api.buffer.com` with `Authorization: Bearer <apiKey>` (static, user-issued from Buffer dashboard, no refresh). Pivoted Buffer connect flow to match Postiz: paste API key → probe → seal → store. Removed: OAuth start/callback routes, `oauthStates` table usage for Buffer, refresh-lease pattern (`claimRefreshLease` / `commitRefresh`), `BUFFER_CLIENT_ID` / `BUFFER_CLIENT_SECRET` / `BUFFER_REDIRECT_URI` env vars. Added: Buffer queue-only constraint (no `draft` mode in `createPost`; valid modes are `addToQueue | shareNow | shareNext | customScheduled`). UI surfaces a note when user picks "Save as draft" + Buffer is selected; Buffer pushes go to queue, Postiz respects draft. Affected units: U2 (rewritten), U5 (Buffer tile uses `ConnectDialog`), U8 (no refresh-lease for Buffer), Risks (drop OAuth/refresh/CSRF rows; add Buffer-queue-only row). Plan flipped from `status: completed` → `revising` pending re-execution of pivot scope.
 
 ---
 
@@ -27,7 +32,7 @@ The previous attempt (`docs/plans/2026-04-28-001-feat-postiz-posting-backbone-pl
 
 ## Requirements Trace
 
-- R1. Users connect Buffer via OAuth 2.0 in <60s; channel list populates automatically. (origin: Success Criteria)
+- R1. Users connect Buffer via API key paste in <60s; channel list populates automatically. (origin: Success Criteria — pivoted 2026-04-29 from OAuth, see Changelog)
 - R2. Users connect Postiz (Cloud + self-hosted) with instance URL + API key in <60s; channel list populates automatically. (origin: Success Criteria)
 - R3. Approve modal pre-fills format→channel selections from routing defaults; one-click confirm hits ≥80% of approvals. (origin: Success Criteria)
 - R4. Approve → all selected pushes reach provider queue/drafts in <10s; each push status reflected per-row. (origin: Success Criteria + Flow step 5)
@@ -35,7 +40,7 @@ The previous attempt (`docs/plans/2026-04-28-001-feat-postiz-posting-backbone-pl
 - R6. Zero platform tokens (X, LinkedIn, IG, etc.) stored in bragfast Convex. (origin: Outside This Product's Identity)
 - R7. Disconnecting a provider removes the secret + clears routing entries that referenced its channels. (origin: Success Criteria)
 - R8. User picks per-draft which provider(s) receive the push when both are connected. (origin: Decisions Locked)
-- R9. User picks per-draft post state: queue or draft. (origin: Decisions Locked)
+- R9. User picks per-draft post state: queue or draft. Buffer pushes always go to queue (Buffer's `createPost` API does not expose draft state); Postiz respects both. UI surfaces this asymmetry inline when user selects draft + Buffer. (origin: Decisions Locked — Buffer constraint added 2026-04-29, see Changelog)
 - R10. Format→channel mapping uses smart defaults + per-draft override grid. (origin: Decisions Locked)
 - R11. Video drafts use the same approve→push flow as image drafts (MVP). (origin: Decisions Locked)
 
@@ -90,13 +95,13 @@ The previous attempt (`docs/plans/2026-04-28-001-feat-postiz-posting-backbone-pl
 ### External References
 
 - Buffer GraphQL API: `https://developers.buffer.com/`
-  - Auth: OAuth 2.0 (Authorization Code + PKCE optional). Endpoint pair: `https://auth.buffer.com/auth` (authorize), `https://auth.buffer.com/token` (exchange + refresh). Single API endpoint: `POST https://api.buffer.com` (GraphQL body).
-  - Access tokens 3,600s. Refresh tokens **rotate on every use** — store the new refresh token from every `/token` response immediately. Reusing a stale refresh token revokes the entire grant. Request `offline_access` scope.
-  - Scopes needed: `posts:read posts:write account:read offline_access`.
-  - Channels: `query { channels(input: { organizationId }) { id service displayName isDisconnected } }`.
-  - createPost mutation. `mode: addToQueue | shareNow | shareNext | customScheduled`. `saveToDraft: true` flips the same mutation to draft state. Media via `assets.images[].url` (URL fetched by Buffer; no binary upload).
-  - Rate limits: 100 req / 15 min per OAuth client (across all bragfast users), 2000 / 15 min per account. **The per-client cap is a real ceiling at scale; treat as an open operational risk for fanout.**
-  - Video: schema lists `videos` in `AssetsInput` but Buffer's roadmap notes "Video uploads are not supported via the public API" (ambiguous scope; may apply to `createIdea` only). **Video via Buffer is unverified — image-only on the Buffer side in MVP. See Risks.**
+  - **Auth: API key (Bearer).** Buffer no longer issues new OAuth developer apps; the public API is GraphQL-only with user-issued API keys from the Buffer dashboard. Header: `Authorization: Bearer <apiKey>`. Static — no refresh, no rotation, no expiry. (Pivoted 2026-04-29; original plan locked OAuth 2.0. See Changelog.)
+  - Endpoint: `POST https://api.buffer.com` (also `https://api.buffer.com/graphql`; both accept the same GraphQL body).
+  - Account + organizations: `query { account { organizations { id name } } }`. A user's API key may grant access to multiple orgs; we cache the first or surface a picker (defer to implementation).
+  - Channels: `query { channels(input: { organizationId }) { id service name } }` — fields confirmed via Context7 docs.
+  - createPost mutation: `createPost(input: { text, channelId, schedulingType: automatic, mode: addToQueue | shareNow | shareNext | customScheduled, dueAt?, assets: { images: [{ url }] } }) { ... on PostActionSuccess { post { id text status assets { id mimeType } } } ... on MutationError { message } }`. **No `draft` mode in the enum.** Media via `assets.images[].url` (URL fetched by Buffer; no binary upload).
+  - Rate limits: **100 req / 15 min, 100 / 24 hr, 3000 / 30 days per API key** (per-user, not per-OAuth-client — substantially more headroom than the prior OAuth cap).
+  - Video: still unverified for `createPost`. Image-only on the Buffer side in MVP. See Risks.
 - Postiz REST API: `https://docs.postiz.com/public-api/introduction`
   - Auth: `Authorization: <api-key>` header (no `Bearer` prefix). Per-organization key.
   - Cloud base: `https://api.postiz.com/public/v1`. Self-hosted: `https://{user-instance}/public/v1`. Same contract.
@@ -110,7 +115,7 @@ The previous attempt (`docs/plans/2026-04-28-001-feat-postiz-posting-backbone-pl
 
 ## Key Technical Decisions
 
-- **OAuth token storage shape (Buffer):** Seal a single JSON string `{accessToken, refreshToken, expiresAt}` as the row's `ciphertext`. Fits existing single-blob-per-row schema. No schema migration needed beyond the provider literal. Resolves origin question #2.
+- **API key storage shape (Buffer):** Seal the API key as the row's `ciphertext` (single string, identical to Postiz). `extra` JSON holds `{organizationId, channels}`. No tokens to refresh, no expiry to track. Pivoted 2026-04-29 — see Changelog. (Original plan: dual-token JSON for OAuth.)
 - **Postiz instance URL storage:** Plaintext in `extra` JSON (`{instanceUrl, channels}`). Not secret. Postiz API key is sealed in the row's ciphertext.
 - **Postiz `instanceUrl` SSRF defense:** A user-supplied URL is an SSRF vector — without validation an attacker can target `http://169.254.169.254` (cloud metadata), `http://127.0.0.1`, or RFC-1918 ranges and exfiltrate creds or hit internal services. All Postiz HTTP calls must go through a single helper (`src/lib/integrations/postiz/client.ts`) that, before issuing the request:
   1. Reject if scheme is not `https` (allow `http` only when `NODE_ENV === "development"` for self-hosted dev).
@@ -128,18 +133,11 @@ The previous attempt (`docs/plans/2026-04-28-001-feat-postiz-posting-backbone-pl
   - Buffer: hand R2 public URL directly in `assets.images[].url`. No upload step.
   - Postiz: `POST /upload-from-url { url: <r2-url> }` → `{id, path}`, then reference both in `posts[].value[].image[]`. Two HTTP calls per push.
 - **Retry policy:** Bounded auto-retry (3 attempts, exponential backoff via `withRetry` helper) for transient errors (5xx, 429, network). After exhaustion, status=`failed` with `errorClass`. Manual retry button on draft detail row resets attempts and re-schedules the action. 401/403 (token expired or revoked) skips retry — surfaces "Reconnect Buffer/Postiz" CTA.
-- **Buffer token refresh (refresh-lease pattern):** A bare atomic `refreshBufferToken` mutation is **insufficient** — Buffer rotates the refresh token on every `/token` call, so two concurrent pushes that both detect near-expiry and both call `/token` cause the second to invalidate the first's freshly-stored refresh token, revoking the entire grant. Use a refresh-lease instead:
-  1. `claimRefreshLease(provider, userId)` mutation — atomic CAS: if `refreshInProgress` is unset OR `leaseUntil < now`, set `{refreshInProgress: true, leaseUntil: now + 30s}` and return `{owned: true, currentSealed}`. Else return `{owned: false}`.
-  2. Owner thread calls `/token`, then `commitRefresh(provider, userId, newSealed)` which seals the new pair and clears the lease in one mutation.
-  3. Non-owner threads poll `getSealed(provider, userId)` every 500ms (cap 30s) waiting for `expiresAt > now + 60s`, then proceed with the freshly-stored token.
-  4. Lease auto-expires at `leaseUntil` to defend against owner action timeout. On 401 from `/token`, owner clears the lease + marks provider disconnected.
-- **Refresh-lease applies only to Buffer.** Postiz uses a static API key — no refresh path.
-- **State CSRF + session-binding for Buffer OAuth:** Generate random `state` nonce, store in `oauthStates` row keyed by userId (TTL 10 min) before redirecting to Buffer. On callback, **two checks** must both pass before exchanging code:
-  1. `consumeState(state)` returns a row whose `userId` matches.
-  2. The callback re-runs `authenticate()` (session cookie) and asserts `session.userId === state.userId`. **State nonce alone is insufficient** — without this check, an attacker can pre-issue state for their own account, lure a logged-in victim to the callback URL, and bind the attacker's Buffer to the victim's bragfast (or vice versa).
-  Reject any mismatch with 403.
+- **No token refresh required (Buffer pivot 2026-04-29):** Buffer API keys are static and do not expire. The refresh-lease pattern (`claimRefreshLease`/`commitRefresh`/`getSealed`) was implemented in U1/U2 of the original plan; columns `refreshInProgress` and `leaseUntil` remain in `integrationSecrets` schema as dormant fields (no migration churn) but are unused for Buffer. Both providers now use static API keys — symmetrical handling.
+- **No OAuth state CSRF needed (Buffer pivot 2026-04-29):** API key paste flow is authenticated by session at the API route level (same as Postiz). The `oauthStates` table and `convex/oauthState.ts` mutations remain in the codebase as dormant infrastructure; not deleted in case of future OAuth-bearing providers. Buffer-specific use is removed.
 - **R2 URL access:** Already public + permanent + immutable per `src/lib/storage/r2.ts:98-107`. No bucket policy change needed. Resolves origin question #6.
 - **No bragfast-side `scheduled_at`:** MVP only supports queue and draft. Custom-scheduled adds UX complexity (date picker, timezone) without strong demand. Stays in Deferred.
+- **Per-provider draft state asymmetry (added 2026-04-29):** Buffer's `createPost` enum has no `draft` mode (`addToQueue | shareNow | shareNext | customScheduled`). When a user picks "Save as draft" + Buffer is in selected providers, Buffer pushes go to `addToQueue`; Postiz pushes use `type: "draft"`. UI shows an inline note disclosing the asymmetry before confirm. `draftPushes.state` reflects the actual provider outcome (`queued` for Buffer, `drafted` for Postiz) — not the user's intent.
 - **Rate-limit handling:** Per-provider in-process rate limiter (token bucket) inside the push action. Buffer: respect 100/15min OAuth-client global. Postiz: respect 30/hr per key (per-user). On 429, push goes back to `pending` with delayed re-schedule via `ctx.scheduler.runAfter(retryAfterMs, ...)`.
 
 ---
@@ -258,52 +256,52 @@ State: ( ) Add to queue   ( ) Save as draft
 
 ---
 
-- U2. **Buffer OAuth flow: initiate + callback + token refresh**
+- U2. **Buffer connect flow (paste API key)** — pivoted 2026-04-29 from OAuth
 
-**Goal:** Build the OAuth 2.0 Authorization Code flow with state CSRF, exchanging code for `{accessToken, refreshToken, expiresAt}`, sealing as one JSON ciphertext, and a refresh helper.
+**Goal:** Build the Buffer connect flow as a paste-API-key form (parallel to U3 Postiz). Probe → seal → store. No OAuth, no refresh, no state nonce.
 
 **Requirements:** R1, R6
 
 **Dependencies:** U1
 
 **Files:**
-- Create: `src/app/api/integrations/buffer/start/route.ts` (GET — generates state, stores it, redirects to `https://auth.buffer.com/auth?response_type=code&client_id=...&redirect_uri=...&scope=...&state=...`)
-- Create: `src/app/api/integrations/buffer/callback/route.ts` (GET — validates state, exchanges code, fetches org+channels, calls upsertAction with sealed JSON, redirects to `/admin/account?connected=buffer`)
-- Create: `src/lib/integrations/buffer/oauth.ts` (token exchange, refresh, organizationId fetch helpers)
-- Create: `src/lib/integrations/buffer/graphql.ts` (single GraphQL fetch helper: builds body, sets Authorization, parses errors)
-- Create: `convex/oauthState.ts` (`internalMutation issueState`, `internalMutation consumeState` — atomic single-use delete; short-lived CSRF nonces, TTL 10 min)
-- Modify: `convex/schema.ts` (add `oauthStates` table: `{userId, state, provider, createdAt, expiresAt}`, indexed `by_state`)
-- Modify: `convex/integrationSecrets.ts` (add refresh-lease mutations: `claimRefreshLease`, `commitRefresh`, plus `internalQuery getSealed`. Add `refreshInProgress: boolean` and `leaseUntil: number` columns to `integrationSecrets` schema in U1.)
-- Test: `src/lib/integrations/buffer/__tests__/oauth.test.ts`
+- Modify: `src/app/api/v1/sous-chef/integrations/route.ts` (add `provider: "buffer"` branch — accepts `{apiKey}`, probes `account { organizations { id name } }`, then `channels(input: {organizationId})`, stores sealed apiKey + extra JSON)
+- Create/replace: `src/lib/integrations/buffer/client.ts` (replaces `oauth.ts` — exports `validateApiKey(apiKey): {organizationId, channels}`, `fetchChannels(apiKey, organizationId)`, `BufferAuthError`)
+- Modify: `src/lib/integrations/buffer/graphql.ts` (endpoint `https://api.buffer.com`, `Authorization: Bearer <apiKey>`, parse `errors[]` and typed payload errors)
+- Modify: `src/components/admin/integration-forms.tsx` (add `BufferForm` variant — single API key field, link out to Buffer dashboard for key creation; mirrors `PostizForm`)
+- **Delete:** `src/app/api/integrations/buffer/start/route.ts` (OAuth start — no longer needed)
+- **Delete:** `src/app/api/integrations/buffer/callback/route.ts` (OAuth callback — no longer needed)
+- **Delete:** `src/lib/integrations/buffer/oauth.ts` (replaced by `client.ts`)
+- **Dormant** (kept, not removed): `convex/oauthState.ts` + `oauthStates` table — Buffer-specific use ends, infra remains for future OAuth-bearing providers.
+- **Dormant** (kept, not removed): `claimRefreshLease`/`commitRefresh`/`getSealed` in `convex/integrationSecrets.ts`; `refreshInProgress`/`leaseUntil` columns in schema. No migration churn; future use possible.
+- Test: `src/lib/integrations/buffer/__tests__/client.test.ts` (replaces `oauth.test.ts`)
 
 **Approach:**
-- Start route: authenticate user (existing `authenticate()`), generate `state` (32 bytes hex), call `convex.mutation(api.oauthState.issueState, {userId, provider: "buffer", state})`, redirect to Buffer authorize URL with `redirect_uri` pointing at our callback. Scopes: `posts:read posts:write account:read offline_access`.
-- Callback route: **first** call `authenticate()` (session cookie) — if no session, redirect to `/login?redirect=/api/integrations/buffer/callback?...` (preserving query). **Second** call `consumeState(state)` (atomic single-use) and assert returned `userId === session.userId`; mismatch → 403. **Third** exchange `code` at `https://auth.buffer.com/token`, parse response to `{access_token, refresh_token, expires_in}`, compute `expiresAt = now + expires_in*1000`, fetch organizationId + channels via GraphQL, seal `JSON.stringify({accessToken, refreshToken, expiresAt})`, call `convex.action(api.integrationSecrets.upsertAction, {provider: "buffer", ciphertext, iv, tag, extra: JSON.stringify({organizationId, channels, expiresAt})})`, redirect to `/admin/account?connected=buffer`.
-- Refresh helper (`src/lib/integrations/buffer/oauth.ts:refreshBufferToken`): given current sealed payload, call `/token` with `grant_type=refresh_token`, get new pair, **immediately store** (rotation rule), return new access token. On 401 → throw `BufferRefreshFailed` and caller marks provider disabled.
-- GraphQL helper: applies `Authorization: Bearer <token>`, throws `BufferAuthError` on `UNAUTHORIZED`, returns parsed `data`. Handles GraphQL-level `errors[]` and typed mutation-payload errors uniformly.
-- Env vars: `BUFFER_CLIENT_ID`, `BUFFER_CLIENT_SECRET`, `BUFFER_REDIRECT_URI`. Document in `.env.example`.
+- Connect branch in route: `authenticate()` → validate `{apiKey}` → call `validateApiKey(apiKey)` (probes `account { organizations { id name } }` → uses first organization; if multiple, log + continue with first, defer org-picker to follow-up) → call `fetchChannels(apiKey, organizationId)` → seal `apiKey` → call `convex.action(api.integrationSecrets.upsertAction, {provider: "buffer", ciphertext, iv, tag, extra: JSON.stringify({organizationId, channels})})`. On probe failure: 401 → 400 "key rejected by Buffer"; network/timeout → 504; any failure after `upsertAction` succeeded triggers `disconnectAction` rollback.
+- `client.ts:validateApiKey`: GraphQL POST `https://api.buffer.com` with body `{ query: "{ account { organizations { id name } } }" }` and `Authorization: Bearer <apiKey>`. Throw `BufferAuthError` on 401 or `errors[].extensions.code === "UNAUTHORIZED"`. Return `{organizationId, organizations}`.
+- `client.ts:fetchChannels`: GraphQL POST with `query channels($input: ChannelsInput!) { channels(input: $input) { id service name } }` + `variables: { input: { organizationId } }`. Returns `[{id, service, name}]`.
+- `graphql.ts`: thin helper. `bufferGraphQL({apiKey, query, variables})` → fetch → parse → return `data` or throw classified error. Single source of truth for endpoint and Bearer header.
+- Env vars: **none required.** API key is per-user, stored sealed in Convex. Drop `BUFFER_CLIENT_ID`/`BUFFER_CLIENT_SECRET`/`BUFFER_REDIRECT_URI` from `.env.example`.
 
-**Execution note:** Start with a unit test that fakes `https://auth.buffer.com/token` and asserts: success path stores new tokens, refresh-token reuse path detects revocation, response with rotated refresh token persists the new value.
+**Execution note:** Test-first. Start with `client.test.ts` faking `https://api.buffer.com` and assert: valid key → returns `{organizationId, channels}`; 401 → `BufferAuthError`; multi-org response → first org returned + warning logged; channels query maps `service` correctly.
 
 **Patterns to follow:**
-- Connect flow rollback: `src/app/api/v1/sous-chef/integrations/route.ts:71-128` — authenticate → seal → upsert → probe → on probe failure call `disconnectAction`.
-- Sealed-secret API contract: `src/lib/crypto/secret-box.ts`.
+- Postiz connect branch in `src/app/api/v1/sous-chef/integrations/route.ts:71-128` — authenticate → validate → probe → seal → upsert → rollback on failure. Buffer branch is structurally identical.
+- `ConnectDialog` modal shell in `src/components/admin/integration-forms.tsx` — Postiz form variant is the template for `BufferForm`.
 
 **Test scenarios:**
-- Happy path: callback with valid state + valid code stores sealed token + channel list; redirect URL is correct.
-- Edge case: callback with no state → 400.
-- Edge case: callback with mismatched/expired state → 400, no DB write.
-- Edge case: callback with state belonging to a different user (session swap — attacker pre-issues state for their account, victim hits callback) → 403, no DB write, state row consumed.
-- Edge case: callback with no active session → redirect to `/login?redirect=...`, state preserved (do not consume on this path).
-- Error path: code-exchange returns 400 → user redirected with `?error=invalid_code`, no DB write.
-- Error path: probe (org+channels fetch) fails → `disconnectAction` called, redirect with `?error=probe_failed`.
-- Happy path: refresh helper rotates tokens — stores new pair atomically.
-- Error path: refresh returns 401 (revoked grant) → throws `BufferRefreshFailed`; integration disconnected on next push.
-- Integration scenario: rotated refresh token reuse — old refresh is rejected; provider must be reconnected.
+- Happy path: valid API key → row created with sealed apiKey + extra `{organizationId, channels}`; 200 response.
+- Edge case: key with multiple organizations — first org returned, warning logged, picker deferred.
+- Edge case: key with zero organizations — 400 "no organizations found".
+- Edge case: key with zero channels — row created with `extra.channels = []`; UI surfaces "Connect channels in Buffer first".
+- Error path: 401 from Buffer → 400 "key rejected by Buffer", no row created.
+- Error path: network timeout → 504.
+- Error path: probe succeeds, upsert succeeds, channels fetch fails → `disconnectAction` rollback; integration not left in inconsistent state.
+- Integration scenario: disconnect then reconnect — old row removed, new row created cleanly.
 
 **Verification:**
-- A real round-trip with a test Buffer account completes Connect flow and lists channels.
-- Refreshing a near-expiry token rotates and stores the new pair.
+- Connecting with a real Buffer API key (issued from Buffer dashboard) populates organization + channels in <60s.
+- DELETE `/api/v1/sous-chef/integrations?provider=buffer` removes the row.
 
 ---
 
@@ -396,12 +394,12 @@ State: ( ) Add to queue   ( ) Save as draft
 
 **Files:**
 - Modify: `src/components/admin/sous-chef-client.tsx` (add Buffer + Postiz blocks)
-- Modify: `src/components/admin/integration-forms.tsx` (Buffer block uses a "Connect Buffer" link to `/api/integrations/buffer/start`; Postiz block reuses `ConnectDialog` with the new form variant)
+- Modify: `src/components/admin/integration-forms.tsx` (Buffer block reuses `ConnectDialog` with `BufferForm` variant — paste API key, link out to Buffer dashboard. Pivoted 2026-04-29 from OAuth href.)
 - Modify: `src/app/(admin)/account/page.tsx` (or wherever the Sous-Chef integrations grid renders — verify path at implementation)
 - Test: existing component test patterns under `src/components/admin/__tests__/` (if present)
 
 **Approach:**
-- Buffer block: connected state shows organization name + channel list (avatars + service icons). Disconnected state shows a "Connect Buffer" PixelButton linking to start route.
+- Buffer block: connected state shows organization name + channel list (avatars + service icons). Disconnected state shows a "Connect Buffer" PixelButton opening the `ConnectDialog` with `BufferForm`. Form includes an inline link to `https://publish.buffer.com/account/apps` (or wherever Buffer surfaces the API key UI) for users to obtain a key.
 - Postiz block: connected state shows instance URL (truncated) + channel list. Disconnected state shows a "Connect Postiz" PixelButton opening the modal.
 - Channel list rendering: small badges with service icon + display name; `disabled: true` channels render dimmed with "(disabled)".
 - Disconnect: shadcn AlertDialog wrapping a `PixelButton variant="danger"` — on confirm calls `DELETE /api/v1/sous-chef/integrations?provider=buffer|postiz`. Also clears that provider's entries from `routingDefaults` (server-side as part of disconnect mutation).
@@ -411,7 +409,7 @@ State: ( ) Add to queue   ( ) Save as draft
 - Disconnect AlertDialog: existing PostHog/GA4 disconnect pattern in same file.
 
 **Test scenarios:**
-- Happy path: connect Buffer via OAuth → returns to settings with badge "Connected" + channel list.
+- Happy path: connect Buffer via API key paste → modal closes, badge "Connected" + channel list.
 - Happy path: connect Postiz → modal closes, badge updates.
 - Edge case: connected provider with zero channels — show "No channels connected in {provider} yet" hint.
 - Integration scenario: disconnect provider — confirmation dialog, then row gone, routing defaults referencing those channels cleared, draftPushes for in-flight pushes finish (not blocked).
@@ -532,13 +530,13 @@ State: ( ) Add to queue   ( ) Save as draft
   1. Load all `pending` rows for `draftId` via `getPendingForDraft`.
   2. For each row, attempt `claimPush(rowId)` → returns `false` if not pending (someone else claimed). Skip if false.
   3. Resolve sealed creds via `getSealedForUser(userId, provider)`. Open ciphertext via `secret-box`.
-  4. Buffer path: refresh token if `expiresAt < now + 60s` via the **refresh-lease** (Key Decisions): call `claimRefreshLease`; if `owned`, exchange + `commitRefresh`; if not owned, poll `getSealed` until `expiresAt > now + 60s` or timeout. Then call `createPost` GraphQL mutation. Use `withRetry` (3 attempts) for transient errors. **Never** call `/token` outside the lease.
+  4. Buffer path (pivoted 2026-04-29): unseal apiKey directly. **No refresh-lease** — Buffer API keys are static. Build `createPost` mutation: `text` from draft copy, `channelId`, `schedulingType: automatic`, `mode: addToQueue` (always queue — Buffer has no `draft` enum). When user-intent state was `draft`, log a warning + still send `addToQueue`. Media: `assets: { images: [{ url: <r2-url> }] }`. Use `withRetry` (3 attempts) for transient errors. Endpoint `https://api.buffer.com`, `Authorization: Bearer <apiKey>`.
   5. Postiz path: rate-limit check (in-process token bucket per-user). Then `POST /upload-from-url` → `{id, path}` → `POST /posts`. Use `withRetry`.
-  6. On success: `finalizePush(rowId, state: "queued"|"drafted", providerPostId)`. State = `queued` if user picked queue mode AND provider returned a scheduled time; otherwise `drafted`.
+  6. On success: `finalizePush(rowId, state: "queued"|"drafted", providerPostId)`. Buffer always returns `queued`. Postiz returns `drafted` when request used `type: "draft"`, else `queued`.
   7. On failure: classify error → `auth`, `channel_gone`, `rate_limit`, `media`, `transient`, `unknown`. `transient` and `rate_limit` re-schedule via `ctx.scheduler.runAfter(retryDelay, internal.pushFanout.run, {draftId, userId})` after incrementing `attempts` (cap at 3). Non-retryable: `finalizePush(state: "failed", errorClass, errorMessage)`.
 - Atomic claim: `claimPush` mutation runs inside Convex's serialized mutation lane — concurrent action invocations for the same draft (e.g., manual retry race) cannot both claim the same row. Defends against double-fire. Pattern from superseded Postiz plan + canonical state-machine usage.
 - Logging: structured `[push:<draftId>:<rowId>]` prefix on every console output for log correlation.
-- Buffer rate-limit awareness: maintain a process-wide bucket (since "use node" actions reuse Node processes briefly within Convex). Soft signal only; rely on 429 response + retry as authoritative.
+- Buffer rate-limit awareness: per-API-key (per-user) limits — 100/15min, 100/24hr, 3000/30days. Maintain a process-wide bucket (since "use node" actions reuse Node processes briefly within Convex). Soft signal only; rely on 429 response + retry as authoritative.
 
 **Execution note:** Build the dispatcher with a fake provider client first; integration tests against real Buffer/Postiz come last.
 
@@ -550,8 +548,8 @@ State: ( ) Add to queue   ( ) Save as draft
 - Happy path: 1 push to Buffer image — completes, row state=`queued`, providerPostId stored.
 - Happy path: 1 push to Postiz image — uploads media, posts, state=`queued`.
 - Happy path: 1 push to Postiz video — same flow with .mp4 URL.
-- Edge case: Buffer access token within 60s of expiry — refreshed inline, new pair stored, push succeeds.
-- Edge case: Buffer refresh returns 401 (revoked) — push fails with `errorClass: "auth"`, integration disconnected, no auto-retry.
+- Edge case: Buffer apiKey returns 401 (revoked) — push fails with `errorClass: "auth"`, integration disconnected, no auto-retry. (No refresh path — pivoted 2026-04-29.)
+- Edge case: user picked `state: "draft"` + Buffer in providers — Buffer push uses `mode: addToQueue` (queue-only constraint), `draftPushes.state` finalizes to `queued`, warning logged.
 - Edge case: Postiz returns 429 — backoff + reschedule; succeeds on retry.
 - Edge case: Buffer GraphQL `ChannelReconnectRequired` typed error — `errorClass: "channel_gone"`, no auto-retry, channel pruned from cache on next refresh.
 - Edge case: media URL returns 404 to provider — `errorClass: "media"`, no retry (R2 should never 404 but record the case).
@@ -643,10 +641,10 @@ State: ( ) Add to queue   ( ) Save as draft
 
 ## System-Wide Impact
 
-- **Interaction graph:** New flow touches: drafts UI → Approve mutation → schedule fanout action → provider HTTP → finalize mutation → live UI update. Existing drafts/render pipelines unchanged. New OAuth callback adds a new public route that must pass authentication and CSRF checks.
+- **Interaction graph:** New flow touches: drafts UI → Approve mutation → schedule fanout action → provider HTTP → finalize mutation → live UI update. Existing drafts/render pipelines unchanged. (Pivoted 2026-04-29: no OAuth callback route; Buffer connect goes through the existing `/api/v1/sous-chef/integrations` POST surface, identical to Postiz.)
 - **Error propagation:** Push errors classified at the boundary; `errorClass` drives UI affordances (auth = "Reconnect", channel_gone = informational, transient = auto-retried, media/unknown = manual retry). No exception bubbles up beyond the action.
-- **State lifecycle risks:** Concurrent approves of the same draft → defended by `clientNonce` + `claimPush` atomic. Buffer refresh-token races → defended by atomic `refreshBufferToken` mutation and rotation rule. Provider rate limits → in-process bucket + 429 backoff.
-- **API surface parity:** `/api/v1/sous-chef/integrations` extended (new `provider` enum values). `/api/integrations/buffer/{start,callback}` is a new namespace — distinct from sous-chef integrations because OAuth callbacks must be GET endpoints with no auth headers, and bundling them under `/api/v1/sous-chef` would force shape mismatches.
+- **State lifecycle risks:** Concurrent approves of the same draft → defended by `clientNonce` + `claimPush` atomic. Provider rate limits → in-process bucket + 429 backoff. (Pivoted 2026-04-29: no Buffer refresh-token races — API keys are static.)
+- **API surface parity:** `/api/v1/sous-chef/integrations` extended (new `provider` enum values for `buffer` + `postiz`). Both providers connect via POST to that endpoint; no separate OAuth namespace. (Pivoted 2026-04-29 — original plan reserved `/api/integrations/buffer/{start,callback}` for OAuth. Those routes are deleted.)
 - **Integration coverage:** Need at least one integration test per provider that hits a sandbox or recorded fixture to prove media URL handoff (Buffer) and 2-step upload (Postiz) work end-to-end. Unit tests cannot prove these.
 - **Unchanged invariants:**
   - Render pipeline (`src/lib/pipeline/render.ts` + `render-video.ts`) untouched.
@@ -661,26 +659,24 @@ State: ( ) Add to queue   ( ) Save as draft
 | Risk | Mitigation |
 |------|------------|
 | Buffer video API unverified — schema shows it but roadmap suggests it may not work for `createPost` | MVP gates Buffer pushes to image formats only. Video formats sent to Buffer return `media` errorClass with explicit message; user routes video to Postiz. Re-test post-launch and lift gate when verified. |
-| Buffer 100/15min OAuth-client cap is shared across all bragfast users | At small scale, ample headroom. At growth, may need a Convex-level token-bucket queue or higher-tier OAuth app. Tracked as deferred operational concern. Document in README. |
+| Buffer 100/15min, 100/24hr, 3000/30days per-API-key cap (pivoted 2026-04-29 — per-user, not per-OAuth-client) | Per-user limits give substantially more headroom than the original OAuth per-client cap. In-process bucket throttles per-user. 429 → `ctx.scheduler.runAfter` with delay. |
+| Buffer queue-only constraint — `createPost` enum has no `draft` mode | UI note in approve modal when user picks draft + Buffer is selected: "Buffer doesn't support drafts via API; Buffer pushes will go to queue." `draftPushes.state` finalizes to `queued` for Buffer regardless of user intent. Postiz still respects draft. |
 | Postiz 30/hr per API key is tight for power users | In-process rate limiter throttles at 25/hr soft cap. 429 response triggers `ctx.scheduler.runAfter` with exact `retryAfter`. Surface "Throttled — will resume in N min" in UI. |
-| Buffer refresh-token rotation rule — reuse revokes the entire grant; concurrent pushes are the failure mode | Refresh-lease pattern (Key Decisions): claim → exchange → commit, with non-owners polling for the committed pair. Unit test specifically for two concurrent pushes hitting the lease and only one calling `/token`. |
-| OAuth state CSRF — Buffer doesn't natively enforce it | Self-issued state nonce stored in `oauthStates` table, single-use, 10-min TTL. Standard pattern; just needs disciplined implementation. |
 | Postiz `instanceUrl` SSRF — user-supplied URL can target IMDS / loopback / RFC-1918 | Single `safeFetch` wrapper in `src/lib/integrations/postiz/client.ts` with scheme + DNS + private-range checks + IP pinning. All Postiz calls (probe, refresh, push) go through it. Tested against IMDS, RFC-1918, and DNS rebinding. |
-| OAuth callback session swap — attacker tricks logged-in user into completing attacker's OAuth flow | Callback re-authenticates via `authenticate()` and asserts `session.userId === state.userId` before `consumeState`. State nonce alone is insufficient (it's a CSRF guard, not a session-binding guard). |
 | Postiz `settings.__type` per-platform schema variance (Instagram, LinkedIn) | Start with minimal `{__type: identifier}` form; iterate based on Postiz error responses. Track as implementation-time discovery. |
 | Postiz known issue with MP4 extension capitalization | Lowercase `.mp4` enforced at R2 key naming convention (already the case per render pipeline). Add an assertion in Postiz upload helper. |
-| OAuth redirect URI must be registered per environment | Document in `.env.example` and onboarding docs. Use a single env var `BUFFER_REDIRECT_URI` resolved per-deploy. |
 | Buffer GraphQL error parsing: top-level vs typed payload errors | Single helper in `src/lib/integrations/buffer/graphql.ts` handles both uniformly. Tested against fixtures. |
+| Buffer multi-organization API keys — a key may grant access to several orgs; we currently use the first | Log warning on multi-org probe, defer org-picker UI to follow-up work. Single-org keys (vast majority) unaffected. |
 
 ---
 
 ## Documentation / Operational Notes
 
-- Update `.env.example` with `BUFFER_CLIENT_ID`, `BUFFER_CLIENT_SECRET`, `BUFFER_REDIRECT_URI`.
-- Update `README.md` (Stack section + Integrations section).
-- Add a `docs/solutions/` entry post-merge for: Buffer OAuth + state CSRF, dual-token sealing, Convex `"use node"` outbound HTTP, claimPush atomic state-machine, provider error classification.
-- Operational: monitor `draftPushes` rows by `errorClass` weekly. A spike in `auth` errors indicates a refresh-token bug; `channel_gone` indicates user disconnect drift; `rate_limit` indicates approaching ceiling.
-- Buffer OAuth app registration is a one-time prod setup gate. Capture in onboarding runbook.
+- **No Buffer env vars required** (pivoted 2026-04-29). Drop `BUFFER_CLIENT_ID`/`BUFFER_CLIENT_SECRET`/`BUFFER_REDIRECT_URI` from `.env.example` and any deploy configs. API keys are user-issued, sealed in Convex.
+- Update `README.md` (Stack section + Integrations section) — Buffer connect = paste API key from Buffer dashboard.
+- Add a `docs/solutions/` entry post-merge for: BYO API-key sealing pattern (Buffer + Postiz symmetric), Convex `"use node"` outbound HTTP, claimPush atomic state-machine, provider error classification, Buffer queue-only constraint.
+- Operational: monitor `draftPushes` rows by `errorClass` weekly. A spike in `auth` errors indicates user revoked a Buffer API key (no auto-recovery; user must reconnect); `channel_gone` indicates user disconnect drift; `rate_limit` indicates approaching ceiling.
+- No prod-side Buffer setup gate (no OAuth app registration). Each user issues their own key from the Buffer dashboard.
 
 ---
 
@@ -689,8 +685,9 @@ State: ( ) Add to queue   ( ) Save as draft
 - **Origin document:** `docs/brainstorms/2026-04-28-buffer-postiz-byo-posting-requirements.md`
 - **Superseded plan:** `docs/plans/2026-04-28-001-feat-postiz-posting-backbone-plan.md` (architectural decisions on `claimPush`, error taxonomy, structured logging carried forward)
 - Buffer GraphQL API: `https://developers.buffer.com/`
-- Buffer OAuth: `https://developers.buffer.com/guides/authentication.html`
+- Buffer getting started (API key): `https://developers.buffer.com/guides/getting-started.html`
 - Buffer createPost examples: `https://developers.buffer.com/examples/`
+- Buffer REST→GraphQL migration: `https://developers.buffer.com/guides/rest-migration.html`
 - Postiz Public API: `https://docs.postiz.com/public-api/introduction`
 - Postiz OpenAPI: `https://docs.postiz.com/public-api/openapi.json`
 - Postiz upload-from-url fix (PR #1207): `https://github.com/gitroomhq/postiz-app/issues/1147`

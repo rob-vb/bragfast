@@ -83,18 +83,14 @@ function makePostizRow(overrides: Partial<PushRow> = {}): PushRow {
 }
 
 const BUFFER_SEALED: SealedRow = {
-  ciphertext: JSON.stringify({
-    accessToken: "buf_access_token",
-    refreshToken: "buf_refresh_token",
-    expiresAt: Date.now() + 3_600_000,
-  }),
+  ciphertext: "buf_api_key",
   iv: "fake-iv",
   tag: "fake-tag",
-  extra: null,
+  extra: JSON.stringify({ organizationId: "org-1", channels: [] }),
 };
 
 const POSTIZ_SEALED: SealedRow = {
-  ciphertext: JSON.stringify({ apiKey: "ptz_api_key" }),
+  ciphertext: "ptz_api_key",
   iv: "fake-iv",
   tag: "fake-tag",
   extra: JSON.stringify({ instanceUrl: "https://postiz.example.com" }),
@@ -116,11 +112,11 @@ describe("pushToBuffer", () => {
 
   it("happy path — returns providerPostId from GraphQL response", async () => {
     mockBufferGraphQL.mockResolvedValueOnce({
-      createPost: { id: "buf_post_123" },
+      createPost: { __typename: "PostActionSuccess", post: { id: "buf_post_123" } },
     });
 
     const result = await pushToBuffer({
-      accessToken: "tok",
+      apiKey: "tok",
       channelId: "ch_1",
       title: "Hello",
       description: "World",
@@ -136,7 +132,7 @@ describe("pushToBuffer", () => {
   it("video format → throws PushError(media)", async () => {
     await expect(
       pushToBuffer({
-        accessToken: "tok",
+        apiKey: "tok",
         channelId: "ch_1",
         title: "Video",
         description: "",
@@ -148,7 +144,7 @@ describe("pushToBuffer", () => {
 
     await expect(
       pushToBuffer({
-        accessToken: "tok",
+        apiKey: "tok",
         channelId: "ch_1",
         title: "Video",
         description: "",
@@ -168,7 +164,7 @@ describe("pushToBuffer", () => {
 
     await expect(
       pushToBuffer({
-        accessToken: "expired",
+        apiKey: "expired",
         channelId: "ch_1",
         title: "T",
         description: "",
@@ -188,7 +184,7 @@ describe("pushToBuffer", () => {
 
     await expect(
       pushToBuffer({
-        accessToken: "tok",
+        apiKey: "tok",
         channelId: "ch_1",
         title: "T",
         description: "",
@@ -206,7 +202,7 @@ describe("pushToBuffer", () => {
 
     await expect(
       pushToBuffer({
-        accessToken: "tok",
+        apiKey: "tok",
         channelId: "ch_1",
         title: "T",
         description: "",
@@ -329,7 +325,9 @@ describe("dispatchPush", () => {
   });
 
   it("routes Buffer row to Buffer client", async () => {
-    mockBufferGraphQL.mockResolvedValueOnce({ createPost: { id: "buf_dispatch_1" } });
+    mockBufferGraphQL.mockResolvedValueOnce({
+      createPost: { __typename: "PostActionSuccess", post: { id: "buf_dispatch_1" } },
+    });
 
     const result = await dispatchPush(makeBufferRow(), BUFFER_SEALED, openSecret);
     expect(result.providerPostId).toBe("buf_dispatch_1");
@@ -351,16 +349,19 @@ describe("dispatchPush", () => {
     expect(mockBufferGraphQL).not.toHaveBeenCalled();
   });
 
-  it("bad sealed payload → PushError(auth)", async () => {
-    const badSealed: SealedRow = {
-      ciphertext: "not-valid-json{{{",
+  it("openSecret throws → PushError(auth)", async () => {
+    const sealed: SealedRow = {
+      ciphertext: "x",
       iv: "iv",
       tag: "tag",
       extra: null,
     };
+    const failingOpen = () => {
+      throw new Error("decryption failed");
+    };
 
     await expect(
-      dispatchPush(makeBufferRow(), badSealed, openSecret),
+      dispatchPush(makeBufferRow(), sealed, failingOpen),
     ).rejects.toMatchObject({ class: "auth" });
   });
 });

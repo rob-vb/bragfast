@@ -34,7 +34,7 @@
     "better-auth": "^1.4.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "convex": "^1.32.0",
+    "convex": "^1.36.1",
     "google-auth-library": "^10.6.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.577.0",

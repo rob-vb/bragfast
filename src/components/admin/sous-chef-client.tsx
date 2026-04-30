@@ -219,16 +219,9 @@ function PostingProviderBlock({
           </div>
           <div className="flex gap-2">
             {!connected ? (
-              provider === "buffer" ? (
-                <a
-                  href="/api/integrations/buffer/start"
-                  className="font-[family-name:var(--font-press-start)] text-xs px-4 py-2 border-2 border-brand bg-gold text-brand shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] transition-all inline-block"
-                >
-                  Connect Buffer
-                </a>
-              ) : (
-                <PixelButton onClick={onConnect}>Connect Postiz</PixelButton>
-              )
+              <PixelButton onClick={onConnect}>
+                Connect {PROVIDER_LABELS[provider]}
+              </PixelButton>
             ) : (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -346,7 +339,8 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
     reload();
   }, [reload]);
 
-  // Handle ?connected= and ?error= query params (Buffer OAuth redirect)
+  // Handle ?connected= and ?error= query params left over from prior flows.
+  // Buffer no longer redirects (paste-key flow now); kept generic.
   useEffect(() => {
     const connected = searchParams.get("connected");
     const error = searchParams.get("error");
@@ -361,7 +355,6 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
       toast.success(`${label} connected`, {
         description: "Your posting provider is now active.",
       });
-      // Strip the query param without a hard reload
       const url = new URL(window.location.href);
       url.searchParams.delete("connected");
       router.replace(url.pathname + (url.search !== "?" ? url.search : ""), {
@@ -370,15 +363,7 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
     }
 
     if (error) {
-      const messages: Record<string, string> = {
-        buffer_denied: "Buffer authorization was declined.",
-        invalid_code: "Buffer authorization code was invalid.",
-        probe_auth_failed: "Buffer probe failed: authentication error.",
-        probe_failed: "Buffer probe failed. Please try again.",
-      };
-      toast.error("Connection failed", {
-        description: messages[error] ?? `Error: ${error}`,
-      });
+      toast.error("Connection failed", { description: `Error: ${error}` });
       const url = new URL(window.location.href);
       url.searchParams.delete("error");
       router.replace(url.pathname + (url.search !== "?" ? url.search : ""), {

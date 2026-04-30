@@ -8,6 +8,11 @@ import {
   normalizeInstanceUrl,
   PostizAuthError,
 } from "@/lib/integrations/postiz/client";
+import {
+  validateApiKey as validateBufferKey,
+  fetchChannels as fetchBufferChannels,
+  BufferAuthError,
+} from "@/lib/integrations/buffer/client";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -28,7 +33,11 @@ type PostizBody = {
   instanceUrl: string;
   apiKey: string;
 };
-type Body = StripeBody | PostHogBody | Ga4Body | PostizBody;
+type BufferBody = {
+  provider: "buffer";
+  apiKey: string;
+};
+type Body = StripeBody | PostHogBody | Ga4Body | PostizBody | BufferBody;
 
 export function validateBody(raw: unknown): Body | { error: string } {
   if (!raw || typeof raw !== "object") return { error: "invalid body" };
@@ -88,6 +97,11 @@ export function validateBody(raw: unknown): Body | { error: string } {
     const normalizedUrl = b.instanceUrl.replace(/\/+$/, "");
     return { provider: "postiz", instanceUrl: normalizedUrl, apiKey: b.apiKey };
   }
+  if (b.provider === "buffer") {
+    if (typeof b.apiKey !== "string" || b.apiKey.length < 8)
+      return { error: "apiKey required" };
+    return { provider: "buffer", apiKey: b.apiKey };
+  }
   return { error: "unknown provider" };
 }
 
@@ -110,6 +124,70 @@ export async function POST(request: Request) {
   }
 
   const { userId } = auth;
+
+  // -------------------------------------------------------------------------
+  // Buffer: probe API key, then store. Same shape as Postiz — paste-key BYO.
+  // -------------------------------------------------------------------------
+  if (body.provider === "buffer") {
+    let account: Awaited<ReturnType<typeof validateBufferKey>>;
+    try {
+      account = await validateBufferKey(body.apiKey);
+    } catch (err) {
+      if (err instanceof BufferAuthError) {
+        return Response.json({ error: "key rejected by Buffer" }, { status: 400 });
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("timeout") || msg.includes("AbortError")) {
+        return Response.json(
+          { error: "Buffer API did not respond in time" },
+          { status: 504 },
+        );
+      }
+      console.error("[buffer] probe failed:", err);
+      return Response.json(
+        { error: "Could not reach Buffer API, please retry" },
+        { status: 504 },
+      );
+    }
+
+    if (account.organizations.length > 1) {
+      console.warn(
+        `[buffer] API key has ${account.organizations.length} organizations — using first (${account.organizationId}). Org-picker UI deferred.`,
+      );
+    }
+
+    let channels: Awaited<ReturnType<typeof fetchBufferChannels>>;
+    try {
+      channels = await fetchBufferChannels(body.apiKey, account.organizationId);
+    } catch (err) {
+      console.error("[buffer] channels fetch failed:", err);
+      return Response.json(
+        { error: "Buffer probe succeeded but channels fetch failed, please retry" },
+        { status: 504 },
+      );
+    }
+
+    const sealed = seal(body.apiKey);
+    const extra = JSON.stringify({
+      organizationId: account.organizationId,
+      channels,
+    });
+
+    await convex.action(api.integrationSecrets.upsertAction, {
+      userId,
+      provider: "buffer",
+      ciphertext: sealed.ciphertext,
+      iv: sealed.iv,
+      tag: sealed.tag,
+      extra,
+    });
+
+    return Response.json({
+      ok: true,
+      provider: "buffer",
+      channelCount: channels.length,
+    });
+  }
 
   // -------------------------------------------------------------------------
   // Postiz: probe first, then store. Different from analytics providers which

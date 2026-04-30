@@ -17,15 +17,18 @@
  *  - On every approve attempt — to ensure the cache is fresh before routing.
  *  - From the daily cron sweep — to keep all enabled integrations up-to-date.
  *
- * Intentionally does NOT attempt a Buffer token refresh if the access token is
- * expired. A 401 surfaces as errorClass "auth" and the integration is disabled.
- * The user reconnects via OAuth. This avoids cascading lease contention during
- * the cron sweep.
+ * Buffer + Postiz both use static API keys (Buffer pivoted from OAuth on
+ * 2026-04-29 — see plan changelog). A 401 surfaces as errorClass "auth" and
+ * the integration is disabled; the user reconnects by pasting a fresh key.
  */
 
 import { open } from "@/lib/crypto/secret-box";
 import type { SealedSecret } from "@/lib/crypto/secret-box";
-import { fetchOrgAndChannels, BufferAuthError } from "./buffer/oauth";
+import {
+  validateApiKey as validateBufferKey,
+  fetchChannels as fetchBufferChannels,
+  BufferAuthError,
+} from "./buffer/client";
 import { listIntegrations, PostizAuthError } from "./postiz/client";
 
 // ---------------------------------------------------------------------------
@@ -78,27 +81,24 @@ export async function refreshChannelsForProvider(
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch Buffer channels using the access token inside the sealed payload.
- * Merges with existing extra to preserve fields this refresh does not own.
+ * Fetch Buffer channels using the API key inside the sealed payload.
+ * Re-resolves the organizationId via validateApiKey (in case the user's first
+ * org changed) and merges with existing extra to preserve unrelated fields.
  */
 export async function refreshBufferChannels(
   sealed: SealedSecret,
   currentExtra: string | null,
 ): Promise<string> {
-  let payload: { accessToken: string };
-  try {
-    payload = JSON.parse(open(sealed)) as { accessToken: string };
-  } catch {
-    throw new Error("Failed to unseal Buffer token payload.");
-  }
+  const apiKey = open(sealed);
 
-  const orgInfo = await fetchOrgAndChannels(payload.accessToken);
+  const account = await validateBufferKey(apiKey);
+  const channels = await fetchBufferChannels(apiKey, account.organizationId);
 
   const existing = parseExtra(currentExtra);
   const newExtra = {
     ...existing,
-    organizationId: orgInfo.organizationId,
-    channels: orgInfo.channels,
+    organizationId: account.organizationId,
+    channels,
   };
 
   return JSON.stringify(newExtra);

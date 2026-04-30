@@ -35,16 +35,6 @@ vi.mock("../../src/lib/integrations/push", () => ({
   dispatchPush: vi.fn(),
 }));
 
-// Mock Buffer oauth (refresh path — most tests won't reach it)
-vi.mock("../../src/lib/integrations/buffer/oauth", async (importOriginal) => {
-  const orig =
-    await importOriginal<typeof import("../../src/lib/integrations/buffer/oauth")>();
-  return {
-    ...orig,
-    refreshBufferToken: vi.fn(),
-  };
-});
-
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
@@ -100,27 +90,23 @@ async function seedIntegration(
 ) {
   await t.run(async (ctx) => {
     const now = new Date().toISOString();
-    // Ciphertext IS the plaintext under the test mock of open()
-    const tokenPayload =
-      provider === "buffer"
-        ? JSON.stringify({
-            accessToken: "buf_access",
-            refreshToken: "buf_refresh",
-            expiresAt: Date.now() + 3_600_000, // valid for 1h
-          })
-        : JSON.stringify({ apiKey: "ptz_api_key" });
+    // Buffer + Postiz both seal a plain apiKey string. Ciphertext IS the
+    // plaintext under the test mock of open().
+    const apiKey = provider === "buffer" ? "buf_api_key" : "ptz_api_key";
 
     await ctx.db.insert("integrationSecrets", {
       userId: USER_ID,
       provider,
-      ciphertext: tokenPayload,
+      ciphertext: apiKey,
       iv: "fake-iv",
       tag: "fake-tag",
       extra:
         extra ??
         (provider === "postiz"
           ? JSON.stringify({ instanceUrl: "https://postiz.example.com" })
-          : undefined),
+          : provider === "buffer"
+            ? JSON.stringify({ organizationId: "org-1", channels: [] })
+            : undefined),
       enabled: true,
       created_at: now,
       updated_at: now,

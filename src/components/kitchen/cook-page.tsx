@@ -14,6 +14,7 @@ import { PlatingStep } from "@/components/kitchen/plating-step";
 import { CookButton } from "@/components/kitchen/cook-button";
 import { CookResults } from "@/components/kitchen/cook-results";
 import { SaveDraftDialog } from "@/components/kitchen/save-draft-dialog";
+import { ApproveDraftModal } from "@/components/admin/approve-draft-modal";
 import { useUserId } from "@/hooks/use-user-id";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
 import type { AnimationPreset, ObjectModification, ReleaseResult, FormatEntry, Brand } from "@/lib/types";
@@ -192,7 +193,9 @@ export function CookPage({ templates }: CookPageProps) {
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
   const hydratedDraftRef = useRef<string | null>(null);
+  const autoApprovedCookRef = useRef<string | null>(null);
 
   // Progressive disclosure
   const hasTemplate = !!state.templateId;
@@ -202,6 +205,10 @@ export function CookPage({ templates }: CookPageProps) {
 
   // ── Live credit balance ─────────────────────────────────────────────────
   const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
+
+  // ── Approve flow: integrations + routing defaults ──────────────────────
+  const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
+  const routingRows = useQuery(api.routingDefaults.listByUser, { userId });
 
   // ── Primary brand for template previews ────────────────────────────────
   // Independent of the brand selected for cooking — the picker always shows
@@ -309,6 +316,15 @@ export function CookPage({ templates }: CookPageProps) {
       dispatch({ type: "SET_PROGRESS", progress: releaseProgressPct });
     }
   }, [releaseStatus, releaseProgressPct, state.status, state.cookId]);
+
+  // Auto-open Approve modal once a draft cook finishes
+  useEffect(() => {
+    if (state.status !== "done") return;
+    if (!draftId || !state.cookId) return;
+    if (autoApprovedCookRef.current === state.cookId) return;
+    autoApprovedCookRef.current = state.cookId;
+    setApproveOpen(true);
+  }, [state.status, state.cookId, draftId]);
 
   // Safety timeout
   useEffect(() => {
@@ -655,6 +671,30 @@ export function CookPage({ templates }: CookPageProps) {
         onClose={() => setSaveDialogOpen(false)}
         onSave={handleSaveDraft}
       />
+
+      {approveOpen && draftId && (() => {
+        const texts = Object.values(state.objectContent)
+          .map((m) => m.text)
+          .filter((t): t is string => !!t);
+        const title = (texts[0] ?? "Untitled draft").slice(0, 80);
+        const description = (texts[1] ?? "").slice(0, 220);
+        const draftFormats =
+          state.outputType === "video"
+            ? state.formats.map((f) => `video-${f}` as const)
+            : state.formats;
+        return (
+          <ApproveDraftModal
+            draftId={draftId}
+            userId={userId}
+            initialTitle={title}
+            initialDescription={description}
+            draftFormats={draftFormats}
+            routingRows={routingRows ?? []}
+            integrations={integrations ?? []}
+            onClose={() => setApproveOpen(false)}
+          />
+        );
+      })()}
     </>
   );
 }

@@ -140,6 +140,48 @@ export function PostHogForm({ onSubmit, submitting }: FormProps) {
   );
 }
 
+export function BufferForm({ onSubmit, submitting }: FormProps) {
+  const [apiKey, setApiKey] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({ apiKey });
+      }}
+      className="space-y-3"
+    >
+      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+        Generate an API key in{" "}
+        <a
+          href="https://publish.buffer.com/developers/api"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Buffer Developers
+        </a>
+        . Buffer no longer issues new OAuth apps; static API keys are the
+        supported path.
+      </p>
+      <label className="block">
+        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
+          API key
+        </span>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          required
+          className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+        />
+      </label>
+      <PixelButton type="submit" disabled={submitting || !apiKey}>
+        {submitting ? "Connecting..." : "Connect"}
+      </PixelButton>
+    </form>
+  );
+}
+
 export function PostizForm({ onSubmit, submitting }: FormProps) {
   const [instanceUrl, setInstanceUrl] = useState("https://api.postiz.com");
   const [apiKey, setApiKey] = useState("");
@@ -302,6 +344,7 @@ export function ConnectDialog({ provider, onClose, onDone }: ConnectDialogProps)
         {provider === "stripe" && <StripeForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "posthog" && <PostHogForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "ga4" && <Ga4Form onSubmit={handleSubmit} submitting={submitting} />}
+        {provider === "buffer" && <BufferForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "postiz" && <PostizForm onSubmit={handleSubmit} submitting={submitting} />}
 
         {error && (
@@ -350,6 +393,7 @@ export function InlineIntegrationForm({ provider, onDone }: InlineFormProps) {
       {provider === "stripe" && <StripeForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "posthog" && <PostHogForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "ga4" && <Ga4Form onSubmit={handleSubmit} submitting={submitting} />}
+      {provider === "buffer" && <BufferForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "postiz" && <PostizForm onSubmit={handleSubmit} submitting={submitting} />}
       {error && (
         <p className="font-[family-name:var(--font-geist-mono)] text-xs text-red-600 break-words">

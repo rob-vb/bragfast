@@ -281,6 +281,15 @@ export function ApproveDraftModal({
 
   const noProviders = !bufferConnected && !postizConnected;
 
+  const bufferInSelection = useMemo(() => {
+    for (const key of checked) {
+      if (key.split("::")[1] === "buffer") return true;
+    }
+    return false;
+  }, [checked]);
+
+  const showBufferDraftNote = postState === "draft" && bufferInSelection;
+
   return (
     <div className="fixed inset-0 z-50 bg-brand/30 flex items-center justify-center p-4">
       <div className="bg-white border-2 border-brand shadow-[8px_8px_0_var(--color-brand)] p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-5">
@@ -418,6 +427,11 @@ export function ApproveDraftModal({
                 </label>
               ))}
             </div>
+            {showBufferDraftNote && (
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 border-2 border-yellow-400 bg-yellow-50 p-2">
+                Buffer doesn&apos;t support drafts via API; Buffer pushes will go to queue. Postiz pushes will save as draft.
+              </p>
+            )}
           </div>
         )}
 

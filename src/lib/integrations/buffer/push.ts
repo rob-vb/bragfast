@@ -1,15 +1,16 @@
 /**
- * Buffer posting — create a post via Buffer's GraphQL API.
+ * Buffer posting — create a post via Buffer's GraphQL API (API-key auth).
  *
- * Only image formats are supported in MVP. Video formats throw PushError("media", …)
- * immediately so the fanout can surface a clear message.
+ * Image-only in MVP. Video formats throw PushError("media", …) so the fanout
+ * surfaces a clear message; route video to Postiz instead.
  *
- * Buffer GraphQL endpoint: https://graph.buffer.com
+ * Buffer queue-only constraint: createPost has no `draft` mode. Valid modes are
+ * `addToQueue | shareNow | shareNext | customScheduled`. When the user picks
+ * "Save as draft" + Buffer, we still send `addToQueue` and log a warning. The
+ * UI surfaces this asymmetry before confirm; the fanout finalizes Buffer pushes
+ * as `state: "queued"` regardless of user intent.
  *
- * NOTE(approx schema): The PostCreateInput shape below is derived from Buffer's
- * public 2024 GraphQL schema documentation. Real integration testing (U9+) will
- * validate the exact field names. If the API returns an unknown shape, treat the
- * response id as the providerPostId.
+ * Endpoint: https://api.buffer.com (GraphQL).
  */
 
 import { PushError, type ErrorClass } from "../error-classes";
@@ -26,20 +27,28 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface BufferPushParams {
-  accessToken: string;
+  apiKey: string;
   channelId: string;
   title: string;
   description: string;
   mediaUrl: string;
   format: string;
-  /** "queue" → AddToQueue, "draft" → Draft */
+  /** User intent. Buffer always queues regardless — see queue-only note. */
   postState: "queue" | "draft";
 }
 
+interface CreatePostSuccess {
+  __typename?: "PostActionSuccess";
+  post: { id: string };
+}
+
+interface CreatePostError {
+  __typename?: "MutationError";
+  message: string;
+}
+
 interface CreatePostResponse {
-  createPost: {
-    id: string;
-  };
+  createPost: CreatePostSuccess | CreatePostError;
 }
 
 // ---------------------------------------------------------------------------
@@ -49,7 +58,13 @@ interface CreatePostResponse {
 const CREATE_POST_MUTATION = `
   mutation CreatePost($input: PostCreateInput!) {
     createPost(input: $input) {
-      id
+      __typename
+      ... on PostActionSuccess {
+        post { id }
+      }
+      ... on MutationError {
+        message
+      }
     }
   }
 `;
@@ -116,9 +131,8 @@ function classifyBufferError(err: unknown): ErrorClass {
  * Throws PushError on any failure with a classified errorClass.
  */
 export async function pushToBuffer(params: BufferPushParams): Promise<{ providerPostId: string }> {
-  const { accessToken, channelId, title, description, mediaUrl, format, postState } = params;
+  const { apiKey, channelId, title, description, mediaUrl, format, postState } = params;
 
-  // Video not supported via Buffer in MVP — Postiz handles video.
   if (isVideoFormat(format)) {
     throw new PushError(
       "media",
@@ -126,27 +140,52 @@ export async function pushToBuffer(params: BufferPushParams): Promise<{ provider
     );
   }
 
+  if (postState === "draft") {
+    console.warn(
+      `[buffer:push] User picked draft state, but Buffer createPost has no draft mode. Sending mode: addToQueue (channel=${channelId}).`,
+    );
+  }
+
   const text = [title, description].filter(Boolean).join("\n\n");
 
-  const input = {
-    channelIds: [channelId],
+  const input: Record<string, unknown> = {
+    channelId,
     text,
-    media: mediaUrl ? [{ type: "image", url: mediaUrl }] : [],
-    scheduling: {
-      type: postState === "queue" ? "AddToQueue" : "Draft",
-    },
+    schedulingType: "automatic",
+    mode: "addToQueue",
   };
 
+  if (mediaUrl) {
+    input.assets = { images: [{ url: mediaUrl }] };
+  }
+
+  let data: CreatePostResponse;
   try {
-    const data = await bufferGraphQL<CreatePostResponse>(
-      accessToken,
+    data = await bufferGraphQL<CreatePostResponse>(
+      apiKey,
       CREATE_POST_MUTATION,
       { input },
     );
-    return { providerPostId: data.createPost.id };
   } catch (err) {
     const cls = classifyBufferError(err);
     const msg = err instanceof Error ? err.message : String(err);
     throw new PushError(cls, msg);
   }
+
+  const result = data.createPost;
+  if (result && "post" in result && result.post?.id) {
+    return { providerPostId: result.post.id };
+  }
+  if (result && "message" in result) {
+    const message = result.message ?? "Buffer createPost returned MutationError";
+    const cls: ErrorClass = /channel.*reconnect/i.test(message)
+      ? "channel_gone"
+      : /unauth|forbidden/i.test(message)
+        ? "auth"
+        : /media|image|url/i.test(message)
+          ? "media"
+          : "unknown";
+    throw new PushError(cls, message);
+  }
+  throw new PushError("unknown", "Buffer createPost returned unexpected payload");
 }
