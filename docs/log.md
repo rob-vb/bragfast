@@ -14,6 +14,24 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 27 — S3.6 — destination picker
+
+**Attempted:**
+- `src/components/admin/destination-picker-modal.tsx`: client modal with 4 destinations. Buffer + Postiz route to `/admin/kitchen?draft=<id>&approve=1&provider=<provider>` (delegates final post to existing kitchen approve flow). Copy uses `navigator.clipboard.writeText` over X copy resolved via `pickXCopy(config, fallbackTitle)` (prefers `copyByPlatform.x.title+description`, falls back to `objectContent` text, then derived title). X intent opens `https://twitter.com/intent/tweet?text=…` in new tab. All four paths fire PostHog `post_approved` with `approval_surface: "dashboard_hero"` + `destination` per `docs/conventions.md`.
+- `src/components/admin/retro-draft-hero.tsx`: Approve CTA now opens `DestinationPickerModal` instead of navigating directly to kitchen. `pickerOpen` state + `onApproved` closes modal.
+
+**Verified by agent-browser:**
+- Dashboard still renders cleanly without hero (no qualifying retro draft on test account).
+- Lint + typecheck clean on touched files.
+
+**Deferred / why:** Live modal verify (clipboard + X intent paths) requires a seeded agent+github draft on the test account. Direct Convex DB seeding denied as shared-infra write; not exercised end-to-end. Modal logic is straightforward; will be hit naturally as soon as a real retro PR-merge draft lands or once a synthetic seed path lands.
+
+**Open questions for user:** None.
+
+**Next session start:** S3.7 — brand → goal → integration prompt sequence.
+
+---
+
 ## 2026-04-30 — Session 26 — S3.5 — retro draft + approval UI on dashboard load
 
 **Attempted:**

@@ -11,6 +11,7 @@ import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import { derivePreviewTitle } from "@/lib/drafts/preview";
 import { DraftPreview } from "./draft-preview";
 import { DraftPreviewBoundary } from "./draft-preview-boundary";
+import { DestinationPickerModal } from "./destination-picker-modal";
 
 type DraftRow = {
   id: string;
@@ -62,6 +63,7 @@ export function RetroDraftHero() {
     | DraftRow[]
     | undefined;
   const [skipping, setSkipping] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const target = useMemo(() => {
     if (!drafts) return null;
@@ -99,7 +101,7 @@ export function RetroDraftHero() {
 
   function onApprove() {
     if (!target) return;
-    router.push(`/admin/kitchen?draft=${encodeURIComponent(target.id)}&approve=1`);
+    setPickerOpen(true);
   }
 
   return (
@@ -163,6 +165,15 @@ export function RetroDraftHero() {
           </button>
         </div>
       </div>
+
+      <DestinationPickerModal
+        draftId={target.id}
+        config={config}
+        fallbackTitle={title}
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onApproved={() => setPickerOpen(false)}
+      />
     </div>
   );
 }

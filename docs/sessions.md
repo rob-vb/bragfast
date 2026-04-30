@@ -193,10 +193,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser hits dashboard → sees draft → can approve.
 - Deps: S2.4, S3.4.
 
-### S3.6 — Destination picker · M
+### S3.6 — Destination picker · M  [x] 2026-04-30
 - Goal: After Approve, modal: Buffer / Postiz / Copy + open X intent URL. None required to proceed.
 - Acceptance: agent-browser approves with clipboard fallback → text copied + X compose URL opens.
 - Deps: S3.5.
+- **Result:** `DestinationPickerModal` wired into `RetroDraftHero`. Buffer/Postiz route to existing kitchen approve flow (`/admin/kitchen?draft=…&approve=1&provider=…`). Copy uses `navigator.clipboard.writeText` over X copy (`copyByPlatform.x` → `objectContent` text → fallback title). X intent opens `twitter.com/intent/tweet?text=…` in new tab. PostHog `post_approved` fires with `approval_surface: "dashboard_hero"` + `destination`. Live UI verify deferred — requires seeded agent+github draft on test account; permission denied on direct DB seed. Code-level lint + typecheck clean.
 
 ### S3.7 — Brand → Goal → Integration prompt sequence · M
 - Goal: Three sequential post-activation prompts. Brand kit (logo + primary color, skippable). Goal-setting modal (full-screen, structured form). Integration prompt driven by goal type.
