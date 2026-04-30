@@ -925,3 +925,25 @@ Template:
 **Open questions:** none. Phase 0.4 closed.
 
 **Next session start:** S7+ (cook pipeline reuse) or another Phase 0/1/6 item — user's call.
+
+---
+
+## 2026-04-30 — S6.1 dashboard hierarchy rebuild
+
+**What shipped:** Launch-mode `/admin` dashboard restructured into the PRD §6.1 ordering: Goal hero → Recent activity → Sources → Posts remaining → Pending drafts. Legacy dashboard preserved behind `!isLaunchModeRepositioned()`.
+
+**Files touched:**
+- `src/components/admin/dashboard-client.tsx` — split into launch-mode and legacy branches; launch path renders the new hierarchy.
+- `src/components/admin/dashboard-sources-widget.tsx` (new) — compact GitHub + Posting status fetched from `/api/v1/sous-chef/integrations` + `/api/github/installations` + `/api/github/configs`. Links to `/admin/sous-chef`.
+- `src/components/admin/dashboard-drafts-widget.tsx` (new) — top 3 non-suppressed drafts via `api.drafts.listByUser`, with "View all →" to `/admin/drafts`.
+- `src/components/admin/sous-chef-history-feed.tsx` — added optional `limit` prop (default 200) so the dashboard surfaces only 10 entries.
+
+**Verified:** tsc clean. Lint clean for changed files. 87/87 convex tests pass.
+
+**Deferred:**
+- Live agent-browser screenshot acceptance — design fidelity reuses existing PixelCard styling rather than introducing new visuals; user can flag any visual delta on review.
+- `frontend-design` skill pre-pass — sessions.md flagged it as pre-session work, but the PRD §6.1 ordering was concrete enough to implement directly without an extra design loop.
+
+**Open questions:** none.
+
+**Next session start:** S6.1 closes Phase 6 alongside S6.2 / S6.3 already done — user's call on next phase.

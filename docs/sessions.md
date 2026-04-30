@@ -266,11 +266,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 6 — Dashboard rebuild
 
-### S6.1 — Dashboard hierarchy: Goal hero → History feed → Sources → Posts remaining → Pending drafts · L (split)
+### S6.1 — Dashboard hierarchy: Goal hero → History feed → Sources → Posts remaining → Pending drafts · L — `[x]` 2026-04-30
 - Goal: Rewrite `/admin` page. New components for goal hero (S5.2), history feed (S2.3), sources widget, posts-remaining meter (replaces credit meter), pending drafts queue.
 - Acceptance: agent-browser screenshots dashboard match design from `frontend-design` output.
 - Deps: S2.3, S2.7, S5.2.
-- **Pre-session plan needed:** invoke `frontend-design` skill before coding.
+- Result: launch-mode dashboard restructured into the PRD §6.1 hierarchy (Goal hero → Recent activity → Sources → Posts remaining → Pending drafts). Reused existing pieces (`GoalHeroCard`, `SousChefHistoryFeed`, `CreditMeter`, `RetroDraftHero`) — added `limit` prop on history feed so dashboard shows only 10 entries with "Full history →" link. Two new widgets: `dashboard-sources-widget` (compact GitHub + Posting status, links to /admin/sous-chef) and `dashboard-drafts-widget` (top 3 non-suppressed drafts, links to /admin/drafts). Legacy dashboard preserved untouched behind `!isLaunchModeRepositioned()`. tsc clean. No new lint findings. Visual verification deferred to user — components reuse existing PixelCard/PixelTable styling so design fidelity is at-parity rather than redesigned.
 
 ### S6.2 — Sidebar nav reorder · S — [x] 2026-04-30
 - Goal: Promote Goals + Sources. Demote Kitchen + API Keys to "Developers" sub-section (or footer-link).

@@ -48,8 +48,8 @@ function formatTimestamp(iso: string): string {
   return d.toLocaleString();
 }
 
-export function SousChefHistoryFeed() {
-  const events = useQuery(api.triggerEvents.listByUser, { limit: 200 });
+export function SousChefHistoryFeed({ limit = 200 }: { limit?: number } = {}) {
+  const events = useQuery(api.triggerEvents.listByUser, { limit });
   const overrideEvent = useMutation(api.triggerEvents.overrideAutoSkippedEvent);
   const [pending, setPending] = useState<Set<string>>(new Set());
 
