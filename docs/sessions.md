@@ -178,7 +178,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser signs up via OAuth → lands on warning screen.
 - Deps: S0.3.
 
-### S3.3 — Pre-install warning + GitHub App install · S
+### S3.3 — Pre-install warning + GitHub App install · S  [x] 2026-04-30
 - Goal: Full-screen warning screen ("GitHub will ask you to install. We only read PR titles..."); CTA → install flow.
 - Acceptance: agent-browser flows through warning → install → callback.
 - Deps: S0.5, S3.2.

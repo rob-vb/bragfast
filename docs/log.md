@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 24 — S3.3 — pre-install warning + install callback
+
+**Attempted:**
+- `src/app/api/github/callback/route.ts`: success redirect now branches on `isLaunchModeRepositioned()`. Repositioned → `/welcome/pick-repo`. Legacy → `/admin/account`. Org-pending and missing-installation-id paths unchanged.
+- `src/app/welcome/pick-repo/page.tsx`: stub landing page so callback has a destination. Real repo picker ships in S3.4.
+- `src/app/api/github/__tests__/callback.test.ts`: added `isLaunchModeRepositioned` mock + 2 tests covering legacy/repositioned redirect paths. 6/6 pass.
+- Warning page (`/welcome/install-warning`) copy from S3.2 reused as-is — agent-browser confirmed render in S3.2.
+
+**Verified by agent-browser:**
+- `/welcome/pick-repo` renders header bar + heading + dashboard CTA.
+- Live OAuth → install round-trip not exercised (real GitHub redirect).
+
+**Deferred / why:** Live install round-trip is e2e-only; covered by unit tests. S3.4 will replace stub with real repo list from `githubInstallations` + selection UI.
+
+**Open questions for user:** None.
+
+**Next session start:** S3.4 — repo picker (single repo).
+
+---
+
 ## 2026-04-30 — Session 23 — S3.2 — GitHub-OAuth-first signup
 
 **Attempted:**
