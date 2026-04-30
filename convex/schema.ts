@@ -68,6 +68,14 @@ export default defineSchema({
     requestCount: v.number(),
   }).index("by_userId", ["userId"]),
 
+  previewRateLimits: defineTable({
+    ip: v.string(),
+    hourStart: v.number(),
+    hourCount: v.number(),
+    dayStart: v.number(),
+    dayCount: v.number(),
+  }).index("by_ip", ["ip"]),
+
   releases: defineTable({
     userId: v.string(),
     externalId: v.string(),

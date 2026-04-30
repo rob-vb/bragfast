@@ -27,6 +27,7 @@ import type * as integrations_stripe from "../integrations/stripe.js";
 import type * as migrations from "../migrations.js";
 import type * as milestoneHits from "../milestoneHits.js";
 import type * as oauthState from "../oauthState.js";
+import type * as previewLimit from "../previewLimit.js";
 import type * as pushFanout from "../pushFanout.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as refreshChannelsAction from "../refreshChannelsAction.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   milestoneHits: typeof milestoneHits;
   oauthState: typeof oauthState;
+  previewLimit: typeof previewLimit;
   pushFanout: typeof pushFanout;
   rateLimit: typeof rateLimit;
   refreshChannelsAction: typeof refreshChannelsAction;
