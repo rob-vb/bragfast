@@ -113,7 +113,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser sees a feed row for every trigger event in dev.
 - Deps: S2.1.
 
-### S2.4 — Retro PR rendering on signup · M
+### S2.4 — Retro PR rendering on signup · M [x] 2026-04-30
 - Goal: After GitHub App install + repo pick, fetch most-recent merged PR for that repo, run full pipeline (Layer 1 filter → composeCopy → confidence → draft + render with sample brand). Result available when wizard hits dashboard step.
 - Acceptance: agent-browser signs up + installs → dashboard load shows pre-rendered draft.
 - Deps: S2.1, S2.2, S0.6.

@@ -14,6 +14,28 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 15 — S2.4 — retro PR rendering on signup
+
+**Attempted:**
+- New `src/lib/github/retro-pr.ts`: `fetchLatestMergedPr(installationId, repoFullName)` hits `GET /repos/{repo}` to read the default branch, then `GET /repos/{repo}/pulls?state=closed&base=<default>&sort=updated&direction=desc&per_page=20` and returns the first `merged_at != null` entry. Returns `null` cleanly on any non-OK response.
+- `runRetroPrMergeDraft(...)`: same pipeline as the live webhook (Layer 1 filter → composeCopyByPlatform → confidence → idempotent insert + trigger event). Uses the same milestoneKey/idempotencyKey shape as live, so re-running is a true no-op. Tags events with `triggerType: "pr_merged_retro"` + `metadata.retro: true` so the feed can distinguish retro from live.
+- Wired into `PUT /api/github/configs`: detects the `notifyOnPrMerge: false → true` transition (reads prior config first), then schedules `runRetroPrMergeDraft` via `after()` so the API response stays fast. Fires once per opt-in transition; idempotency guards repeat opt-ins.
+
+**Verified by agent-browser:** Pending — flow is signup → install GitHub App → enable a repo → dashboard load. Trigger event will land in `/admin/sous-chef/history` with `triggerType="pr_merged_retro"`. Live verification deferred to QA pass once dev env is reachable.
+
+**Tests:** 5 new tests in `src/lib/github/__tests__/retro-pr.test.ts` covering happy path (picks first merged in updated-desc list), repo-lookup failure, no-merged-PRs, listing failure, and default-branch query parameter. Mocks global fetch + `getInstallationToken`. Pipeline composition is covered transitively by the existing webhook/composeCopy tests.
+
+**Deferred / why:**
+- Render trigger: retro draft is inserted but no image render is auto-fired yet. Render still happens lazily when user opens the draft / approves. Per session goal phrasing ("pre-rendered draft"), a follow-up could schedule the cook pipeline immediately. Folded into S2.6 (preview pipeline) where render-on-demand is already the design.
+- Sample brand fallback: PRD calls for "render with sample brand" if user hasn't created one yet. Current pipeline falls back to template colors via `resolveBrand` already; a dedicated "sample brand" presentation will land alongside onboarding wizard work in Phase 3.
+- Org-pending detection (S2.5) still queued.
+
+**Open questions for user:** none new.
+
+**Next session start:** S2.5 — Org-pending detection on install.
+
+---
+
 ## 2026-04-30 — Session 14 — S2.3 — skipped-PR history storage
 
 **Attempted:**
