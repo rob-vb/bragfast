@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { PixelCard } from "./pixel-card";
 import { PixelButton } from "./pixel-button";
 
@@ -9,9 +9,12 @@ type Props = {
 };
 
 export function OrgPendingBanner({ appSlug }: Props) {
-  const searchParams = useSearchParams();
-  const state = searchParams.get("install_state");
-  if (state !== "pending") return null;
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setPending(params.get("install_state") === "pending");
+  }, []);
+  if (!pending) return null;
 
   const installUrl = `https://github.com/apps/${appSlug}/installations/new`;
 
