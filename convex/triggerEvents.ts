@@ -161,6 +161,58 @@ export const overrideAutoSkippedEvent = mutation({
 });
 
 /**
+ * S9.2: aggregate a user's trigger events for a calendar year. Powers
+ * year-end recap rollups; no UI yet. Returns counts per decision +
+ * approved-by-source breakdown + top sourceReferences.
+ */
+export const aggregateForYear = query({
+  args: { year: v.number() },
+  handler: async (ctx, { year }) => {
+    const userId = await requireAuthedUser(ctx);
+    const start = `${year}-01-01T00:00:00.000Z`;
+    const end = `${year + 1}-01-01T00:00:00.000Z`;
+    const rows = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const inYear = rows.filter(
+      (r) => r.created_at >= start && r.created_at < end,
+    );
+
+    const byDecision: Record<string, number> = {};
+    const approvedBySource: Record<string, number> = {};
+    const refCounts = new Map<string, number>();
+
+    for (const r of inYear) {
+      byDecision[r.decision] = (byDecision[r.decision] ?? 0) + 1;
+      if (r.decision === "approved") {
+        approvedBySource[r.sourceSystem] =
+          (approvedBySource[r.sourceSystem] ?? 0) + 1;
+        if (r.sourceReference) {
+          refCounts.set(
+            r.sourceReference,
+            (refCounts.get(r.sourceReference) ?? 0) + 1,
+          );
+        }
+      }
+    }
+
+    const topReferences = [...refCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([reference, count]) => ({ reference, count }));
+
+    return {
+      year,
+      total: inYear.length,
+      byDecision,
+      approvedBySource,
+      topReferences,
+    };
+  },
+});
+
+/**
  * Authed list for the /admin/sous-chef/history feed. Newest first. Founder
  * scale: scans the user's index and sorts in JS.
  */

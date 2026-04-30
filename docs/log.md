@@ -14,6 +14,36 @@ Template:
 
 ---
 
+## 2026-04-30 — Session — Phases 7–11 batch (autonomous)
+
+**Attempted:** ship what's clean, defer what's not, audit launch readiness.
+
+**Shipped:**
+- S7.3 server-enforcement — confirmed already done in `convex/draftPushes.ts:172-261` (format/platform/video gating returns typed errors with `upgradeTier`). UI pre-disable layer marked PARTIAL deferred — server is source of truth.
+- S8.2 schema — `userProfiles.voicePreset` field, validated `getVoicePreset`/`setVoicePreset` mutations, `VOICE_PRESET_GUIDE` + `voicePresetLine()` helper in `src/lib/drafts/compose-copy.ts`. Settings UI + Haiku prompt wiring deferred.
+- S9.2 query — `convex/triggerEvents.ts:aggregateForYear({year})` returns `{year, total, byDecision, approvedBySource, topReferences}`; ISO range scan; authed via `requireAuthedUser`.
+- S11.2 audit — `docs/launch-readiness.md` covers every PRD §14 box with ✅/🟡/⏭️ status + evidence paths. Surfaces 4 blockers (Q1 Stripe IDs, S7.1, GH App scope, demo video) + acceptable degradations.
+
+**Deferred (with rationale in sessions.md):**
+- S7.1 — auto-cook on approve. Requires DraftConfig→ReleaseRequest adapter + cross-process render orchestration. Current fallback fails with helpful "cook before approving" message.
+- S7.2 — clipboard destination. Depends on S7.1.
+- S8.1 — edit-delta capture. Mid-sized refactor of approve modal + analytics layer.
+- S8.3 — few-shot. Depends on S8.1.
+- S8.4 — voice settings UI. Depends on S8.3.
+- S9.1 — weekly digest. Cron + email infra not in scope for autonomous batch.
+- S10.1 — 14-event audit. Mechanical end-to-end browser pass needed.
+- S10.2/S10.3 — PostHog console UI; cannot run autonomously.
+- S11.1 — soft launch (real users); cannot run autonomously.
+- S11.3 — merge to main + deploy; explicit user go-ahead required.
+
+**Open questions for user:**
+- Q1 (Phase 4) Stripe price-ID strategy still unresolved — surfaces as launch blocker in `docs/launch-readiness.md`.
+- Whether S7.1 is a launch blocker or post-launch work — depends on whether MCP/agent approval path is in scope for this launch.
+
+**Next session start:** S7.1 (after Q1 + S7.1-vs-defer decision) OR direct to S11.3 merge if user accepts current state.
+
+---
+
 ## 2026-04-30 — Session 33 — S5.2 — Goal hero card on dashboard
 
 **Attempted:**

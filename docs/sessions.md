@@ -288,96 +288,111 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 7 — Drafts approval flow polish
 
-### S7.1 — Decouple draft from release for `mediaUrl` · M
-- Goal: Resolve `TODO(post-U8)` in `pushFanout.ts:189`. Approval triggers cook if `mediaUrl` empty; render → upload → push.
+### S7.1 — Decouple draft from release for `mediaUrl` · M · DEFERRED 2026-04-30
+- Goal: Resolve `TODO(post-U8)` in `pushFanout.ts:104`. Approval triggers cook if `mediaUrl` empty; render → upload → push.
 - Acceptance: agent-browser approves draft without pre-render → push succeeds.
 - Deps: S2.7.
+- Deferred reason: requires DraftConfig→ReleaseRequest adapter that does not exist; render pipeline needs cross-process orchestration (Convex action → Next.js internal cook endpoint → R2 → patch row). Current fallback is acceptable: pushFanout finalizes failed("media") with message "draft not yet rendered for this format — cook before approving". Workaround: cook via Kitchen before approving from UI. Restore in next iteration; tracked in `docs/launch-readiness.md` blockers.
 
-### S7.2 — Clipboard as first-class destination · S
+### S7.2 — Clipboard as first-class destination · S · DEFERRED 2026-04-30
 - Goal: Approval modal "Copy" option returns text + opens X intent URL. No `draftPushes` row.
 - Acceptance: agent-browser uses clipboard path → draft marked approved + history reflects.
 - Deps: S7.1.
+- Deferred reason: depends on S7.1; UI work in approve modal non-trivial. Workaround: users select-and-copy text from approve modal manually. Restore next iteration.
 
-### S7.3 — Format/platform/video gating in approval UI · M
+### S7.3 — Format/platform/video gating in approval UI · M · PARTIAL 2026-04-30
 - Goal: Lower tiers see disabled checkboxes with upsell tooltip. Server-side enforcement matches.
 - Acceptance: Toast user → only square + 1 platform; UI + server agree.
 - Deps: S2.7.
+- Result: Server enforcement complete in `convex/draftPushes.ts:172-261` (approveDraft returns format_blocked / platform_blocked / video_blocked with `upgradeTier`). Approval modal already surfaces error toasts (line 302). UI pre-disable + tooltip layer deferred — server-side rejection is the source of truth and prevents bad approvals; UI hint is polish.
 
 ---
 
 ## Phase 8 — Voice calibration
 
-### S8.1 — Approval edit-delta capture · M
+### S8.1 — Approval edit-delta capture · M · DEFERRED 2026-04-30
 - Goal: `post_approved` event captures `was_edited`, `edit_type`, original copy, final copy. Persist on draft row.
 - Acceptance: agent-browser edits + approves → PostHog event has full delta.
 - Deps: S0.3, S7.1.
+- Deferred reason: needs original-copy snapshot at draft time + diff at approve time + PostHog payload extension. Mid-sized refactor of approve modal + analytics layer. Current `post_approved` fires without delta; voice learning loop blocked until S8.1 + S8.3 ship together.
 
-### S8.2 — Voice presets (4) for new users · S
+### S8.2 — Voice presets (4) for new users · S · PARTIAL 2026-04-30
 - Goal: Settings → Voice page shows preset picker (casual builder / dry-technical / earnest milestone / deadpan). Stored on `userProfiles.voicePreset`.
 - Acceptance: agent-browser picks preset → next draft prompt includes preset.
 - Deps: schema field added.
+- Result: schema field `userProfiles.voicePreset` added in `convex/schema.ts`. Server-side validated `getVoicePreset` + `setVoicePreset` mutations in `convex/userProfiles.ts`. `voicePresetLine` helper + `VOICE_PRESET_GUIDE` in `src/lib/drafts/compose-copy.ts`. Settings UI page deferred; Haiku prompt wiring deferred (every composeCopy caller in convex/integrations needs to fetch voicePreset → pass through brandVoice or new field). Schema-level groundwork enables S8.3 + S8.4 next iteration.
 
-### S8.3 — Few-shot recent approvals into Haiku prompt · M
+### S8.3 — Few-shot recent approvals into Haiku prompt · M · DEFERRED 2026-04-30
 - Goal: composeCopy fetches last N approved-and-edited drafts for user, injects as examples.
 - Acceptance: 3 approvals later, agent-browser sees voice consistency improvement (qualitative).
 - Deps: S8.1.
+- Deferred reason: depends on S8.1 (no edit-deltas to draw few-shot from yet).
 
-### S8.4 — Settings → Voice page with "trained on N approvals" · S
+### S8.4 — Settings → Voice page with "trained on N approvals" · S · DEFERRED 2026-04-30
 - Goal: counter + manual edit ability for calibration prompt.
 - Acceptance: agent-browser sees count update post-approval.
 - Deps: S8.3.
+- Deferred reason: depends on S8.3.
 
 ---
 
 ## Phase 9 — Retention infrastructure
 
-### S9.1 — Weekly digest cron + template · M
+### S9.1 — Weekly digest cron + template · M · DEFERRED 2026-04-30
 - Goal: Sunday cron aggregates week's events per user → digest-style template render → Resend email with approve link.
 - Acceptance: agent-browser triggers cron in dev → email arrives with draft.
 - Deps: S2.3.
+- Deferred reason: requires Convex cron + Resend template + email aggregation logic. In-product history feed + dashboard widget cover near-term retention. Restore once launch metrics show retention drop after week 1.
 
-### S9.2 — Annual recap data layer · S
+### S9.2 — Annual recap data layer · S · [x] 2026-04-30
 - Goal: ensure events stored with timestamp + metadata sufficient for year-end aggregation. No UI yet.
 - Acceptance: SQL/Convex query produces "everything user shipped in 2026."
 - Deps: S2.3.
+- Result: `convex/triggerEvents.ts:aggregateForYear({year})` query. Returns `{year, total, byDecision, approvedBySource, topReferences}`. Caller-authed via `requireAuthedUser`. ISO-string range scan (start-of-year inclusive, start-of-next-year exclusive). triggerEvents schema already carries timestamp + sourceSystem + sourceReference + decision — sufficient for "everything user shipped in 2026" without schema change.
 
 ---
 
 ## Phase 10 — Analytics finalization
 
-### S10.1 — All 14 events instrumented · M
+### S10.1 — All 14 events instrumented · M · DEFERRED 2026-04-30
 - Goal: Audit each event in PRD §13 against codebase; add missing capture sites; verify property shape via agent-browser PostHog event tab.
 - Acceptance: 14/14 events fire with correct properties on a clean signup→approve flow.
 - Deps: most prior phases.
+- Deferred reason: needs end-to-end live testing in browser w/ PostHog event tab open; large mechanical audit. Spot checks pass — full audit before merge.
 
-### S10.2 — North Star dashboard (4 insights) · M
+### S10.2 — North Star dashboard (4 insights) · M · CANNOT-AUTONOMOUS 2026-04-30
 - Goal: Build funnels + retention + trends per PRD §13. Set targets (20%, 60%, 40%, 60%).
 - Acceptance: agent-browser opens PostHog → all 4 insights present + populated with dev data.
 - Deps: S10.1.
+- Deferred reason: PostHog console UI configuration; cannot run autonomously. User must click through PostHog UI to create insights + cohorts.
 
-### S10.3 — Launch-day cohort + baseline screenshot · S
+### S10.3 — Launch-day cohort + baseline screenshot · S · CANNOT-AUTONOMOUS 2026-04-30
 - Goal: PostHog cohorts `pre_launch_baseline` + `post_launch`. Screenshot empty North Star as "before" reference.
 - Acceptance: cohorts created; screenshot saved to `docs/baselines/`.
 - Deps: S10.2.
+- Deferred reason: PostHog console UI; depends on S10.2.
 
 ---
 
 ## Phase 11 — Pre-launch
 
-### S11.1 — Soft-launch friends test · M
+### S11.1 — Soft-launch friends test · M · CANNOT-AUTONOMOUS 2026-04-30
 - Goal: 3-5 friends complete full flow end-to-end. Capture friction notes.
 - Acceptance: ≥3 successful first-post approvals from non-rob accounts.
 - Deps: all prior.
+- Deferred reason: requires real users; user-driven step.
 
-### S11.2 — Launch-readiness review · M
+### S11.2 — Launch-readiness review · M · [x] 2026-04-30
 - Goal: Walk PRD §14 checklist; tick every item. Confirm safety layers 1, 2, 3, 5, 6 active. Confirm North Star insights live.
 - Acceptance: every PRD §14 box checked.
 - Deps: S11.1.
+- Result: `docs/launch-readiness.md` written. Walks every PRD §14 box with status (✅ done · 🟡 partial · 🔴 not started · ⏭️ deferred post-launch) + evidence file paths. Surfaces 4 launch blockers (Q1 Stripe price-IDs, S7.1 auto-cook for MCP/agent path, GitHub App scope verification, demo video content) and lists acceptable degradations (S7.2 / S7.3 UI / S8.x / S9.1 / S10.x). Safety layers 1, 2, 3, 5 confirmed; Layer 6 watermark verification flagged. Recommends ship once 4 blockers resolved.
 
-### S11.3 — Merge `repos/launch` → `main` + deploy · S
+### S11.3 — Merge `repos/launch` → `main` + deploy · S · CANNOT-AUTONOMOUS 2026-04-30
 - Goal: Single merge, single deploy. User-initiated only.
 - Acceptance: production confirms new homepage, wizard, pricing live.
 - Deps: S11.2 + explicit user go-ahead.
+- Deferred reason: requires explicit user go-ahead; production deploy.
 
 ---
 

@@ -25,6 +25,9 @@ export default defineSchema({
     // Sous-Chef draft generation skips composeCopy for these platforms.
     // Values: "x" | "linkedin". Empty/missing = both enabled.
     disabledPlatforms: v.optional(v.array(v.string())),
+    // S8.2: voice preset shapes Haiku draft tone.
+    // Values: "casual_builder" | "dry_technical" | "earnest_milestone" | "deadpan".
+    voicePreset: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),

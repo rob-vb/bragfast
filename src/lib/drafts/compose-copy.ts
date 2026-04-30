@@ -85,6 +85,28 @@ function brandLine(input: { brandName?: string; brandVoice?: string }): string {
   return parts.join("\n");
 }
 
+// S8.2: voice presets shape Haiku tone when no explicit brandVoice override.
+export type VoicePreset =
+  | "casual_builder"
+  | "dry_technical"
+  | "earnest_milestone"
+  | "deadpan";
+
+const VOICE_PRESET_GUIDE: Record<VoicePreset, string> = {
+  casual_builder:
+    "Tone: casual indie maker. First person, light humor, no corporate polish.",
+  dry_technical:
+    "Tone: dry and technical. State the change plainly, no exclamation, no celebration.",
+  earnest_milestone:
+    "Tone: earnest milestone. Sincere, brief gratitude, no false modesty.",
+  deadpan:
+    "Tone: deadpan. Minimal, slightly understated, factual. No emojis, no hype.",
+};
+
+export function voicePresetLine(preset: VoicePreset | null | undefined): string {
+  return preset ? VOICE_PRESET_GUIDE[preset] : "";
+}
+
 const PLATFORM_GUIDE: Record<Platform, string> = {
   x: `Target platform: X (Twitter). Description should read like a tweet — punchy, conversational, no hashtags, fits in ~220 chars. Title doubles as the post hook.`,
   linkedin: `Target platform: LinkedIn. Description should read like a short LinkedIn post — slightly more reflective, can mention the journey or thanks, but still concise (1–2 short sentences, no hashtags, no buzzwords).`,

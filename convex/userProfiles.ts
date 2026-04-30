@@ -145,6 +145,39 @@ export const setDisabledPlatforms = mutation({
   },
 });
 
+// S8.2: voice preset shapes Haiku draft tone. 4 presets only, validated server-side.
+const VOICE_PRESETS = new Set([
+  "casual_builder",
+  "dry_technical",
+  "earnest_milestone",
+  "deadpan",
+]);
+
+export const getVoicePreset = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    return profile?.voicePreset ?? null;
+  },
+});
+
+export const setVoicePreset = mutation({
+  args: { userId: v.string(), preset: v.string() },
+  handler: async (ctx, { userId, preset }) => {
+    if (!VOICE_PRESETS.has(preset)) throw new Error("invalid_preset");
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) throw new Error("User profile not found");
+    await ctx.db.patch(profile._id, { voicePreset: preset });
+    return preset;
+  },
+});
+
 // S2.7: idempotent one-shot backfill. Map legacy plans → new tiers + seed counter.
 // Run manually from Convex dashboard at launch (after flag flip).
 // Skip rows already on new accounting (postsRemainingThisMonth or postsLifetime set).
