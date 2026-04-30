@@ -52,6 +52,43 @@ S0.4a.4 was scoped to extend the same discipline to the 10 MIXED RISKY functions
 
 ---
 
+## 2026-04-30 — Migration plan for grandfathered users (S4.3)
+
+**Context:** S2.7 introduced new tiers (`free` / `toast` / `plate` / `buffet`) with posts/month accounting + format/platform/video gating. Existing users sit on legacy plans (`trial` / `starter` / `pro` / `scale`) with credits-based accounting. Need a grandfathering policy that lets the new model ship without disrupting paying customers or refunding/double-billing.
+
+**Options considered:**
+1. **Hard cutover** — flip everyone to new tiers on launch day, prorate Stripe, seed posts counter, retire credits. Simplest mental model, but: (a) some legacy `pro` ($X/mo for 800 credits ≈ ~250 posts of one-image work) would land on `plate` (100 posts/mo) and feel downgraded; (b) one-shot DB migration risks one-off data loss with no easy revert.
+2. **Permanent dual-track** — leave legacy users on credits forever; new signups only on tiers. Zero migration risk; permanent code-path duplication. Two billing models, two metering systems, two upsell flows. Tax compounds.
+3. **Soft grandfather + opt-in migration** — leave legacy users on credits + legacy plan literals (`trial` / `starter` / `pro` / `scale`). All new accounting code branches on `tierFor(plan)` returning `null` for legacy → falls through to existing credit deduction. New signups go straight to `free` / `toast` / `plate` / `buffet`. Provide an "Upgrade to new plan" path on `/admin/account/upgrade` (already shipped in S4.1) that flips them when they next change plan. Existing Stripe subs keep current price; `priceToPlan()` mapping still works. When a legacy paying user's invoice renews, webhook continues to set `plan: "starter" | "pro" | "scale"`. Migration is voluntary at billing event.
+
+**Decision:** Option 3.
+
+**Mapping (when migration happens):**
+- `trial` → `free` (30 posts lifetime; legacy trial was 30 free credits — equivalent floor).
+- `starter` → `toast` (30 posts/month; legacy starter was 200 credits/mo — fewer posts but unlocks goals + history retention floor).
+- `pro` → `plate` (100 posts/month; legacy pro was 800 credits/mo — quantitatively similar approval count once one credit ≈ one post on the new model).
+- `scale` → `buffet` (500 posts/month; legacy scale was 5000 credits/mo).
+
+**Mechanics:**
+- Schema: legacy `creditsRemaining` field retained on `userProfiles` for `/api/v1/cook` legacy routes (R8). New fields `postsRemainingThisMonth` / `postsLifetime` are optional; only populated post-migration.
+- Code: `tierFor(plan)` returns `null` for legacy plans → all gating + counter logic branches on this and falls back to credits. Tested in `convex/__tests__/draft-pushes-tier.test.ts`.
+- Routing: tier-aware code paths (drafts approval, dashboard meter, sources cap, format/video gates) bypass for legacy. Legacy users keep credits meter on dashboard.
+- Stripe: env-mapped price IDs include both `STRIPE_{STARTER,PRO,SCALE}_PRICE_ID` (legacy) and `STRIPE_{TOAST,PLATE,BUFFET}_PRICE_ID` (new). Webhook routes to whichever plan literal matches the price.
+- Migration trigger: user-initiated only. Visiting `/admin/account/upgrade` shows new-tier cards with "Current Plan" badge resolved through `LEGACY_TO_NEW` map (`trial→free`, `starter→toast`, `pro→plate`, `scale→buffet`). When the user picks a new tier, Stripe checkout switches them to the matching new price; webhook writes the new plan literal + seeds `postsRemainingThisMonth`. The `backfillToNewAccounting` internalMutation in `convex/userProfiles.ts` exists for an admin-triggered bulk pass once organic migration tapers.
+- No automatic forced migration. No refunds. No retroactive accounting changes for past months.
+
+**Rationale:** Soft grandfather lets us ship the new model without forcing churn-risk on every paying user, lets each user pick their own moment, keeps the legacy code path alive only as long as legacy users exist, and avoids customer-support headaches from Stripe proration + counter-seeding edge cases. Cost is one extra branch (`if (tier)`) at every gating point; that branch already exists everywhere it matters because S2.7 was built tier-aware from day one.
+
+**Rollback:** legacy plans never had their counters seeded, so flipping `LAUNCH_MODE` off restores the original surface for them. New signups on `free` / `toast` / `plate` / `buffet` would need a manual write-back to `trial` (no production users yet). No DDL changes; all new fields are optional on schema.
+
+**Open follow-ups:**
+- Communications: when the new model is live, send a one-time "what's changing for you (nothing yet)" email to legacy paying users with a link to the upgrade page. Out of scope for this decision.
+- Force-migration deadline: re-evaluate 90 days post-launch. If <10% of legacy users have voluntarily moved, schedule a forced sweep with 30-day notice. Tracked as a future session, not committed here.
+
+**PRD impact:** clarifies §14 phase 2 — legacy users keep credits accounting indefinitely until they self-upgrade; no hard cutover. PRD §pricing pricing rewrite stays accurate for new signups.
+
+---
+
 ## 2026-04-30 — GitHub App scope guidance is user-side, not enforced (S0.5)
 
 **Context:** PRD §safety Layer 5 calls for a "select repositories" default install scope. PRD §sessions S0.5 acceptance asks the install screen pre-select "Only select repositories." Investigated whether GitHub's `https://github.com/apps/{slug}/installations/new` endpoint accepts a parameter that pre-selects scoped install.
