@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 33 — S5.2 — Goal hero card on dashboard
+
+**Attempted:**
+- New `src/components/admin/goal-hero-card.tsx` reads `api.goals.listByUser`, picks primary goal (first enabled+not-fired, fallback first enabled, fallback first), renders heading (label or metric+scope), formatted target ($X for revenue metrics, count otherwise), source label, days-since-set, "N more" link to `/admin/sous-chef` when multi-goal, and the automation copy "brag.fast will post automatically when you hit this." Hit state swaps copy to past-tense + bg=gold; recurring hits surface re-fire copy.
+- `src/components/admin/dashboard-client.tsx`: hero gated on `isLaunchModeRepositioned()`, rendered above the posts/credits meter. Empty-state CTA links to `/admin/sous-chef` to set first goal.
+- Loading state matches existing skeleton pattern (animate-pixel-skeleton h-32).
+
+**Verified by agent-browser:** Logged in as `hi+test@robvb.com` → `/admin` snapshot shows "ACTIVE GOAL · Custom" header, heading "100 mailing-list subs", "100 target", "Set today", "2 more" link, automation copy. Hero renders above legacy credits meter (test user is grandfathered on "pro" tier → tierFor=null, falls back to credits meter — expected).
+
+**Deferred / why:**
+- "Current" live progress: scanners don't cache per-goal current values yet. Hero shows target + status only. Adding live current means either a new `goals.currentValue` field updated by scanners (write amplification) or query-time fetch from each provider (fan-out latency). Picking the right approach belongs in a separate session — out of scope for hero card MVP.
+- Progress bar visualization deferred until current value lands.
+- S5.4 (Toast 1-goal cap) + S5.5 (celebration modal) are separate sessions.
+
+**Open questions for user:** none.
+
+**Next session start:** S4.2 (source-cap upsells), S4.3 (migration plan write-up), S5.4 (Toast goal cap), or S6.x dashboard rebuild. User pick.
+
+---
+
 ## 2026-04-30 — Session 32 — S4.1 — Pricing page rewrite (outcome-denominated)
 
 **Attempted:**

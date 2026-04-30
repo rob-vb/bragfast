@@ -12,6 +12,8 @@ import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { RetroDraftHero } from "@/components/admin/retro-draft-hero";
+import { GoalHeroCard } from "@/components/admin/goal-hero-card";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import Link from "next/link";
 
 export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boolean }) {
@@ -67,6 +69,9 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
       </h1>
 
       {showRetroHero && <RetroDraftHero />}
+
+      {/* S5.2: goal hero card (launch-mode only) */}
+      {isLaunchModeRepositioned() && <GoalHeroCard userId={userId} />}
 
       {/* Posts meter (new tier) or credits meter (legacy) */}
       {newTierMeter ? (
