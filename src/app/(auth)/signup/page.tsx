@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import posthog from "posthog-js";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SocialButtons } from "../components/social-buttons";
@@ -47,6 +48,12 @@ export default function SignupPage() {
       setError(error.message ?? "Something went wrong");
       return;
     }
+
+    // signup_source will be updated to 'preview' once the preview flow (S3.1) ships.
+    posthog.capture("signup_completed", {
+      signup_source: "direct",
+      came_from_preview: false,
+    });
 
     router.push("/admin");
   }
