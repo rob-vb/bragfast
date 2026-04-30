@@ -103,6 +103,33 @@ export const getStats = query({
   },
 });
 
+// Sous-Chef: read per-user disabled-platform set. Missing/empty = both X and LinkedIn enabled.
+export const getDisabledPlatforms = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    return (profile?.disabledPlatforms ?? []) as string[];
+  },
+});
+
+export const setDisabledPlatforms = mutation({
+  args: { userId: v.string(), platforms: v.array(v.string()) },
+  handler: async (ctx, { userId, platforms }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) throw new Error("User profile not found");
+    const allowed = new Set(["x", "linkedin"]);
+    const cleaned = [...new Set(platforms.filter((p) => allowed.has(p)))];
+    await ctx.db.patch(profile._id, { disabledPlatforms: cleaned });
+    return cleaned;
+  },
+});
+
 // Refund credits on render failure.
 export const refund = mutation({
   args: { userId: v.string(), amount: v.number() },

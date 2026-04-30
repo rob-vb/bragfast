@@ -322,3 +322,100 @@ describe("approveDraft — fanout scheduling", () => {
     vi.useRealTimers();
   });
 });
+
+describe("approveDraft — copyByPlatform routing", () => {
+  it("uses X copy for Buffer twitter channel and LinkedIn copy for Buffer linkedin channel", async () => {
+    const { t, asUser } = setupT();
+    await seedIntegration(t, "buffer", BUFFER_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "FALLBACK T",
+      description: "FALLBACK D",
+      copyByPlatform: {
+        x: { title: "X title", description: "X desc" },
+        linkedin: { title: "LI title", description: "LI desc" },
+      },
+      selections: [
+        { format: "landscape", provider: "buffer", channelId: "ch_buf_1" },
+        { format: "landscape", provider: "buffer", channelId: "ch_buf_2" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-platform-0001",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.pushIds).toHaveLength(2);
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    const xRow = rows.find((r) => r.channelId === "ch_buf_1");
+    const liRow = rows.find((r) => r.channelId === "ch_buf_2");
+    expect(xRow?.title).toBe("X title");
+    expect(xRow?.description).toBe("X desc");
+    expect(liRow?.title).toBe("LI title");
+    expect(liRow?.description).toBe("LI desc");
+  });
+
+  it("falls back to top-level title/description when channel platform is unmapped", async () => {
+    const { t, asUser } = setupT();
+    await seedIntegration(t, "postiz", POSTIZ_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "Generic T",
+      description: "Generic D",
+      copyByPlatform: {
+        x: { title: "X title", description: "X desc" },
+        linkedin: { title: "LI title", description: "LI desc" },
+      },
+      selections: [
+        { format: "square", provider: "postiz", channelId: "ch_ptz_1" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-platform-0002",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("Generic T");
+    expect(rows[0].description).toBe("Generic D");
+  });
+
+  it("uses top-level copy when copyByPlatform is omitted", async () => {
+    const { t, asUser } = setupT();
+    await seedIntegration(t, "buffer", BUFFER_EXTRA);
+
+    await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "Plain T",
+      description: "Plain D",
+      selections: [
+        { format: "landscape", provider: "buffer", channelId: "ch_buf_1" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-platform-0003",
+    });
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("Plain T");
+    expect(rows[0].description).toBe("Plain D");
+  });
+});

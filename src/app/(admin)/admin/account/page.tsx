@@ -6,6 +6,7 @@ import { PixelCard } from "@/components/admin/pixel-card";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
 import { ManageBillingButton } from "./manage-billing-button";
+import { PlatformPreferences } from "@/components/admin/platform-preferences";
 import Link from "next/link";
 
 function CreditBar({ remaining, total }: { remaining: number; total: number }) {
@@ -110,7 +111,12 @@ export default async function AccountPage() {
         </div>
       </PixelCard>
 
-      {/* Card 2 — Danger Zone */}
+      {/* Card 2 — Sous-Chef preferences */}
+      <PixelCard>
+        <PlatformPreferences userId={user._id} />
+      </PixelCard>
+
+      {/* Card 3 — Danger Zone */}
       <div className="border-2 border-red-700 bg-red-50/80 p-5 shadow-[4px_4px_0_var(--color-brand)]">
         <h2 className="font-[family-name:var(--font-press-start)] text-sm text-red-700 mb-2">
           Danger Zone

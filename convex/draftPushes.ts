@@ -43,6 +43,34 @@ interface PostizExtra {
   channels?: Array<{ id: string; identifier?: string; name?: string }>;
 }
 
+type Platform = "x" | "linkedin";
+
+/**
+ * Map a (provider, channelId) → platform copy bucket. Buffer's `service`
+ * ("twitter" | "linkedin" | ...) and Postiz's `identifier` ("x" | "linkedin")
+ * are the source of truth. Returns null if the channel isn't an X/LinkedIn
+ * surface — caller falls back to top-level title/description.
+ */
+function platformForChannel(
+  provider: "buffer" | "postiz",
+  channelId: string,
+  bufferExtra: BufferExtra | null,
+  postizExtra: PostizExtra | null,
+): Platform | null {
+  if (provider === "buffer") {
+    const ch = bufferExtra?.channels?.find((c) => c.id === channelId);
+    const svc = ch?.service?.toLowerCase();
+    if (svc === "twitter" || svc === "x") return "x";
+    if (svc === "linkedin") return "linkedin";
+    return null;
+  }
+  const ch = postizExtra?.channels?.find((c) => c.id === channelId);
+  const id = ch?.identifier?.toLowerCase();
+  if (id === "x" || id === "twitter") return "x";
+  if (id === "linkedin") return "linkedin";
+  return null;
+}
+
 function channelLabelFromBuffer(
   extra: BufferExtra,
   channelId: string,
@@ -75,6 +103,16 @@ export const approveDraft = mutation({
     draftId: v.string(),
     title: v.string(),
     description: v.string(),
+    copyByPlatform: v.optional(
+      v.object({
+        x: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        linkedin: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+      }),
+    ),
     selections: v.array(
       v.object({
         format: formatValidator,
@@ -87,7 +125,7 @@ export const approveDraft = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthedUser(ctx);
-    const { draftId, title, description, selections, postState, clientNonce } = args;
+    const { draftId, title, description, copyByPlatform, selections, postState, clientNonce } = args;
 
     // ── Validation: nothing selected ──────────────────────────────────────────
     if (selections.length === 0) {
@@ -178,6 +216,17 @@ export const approveDraft = mutation({
         continue;
       }
 
+      // Route per-platform copy when available; fall back to top-level title/description.
+      const platform = platformForChannel(
+        provider,
+        channelId,
+        bufferExtra,
+        postizExtra,
+      );
+      const platformCopy = platform ? copyByPlatform?.[platform] : undefined;
+      const rowTitle = platformCopy?.title ?? title;
+      const rowDescription = platformCopy?.description ?? description;
+
       const id = await ctx.db.insert("draftPushes", {
         draftId,
         userId,
@@ -188,8 +237,8 @@ export const approveDraft = mutation({
         state: "pending",
         postState,
         mediaUrl: "", // TBD: U8 resolves this during fanout
-        title,
-        description,
+        title: rowTitle,
+        description: rowDescription,
         attempts: 0,
         clientNonce,
         created_at: now,

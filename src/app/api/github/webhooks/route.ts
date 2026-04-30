@@ -7,7 +7,12 @@ import {
   buildPrMergeDraftInput,
   type GitHubPullRequestPayload,
 } from "@/lib/github/pr-merge";
-import { composeCopy, SUPPRESS_THRESHOLD } from "@/lib/drafts/compose-copy";
+import {
+  composeCopyByPlatform,
+  SUPPRESS_THRESHOLD,
+  PLATFORMS,
+  type Platform,
+} from "@/lib/drafts/compose-copy";
 import { pickTemplate } from "@/lib/drafts/pick-template";
 import type { DraftConfig } from "@/lib/drafts/types";
 import { scanContent } from "@/lib/safety/content-filter";
@@ -153,22 +158,31 @@ async function createPrMergeDraft(
 ) {
   try {
     const input = buildPrMergeDraftInput(payload, userId);
-    const [pick, copy] = await Promise.all([
+    const disabled = await convex.query(
+      api.userProfiles.getDisabledPlatforms,
+      { userId },
+    );
+    const enabledPlatforms: Platform[] = PLATFORMS.filter(
+      (p) => !disabled.includes(p),
+    );
+    const [pick, composed] = await Promise.all([
       pickTemplate(input.pickTemplateInput),
-      composeCopy(input.composeCopyInput),
+      composeCopyByPlatform(input.composeCopyInput, enabledPlatforms),
     ]);
+    const { copies, primary } = composed;
 
     const draftConfig: DraftConfig = {
       output: "image",
       templateId: pick.templateId,
       objectContent: {
-        title: { text: copy.title },
-        description: { text: copy.description },
+        title: { text: primary.title },
+        description: { text: primary.description },
       },
+      copyByPlatform: copies,
       notes: `Sous-Chef: PR #${input.prNumber} merged to ${payload.repository.default_branch} in ${input.repoFullName}`,
     };
 
-    const suppressed = copy.confidence < SUPPRESS_THRESHOLD;
+    const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
 
     await convex.action(api.drafts.insertDraftIfNewAction, {
       userId,
@@ -176,10 +190,10 @@ async function createPrMergeDraft(
       sourceSystem: "github",
       milestoneKey: input.milestoneKey,
       eventReference: input.eventReference,
-      name: copy.title,
+      name: primary.title,
       config: JSON.stringify(draftConfig),
       createdBy: "sous-chef",
-      confidence: copy.confidence,
+      confidence: primary.confidence,
       suppressed,
     });
 
@@ -189,11 +203,12 @@ async function createPrMergeDraft(
       properties: {
         trigger_type: "pr_merged",
         source_type: "github",
-        confidence_score: copy.confidence,
+        confidence_score: primary.confidence,
         was_suppressed: suppressed,
         has_visual_asset: true,
         formats_to_render: ["landscape"],
         video_requested: false,
+        platforms_generated: Object.keys(copies),
       },
     });
   } catch (err) {

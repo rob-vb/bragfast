@@ -103,7 +103,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser triggers a low-confidence simulated PR → history shows skipped entry; clicking override creates draft. PostHog `draft_generated{was_suppressed:true}` fires.
 - Deps: S0.3, S0.6.
 
-### S2.2 — Per-platform copy generation · M
+### S2.2 — Per-platform copy generation · M [x] 2026-04-30
 - Goal: Two Haiku calls per trigger (X + LinkedIn). Persist as two draft fields. Approval modal renders both. Per-user platform-disable in settings.
 - Acceptance: agent-browser approves a draft → both platform copies visible and editable.
 - Deps: S2.1.

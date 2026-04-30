@@ -188,6 +188,9 @@ export function CookPage({ templates }: CookPageProps) {
   const searchParams = useSearchParams();
   const draftParam = searchParams.get("draft");
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftCopyByPlatform, setDraftCopyByPlatform] = useState<
+    DraftConfig["copyByPlatform"] | undefined
+  >(undefined);
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftMissingTemplate, setDraftMissingTemplate] = useState<string | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -276,6 +279,7 @@ export function CookPage({ templates }: CookPageProps) {
         }
 
         setDraftId(draftParam);
+        setDraftCopyByPlatform(cfg.copyByPlatform);
       } catch (err) {
         console.error("Draft hydration failed", err);
         if (!cancelled) setDraftError("Failed to load draft.");
@@ -687,6 +691,7 @@ export function CookPage({ templates }: CookPageProps) {
             draftId={draftId}
             initialTitle={title}
             initialDescription={description}
+            initialCopyByPlatform={draftCopyByPlatform}
             draftFormats={draftFormats}
             routingRows={routingRows ?? []}
             integrations={integrations ?? []}

@@ -12,52 +12,60 @@ export type Copy = { title: string; description: string; confidence: number };
 
 export const SUPPRESS_THRESHOLD = 0.5;
 
+export type Platform = "x" | "linkedin";
+export const PLATFORMS: Platform[] = ["x", "linkedin"];
+export type CopyByPlatform = Partial<
+  Record<Platform, { title: string; description: string }>
+>;
+
+type PlatformOpt = { platform?: Platform };
+
 export type ComposeCopyInput =
-  | {
+  | ({
       type: "pr_merged";
       title: string;
       body: string;
       repoFullName: string;
       brandName?: string;
       brandVoice?: string;
-    }
-  | {
+    } & PlatformOpt)
+  | ({
       type: "mrr";
       threshold: number;
       brandName?: string;
       brandVoice?: string;
-    }
-  | {
+    } & PlatformOpt)
+  | ({
       type: "first_sale";
       brandName?: string;
       brandVoice?: string;
-    }
-  | {
+    } & PlatformOpt)
+  | ({
       type: "visitors";
       source: "posthog" | "ga4";
       threshold: number;
       brandName?: string;
       brandVoice?: string;
-    }
-  | {
+    } & PlatformOpt)
+  | ({
       type: "star";
       repoFullName: string;
       threshold: number;
       brandName?: string;
       brandVoice?: string;
-    }
-  | {
+    } & PlatformOpt)
+  | ({
       type: "total_revenue";
       threshold: number;
       brandName?: string;
       brandVoice?: string;
-    }
-  | {
+    } & PlatformOpt)
+  | ({
       type: "subscribers";
       threshold: number;
       brandName?: string;
       brandVoice?: string;
-    };
+    } & PlatformOpt);
 
 const CopySchema = z.object({
   title: z.string().transform((s) => s.slice(0, 80)),
@@ -75,6 +83,42 @@ function brandLine(input: { brandName?: string; brandVoice?: string }): string {
   if (input.brandName) parts.push(`Brand: ${input.brandName}`);
   if (input.brandVoice) parts.push(`Voice: ${input.brandVoice}`);
   return parts.join("\n");
+}
+
+const PLATFORM_GUIDE: Record<Platform, string> = {
+  x: `Target platform: X (Twitter). Description should read like a tweet — punchy, conversational, no hashtags, fits in ~220 chars. Title doubles as the post hook.`,
+  linkedin: `Target platform: LinkedIn. Description should read like a short LinkedIn post — slightly more reflective, can mention the journey or thanks, but still concise (1–2 short sentences, no hashtags, no buzzwords).`,
+};
+
+function platformLine(input: { platform?: Platform }): string {
+  return input.platform ? PLATFORM_GUIDE[input.platform] : "";
+}
+
+/**
+ * Compose copy for multiple platforms in parallel. Returns one Copy per
+ * requested platform. Confidence is assumed equal across platforms — the
+ * first platform's score is used as the canonical signal.
+ */
+export async function composeCopyByPlatform(
+  base: ComposeCopyInput,
+  platforms: Platform[],
+): Promise<{ copies: CopyByPlatform; primary: Copy; primaryPlatform: Platform | null }> {
+  if (platforms.length === 0) {
+    const primary = await composeCopy(base);
+    return { copies: {}, primary, primaryPlatform: null };
+  }
+  const results = await Promise.all(
+    platforms.map((p) => composeCopy({ ...base, platform: p })),
+  );
+  const copies: CopyByPlatform = {};
+  platforms.forEach((p, i) => {
+    copies[p] = { title: results[i].title, description: results[i].description };
+  });
+  return {
+    copies,
+    primary: results[0],
+    primaryPlatform: platforms[0],
+  };
 }
 
 const BASE_SYSTEM = `You write short, honest brag posts for indie makers.
@@ -132,6 +176,7 @@ If the PR contains one real feature plus cleanup/fixes, announce only the featur
 
   const user = `Repo: ${input.repoFullName}
 ${brandLine(input)}
+${platformLine(input)}
 PR title: ${input.title}
 PR body:
 ---
@@ -162,6 +207,7 @@ You celebrate a revenue milestone. The title should prominently feature the doll
 
   const user = `Milestone: ${amount} MRR
 ${brandLine(input)}
+${platformLine(input)}
 
 Write the brag post JSON.`;
 
@@ -186,6 +232,7 @@ You celebrate the first paying customer. Title should feel momentous but not che
 
   const user = `Milestone: first paying customer
 ${brandLine(input)}
+${platformLine(input)}
 
 Write the brag post JSON.`;
 
@@ -211,6 +258,7 @@ You celebrate a visitor/traffic milestone. Title leads with the number. Descript
 
   const user = `Milestone: ${n} visitors (rolling 30 days, via ${input.source})
 ${brandLine(input)}
+${platformLine(input)}
 
 Write the brag post JSON.`;
 
@@ -236,6 +284,7 @@ You celebrate a total revenue milestone. Title leads with the dollar amount. Des
 
   const user = `Milestone: ${amount} in total revenue
 ${brandLine(input)}
+${platformLine(input)}
 
 Write the brag post JSON.`;
 
@@ -257,6 +306,7 @@ You celebrate a paying subscriber milestone. Title leads with the number. Descri
 
   const user = `Milestone: ${n} paying subscribers
 ${brandLine(input)}
+${platformLine(input)}
 
 Write the brag post JSON.`;
 
@@ -278,6 +328,7 @@ You celebrate a GitHub star milestone. Title names the number and the repo. Desc
 
   const user = `Milestone: ${n} GitHub stars on ${input.repoFullName}
 ${brandLine(input)}
+${platformLine(input)}
 
 Write the brag post JSON.`;
 

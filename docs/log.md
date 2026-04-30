@@ -14,6 +14,33 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 13 — S2.2 — per-platform copy generation
+
+**Attempted:**
+- Extended `composeCopy` input with optional `platform: "x" | "linkedin"`; added per-platform tone guide injected into the user prompt.
+- New `composeCopyByPlatform(input, platforms)` helper runs Haiku in parallel per platform and returns `{ copies, primary, primaryPlatform }`. Empty `platforms` array still produces a single primary call so the visual copy is never missing.
+- `DraftConfig.copyByPlatform?: { x?, linkedin? }` carries per-platform variants alongside the canonical `objectContent.title/description` (which still feeds the image render).
+- `userProfiles.disabledPlatforms?: string[]` schema field + `getDisabledPlatforms` query + `setDisabledPlatforms` mutation (validates against `["x","linkedin"]`, dedupes).
+- PR-merge webhook reads disabled list, runs `composeCopyByPlatform` for the enabled set, persists both copies, picks primary copy as the visual title/description. PostHog `draft_generated` now carries `platforms_generated`.
+- `ApproveDraftModal` accepts `initialCopyByPlatform`; renders one editable Title+Description block per generated platform when present, otherwise falls back to the existing single block. Submission sends `copyByPlatform` to `approveDraft`.
+- `approveDraft` mutation accepts optional `copyByPlatform`; routes per-row title/description by mapping (provider, channelId) → platform via Buffer `service` ("twitter"/"linkedin") or Postiz `identifier` ("x"/"linkedin"). Unmapped channels fall back to the top-level title/description.
+- `cook-page.tsx` stashes `cfg.copyByPlatform` from the loaded draft and threads it into the modal.
+- New `PlatformPreferences` client component on `/admin/account` renders X / LinkedIn checkboxes wired to the Convex pref mutation.
+- Tests: 4 new compose-copy tests (platform guides, multi-platform helper), 3 new draftPushes tests (X/LI routing, fallback, omitted), 5 new userProfiles tests (read default, read field, write dedupe, write filters unknowns, throws when missing). 757 tests pass; typecheck clean; lint baseline unchanged (23 errors pre-existing).
+
+**Verified by agent-browser:** pending — needs end-to-end with a real PR-merge webhook that produces both copies and the modal showing both editable.
+
+**Deferred / why:**
+- Other Sous-Chef triggers (mrr, first_sale, visitors, star, total_revenue, subscribers) still call `composeCopy` directly without the platform helper. Routing them is a one-liner per call-site but is not part of S2.2 — folded into S2.3 unification.
+- Per-platform copy is only used at the post-routing layer; the image visual still uses `objectContent` (intentionally — visual title is platform-agnostic).
+- No retroactive backfill: existing drafts continue to render through the single-copy path until edited.
+
+**Open questions for user:** none new.
+
+**Next session start:** S2.3 — Skipped-PR history storage.
+
+---
+
 ## 2026-04-30 — Session 10 — S1.3 — pricing page MCP/credits purge
 
 **Attempted:**

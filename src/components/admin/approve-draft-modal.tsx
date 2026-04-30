@@ -57,12 +57,23 @@ interface IntegrationRow {
 
 // ── ApproveDraftModal props ────────────────────────────────────────────────────
 
+type Platform = "x" | "linkedin";
+
+const PLATFORM_LABELS: Record<Platform, string> = {
+  x: "X",
+  linkedin: "LinkedIn",
+};
+
 export interface ApproveDraftModalProps {
   draftId: string;
-  /** Pre-filled title from composed copy. User-editable. */
+  /** Pre-filled title from composed copy. User-editable. Used as fallback when no per-platform copy exists. */
   initialTitle: string;
-  /** Pre-filled description from composed copy. User-editable. */
+  /** Pre-filled description from composed copy. User-editable. Used as fallback. */
   initialDescription: string;
+  /** Per-platform copy from Sous-Chef (X + LinkedIn variants). When present, the modal renders one editable group per platform. */
+  initialCopyByPlatform?: Partial<
+    Record<Platform, { title: string; description: string }>
+  >;
   /** Formats present on this draft (from config.formats). */
   draftFormats: Format[];
   /** Current routing defaults for this user. */
@@ -154,6 +165,7 @@ export function ApproveDraftModal({
   draftId,
   initialTitle,
   initialDescription,
+  initialCopyByPlatform,
   draftFormats,
   routingRows,
   integrations,
@@ -195,6 +207,41 @@ export function ApproveDraftModal({
   const [postState, setPostState] = useState<"queue" | "draft">("queue");
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
+
+  // Per-platform copy state. When the draft was created with platform variants,
+  // each platform has its own editable title+description; otherwise these stay
+  // empty and the top-level title/description applies to all channels.
+  const platformsPresent: Platform[] = useMemo(() => {
+    const out: Platform[] = [];
+    if (initialCopyByPlatform?.x) out.push("x");
+    if (initialCopyByPlatform?.linkedin) out.push("linkedin");
+    return out;
+  }, [initialCopyByPlatform]);
+
+  const [copyByPlatform, setCopyByPlatform] = useState<
+    Partial<Record<Platform, { title: string; description: string }>>
+  >(() => {
+    const seed: Partial<Record<Platform, { title: string; description: string }>> = {};
+    if (initialCopyByPlatform?.x) seed.x = { ...initialCopyByPlatform.x };
+    if (initialCopyByPlatform?.linkedin)
+      seed.linkedin = { ...initialCopyByPlatform.linkedin };
+    return seed;
+  });
+
+  function updatePlatformCopy(
+    platform: Platform,
+    field: "title" | "description",
+    value: string,
+  ) {
+    setCopyByPlatform((prev) => ({
+      ...prev,
+      [platform]: {
+        title: prev[platform]?.title ?? "",
+        description: prev[platform]?.description ?? "",
+        [field]: value,
+      },
+    }));
+  }
   const [hideUnchecked, setHideUnchecked] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -239,6 +286,8 @@ export function ApproveDraftModal({
         draftId,
         title,
         description,
+        copyByPlatform:
+          platformsPresent.length > 0 ? copyByPlatform : undefined,
         selections,
         postState,
         clientNonce,
@@ -432,8 +481,8 @@ export function ApproveDraftModal({
           </div>
         )}
 
-        {/* Title + description */}
-        {!noProviders && (
+        {/* Title + description (per-platform when copyByPlatform was generated) */}
+        {!noProviders && platformsPresent.length === 0 && (
           <div className="space-y-3">
             <div className="space-y-1">
               <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
@@ -459,6 +508,48 @@ export function ApproveDraftModal({
                 className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
               />
             </div>
+          </div>
+        )}
+
+        {!noProviders && platformsPresent.length > 0 && (
+          <div className="space-y-4">
+            {platformsPresent.map((p) => (
+              <div
+                key={p}
+                className="space-y-2 border-2 border-brand/30 p-3"
+                data-testid={`platform-copy-${p}`}
+              >
+                <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
+                  {PLATFORM_LABELS[p]} copy
+                </div>
+                <div className="space-y-1">
+                  <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={copyByPlatform[p]?.title ?? ""}
+                    onChange={(e) => updatePlatformCopy(p, "title", e.target.value)}
+                    maxLength={80}
+                    className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
+                    Description
+                  </label>
+                  <textarea
+                    value={copyByPlatform[p]?.description ?? ""}
+                    onChange={(e) =>
+                      updatePlatformCopy(p, "description", e.target.value)
+                    }
+                    maxLength={220}
+                    rows={3}
+                    className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

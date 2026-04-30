@@ -14,6 +14,9 @@ export default defineSchema({
       v.literal("scale")
     ),
     lastDraftsVisitAt: v.optional(v.number()),
+    // Sous-Chef draft generation skips composeCopy for these platforms.
+    // Values: "x" | "linkedin". Empty/missing = both enabled.
+    disabledPlatforms: v.optional(v.array(v.string())),
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),
