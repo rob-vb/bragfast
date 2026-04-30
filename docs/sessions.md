@@ -269,10 +269,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S2.3, S2.7, S5.2.
 - **Pre-session plan needed:** invoke `frontend-design` skill before coding.
 
-### S6.2 — Sidebar nav reorder · S
+### S6.2 — Sidebar nav reorder · S — [x] 2026-04-30
 - Goal: Promote Goals + Sources. Demote Kitchen + API Keys to "Developers" sub-section (or footer-link).
 - Acceptance: agent-browser nav matches PRD §7.
 - Deps: S6.1.
+- Result: Sous-Chef (sources + goals) promoted to Main group between Dashboard and Drafts. New "Developers" sidebar group holds Kitchen + API Keys. Configure group now Templates + Brands only. Kitchen route untouched — still reachable, just demoted from primary path. tsc clean.
 
 ### S6.3 — History feed entry override path · M
 - Goal: Auto-skipped entries get "Draft anyway" override. User-skipped entries get reason capture (modal).

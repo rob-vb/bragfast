@@ -823,3 +823,18 @@ Template:
 **Open questions:** none.
 
 **Next session start:** TBD — Phase 5 closed.
+
+## 2026-04-30 — S6.2 sidebar nav reorder
+
+**Attempted:**
+- `src/components/admin/admin-sidebar.tsx`: Sous-Chef promoted from Configure → Main (between Dashboard and Drafts). New `developersNav` group ("Developers" SidebarGroupLabel) holds Kitchen + API Keys. Configure now Templates + Brands only.
+
+**Verified:** tsc clean. Visual + agent-browser nav walkthrough deferred to phase-end sweep.
+
+**Deferred / why:**
+- "Sources" rename for Sous-Chef label — kept brand label per BRAND_VOICE.md diner metaphor; can revisit if user testing shows confusion.
+- Footer-link variant of Developers group — chose explicit subgroup over footer link for collapsibility consistency.
+
+**Open questions:** none.
+
+**Next session start:** S6.3 (History feed entry override path) or another Phase 6 item.
