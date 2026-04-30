@@ -148,7 +148,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: public repo returns latest merged PR. Private repo → 404 surface. Rate-limit → 503.
 - Deps: S2.6a.
 
-#### S2.6d — Low-quality watermarked render + R2 upload · M
+#### S2.6d — Low-quality watermarked render + R2 upload · M  [x] 2026-04-30
 - Goal: new `renderPreview(pr, repoFullName)` — single square format, raw PR title + `repoFullName` body, watermark composite via Sharp, JPEG quality 60. Upload to R2 with 7d TTL key. Returns public URL.
 - Acceptance: render output ≤80KB; watermark visible bottom-bar; cache key deterministic per `(repo, prNumber)`.
 - Deps: S2.6a.

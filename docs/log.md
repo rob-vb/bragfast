@@ -14,6 +14,30 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 20 — S2.6d — preview render + R2 cache
+
+**Attempted:**
+- `src/lib/preview/render-preview.ts`: `renderPreviewBuffer`, `renderAndUploadPreview`, `previewCacheKey`, `getCachedPreviewUrl`. Square 1080×1080 Satori → Sharp JPEG q60. Layout: repo top, PR title middle (truncate 120ch), `brag.fast preview` + `brag.fast` watermark bottom. Plus Jakarta Sans via `loadFontsForFamily`.
+- Deterministic cache key `preview/sha256(repoFullName + ":" + prNumber).jpg`. R2 `headObject` → return cached URL on hit; `uploadImage` on miss.
+- `src/app/api/preview/route.ts`: wired `renderAndUploadPreview` after PR fetch. Returns `{status:"ready", repo, pr, image:{url, format:"square", width:1080, height:1080}}`. 500 `render_failed` on render exception.
+
+**Tests:**
+- `src/lib/preview/__tests__/render-preview.test.ts` (7): cache key determinism, distinctness across repo/PR, headObject miss/hit, render-skip on cache hit, render+upload on miss. R2/satori/sharp/fonts mocked. `vi.hoisted` sets `R2_PUBLIC_URL` before module import.
+- Route tests extended: 200 with image payload + render_failed branch. 37/37 preview tests pass; tsc clean; lint clean for preview files.
+
+**Verified live (curl, running dev server):**
+- `anthropics/claude-code` → 200 `{status:"ready",..., image:{url:"https://cdn.brag.fast/preview/a1e3...c1d.jpg", format:"square", width:1080, height:1080}}`. Image fetched: 24,962 bytes, image/jpeg (≤80KB target met).
+- Second call → 324ms (cache hit short-circuits render).
+- Visual: white bg, `anthropics/claude-code` top-left, "Create SECURITY.md" centered, watermark bottom — clean and on-brand.
+
+**Deferred / why:** S2.6e remaining work is just Layer 1 content-filter gating (depends on S0.6). Cache lookup + e2e wiring is already done in this session.
+
+**Open questions for user:** None.
+
+**Next session start:** S2.6e — content-filter gate on render (depends on S0.6 outputs).
+
+---
+
 ## 2026-04-30 — Session 19 — S2.6c — unauth PR fetch helper
 
 **Attempted:**
