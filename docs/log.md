@@ -14,6 +14,23 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 29 — S5.1 — goal create modal (category → form)
+
+**Attempted:**
+- New `src/components/admin/goal-create-modal.tsx`: full-screen two-step modal. Step 1 picks category (Revenue/Users/Traffic/Custom); step 2 renders per-category form. Disabled categories show "Connect X first" hint when integration not connected. Custom goals send `provider: null` + required `label`; Traffic offers PostHog/GA4 toggle when both connected.
+- Wired into `src/components/admin/sous-chef-client.tsx` as a top-level `▸ NEW GOAL` button gated on `isLaunchModeRepositioned()`. Existing per-provider AddGoalDialog left untouched (still used by integration tiles).
+- Posts to `/api/v1/goals`; on success fires `posthog.capture("goal_set", { goal_category, is_first_goal, has_connected_source })` per `docs/conventions.md`.
+
+**Verified by agent-browser:** Logged in as `hi+test@robvb.com`, opened `/admin/sous-chef`, clicked `▸ NEW GOAL`, picked Custom, entered "100 mailing-list subs" + target 100, submitted. Confirmed via `convex data goals` that row exists: provider empty, metric `custom`, target 100, label match.
+
+**Deferred / why:** S5.2 (sidebar progress glance), S5.4 (first-hit celebrate modal), S5.5 (recurring vs one-shot semantics) still pending — separate sessions.
+
+**Open questions for user:** none new.
+
+**Next session start:** S3.7 — Brand → Goal → Integration prompt sequence (now unblocked since S5.1 + S5.3 shipped). Or continue chasing S5.2/S5.4/S5.5.
+
+---
+
 ## 2026-04-30 — Session 28 — S5.3 — goal schema migration (custom + persistent)
 
 **Attempted:**

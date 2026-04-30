@@ -227,10 +227,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 5 — Goal-setting UX
 
-### S5.1 — Goal modal + structured form · M
+### S5.1 — Goal modal + structured form · M  [x] 2026-04-30
 - Goal: Single full-screen modal with category (Revenue/Users/Traffic/Custom), metric picker, threshold input. Custom category bypasses provider requirement.
 - Acceptance: agent-browser sets a custom goal ("100 mailing-list subs").
 - Deps: schema migration (S5.3).
+- **Result:** `GoalCreateModal` (`src/components/admin/goal-create-modal.tsx`) — two-step flow (category → form). Categories: Revenue (Stripe MRR/total/first_sale), Users (Stripe subscribers), Traffic (PostHog/GA4 visitors), Custom (provider null + label required). Disabled categories show "Connect X first" hint. Wired into `sous-chef-client.tsx` as a top-level `▸ NEW GOAL` button gated on `isLaunchModeRepositioned()`. Fires PostHog `goal_set` with `goal_category`, `is_first_goal`, `has_connected_source` per `docs/conventions.md`. agent-browser verified: clicked Custom → entered "100 mailing-list subs" + target 100 → submitted → row in Convex `goals` table with provider empty, metric "custom", target 100, label match. Existing per-provider AddGoalDialog left untouched.
 
 ### S5.2 — Goal hero card on dashboard · M
 - Goal: Single hero card showing target / current / progress / days-since-set / "brag.fast will post automatically when you hit this."

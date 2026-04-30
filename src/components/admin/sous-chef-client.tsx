@@ -9,6 +9,8 @@ import { GitHubSection } from "./github-section";
 import { OrgPendingBanner } from "./org-pending-banner";
 import { GoalsSection } from "./goals-section";
 import type { Goal } from "./goals-section";
+import { GoalCreateModal } from "./goal-create-modal";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import {
   ConnectDialog,
   PROVIDER_LABELS,
@@ -316,6 +318,8 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const repositioned = isLaunchModeRepositioned();
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -392,6 +396,18 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
         </span>
       </div>
 
+      {repositioned && (
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={() => setShowGoalModal(true)}
+            className="bg-gold text-brand border-2 border-brand px-4 py-3 font-mono text-xs uppercase tracking-widest font-bold shadow-[3px_3px_0_var(--color-brand)] transition-all hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
+          >
+            ▸ New goal
+          </button>
+        </div>
+      )}
+
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 max-w-prose">
         Sous-Chef watches your connected apps for milestones and drafts brag
         posts automatically. You still approve every post — Sous-Chef just
@@ -450,6 +466,21 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
           }}
         />
       )}
+
+      <GoalCreateModal
+        open={showGoalModal}
+        onClose={() => setShowGoalModal(false)}
+        onCreated={async () => {
+          setShowGoalModal(false);
+          await reload();
+        }}
+        isFirstGoal={goals.length === 0}
+        connected={{
+          stripe: byProvider.get("stripe")?.enabled ?? false,
+          posthog: byProvider.get("posthog")?.enabled ?? false,
+          ga4: byProvider.get("ga4")?.enabled ?? false,
+        }}
+      />
     </div>
   );
 }
