@@ -428,7 +428,7 @@ export default function Home() {
               href="/docs"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
             >
-              Docs
+              Developers
             </Link>
             <Link
               href="/pricing"
