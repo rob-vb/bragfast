@@ -3,6 +3,16 @@ import { api } from "@convex/_generated/api";
 import { authenticate } from "@/lib/auth/authenticate";
 import { seal } from "@/lib/crypto/secret-box";
 import { ALLOWED_POSTHOG_HOST_SET } from "@/lib/integrations/posthog-hosts";
+import {
+  listIntegrations,
+  normalizeInstanceUrl,
+  PostizAuthError,
+} from "@/lib/integrations/postiz/client";
+import {
+  validateApiKey as validateBufferKey,
+  fetchChannels as fetchBufferChannels,
+  BufferAuthError,
+} from "@/lib/integrations/buffer/client";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -18,7 +28,16 @@ type Ga4Body = {
   serviceAccountJson: string;
   propertyId: string;
 };
-type Body = StripeBody | PostHogBody | Ga4Body;
+type PostizBody = {
+  provider: "postiz";
+  instanceUrl: string;
+  apiKey: string;
+};
+type BufferBody = {
+  provider: "buffer";
+  apiKey: string;
+};
+type Body = StripeBody | PostHogBody | Ga4Body | PostizBody | BufferBody;
 
 export function validateBody(raw: unknown): Body | { error: string } {
   if (!raw || typeof raw !== "object") return { error: "invalid body" };
@@ -65,6 +84,24 @@ export function validateBody(raw: unknown): Body | { error: string } {
       propertyId: b.propertyId,
     };
   }
+  if (b.provider === "postiz") {
+    if (typeof b.apiKey !== "string" || b.apiKey.length < 4)
+      return { error: "apiKey required" };
+    if (typeof b.instanceUrl !== "string" || !b.instanceUrl)
+      return { error: "instanceUrl required" };
+    if (!b.instanceUrl.startsWith("http://") && !b.instanceUrl.startsWith("https://"))
+      return { error: "instanceUrl must include a scheme (https:// or http://)" };
+    const isDev = process.env.NODE_ENV === "development";
+    if (b.instanceUrl.startsWith("http://") && !isDev)
+      return { error: "https required: http is only allowed in development" };
+    const normalizedUrl = b.instanceUrl.replace(/\/+$/, "");
+    return { provider: "postiz", instanceUrl: normalizedUrl, apiKey: b.apiKey };
+  }
+  if (b.provider === "buffer") {
+    if (typeof b.apiKey !== "string" || b.apiKey.length < 8)
+      return { error: "apiKey required" };
+    return { provider: "buffer", apiKey: b.apiKey };
+  }
   return { error: "unknown provider" };
 }
 
@@ -87,6 +124,124 @@ export async function POST(request: Request) {
   }
 
   const { userId } = auth;
+
+  // -------------------------------------------------------------------------
+  // Buffer: probe API key, then store. Same shape as Postiz — paste-key BYO.
+  // -------------------------------------------------------------------------
+  if (body.provider === "buffer") {
+    let account: Awaited<ReturnType<typeof validateBufferKey>>;
+    try {
+      account = await validateBufferKey(body.apiKey);
+    } catch (err) {
+      if (err instanceof BufferAuthError) {
+        return Response.json({ error: "key rejected by Buffer" }, { status: 400 });
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("timeout") || msg.includes("AbortError")) {
+        return Response.json(
+          { error: "Buffer API did not respond in time" },
+          { status: 504 },
+        );
+      }
+      console.error("[buffer] probe failed:", err);
+      return Response.json(
+        { error: "Could not reach Buffer API, please retry" },
+        { status: 504 },
+      );
+    }
+
+    if (account.organizations.length > 1) {
+      console.warn(
+        `[buffer] API key has ${account.organizations.length} organizations — using first (${account.organizationId}). Org-picker UI deferred.`,
+      );
+    }
+
+    let channels: Awaited<ReturnType<typeof fetchBufferChannels>>;
+    try {
+      channels = await fetchBufferChannels(body.apiKey, account.organizationId);
+    } catch (err) {
+      console.error("[buffer] channels fetch failed:", err);
+      return Response.json(
+        { error: "Buffer probe succeeded but channels fetch failed, please retry" },
+        { status: 504 },
+      );
+    }
+
+    const sealed = seal(body.apiKey);
+    const extra = JSON.stringify({
+      organizationId: account.organizationId,
+      channels,
+    });
+
+    await convex.action(api.integrationSecrets.upsertAction, {
+      userId,
+      provider: "buffer",
+      ciphertext: sealed.ciphertext,
+      iv: sealed.iv,
+      tag: sealed.tag,
+      extra,
+    });
+
+    return Response.json({
+      ok: true,
+      provider: "buffer",
+      channelCount: channels.length,
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Postiz: probe first, then store. Different from analytics providers which
+  // store then seed. We must not persist anything until the probe succeeds.
+  // -------------------------------------------------------------------------
+  if (body.provider === "postiz") {
+    let channels: Awaited<ReturnType<typeof listIntegrations>>;
+    try {
+      channels = await listIntegrations(body.instanceUrl, body.apiKey);
+    } catch (err) {
+      if (err instanceof PostizAuthError) {
+        return Response.json({ error: "key rejected by Postiz" }, { status: 400 });
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      if (
+        msg.includes("instance URL not reachable") ||
+        msg.includes("DNS resolution failed") ||
+        msg.includes("https required") ||
+        msg.includes("instanceUrl must include a scheme")
+      ) {
+        return Response.json({ error: msg }, { status: 400 });
+      }
+      if (msg.includes("timed out")) {
+        return Response.json(
+          { error: "Postiz instance did not respond in time" },
+          { status: 504 },
+        );
+      }
+      console.error("[postiz] probe failed:", err);
+      return Response.json(
+        { error: "Could not reach Postiz instance, please retry" },
+        { status: 504 },
+      );
+    }
+
+    const sealed = seal(body.apiKey);
+    const extra = JSON.stringify({ instanceUrl: body.instanceUrl, channels });
+
+    await convex.action(api.integrationSecrets.upsertAction, {
+      userId,
+      provider: "postiz",
+      ciphertext: sealed.ciphertext,
+      iv: sealed.iv,
+      tag: sealed.tag,
+      extra,
+    });
+
+    // No seedAction for Postiz — posting providers skip scan/seed semantics.
+    return Response.json({ ok: true, provider: "postiz", channelCount: channels.length });
+  }
+
+  // -------------------------------------------------------------------------
+  // Analytics providers: store then seed
+  // -------------------------------------------------------------------------
   const plaintextSecret =
     body.provider === "ga4" ? body.serviceAccountJson : body.apiKey;
   const sealed = seal(plaintextSecret);
@@ -148,7 +303,9 @@ export async function DELETE(request: Request) {
   if (
     providerParam !== "stripe" &&
     providerParam !== "posthog" &&
-    providerParam !== "ga4"
+    providerParam !== "ga4" &&
+    providerParam !== "buffer" &&
+    providerParam !== "postiz"
   ) {
     return Response.json({ error: "invalid provider" }, { status: 400 });
   }

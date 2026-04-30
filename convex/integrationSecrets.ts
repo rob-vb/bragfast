@@ -12,6 +12,8 @@ const provider = v.union(
   v.literal("stripe"),
   v.literal("posthog"),
   v.literal("ga4"),
+  v.literal("buffer"),
+  v.literal("postiz"),
 );
 
 export const getByUserProvider = query({
@@ -68,6 +70,7 @@ export const listByUser = query({
     return rows.map((r) => ({
       provider: r.provider,
       enabled: r.enabled,
+      extra: r.extra ?? null,
       lastScanAt: r.lastScanAt ?? null,
       lastScanOkAt: r.lastScanOkAt ?? null,
       lastScanError: r.lastScanError ?? null,
@@ -154,6 +157,54 @@ export const setEnabled = internalMutation({
   },
 });
 
+/**
+ * Update only the `extra` JSON field for an integration row.
+ * Used by the channel-refresh cron to persist the latest channel list without
+ * touching the sealed credential payload.
+ */
+export const updateExtra = internalMutation({
+  args: { userId: v.string(), provider, extra: v.string() },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row) return false;
+    await ctx.db.patch(row._id, {
+      extra: args.extra,
+      updated_at: new Date().toISOString(),
+    });
+    return true;
+  },
+});
+
+/**
+ * Return all enabled integration rows across every provider.
+ * Used by the daily channel-refresh cron sweep.
+ */
+export const listAllEnabled = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    // Buffer and Postiz are the only posting providers with channel caches.
+    const providers = ["buffer", "postiz"] as const;
+    const results: Array<{ userId: string; provider: "buffer" | "postiz" }> = [];
+    for (const prov of providers) {
+      const rows = await ctx.db
+        .query("integrationSecrets")
+        .withIndex("by_provider_enabled", (q) =>
+          q.eq("provider", prov).eq("enabled", true),
+        )
+        .collect();
+      for (const r of rows) {
+        results.push({ userId: r.userId, provider: prov });
+      }
+    }
+    return results;
+  },
+});
+
 export const disconnect = internalMutation({
   args: { userId: v.string(), provider },
   handler: async (ctx, args) => {
@@ -165,6 +216,34 @@ export const disconnect = internalMutation({
       .first();
     if (!row) return false;
     await ctx.db.delete(row._id);
+
+    // Cascade: clear routingDefaults entries for buffer/postiz on disconnect.
+    // Inlined here (rather than via ctx.runMutation) because Convex mutations
+    // cannot schedule other mutations — we share the transaction by using
+    // ctx.db directly.
+    if (args.provider === "buffer" || args.provider === "postiz") {
+      const routingRows = await ctx.db
+        .query("routingDefaults")
+        .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+        .collect();
+
+      for (const rRow of routingRows) {
+        const filtered = rRow.channels.filter(
+          (ch) => ch.provider !== args.provider,
+        );
+        if (filtered.length !== rRow.channels.length) {
+          if (filtered.length === 0) {
+            await ctx.db.delete(rRow._id);
+          } else {
+            await ctx.db.patch(rRow._id, {
+              channels: filtered,
+              updated_at: new Date().toISOString(),
+            });
+          }
+        }
+      }
+    }
+
     return true;
   },
 });
@@ -193,6 +272,114 @@ export const recordScanResult = internalMutation({
       ...(args.snapshotJson !== undefined ? { lastSnapshotJson: args.snapshotJson } : {}),
       updated_at: now,
     });
+  },
+});
+
+const REFRESH_LEASE_TTL_MS = 30 * 1000; // 30 seconds
+
+/**
+ * Atomic CAS for the Buffer refresh-lease pattern.
+ * If no lease is held (or the existing lease has expired), claims the lease and
+ * returns { owned: true, currentSealed: { ciphertext, iv, tag } }.
+ * If another thread holds a valid lease, returns { owned: false }.
+ *
+ * Only one thread should call /token at a time — Buffer rotates the refresh token
+ * on every call, so two concurrent requests will revoke the entire grant.
+ */
+export const claimRefreshLease = internalMutation({
+  args: { userId: v.string(), provider },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row || !row.enabled) return { owned: false as const };
+
+    const now = Date.now();
+    const leaseActive =
+      row.refreshInProgress === true &&
+      row.leaseUntil !== undefined &&
+      row.leaseUntil > now;
+
+    if (leaseActive) return { owned: false as const };
+
+    await ctx.db.patch(row._id, {
+      refreshInProgress: true,
+      leaseUntil: now + REFRESH_LEASE_TTL_MS,
+      updated_at: new Date(now).toISOString(),
+    });
+
+    return {
+      owned: true as const,
+      currentSealed: {
+        ciphertext: row.ciphertext,
+        iv: row.iv,
+        tag: row.tag,
+        extra: row.extra ?? null,
+      },
+    };
+  },
+});
+
+/**
+ * Commit a completed token refresh — store the new sealed payload and clear the lease.
+ * Only the owner thread (claimRefreshLease returned owned=true) should call this.
+ */
+export const commitRefresh = internalMutation({
+  args: {
+    userId: v.string(),
+    provider,
+    ciphertext: v.string(),
+    iv: v.string(),
+    tag: v.string(),
+    extra: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row) return false;
+
+    await ctx.db.patch(row._id, {
+      ciphertext: args.ciphertext,
+      iv: args.iv,
+      tag: args.tag,
+      extra: args.extra,
+      refreshInProgress: false,
+      leaseUntil: undefined,
+      updated_at: new Date().toISOString(),
+    });
+    return true;
+  },
+});
+
+/**
+ * Internal query: returns the current sealed payload without exposing it to clients.
+ * Used by non-owner threads polling for the freshly-committed token after a refresh.
+ */
+export const getSealed = internalQuery({
+  args: { userId: v.string(), provider },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("integrationSecrets")
+      .withIndex("by_userId_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider),
+      )
+      .first();
+    if (!row || !row.enabled) return null;
+    return {
+      ciphertext: row.ciphertext,
+      iv: row.iv,
+      tag: row.tag,
+      extra: row.extra ?? null,
+      refreshInProgress: row.refreshInProgress ?? false,
+      leaseUntil: row.leaseUntil ?? null,
+    };
   },
 });
 

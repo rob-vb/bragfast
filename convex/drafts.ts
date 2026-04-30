@@ -253,6 +253,37 @@ export const appendPrMergeRollup = mutation({
   },
 });
 
+// Count drafts created after the user's last visit to /admin/drafts.
+// Founder-scale: scans all drafts for the user, then filters in JS.
+export const unseenCount = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    const lastVisit = profile?.lastDraftsVisitAt ?? 0;
+    const rows = await ctx.db
+      .query("drafts")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    return rows.filter((r) => r._creationTime > lastVisit).length;
+  },
+});
+
+// Stamp the user's last-visit time. Idempotent; safe to call on every mount.
+export const markSeen = mutation({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) return;
+    await ctx.db.patch(profile._id, { lastDraftsVisitAt: Date.now() });
+  },
+});
+
 export const remove = mutation({
   args: { externalId: v.string(), userId: v.string() },
   handler: async (ctx, { externalId, userId }) => {

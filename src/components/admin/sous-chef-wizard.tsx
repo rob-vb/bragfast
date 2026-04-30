@@ -9,7 +9,8 @@ import { GitHubSection } from "./github-section";
 import { GoalsSection, type Goal } from "./goals-section";
 import { InlineIntegrationForm, PROVIDER_LABELS, type Provider } from "./integration-forms";
 
-type SourceSystem = Provider | "github";
+type SousChefProvider = Exclude<Provider, "buffer" | "postiz">;
+type SourceSystem = SousChefProvider | "github";
 
 type GitHubInstallation = {
   _id: string;
@@ -78,7 +79,7 @@ export function SousChefWizard({ github, rows, goals, onReload, onComplete }: Pr
     setActiveStep(Math.max(0, Math.min(STEPS.length - 1, n)));
   }
 
-  async function handleProviderDone(provider: Provider, nextStep: number) {
+  async function handleProviderDone(provider: SousChefProvider, nextStep: number) {
     await onReload();
     goTo(nextStep);
   }
@@ -255,7 +256,7 @@ function ProviderBody({
   onDone,
   onNext,
 }: {
-  provider: Provider;
+  provider: SousChefProvider;
   connected: boolean;
   onDone: () => void;
   onNext: () => void;
@@ -295,7 +296,7 @@ function GoalsBody({
   onReload: () => Promise<void> | void;
   onNext: () => void;
 }) {
-  const groups: Array<{ provider: "github" | Provider; label: string; connected: boolean }> = [
+  const groups: Array<{ provider: "github" | SousChefProvider; label: string; connected: boolean }> = [
     { provider: "github", label: "GitHub", connected: github },
     { provider: "stripe", label: "Stripe", connected: !!byProvider.get("stripe")?.enabled },
     { provider: "posthog", label: "PostHog", connected: !!byProvider.get("posthog")?.enabled },

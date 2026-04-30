@@ -3,18 +3,22 @@
 import { useState } from "react";
 import { PixelButton } from "./pixel-button";
 
-export type Provider = "stripe" | "posthog" | "ga4";
+export type Provider = "stripe" | "posthog" | "ga4" | "buffer" | "postiz";
 
 export const PROVIDER_LABELS: Record<Provider, string> = {
   stripe: "Stripe",
   posthog: "PostHog",
   ga4: "Google Analytics",
+  buffer: "Buffer",
+  postiz: "Postiz",
 };
 
 export const PROVIDER_DESCRIPTIONS: Record<Provider, string> = {
   stripe: "Track revenue milestones: MRR, total revenue, subscribers, and first sale.",
   posthog: "Track visitor milestones from PostHog analytics (30-day rolling window).",
   ga4: "Track visitor milestones from Google Analytics 4 (30-day rolling window).",
+  buffer: "Push approved drafts to your Buffer queue or drafts.",
+  postiz: "Push approved drafts to your Postiz instance (cloud or self-hosted).",
 };
 
 interface FormProps {
@@ -136,6 +140,103 @@ export function PostHogForm({ onSubmit, submitting }: FormProps) {
   );
 }
 
+export function BufferForm({ onSubmit, submitting }: FormProps) {
+  const [apiKey, setApiKey] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({ apiKey });
+      }}
+      className="space-y-3"
+    >
+      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+        Generate an API key in{" "}
+        <a
+          href="https://publish.buffer.com/developers/api"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Buffer Developers
+        </a>
+        . Buffer no longer issues new OAuth apps; static API keys are the
+        supported path.
+      </p>
+      <label className="block">
+        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
+          API key
+        </span>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          required
+          className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+        />
+      </label>
+      <PixelButton type="submit" disabled={submitting || !apiKey}>
+        {submitting ? "Connecting..." : "Connect"}
+      </PixelButton>
+    </form>
+  );
+}
+
+export function PostizForm({ onSubmit, submitting }: FormProps) {
+  const [instanceUrl, setInstanceUrl] = useState("https://api.postiz.com");
+  const [apiKey, setApiKey] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({ instanceUrl, apiKey });
+      }}
+      className="space-y-3"
+    >
+      <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+        Generate an API key in{" "}
+        <a
+          href="https://app.postiz.com/settings"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Postiz Settings
+        </a>
+        . For self-hosted instances, paste your custom URL below.
+      </p>
+      <label className="block">
+        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
+          Instance URL
+        </span>
+        <input
+          type="url"
+          value={instanceUrl}
+          onChange={(e) => setInstanceUrl(e.target.value)}
+          required
+          placeholder="https://api.postiz.com"
+          className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+        />
+      </label>
+      <label className="block">
+        <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand">
+          API key
+        </span>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          required
+          className="mt-1 w-full border-2 border-brand bg-white px-3 py-2 font-[family-name:var(--font-geist-mono)] text-sm"
+        />
+      </label>
+      <PixelButton type="submit" disabled={submitting || !apiKey || !instanceUrl}>
+        {submitting ? "Connecting..." : "Connect"}
+      </PixelButton>
+    </form>
+  );
+}
+
 export function Ga4Form({ onSubmit, submitting }: FormProps) {
   const [serviceAccountJson, setServiceAccountJson] = useState("");
   const [propertyId, setPropertyId] = useState("");
@@ -243,6 +344,8 @@ export function ConnectDialog({ provider, onClose, onDone }: ConnectDialogProps)
         {provider === "stripe" && <StripeForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "posthog" && <PostHogForm onSubmit={handleSubmit} submitting={submitting} />}
         {provider === "ga4" && <Ga4Form onSubmit={handleSubmit} submitting={submitting} />}
+        {provider === "buffer" && <BufferForm onSubmit={handleSubmit} submitting={submitting} />}
+        {provider === "postiz" && <PostizForm onSubmit={handleSubmit} submitting={submitting} />}
 
         {error && (
           <p className="font-[family-name:var(--font-geist-mono)] text-xs text-red-600 break-words">
@@ -290,6 +393,8 @@ export function InlineIntegrationForm({ provider, onDone }: InlineFormProps) {
       {provider === "stripe" && <StripeForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "posthog" && <PostHogForm onSubmit={handleSubmit} submitting={submitting} />}
       {provider === "ga4" && <Ga4Form onSubmit={handleSubmit} submitting={submitting} />}
+      {provider === "buffer" && <BufferForm onSubmit={handleSubmit} submitting={submitting} />}
+      {provider === "postiz" && <PostizForm onSubmit={handleSubmit} submitting={submitting} />}
       {error && (
         <p className="font-[family-name:var(--font-geist-mono)] text-xs text-red-600 break-words">
           {error}

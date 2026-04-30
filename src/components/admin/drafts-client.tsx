@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import Masonry from "react-masonry-css";
 import { useUserId } from "@/hooks/use-user-id";
@@ -15,6 +15,7 @@ import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import { DraftPreview } from "./draft-preview";
 import { DraftPreviewBoundary } from "./draft-preview-boundary";
 import { LazyMount } from "./lazy-mount";
+import { PushStatusPanel } from "./push-status-panel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,7 +85,15 @@ export function DraftsClient() {
   const userId = useUserId();
   const router = useRouter();
   const drafts = useQuery(api.drafts.listByUser, { userId });
+  const markSeen = useMutation(api.drafts.markSeen);
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
+
+  // Stamp last-visit time so the sidebar "new drafts" badge clears.
+  // Re-fires when drafts arrive while the page is open.
+  useEffect(() => {
+    if (!userId || drafts === undefined) return;
+    void markSeen({ userId });
+  }, [userId, drafts?.length, markSeen]);
 
   if (!drafts) {
     return (
@@ -153,6 +162,7 @@ export function DraftsClient() {
             <DraftCard
               key={row.id}
               row={row as Row}
+              userId={userId}
               busy={deleting.has(row.id)}
               onDelete={() => handleDelete(row.id)}
             />
@@ -165,10 +175,12 @@ export function DraftsClient() {
 
 function DraftCard({
   row,
+  userId,
   busy,
   onDelete,
 }: {
   row: Row;
+  userId: string;
   busy: boolean;
   onDelete: () => void;
 }) {
@@ -187,7 +199,7 @@ function DraftCard({
   }
 
   const badgeRow = (
-    <div className="flex items-center gap-2 mb-3 pr-10 flex-wrap">
+    <div className="flex items-center gap-2 mb-3 px-10 flex-wrap">
       {row.sourceSystem ? (
         <SourceSystemBadge
           system={row.sourceSystem}
@@ -305,6 +317,8 @@ function DraftCard({
           </LazyMount>
         </DraftPreviewBoundary>
       </div>
+
+      <PushStatusPanel draftId={row.id} userId={userId} />
 
       {titleBlock}
       {metaRow}

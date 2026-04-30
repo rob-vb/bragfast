@@ -7,6 +7,8 @@ export const sousChefProvider = v.union(
   v.literal("posthog"),
   v.literal("ga4"),
   v.literal("github"),
+  v.literal("buffer"),
+  v.literal("postiz"),
 );
 
 function assertNever(value: never): never {
@@ -48,6 +50,10 @@ export const seed = internalAction({
           { userId, installationId },
         );
       }
+      case "buffer":
+      case "postiz":
+        // Posting providers — no scan/seed semantics. Connect path stores creds + channel cache directly.
+        return null;
       default:
         return assertNever(prov);
     }
@@ -70,6 +76,9 @@ export const scanNow = internalAction({
         return await ctx.runAction(internal.integrations.ga4.scan, { userId });
       case "github":
         throw new Error("scanNow does not support github");
+      case "buffer":
+      case "postiz":
+        throw new Error(`scanNow does not support ${prov}`);
       default:
         return assertNever(prov);
     }

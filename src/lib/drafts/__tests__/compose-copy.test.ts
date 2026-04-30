@@ -36,6 +36,34 @@ describe("composeCopy — happy paths", () => {
     expect(copy.description).toBe("Per-repo stats at a glance.");
   });
 
+  it("pr_merged prompt asks Haiku to announce one user-facing feature", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse(
+        '{"title":"Added carousel template","description":"You can now create carousel posts."}',
+      ),
+    );
+    await composeCopy({
+      type: "pr_merged",
+      title:
+        "feat(carousel): consolidate templates, PNG decorations, editor polish",
+      body: `Summary
+- Collapse 4 carousel templates into a single carousel-slide
+- Migrate decorative arcs from inline SVG to PNG assets
+- Align carousel-slide palette and font
+- Fix preview regression`,
+      repoFullName: "rob/brag.fast",
+    });
+
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toContain("Pick the one thing worth announcing");
+    expect(callArgs.system).toContain(
+      "Ignore implementation details, refactors, polish, tests, dependency bumps, and minor bug fixes",
+    );
+    expect(callArgs.system).toContain("announce only the feature");
+    expect(callArgs.system).toContain("what users can now do");
+    expect(callArgs.max_tokens).toBe(250);
+  });
+
   it("mrr returns typed copy", async () => {
     mockCreate.mockResolvedValue(
       textResponse('{"title":"$1k MRR","description":"Thank you to everyone."}'),
@@ -120,7 +148,7 @@ describe("composeCopy — fallbacks", () => {
 });
 
 describe("composeCopy — truncation", () => {
-  it("truncates overlong title to 140 chars", async () => {
+  it("truncates overlong title to 80 chars", async () => {
     const longTitle = "x".repeat(300);
     mockCreate.mockResolvedValue(
       textResponse(
@@ -128,10 +156,10 @@ describe("composeCopy — truncation", () => {
       ),
     );
     const copy = await composeCopy({ type: "mrr", threshold: 1000 });
-    expect(copy.title.length).toBe(140);
+    expect(copy.title.length).toBe(80);
   });
 
-  it("truncates overlong description to 600 chars", async () => {
+  it("truncates overlong description to 220 chars", async () => {
     const longDesc = "y".repeat(1000);
     mockCreate.mockResolvedValue(
       textResponse(
@@ -139,7 +167,7 @@ describe("composeCopy — truncation", () => {
       ),
     );
     const copy = await composeCopy({ type: "mrr", threshold: 1000 });
-    expect(copy.description.length).toBe(600);
+    expect(copy.description.length).toBe(220);
   });
 });
 
