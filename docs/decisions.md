@@ -14,6 +14,24 @@ Format:
 
 ---
 
+## 2026-04-30 — Q1–Q5 launch-plan answers (Session 0 carry-overs)
+
+**Context:** Five questions left open in Session 0 logs. Resolved before resuming S2.7 + S2.8.
+
+**Q1 — Stripe price strategy:** Keep current Stripe prices. Version entitlements in Convex via new `userProfiles.planVersion: 1 | 2`. New signups → v2; old subs → v1 until migration event. Rationale: Stripe price-IDs map $/cadence only; entitlement bundles already live in app code. No $ change → no need for new Stripe Price objects. Avoids Stripe-dashboard duplication, invoice rename, and webhook re-routing. Re-creating prices buys nothing unless $ amount changes (Stripe Price.amount is immutable) or Stripe metadata is the entitlement source-of-truth (it isn't here).
+
+**Q2 — Video posts/month accounting:** Video and image both consume one `posts_used_this_month` slot. Single counter regardless of format. Per `.agents/product-marketing-context.md` line 17, Buffet "1 video per post" — video is rendered alongside post, not separately quotaed. Aligns with stated value metric: "post = one approved share, regardless of platforms or formats."
+
+**Q3 — Kitchen disposition:** Demote, don't kill. Drop from main admin nav. Keep `/admin/kitchen` reachable via footer link from admin shell. Rationale: manual cook is now a power-user escape hatch, not the front door. Honest reflection of repositioning. Zero SEO surface change since `/admin/*` already noindex.
+
+**Q4 — Clipboard `draftPushes` row:** Skip the DB row. PostHog event `draft_clipboard_copied` covers analytics. Clipboard copy is fire-and-forget client-side — no webhook, no failure mode, no retry, nothing to query against. DB row would be storage + write for zero downstream consumer.
+
+**Q5 — Feature-flag granularity:** Single `LAUNCH_MODE` env var (already scaffolded in S0.1). No per-feature flags. Rationale: launch is one cohesive repositioning, not N independent rollouts. One env flip = full new product. Simpler, fewer combinatorial states to test.
+
+**PRD impact:** none — all five clarify implementation-level choices not specified in PRD.
+
+---
+
 ## 2026-04-30 — Defer server-side Convex auth bridge until post-launch (S0.4a.4/5)
 
 **Context:** S0.4a.3 closed the externally exploitable tenant-isolation hole — browser-only RISKY Convex functions now derive `userId` from `requireAuthedUser(ctx)` instead of trusting a client-supplied arg. Anyone with the public Convex URL can no longer call `integrationSecrets.getByUserProvider` for an arbitrary `userId`. That was the P0.
