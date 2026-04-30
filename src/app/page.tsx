@@ -9,6 +9,7 @@ import { LazyVideo } from "@/components/landing/lazy-video";
 import { McpInstallInstructions } from "@/components/landing/mcp-install-instructions";
 import { CtaLink } from "@/components/landing/cta-link";
 import { PAID_PLANS } from "@/lib/plans";
+import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
   title: "brag.fast | Automated Image and Video generation for your wins",
@@ -46,7 +47,7 @@ const FAQ = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-surface text-brand">
+    <div className="min-h-screen bg-surface text-brand" data-launch-mode={getLaunchMode()}>
       <LandingNav />
 
       {/* S1: Hero */}
