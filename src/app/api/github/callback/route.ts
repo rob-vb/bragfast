@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { captureServer } from "@/lib/analytics/posthog-server";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -72,5 +73,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return Response.redirect(new URL("/admin/account", request.url));
+  const successPath = isLaunchModeRepositioned()
+    ? "/welcome/pick-repo"
+    : "/admin/account";
+  return Response.redirect(new URL(successPath, request.url));
 }
