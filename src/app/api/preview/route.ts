@@ -4,6 +4,7 @@ import { api } from "@convex/_generated/api";
 import { parseRepoUrl, extractClientIp } from "@/lib/preview/parse-repo-url";
 import { isRepoOptedOut } from "@/lib/preview/opt-out";
 import { fetchPublicLatestPr } from "@/lib/preview/public-pr";
+import { renderAndUploadPreview } from "@/lib/preview/render-preview";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -56,13 +57,22 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "no_merged_pr" }, { status: 404 });
   }
 
+  let imageUrl: string;
+  try {
+    imageUrl = await renderAndUploadPreview(prResult.pr, parsed.fullName);
+  } catch (err) {
+    console.error(`Preview render failed for ${parsed.fullName}#${prResult.pr.number}:`, err);
+    return Response.json({ error: "render_failed" }, { status: 500 });
+  }
+
   return Response.json({
-    status: "pending",
+    status: "ready",
     repo: parsed.fullName,
     pr: {
       number: prResult.pr.number,
       title: prResult.pr.title,
       url: prResult.pr.html_url,
     },
+    image: { url: imageUrl, format: "square", width: 1080, height: 1080 },
   });
 }

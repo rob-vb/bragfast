@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mutation = vi.fn();
 const optedOut = vi.fn();
 const publicPr = vi.fn();
+const renderUpload = vi.fn();
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
@@ -20,6 +21,10 @@ vi.mock("@/lib/preview/public-pr", () => ({
   fetchPublicLatestPr: (...args: unknown[]) => publicPr(...args),
 }));
 
+vi.mock("@/lib/preview/render-preview", () => ({
+  renderAndUploadPreview: (...args: unknown[]) => renderUpload(...args),
+}));
+
 import { POST } from "../route";
 
 function makeReq(body: unknown, headers: Record<string, string> = {}) {
@@ -34,6 +39,8 @@ beforeEach(() => {
   mutation.mockReset();
   optedOut.mockReset();
   optedOut.mockResolvedValue(false);
+  renderUpload.mockReset();
+  renderUpload.mockResolvedValue("https://cdn.test/preview/abc.jpg");
   publicPr.mockReset();
   publicPr.mockResolvedValue({
     ok: true,
@@ -71,7 +78,7 @@ describe("POST /api/preview", () => {
     expect(await res.json()).toMatchObject({ error: "invalid_repo_url" });
   });
 
-  it("returns 200 with parsed repo + PR when within rate limit", async () => {
+  it("returns 200 with parsed repo + PR + image when within rate limit", async () => {
     mutation.mockResolvedValue({ allowed: true });
     const res = await POST(
       makeReq(
@@ -81,11 +88,24 @@ describe("POST /api/preview", () => {
     );
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({
-      status: "pending",
+      status: "ready",
       repo: "rob/bragfast",
       pr: { number: 7, title: "Add feature" },
+      image: { url: "https://cdn.test/preview/abc.jpg", format: "square", width: 1080, height: 1080 },
     });
     expect(mutation).toHaveBeenCalledWith(expect.anything(), { ip: "1.2.3.4" });
+    expect(renderUpload).toHaveBeenCalledWith(
+      expect.objectContaining({ number: 7, title: "Add feature" }),
+      "rob/bragfast",
+    );
+  });
+
+  it("returns 500 render_failed when render throws", async () => {
+    mutation.mockResolvedValue({ allowed: true });
+    renderUpload.mockRejectedValueOnce(new Error("boom"));
+    const res = await POST(makeReq({ repoUrl: "https://github.com/rob/bragfast" }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "render_failed" });
   });
 
   it("returns 404 repo_not_found when GitHub 404s", async () => {
