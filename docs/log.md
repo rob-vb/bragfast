@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 18.5 — S2.5 backfill — banner verify + render fix
+
+**Attempted:**
+- Booted dev server, logged in as `hi+test@robvb.com` via agent-browser, opened `/admin/sous-chef?install_state=pending`. Found a runtime error overlay: sidebar's `useQuery(api.drafts.unseenCount, {})` threw `Unauthenticated`. Pushed `convex dev --once` first to align deployed validators, then reproduced — error persisted only when `?install_state=pending` was set.
+- Root cause: `OrgPendingBanner` used `useSearchParams`, which (under Next 16) forces the entire route into client-rendered mode when the parent isn't wrapped in Suspense. That made Convex queries fire before `ConvexBetterAuthProvider` had bound the session token.
+- Fix: read `window.location.search` inside a `useEffect` and stash the result in state. Banner is now a leaf client read with no effect on the route's render mode.
+
+**Verified by agent-browser:**
+- `/admin/sous-chef?install_state=pending` → banner heading "GitHub install pending admin approval" present; both CTAs render; `org-pending-personal-cta` href = `https://github.com/apps/brag-fast-cook/installations/new`. No error overlay.
+- `/admin/sous-chef` (no param) → banner absent; page renders GitHub card normally.
+- Callback unit tests still pass (4/4).
+
+**Deferred / why:** None — this closes the verification gap left in Session 16.
+
+**Open questions for user:** None.
+
+**Next session start:** S2.6c — unauth PR fetch helper.
+
+---
+
 ## 2026-04-30 — Session 18 — S2.6b — bragfast.txt opt-out helper
 
 **Attempted:**
