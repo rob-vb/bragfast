@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import posthog from "posthog-js";
+import { capsFor, type Tier } from "@/lib/plan-tiers";
+import { UpsellModal } from "./upsell-modal";
 
 export type GoalCategory = "revenue" | "users" | "traffic" | "custom";
 
@@ -46,6 +48,7 @@ export function GoalCreateModal({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [upsell, setUpsell] = useState<{ tier: Tier; cap: number } | null>(null);
 
   if (!open) return null;
 
@@ -79,7 +82,15 @@ export function GoalCreateModal({
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          tier?: string;
+          cap?: number;
+        };
+        if (res.status === 403 && data.error === "goal_cap_reached" && data.tier) {
+          setUpsell({ tier: data.tier as Tier, cap: data.cap ?? 1 });
+          return;
+        }
         throw new Error(data.error ?? `Failed: ${res.status}`);
       }
       posthog.capture("goal_set", {
@@ -354,6 +365,20 @@ export function GoalCreateModal({
           </form>
         )}
       </div>
+      {upsell && (
+        <UpsellModal
+          open
+          onClose={() => setUpsell(null)}
+          reason="goals"
+          currentTier={upsell.tier}
+          targetTier={
+            (["plate", "buffet"] as Tier[]).find((t) => {
+              const c = capsFor(t);
+              return c.goals === "unlimited" || c.goals > upsell.cap;
+            }) ?? "plate"
+          }
+        />
+      )}
     </div>
   );
 }
