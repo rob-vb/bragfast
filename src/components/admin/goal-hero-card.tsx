@@ -4,10 +4,15 @@
 // "Current" live progress is not yet wired (scanners don't cache values
 // per goal yet) — card shows target, metric, status, days-since-set,
 // and the automation promise.
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { GoalMetric, GoalProvider } from "@/lib/goals/types";
 import Link from "next/link";
+import {
+  GoalCelebrationModal,
+  hasSeenCelebration,
+} from "./goal-celebration-modal";
 
 const METRIC_NOUN: Record<GoalMetric, string> = {
   mrr: "MRR",
@@ -41,6 +46,37 @@ function daysSince(iso: string): number {
 
 export function GoalHeroCard({ userId }: { userId: string }) {
   const goals = useQuery(api.goals.listByUser, { userId });
+  const prevFirstHitRef = useRef<Map<string, string | null>>(new Map());
+  const [celebration, setCelebration] = useState<
+    { externalId: string; label: string } | null
+  >(null);
+
+  // S5.5: detect firstHitAt transition (null → string) on any goal and trigger
+  // the celebration modal once per goal per session.
+  useEffect(() => {
+    if (!goals) return;
+    const prev = prevFirstHitRef.current;
+    for (const g of goals) {
+      const wasUnhit = prev.has(g.externalId)
+        ? prev.get(g.externalId) == null
+        : g.firstHitAt == null;
+      const isHitNow = g.firstHitAt != null;
+      if (
+        wasUnhit &&
+        isHitNow &&
+        !hasSeenCelebration(g.externalId) &&
+        !celebration
+      ) {
+        const label =
+          g.label ??
+          (g.metric === "stars" && g.scope
+            ? `${g.scope} stars`
+            : METRIC_NOUN[g.metric]);
+        setCelebration({ externalId: g.externalId, label });
+      }
+      prev.set(g.externalId, g.firstHitAt ?? null);
+    }
+  }, [goals, celebration]);
 
   if (goals === undefined) {
     return (
@@ -85,6 +121,14 @@ export function GoalHeroCard({ userId }: { userId: string }) {
     primary.provider != null ? PROVIDER_LABEL[primary.provider] : "Custom";
 
   return (
+    <>
+    {celebration && (
+      <GoalCelebrationModal
+        externalId={celebration.externalId}
+        goalLabel={celebration.label}
+        onClose={() => setCelebration(null)}
+      />
+    )}
     <div
       className={`relative border-2 border-brand p-6 shadow-[4px_4px_0_var(--color-brand)] ${
         isHit ? "bg-gold" : "bg-white"
@@ -139,6 +183,24 @@ export function GoalHeroCard({ userId }: { userId: string }) {
             : "brag.fast already posted this milestone."
           : "brag.fast will post automatically when you hit this."}
       </p>
+
+      {isHit && !primary.recurring && (
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+          <Link
+            href="/admin/drafts"
+            className="font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 border-2 border-brand bg-white text-brand text-center shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          >
+            Review draft
+          </Link>
+          <Link
+            href="/admin/sous-chef"
+            className="font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 border-2 border-brand bg-brand text-gold text-center shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          >
+            Set next goal
+          </Link>
+        </div>
+      )}
     </div>
+    </>
   );
 }

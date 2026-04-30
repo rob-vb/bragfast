@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendResetPasswordEmail } from "@/lib/email";
+import { sendResetPasswordEmail, sendGoalHitEmail } from "@/lib/email";
 import crypto from "crypto";
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case "reset-password":
         await sendResetPasswordEmail(to, data.resetUrl);
+        break;
+      case "goal-hit":
+        await sendGoalHitEmail(to, data.goalLabel, data.approveUrl);
         break;
       default:
         return NextResponse.json(

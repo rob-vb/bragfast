@@ -217,8 +217,8 @@ export const disableGoal = internalMutation({
 });
 
 // S5.3 fire path: stamp firedAt + firstHitAt; disable only when !recurring.
-// Replaces the legacy auto-disable-on-fire behaviour. firstHitAt is set once
-// and never overwritten — drives celebration/first-fire prompts downstream.
+// S5.5: returns { firstHit, userId, label, metric, target, scope } so callers
+// can schedule the celebration email exactly once per goal lifetime.
 export const markFired = internalMutation({
   args: { externalId: v.string() },
   handler: async (ctx, { externalId }) => {
@@ -226,8 +226,18 @@ export const markFired = internalMutation({
       .query("goals")
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .first();
-    if (!row) return;
+    if (!row) {
+      return {
+        firstHit: false,
+        userId: null as string | null,
+        label: null as string | null,
+        metric: null as string | null,
+        target: null as number | null,
+        scope: null as string | null,
+      };
+    }
     const now = new Date().toISOString();
+    const firstHit = !row.firstHitAt;
     const patch: {
       firedAt: string;
       updated_at: string;
@@ -237,9 +247,17 @@ export const markFired = internalMutation({
       firedAt: now,
       updated_at: now,
     };
-    if (!row.firstHitAt) patch.firstHitAt = now;
+    if (firstHit) patch.firstHitAt = now;
     if (!row.recurring) patch.enabled = false;
     await ctx.db.patch(row._id, patch);
+    return {
+      firstHit,
+      userId: row.userId,
+      label: row.label ?? null,
+      metric: row.metric,
+      target: row.target ?? null,
+      scope: row.scope ?? null,
+    };
   },
 });
 

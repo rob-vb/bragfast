@@ -17,6 +17,7 @@ import type * as draftPushes from "../draftPushes.js";
 import type * as drafts from "../drafts.js";
 import type * as githubInstallations from "../githubInstallations.js";
 import type * as githubRepoConfigs from "../githubRepoConfigs.js";
+import type * as goalEmails from "../goalEmails.js";
 import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as integrationSecrets from "../integrationSecrets.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   drafts: typeof drafts;
   githubInstallations: typeof githubInstallations;
   githubRepoConfigs: typeof githubRepoConfigs;
+  goalEmails: typeof goalEmails;
   goals: typeof goals;
   http: typeof http;
   integrationSecrets: typeof integrationSecrets;

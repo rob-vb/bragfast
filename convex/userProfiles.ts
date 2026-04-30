@@ -1,8 +1,19 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { TIER_CONFIG } from "./planTiers";
 
 export const getByUserId = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    return ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+  },
+});
+
+// S5.5: internal counterpart so internalActions can read profile (for email).
+export const getByUserIdInternal = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
     return ctx.db

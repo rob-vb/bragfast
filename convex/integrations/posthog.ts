@@ -248,5 +248,17 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
-  await ctx.runMutation(internal.goals.markFired, { externalId: goal.externalId });
+  const fireResult = await ctx.runMutation(internal.goals.markFired, {
+    externalId: goal.externalId,
+  });
+  // S5.5: schedule celebration email exactly once (first hit only).
+  if (fireResult.firstHit && fireResult.userId) {
+    await ctx.scheduler.runAfter(0, internal.goalEmails.sendCelebrationEmail, {
+      userId: fireResult.userId,
+      label: fireResult.label,
+      metric: fireResult.metric,
+      target: fireResult.target,
+      scope: fireResult.scope,
+    });
+  }
 }
