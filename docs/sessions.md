@@ -14,10 +14,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 0 — Foundation (unblocks everything)
 
-### S0.1 — Create launch branch + feature-flag scaffold · S
+### S0.1 — Create launch branch + feature-flag scaffold · S — `[x]` 2026-04-30
 - Goal: `repos/launch` branch off `main`. Add `NEXT_PUBLIC_LAUNCH_MODE` env (`legacy` | `repositioned`) plus a tiny `isLaunchModeRepositioned()` helper to gate new surfaces.
 - Acceptance: branch exists; helper imported in one file (no behavior change yet).
 - Deps: none.
+- **Result:** Branch live; `src/lib/launch-mode.ts` + `data-launch-mode` attribute on homepage root. Verified via curl. `.env.example` edit blocked (tool permission); helper defaults to `legacy`, safe.
 
 ### S0.2 — Naming conventions doc · S
 - Goal: `docs/conventions.md` codifying PRD §13 (events `snake_case` past-tense, properties `snake_case`, no PII, identify-before-capture, autocapture off).

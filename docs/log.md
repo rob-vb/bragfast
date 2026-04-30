@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 1 — S0.1 launch flag scaffold
+
+**Attempted:**
+- Created `repos/launch` branch off `main`.
+- `src/lib/launch-mode.ts` with `getLaunchMode()` + `isLaunchModeRepositioned()`.
+- Wired `data-launch-mode` attribute on `src/app/page.tsx` root div.
+- `.env.example` edit blocked by permission; helper defaults to `legacy` when env unset, so no behavior risk. Flag documented in helper file + sessions.md.
+- Typecheck clean.
+- Two commits on `repos/launch`: planning docs + S0.1 implementation.
+
+**Verified by agent-browser:** `curl http://localhost:3000` confirms `data-launch-mode="legacy"` on homepage root div. Server-side render emits attribute correctly.
+
+**Deferred / why:** `.env.example` append blocked by tool perms — will surface to user (`NEXT_PUBLIC_LAUNCH_MODE=legacy` should be added manually or via a different path). Non-blocking; helper defaults safely.
+
+**Open questions for user:** none new (Q1–Q5 from Session 0 still open).
+
+**Next session start:** S0.3 — PostHog wiring overhaul (autocapture off, identify hook, person profiles).
+
+---
+
 ## 2026-04-30 — Session 0 — Planning + audit
 
 **Attempted:**
