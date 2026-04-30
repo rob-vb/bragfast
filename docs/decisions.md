@@ -22,7 +22,7 @@ Format:
 
 **Q2 — Video posts/month accounting:** Video and image both consume one `posts_used_this_month` slot. Single counter regardless of format. Per `.agents/product-marketing-context.md` line 17, Buffet "1 video per post" — video is rendered alongside post, not separately quotaed. Aligns with stated value metric: "post = one approved share, regardless of platforms or formats."
 
-**Q3 — Kitchen disposition:** Demote, don't kill. Drop from main admin nav. Keep `/admin/kitchen` reachable via footer link from admin shell. Rationale: manual cook is now a power-user escape hatch, not the front door. Honest reflection of repositioning. Zero SEO surface change since `/admin/*` already noindex.
+**Q3 — Kitchen disposition:** Keep. Stays in main admin sidebar, fully reachable. Rationale (user override 2026-04-30): power lives in agent drafting + showing options, but users still need a manual lane to cook one-off posts. Demoting it would amputate intended functionality, not just remove front-door confusion. Repositioning shifts the *primary* path (auto-draft) but doesn't deprecate manual cooking.
 
 **Q4 — Clipboard `draftPushes` row:** Skip the DB row. PostHog event `draft_clipboard_copied` covers analytics. Clipboard copy is fire-and-forget client-side — no webhook, no failure mode, no retry, nothing to query against. DB row would be storage + write for zero downstream consumer.
 
