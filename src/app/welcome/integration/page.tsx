@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { IntegrationStepClient } from "./integration-client";
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function WelcomeIntegrationPage() {
           <span className="text-gold/60">brand → goal → source</span>
         </div>
         <div className="p-6 sm:p-10 space-y-6">
-          <IntegrationStepClient />
+          <Suspense fallback={null}>
+            <IntegrationStepClient />
+          </Suspense>
         </div>
       </div>
     </div>

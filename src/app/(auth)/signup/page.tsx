@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -14,6 +14,14 @@ const POST_SIGNUP_REPOSITIONED = "/welcome/install-warning";
 const POST_SIGNUP_LEGACY = "/admin";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupPageInner />
+    </Suspense>
+  );
+}
+
+function SignupPageInner() {
   const repositioned = isLaunchModeRepositioned();
   const searchParams = useSearchParams();
   const cameFromPreview = searchParams?.get("source") === "preview";
