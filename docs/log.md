@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 8 — S1.1 — MCP/API purged from homepage
+
+**Attempted:**
+- Removed `McpInstallInstructions` import + entire MCP section ("Your AI in the kitchen") from `src/app/page.tsx`.
+- Removed REST API section ("Wire it into anything", `curl https://brag.fast/api/v1/cook/image` example).
+- Removed FAQ entry "Can an AI agent use this for me?".
+- Updated metadata: title → "brag.fast | Build-in-public posts on autopilot"; description rewritten around Sous-Chef drafting.
+- Deleted `src/components/landing/mcp-install-instructions.tsx` (201 lines).
+- Typecheck clean. 729 tests pass.
+
+**Verified by agent-browser:** pending — will batch with S1.2 nav/footer changes.
+
+**Deferred / why:** none. PRD.md and `.{agents,claude}/product-marketing-context.md` show as modified in working tree but unrelated to S1.1 — leaving unstaged.
+
+**Open questions for user:** none new.
+
+**Next session start:** S1.2 — footer "Docs" → "Developers" + landing nav demotion.
+
+---
+
 ## 2026-04-30 — Session 7 — S0.4a.4/5 deferred; sweep closed
 
 **Attempted:**

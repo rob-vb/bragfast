@@ -74,7 +74,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 1 — Public-surface purge
 
-### S1.1 — Remove MCP/API from homepage · M
+### S1.1 — Remove MCP/API from homepage · M [x] 2026-04-30
 - Goal: delete MCP section + REST API section from `src/app/page.tsx`; update meta description; remove MCP/API FAQ items; delete `src/components/landing/mcp-install-instructions.tsx`.
 - Acceptance: agent-browser screenshots `/` — no MCP, no API, no agent language.
 - Deps: S0.1.
