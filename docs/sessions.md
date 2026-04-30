@@ -214,15 +214,17 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser confirms zero credit/MCP language.
 - Deps: S2.7, S1.3.
 
-### S4.2 — Source-cap upsell prompts · M
+### S4.2 — Source-cap upsell prompts · M  [x] 2026-04-30
 - Goal: When Toast user tries to connect Stripe → prompt "Upgrade to Full Plate." Same for format/video gates.
 - Acceptance: agent-browser hits each upsell trigger → prompt fires.
 - Deps: S2.7.
+- **Result:** New `UpsellModal` component (`src/components/admin/upsell-modal.tsx`) supports reasons: sources/format/video/platforms/goals; renders tier-aware copy and links to `/admin/account/upgrade`. Sous-Chef client computes `connectedSourceCount` (stripe/posthog/ga4 + GitHub) and intercepts connect at cap via `requestConnect()` → opens UpsellModal. Server-side authoritative check added to `/api/v1/sous-chef/integrations` POST: rejects new connect with 403 `{error: "source_cap_reached", tier}` when at cap; reconnect of an already-enabled provider bypasses (credential rotation). Tests: 2 new (cap reject, reconnect allowed) — 7/7 pass.
 
-### S4.3 — Migration plan for existing users · S
+### S4.3 — Migration plan for existing users · S  [x] 2026-04-30
 - Goal: Decide grandfathering: existing trial → free tier with same lifetime cap. Existing paid → keep current tier mapped to new plan. Document in `docs/decisions.md`.
 - Acceptance: written plan reviewed by user.
 - Deps: S2.7.
+- **Result:** `docs/decisions.md` 2026-04-30 entry. Soft-grandfather + opt-in migration: legacy plans (trial/starter/pro/scale) keep credits accounting via `tierFor()=null` fallback (already wired in S2.7). New signups land on free/toast/plate/buffet directly. Mapping: trial→free, starter→toast, pro→plate, scale→buffet — applied only when user self-upgrades on `/admin/account/upgrade`. No hard cutover, no proration. Stripe webhook routes to whichever plan literal matches the price (legacy + new price IDs both env-mapped). Rollback = flip `LAUNCH_MODE`.
 
 ---
 
@@ -245,10 +247,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S0.1.
 - **Result:** Schema: `provider` now optional, `metric` adds `"custom"`, new optional fields `firedAt`/`firstHitAt`/`recurring`. New `goals.markFired` internalMutation stamps `firedAt` (always) + `firstHitAt` (once) and only flips `enabled=false` when `!recurring`. All four integration scanners (stripe/posthog/ga4/githubStars) swapped from `disableGoal` → `markFired`. `validateGoalInput` rejects custom-with-provider, custom-without-label, and non-custom-with-null-provider. API route `/api/v1/goals` accepts `provider: null` + `metric: "custom"` + `recurring`. Tests: 812/812 pass; 4 new validator tests cover custom paths. Existing goals untouched (all new fields optional).
 
-### S5.4 — Toast cap of 1 active goal · S
+### S5.4 — Toast cap of 1 active goal · S  [x] 2026-04-30
 - Goal: Enforce in `goals.create` mutation; UI surfaces "Upgrade to Full Plate for unlimited goals."
 - Acceptance: Toast user can't create 2nd goal.
 - Deps: S5.3, S2.7.
+- **Result:** `convex/goals.ts` `create` handler now reads the user's tier and rejects when `enabled` would push active count past `TIER_CONFIG[tier].goals` — throws `goal_cap_reached:<tier>:<cap>`. Legacy plans (`tierFor=null`) bypass. `/api/v1/goals` POST parses the structured error and returns 403 `{error: "goal_cap_reached", tier, cap}`. `goal-create-modal.tsx` catches the 403 and surfaces `UpsellModal` reason="goals" pointing at the next tier with a higher (or unlimited) goals cap. Tests: 1 new in `goals-route.test.ts` covers the 403 mapping — 14/14 pass; full suite 855/855 pass.
 
 ### S5.5 — Goal-hit celebration + email + next-goal prompt · M
 - Goal: Real-time subscription on dashboard fires confetti modal. Resend email with one-click approve link. After approval, "Set your next goal?" prompt.

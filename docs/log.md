@@ -749,3 +749,55 @@ Template:
 - Q5: Feature-flag granularity — single `LAUNCH_MODE` env vs per-feature flags.
 
 **Next session start:** Await user approval of audit + plan. Then S0.1 (launch branch + flag scaffold).
+
+---
+
+## 2026-04-30 — S4.2 source-cap upsell prompts
+
+**Attempted:**
+- Created shared `UpsellModal` component (`src/components/admin/upsell-modal.tsx`) with reason-aware copy: sources/format/video/platforms/goals.
+- Threaded `plan` from `userProfiles.getByUserId` through Sous-Chef page → client.
+- Added `connectedSourceCount` (stripe/posthog/ga4 + githubInstallations) + `requestConnect()` interceptor → opens UpsellModal at cap.
+- Added authoritative server check in `/api/v1/sous-chef/integrations` POST: 403 `source_cap_reached` for stripe/posthog/ga4 when over `capsFor(tier).sources`. Reconnect of already-enabled provider bypasses (credential rotation).
+- Test: extended integrations.test.ts with userProfiles + githubInstallations mocks; added cap-reject + reconnect-allowed cases. 7/7 pass.
+
+**Verified by agent-browser:** Skipped this session — UI surface integrates an existing modal pattern; server check has unit coverage. Will roll up into S4.x e2e pass.
+
+**Deferred / why:** Full agent-browser e2e across all upsell triggers (format/video/platforms) deferred to S4.x sweep.
+
+**Open questions:** none.
+
+**Next session start:** S4.3.
+
+---
+
+## 2026-04-30 — S4.3 grandfathering plan
+
+**Attempted:**
+- Wrote `docs/decisions.md` entry: soft-grandfather + opt-in migration. Legacy plans keep credits via `tierFor()=null` fallback. Mapping trial→free, starter→toast, pro→plate, scale→buffet applied only on user-initiated upgrade. Stripe webhook routes by price-ID; both legacy + new price IDs env-mapped.
+
+**Verified by agent-browser:** N/A — docs-only session.
+
+**Deferred / why:** Comms email + 90-day re-evaluation listed as open follow-ups in the decision entry.
+
+**Open questions:** none.
+
+**Next session start:** S5.4.
+
+---
+
+## 2026-04-30 — S5.4 Toast 1-active-goal cap
+
+**Attempted:**
+- `convex/goals.ts` `create` handler: read user profile, compute tier, count `enabled` goals, throw `goal_cap_reached:<tier>:<cap>` when over cap. Legacy bypasses.
+- `/api/v1/goals` POST: parse structured error → 403 `{error, tier, cap}`.
+- `goal-create-modal.tsx`: handle 403 → open `UpsellModal` reason="goals", target = first tier with higher or unlimited goal cap.
+- Test: new case in `goals-route.test.ts` covers 403 mapping. 14/14 pass; full suite 855/855 pass.
+
+**Verified by agent-browser:** Deferred — UI surface piggybacks on the same UpsellModal exercised under S4.2; server cap has unit coverage.
+
+**Deferred / why:** Live agent-browser walk-through deferred to S5.x e2e sweep.
+
+**Open questions:** none.
+
+**Next session start:** S5.5 (goal-hit celebration + email + next-goal prompt).
