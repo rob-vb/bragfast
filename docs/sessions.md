@@ -57,10 +57,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S0.4a.
 - Result: split public surface (ownership-checked, requires `userId` arg) from `internal*` surface (server-trusted, used by webhook + stars cron). New `assertOwnsInstallation(ctx, userId, installationId)` helper looks up the installation, verifies `userId` match and `status === "active"`. Public `upsert` / `getByRepo` / `listByInstallation` / `toggle` / `setNotifyOnPrMerge` all gated. Defense-in-depth: existing config rows must also match the asserted `installationId` before patching. Webhook computes `userId` from `installation.userId` and uses public `getByRepo` (signature is the trust boundary). Stars cron (`scan`, `seedFromCurrentState`) uses new `internalListByInstallation`. Configs route already passes `user._id`. Auth bridge (S0.4a.4 deferred) means `userId` is still client-supplied — ownership check at minimum drops the prior repoFullName-or-installationId-alone exfil path. tsc clean. 78/78 convex tests pass.
 
-### S0.4d — Cross-tenant integration test · S
+### S0.4d — Cross-tenant integration test · S — `[x]` 2026-04-30
 - Goal: vitest test creates two users, attempts cross-tenant reads/writes on drafts, releases, integrationSecrets, goals; asserts every attempt fails.
 - Acceptance: test suite green.
 - Deps: S0.4a, S0.4b, S0.4c.
+- Result: new `convex/__tests__/crossTenant.test.ts` covers the public Convex surface hardened by S0.4a.3 + S0.4b + S0.4c. Drafts: `unseenCount` + `markSeen` use caller identity (USER_B sees zero of A's drafts, only stamps own profile); `getByExternalId` returns null cross-tenant; `unsuppressDraft` refuses foreign rows. DraftPushes: `listByDraft` returns empty for foreign caller. GithubRepoConfigs: `getByRepo`/`listByInstallation`/`upsert`/`toggle`/`setNotifyOnPrMerge` all reject when caller's userId ≠ installation owner. Releases / integrationSecrets / goals not directly tested — their public surfaces are either internal-only (integrationSecrets is action-only via `upsertAction`) or still client-supplied-userId pending S0.4a.4/a.5 deferral; no enforceable Convex-layer ownership check exists yet to assert. Documented gap in test header. 9/9 new tests pass; full convex suite 87/87.
 
 ### S0.5 — GitHub App scope = "select repositories" default · S — `[x]` 2026-04-30 (UI hint only — see decisions.md)
 - Goal: update App manifest / config so install screen defaults to scoped, not "all repositories."

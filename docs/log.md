@@ -901,3 +901,27 @@ Template:
 **Open questions:** none.
 
 **Next session start:** S0.4d or jump to S7+ (cook pipeline reuse) — user's call.
+
+---
+
+## 2026-04-30 — S0.4d cross-tenant integration test
+
+**What shipped:** Regression test asserting cross-tenant attempts fail on every Convex public surface that S0.4a.3 / S0.4b / S0.4c hardened.
+
+**Files touched:**
+- `convex/__tests__/crossTenant.test.ts` (new, 9 tests).
+- `docs/sessions.md` — S0.4d marked `[x]`.
+
+**Coverage:**
+- Drafts (auth-gated, S0.4a.3): `unseenCount` + `markSeen` use caller identity; `getByExternalId` filter rejects foreign owner; `unsuppressDraft` refuses cross-tenant write.
+- DraftPushes (auth-gated): `listByDraft` empty for foreign caller.
+- GithubRepoConfigs (S0.4c): `getByRepo`, `listByInstallation`, `upsert`, `toggle`, `setNotifyOnPrMerge` all reject cross-tenant.
+- OauthState (S0.4b): already covered by `oauthState.test.ts`.
+
+**Verified:** `vitest convex/__tests__/crossTenant.test.ts` PASS 9/9. Full convex suite PASS 87/87.
+
+**Documented gap:** releases / integrationSecrets / goals public surfaces still accept client-supplied `userId`. Their Next.js callers gate access via `getSessionUser()` so the public Convex URL exfil path is closed by S0.4a.3 (no browser callers). Defense-in-depth at the Convex layer waits on S0.4a.4 (server-side auth bridge) and S0.4a.5 (MIXED RISKY conversion), both deferred post-launch. Integration secrets in particular are write-gated via `internalMutation` — only `upsertAction` / `disconnectAction` are public-callable. The deferred bridge will eventually let us collapse the userId arg into `requireAuthedUser` everywhere.
+
+**Open questions:** none. Phase 0.4 closed.
+
+**Next session start:** S7+ (cook pipeline reuse) or another Phase 0/1/6 item — user's call.
