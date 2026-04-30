@@ -14,6 +14,25 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 7 — S0.4a.4/5 deferred; sweep closed
+
+**Attempted:**
+- Audited Next.js server-side Convex callers (`fetchQuery`/`fetchMutation`/`ConvexHttpClient`). Hit design fork: API-key callers can't ride `convexBetterAuthNextJs` (Better Auth helper only mints tokens from session cookies, not from Bearer API keys).
+- Surfaced four options to user (twin variants / mint JWT from server secret / adopt Better Auth api-key plugin / defer).
+- User chose defer. Reasoning logged in `docs/decisions.md` (2026-04-30 entry "Defer server-side Convex auth bridge until post-launch"): S0.4a.3 already closed the externally exploitable surface; server-side calls remain gated by Next.js `authenticate()`, so the residual risk is a Next.js-route bug, not an attacker entry point.
+- Updated `docs/sessions.md` to mark S0.4a.4 and S0.4a.5 DEFERRED with rationale pointer.
+
+**Verified by agent-browser:** N/A — docs-only.
+
+**Deferred / why:**
+- S0.4a.4 (Next.js auth bridge) and S0.4a.5 (MIXED RISKY conversion) explicitly punted to post-launch. Right end state is option C (Better Auth api-key plugin migration); needs its own phase.
+
+**Open questions for user:** none new.
+
+**Next session start:** continue P1 per `docs/sessions.md` — S1.1 (remove MCP/API from homepage).
+
+---
+
 ## 2026-04-30 — Session 6 — S0.4a.3 browser-only RISKY conversion
 
 **Attempted:**

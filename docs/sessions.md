@@ -42,8 +42,8 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
   - S0.4a.1 — wire `ConvexBetterAuthProvider` so browser carries Better Auth tokens to Convex. `[x]` 2026-04-30
   - S0.4a.2 — add `requireAuthedUser(ctx)` helper in `convex/auth.ts` (subject-based). `[x]` 2026-04-30
   - S0.4a.3 — convert browser-only RISKY: `drafts.unseenCount`, `drafts.markSeen`, `draftPushes.{approveDraft,listByDraft,retryPush}`. `[x]` 2026-04-30
-  - S0.4a.4 — server-side auth bridge: route Next.js `fetchQuery`/`fetchMutation`/`ConvexHttpClient` calls through `convexBetterAuthNextJs` so they carry Better Auth tokens. **TODO**
-  - S0.4a.5 — convert MIXED RISKY: `brands.listByUser`, `drafts.listByUser`, `githubInstallations.listByUserId`, `integrationSecrets.listByUser`, `releases.{getByExternalId,listByUser}`, `routingDefaults.listByUser`, `userProfiles.{getBalance,getStats,refund}`. **Blocked on S0.4a.4.**
+  - S0.4a.4 — server-side auth bridge. **DEFERRED to post-launch** (decision 2026-04-30). Server-side `fetchQuery`/`fetchMutation`/`ConvexHttpClient` calls go through Next.js, which gates them via `authenticate()` (API key or session) before computing `userId`. Not externally exploitable — the public-Convex-URL exfil path is closed by S0.4a.3. Defense-in-depth at Convex layer postponed until Better Auth api-key plugin migration (option C) is planned as its own phase.
+  - S0.4a.5 — convert MIXED RISKY. **DEFERRED with S0.4a.4.** Same rationale.
 
 ### S0.4b — OAuth state issue/consume hardening · S
 - Goal: gate `oauthState.issueStateAction` / `consumeStateAction` behind authed entry; remove the forgery surface where any caller can mint a CSRF state for any userId.
