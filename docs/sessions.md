@@ -138,7 +138,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: invalid URL → 400. Rate-limit exceeded → 429 with retry-after. Valid URL → 200 with stub `{ status: "ok" }`.
 - Deps: S0.1.
 
-#### S2.6b — `bragfast.txt` opt-out check · S
+#### S2.6b — `bragfast.txt` opt-out check · S  [x] 2026-04-30
 - Goal: helper `isRepoOptedOut(repoFullName)` fetches raw `bragfast.txt`, caches result 1h. Wired into preview API before render.
 - Acceptance: opt-out repo returns 403 with `reason: "opted_out"`. Vitest covers cache behavior.
 - Deps: S2.6a.

@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 18 — S2.6b — bragfast.txt opt-out helper
+
+**Attempted:**
+- `src/lib/preview/opt-out.ts`: `isRepoOptedOut(repoFullName, fetchImpl?)` HEADs `https://raw.githubusercontent.com/{repo}/HEAD/bragfast.txt`. Existence-only (status 200 → opted out). Module-level `Map` cache, 1h TTL. Network errors fail-open (not opted out). Exposes `__resetOptOutCache()` for tests.
+- `src/app/api/preview/route.ts`: wired opt-out check after rate-limit pass; returns 403 `{ error: "opted_out", reason: "opted_out" }` when blocked.
+
+**Tests:**
+- `src/lib/preview/__tests__/opt-out.test.ts`: 200 → true, 404 → false, fetch error → false, cache hit avoids second fetch, URL shape verified.
+- Route test extended: 403 path with mocked `isRepoOptedOut`. All 25 preview tests pass; tsc clean.
+
+**Verified by agent-browser:** N/A — JSON only.
+
+**Deferred / why:** Cache survives only within a single serverless instance. Acceptable for MVP — opt-outs are rare and HEAD is cheap.
+
+**Open questions for user:** None new.
+
+**Next session start:** S2.6c — unauth PR fetch helper.
+
+---
+
 ## 2026-04-30 — Session 17 — S2.6a — preview API scaffold + URL parser + IP rate limit
 
 **Attempted:**

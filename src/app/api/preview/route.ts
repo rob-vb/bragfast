@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { parseRepoUrl, extractClientIp } from "@/lib/preview/parse-repo-url";
+import { isRepoOptedOut } from "@/lib/preview/opt-out";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
     return Response.json(
       { error: "rate_limited", scope: limit.scope, retryAfter },
       { status: 429, headers: { "retry-after": String(retryAfter) } },
+    );
+  }
+
+  if (await isRepoOptedOut(parsed.fullName)) {
+    return Response.json(
+      { error: "opted_out", reason: "opted_out" },
+      { status: 403 },
     );
   }
 

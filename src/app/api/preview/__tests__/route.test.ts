@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mutation = vi.fn();
+const optedOut = vi.fn();
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
@@ -8,6 +9,10 @@ vi.mock("convex/browser", () => ({
     action = vi.fn();
     mutation = mutation;
   },
+}));
+
+vi.mock("@/lib/preview/opt-out", () => ({
+  isRepoOptedOut: (...args: unknown[]) => optedOut(...args),
 }));
 
 import { POST } from "../route";
@@ -22,6 +27,8 @@ function makeReq(body: unknown, headers: Record<string, string> = {}) {
 
 beforeEach(() => {
   mutation.mockReset();
+  optedOut.mockReset();
+  optedOut.mockResolvedValue(false);
 });
 
 describe("POST /api/preview", () => {
@@ -61,6 +68,17 @@ describe("POST /api/preview", () => {
       repo: "rob/bragfast",
     });
     expect(mutation).toHaveBeenCalledWith(expect.anything(), { ip: "1.2.3.4" });
+  });
+
+  it("returns 403 opted_out when repo has bragfast.txt", async () => {
+    mutation.mockResolvedValue({ allowed: true });
+    optedOut.mockResolvedValue(true);
+    const res = await POST(
+      makeReq({ repoUrl: "https://github.com/rob/bragfast" }),
+    );
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ reason: "opted_out" });
+    expect(optedOut).toHaveBeenCalledWith("rob/bragfast");
   });
 
   it("returns 429 with retry-after header when rate-limited", async () => {
