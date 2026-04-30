@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mutation = vi.fn();
 const optedOut = vi.fn();
+const publicPr = vi.fn();
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
@@ -13,6 +14,10 @@ vi.mock("convex/browser", () => ({
 
 vi.mock("@/lib/preview/opt-out", () => ({
   isRepoOptedOut: (...args: unknown[]) => optedOut(...args),
+}));
+
+vi.mock("@/lib/preview/public-pr", () => ({
+  fetchPublicLatestPr: (...args: unknown[]) => publicPr(...args),
 }));
 
 import { POST } from "../route";
@@ -29,6 +34,18 @@ beforeEach(() => {
   mutation.mockReset();
   optedOut.mockReset();
   optedOut.mockResolvedValue(false);
+  publicPr.mockReset();
+  publicPr.mockResolvedValue({
+    ok: true,
+    pr: {
+      number: 7,
+      title: "Add feature",
+      body: null,
+      html_url: "https://github.com/rob/bragfast/pull/7",
+      merged_at: "2026-04-29T00:00:00Z",
+    },
+    defaultBranch: "main",
+  });
 });
 
 describe("POST /api/preview", () => {
@@ -54,7 +71,7 @@ describe("POST /api/preview", () => {
     expect(await res.json()).toMatchObject({ error: "invalid_repo_url" });
   });
 
-  it("returns 200 with parsed repo when within rate limit", async () => {
+  it("returns 200 with parsed repo + PR when within rate limit", async () => {
     mutation.mockResolvedValue({ allowed: true });
     const res = await POST(
       makeReq(
@@ -66,8 +83,34 @@ describe("POST /api/preview", () => {
     expect(await res.json()).toMatchObject({
       status: "pending",
       repo: "rob/bragfast",
+      pr: { number: 7, title: "Add feature" },
     });
     expect(mutation).toHaveBeenCalledWith(expect.anything(), { ip: "1.2.3.4" });
+  });
+
+  it("returns 404 repo_not_found when GitHub 404s", async () => {
+    mutation.mockResolvedValue({ allowed: true });
+    publicPr.mockResolvedValue({ ok: false, code: "not_found" });
+    const res = await POST(makeReq({ repoUrl: "https://github.com/rob/x" }));
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: "repo_not_found" });
+  });
+
+  it("returns 404 no_merged_pr when repo has no merged PR", async () => {
+    mutation.mockResolvedValue({ allowed: true });
+    publicPr.mockResolvedValue({ ok: false, code: "no_pr" });
+    const res = await POST(makeReq({ repoUrl: "https://github.com/rob/x" }));
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: "no_merged_pr" });
+  });
+
+  it("returns 503 with retry-after when GitHub rate-limits", async () => {
+    mutation.mockResolvedValue({ allowed: true });
+    publicPr.mockResolvedValue({ ok: false, code: "rate_limited" });
+    const res = await POST(makeReq({ repoUrl: "https://github.com/rob/x" }));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("retry-after")).toBe("3600");
+    expect(await res.json()).toMatchObject({ error: "github_rate_limited" });
   });
 
   it("returns 403 opted_out when repo has bragfast.txt", async () => {

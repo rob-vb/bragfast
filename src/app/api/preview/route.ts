@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { parseRepoUrl, extractClientIp } from "@/lib/preview/parse-repo-url";
 import { isRepoOptedOut } from "@/lib/preview/opt-out";
+import { fetchPublicLatestPr } from "@/lib/preview/public-pr";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -40,8 +41,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const prResult = await fetchPublicLatestPr(parsed.fullName);
+  if (!prResult.ok) {
+    if (prResult.code === "rate_limited") {
+      return Response.json(
+        { error: "github_rate_limited" },
+        { status: 503, headers: { "retry-after": "3600" } },
+      );
+    }
+    if (prResult.code === "not_found") {
+      return Response.json({ error: "repo_not_found" }, { status: 404 });
+    }
+    // no_pr — repo exists but has no merged PR yet
+    return Response.json({ error: "no_merged_pr" }, { status: 404 });
+  }
+
   return Response.json({
     status: "pending",
     repo: parsed.fullName,
+    pr: {
+      number: prResult.pr.number,
+      title: prResult.pr.title,
+      url: prResult.pr.html_url,
+    },
   });
 }
