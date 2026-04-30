@@ -197,16 +197,25 @@ async function createPrMergeDraft(
 ) {
   try {
     const input = buildPrMergeDraftInput(payload, userId);
-    const disabled = await convex.query(
-      api.userProfiles.getDisabledPlatforms,
-      { userId },
-    );
+    const [disabled, voicePreset] = await Promise.all([
+      convex.query(api.userProfiles.getDisabledPlatforms, { userId }),
+      convex.query(api.userProfiles.getVoicePreset, { userId }),
+    ]);
     const enabledPlatforms: Platform[] = PLATFORMS.filter(
       (p) => !disabled.includes(p),
     );
+    const composeInput = {
+      ...input.composeCopyInput,
+      voicePreset: voicePreset as
+        | "casual_builder"
+        | "dry_technical"
+        | "earnest_milestone"
+        | "deadpan"
+        | null,
+    };
     const [pick, composed] = await Promise.all([
       pickTemplate(input.pickTemplateInput),
-      composeCopyByPlatform(input.composeCopyInput, enabledPlatforms),
+      composeCopyByPlatform(composeInput, enabledPlatforms),
     ]);
     const { copies, primary } = composed;
 

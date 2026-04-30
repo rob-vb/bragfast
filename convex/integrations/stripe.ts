@@ -255,7 +255,17 @@ async function fireDraft(
     goalMilestoneKey(goal.externalId),
   );
 
-  const composeInput = buildComposeInput(goal, snapshot);
+  const profile = await ctx.runQuery(
+    internal.userProfiles.getByUserIdInternal,
+    { userId },
+  );
+  const voicePreset = (profile?.voicePreset ?? null) as
+    | "casual_builder"
+    | "dry_technical"
+    | "earnest_milestone"
+    | "deadpan"
+    | null;
+  const composeInput = { ...buildComposeInput(goal, snapshot), voicePreset };
   const [pick, copy] = await Promise.all([
     pickTemplate({ milestoneKey }),
     composeCopy(composeInput),

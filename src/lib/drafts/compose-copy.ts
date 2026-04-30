@@ -18,7 +18,7 @@ export type CopyByPlatform = Partial<
   Record<Platform, { title: string; description: string }>
 >;
 
-type PlatformOpt = { platform?: Platform };
+type PlatformOpt = { platform?: Platform; voicePreset?: VoicePreset | null };
 
 export type ComposeCopyInput =
   | ({
@@ -78,10 +78,16 @@ const CopySchema = z.object({
     .default(0),
 });
 
-function brandLine(input: { brandName?: string; brandVoice?: string }): string {
+function brandLine(input: {
+  brandName?: string;
+  brandVoice?: string;
+  voicePreset?: VoicePreset | null;
+}): string {
   const parts: string[] = [];
   if (input.brandName) parts.push(`Brand: ${input.brandName}`);
   if (input.brandVoice) parts.push(`Voice: ${input.brandVoice}`);
+  const presetLine = voicePresetLine(input.voicePreset);
+  if (presetLine) parts.push(presetLine);
   return parts.join("\n");
 }
 

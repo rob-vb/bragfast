@@ -224,9 +224,24 @@ async function fireDraft(
     goalMilestoneKey(goal.externalId),
   );
 
+  const profile = await ctx.runQuery(
+    internal.userProfiles.getByUserIdInternal,
+    { userId },
+  );
+  const voicePreset = (profile?.voicePreset ?? null) as
+    | "casual_builder"
+    | "dry_technical"
+    | "earnest_milestone"
+    | "deadpan"
+    | null;
   const [pick, copy] = await Promise.all([
     pickTemplate({ milestoneKey }),
-    composeCopy({ type: "visitors", source: "posthog", threshold: goal.target ?? visitors }),
+    composeCopy({
+      type: "visitors",
+      source: "posthog",
+      threshold: goal.target ?? visitors,
+      voicePreset,
+    }),
   ]);
 
   const draftConfig: DraftConfig = {

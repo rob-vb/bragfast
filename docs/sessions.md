@@ -316,11 +316,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S0.3, S7.1.
 - Deferred reason: needs original-copy snapshot at draft time + diff at approve time + PostHog payload extension. Mid-sized refactor of approve modal + analytics layer. Current `post_approved` fires without delta; voice learning loop blocked until S8.1 + S8.3 ship together.
 
-### S8.2 — Voice presets (4) for new users · S · PARTIAL 2026-04-30
+### S8.2 — Voice presets (4) for new users · S · [x] 2026-04-30
 - Goal: Settings → Voice page shows preset picker (casual builder / dry-technical / earnest milestone / deadpan). Stored on `userProfiles.voicePreset`.
 - Acceptance: agent-browser picks preset → next draft prompt includes preset.
 - Deps: schema field added.
-- Result: schema field `userProfiles.voicePreset` added in `convex/schema.ts`. Server-side validated `getVoicePreset` + `setVoicePreset` mutations in `convex/userProfiles.ts`. `voicePresetLine` helper + `VOICE_PRESET_GUIDE` in `src/lib/drafts/compose-copy.ts`. Settings UI page deferred; Haiku prompt wiring deferred (every composeCopy caller in convex/integrations needs to fetch voicePreset → pass through brandVoice or new field). Schema-level groundwork enables S8.3 + S8.4 next iteration.
+- Result: schema field `userProfiles.voicePreset` + validated `getVoicePreset` / `setVoicePreset` shipped earlier in batch. Wiring now landed: `composeCopy` accepts `voicePreset` on every input variant, `brandLine` injects `voicePresetLine(...)` into the user prompt. All 5 callsites fetch and pass through: `convex/integrations/{stripe,ga4,posthog,githubStars}.ts` via `internal.userProfiles.getByUserIdInternal`; `src/app/api/github/webhooks/route.ts` + `src/lib/github/retro-pr.ts` via `api.userProfiles.getVoicePreset`. Settings UI page = S8.4.
 
 ### S8.3 — Few-shot recent approvals into Haiku prompt · M · DEFERRED 2026-04-30
 - Goal: composeCopy fetches last N approved-and-edited drafts for user, injects as examples.

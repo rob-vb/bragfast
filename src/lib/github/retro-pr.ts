@@ -116,13 +116,19 @@ export async function runRetroPrMergeDraft(
     const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
 
     // Skip generation if a draft for this milestone already exists.
-    const disabled = await convex.query(
-      api.userProfiles.getDisabledPlatforms,
-      { userId },
-    );
+    const [disabled, voicePreset] = await Promise.all([
+      convex.query(api.userProfiles.getDisabledPlatforms, { userId }),
+      convex.query(api.userProfiles.getVoicePreset, { userId }),
+    ]);
     const enabledPlatforms: Platform[] = PLATFORMS.filter(
       (p) => !disabled.includes(p),
     );
+    const preset = voicePreset as
+      | "casual_builder"
+      | "dry_technical"
+      | "earnest_milestone"
+      | "deadpan"
+      | null;
 
     const [pick, composed] = await Promise.all([
       pickTemplate({
@@ -135,6 +141,7 @@ export async function runRetroPrMergeDraft(
           title: pr.title,
           body: pr.body ?? "",
           repoFullName,
+          voicePreset: preset,
         },
         enabledPlatforms,
       ),
