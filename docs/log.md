@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 4 — S0.2 + S0.4 + S0.5 (P0 sweep)
+
+**Attempted:**
+- **S0.2** — `docs/conventions.md` codifies PRD §13: PostHog naming rules, setup, the 14 launch events with property contracts, North Star dashboard pointer, launch-mode flag. Linked from `CLAUDE.md`.
+- **S0.4** — Tenant isolation audit (Explore subagent walked `convex/*.ts`). Finding: zero Convex functions call `ctx.auth.getUserIdentity()` or `authComponent.getAuthUser`. Every public function trusts a client-supplied `userId`. Browser components call Convex directly via `useQuery(api.X.listByUser, { userId })`, so the public Convex URL + a known userId allows arbitrary cross-tenant reads/writes including OAuth secret leak via `integrationSecrets.getByUserProvider`. Audit appended to `docs/audit.md` §M with full RISKY + NEEDS_REVIEW lists. Original "cross-tenant test" acceptance moved to S0.4d (post-enforcement). Created S0.4a–d follow-up sessions.
+- **S0.5** — GitHub install endpoint accepts no URL parameter that pre-selects "Only select repositories." Added guidance copy under install CTA in `src/components/admin/github-section.tsx`. Decision recorded in `docs/decisions.md`. Acceptance reframed.
+
+**Verified by agent-browser:** N/A — docs + audit + small UI string. Typecheck clean.
+
+**Deferred / why:**
+- **S0.4 enforcement is the real fix.** Audit alone is not Layer-5-safe for launch. S0.4a (auth on RISKY functions) must ship before public launch — cross-tenant data exposure is a P0 launch blocker.
+- Cross-tenant test (S0.4d) deferred until enforcement exists.
+
+**Open questions for user:**
+- Q6 (NEW): S0.4a is bigger than the original M sizing — likely 2–3 sessions. Confirm: prioritize S0.4a immediately, or continue P1 sequence and treat enforcement as a launch-gate stop?
+
+**Next session start:** await user direction on Q6, otherwise S1 (the next phase per `docs/sessions.md`).
+
+---
+
 ## 2026-04-30 — Session 3 — S0.6 pre-render content filter
 
 **Attempted:**

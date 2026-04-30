@@ -51,6 +51,9 @@ export function GitHubSection({ installations, appSlug }: Props) {
         >
           <PixelButton>Install GitHub App</PixelButton>
         </a>
+        <p className="mt-3 text-xs text-brand/60">
+          On the next screen, choose <span className="font-bold">Only select repositories</span> and pick the repos you want to brag about.
+        </p>
       </div>
     );
   }

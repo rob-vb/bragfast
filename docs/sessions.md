@@ -54,10 +54,10 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: test suite green.
 - Deps: S0.4a, S0.4b, S0.4c.
 
-### S0.5 — GitHub App scope = "select repositories" default · S
+### S0.5 — GitHub App scope = "select repositories" default · S — `[x]` 2026-04-30 (UI hint only — see decisions.md)
 - Goal: update App manifest / config so install screen defaults to scoped, not "all repositories."
-- Acceptance: agent-browser starts install flow → confirms "Only select repositories" pre-selected.
-- Deps: none. Manual step in GitHub App settings; document in `docs/decisions.md`.
+- Outcome: GitHub doesn't accept a URL/manifest param to pre-select scope. Added install-time guidance copy under the install CTA in `github-section.tsx`. Decision recorded in `docs/decisions.md` (2026-04-30 entry). Acceptance reframed.
+- Deps: none.
 
 ### S0.6 — Pre-render content filter (Layer 1) · M — `[x]` 2026-04-30
 - Goal: insert keyword + small LLM check before `composeCopy` in: webhook handler + Stripe/PostHog/GA4 scans. Sensitive matches → store as `suppressed_sensitive` event in history feed, do not draft.
