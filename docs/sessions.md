@@ -173,7 +173,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser pastes a URL → sees preview within 5s; events fire.
 - Deps: S2.6, S0.3.
 
-### S3.2 — GitHub-OAuth-first signup · M
+### S3.2 — GitHub-OAuth-first signup · M  [x] 2026-04-30
 - Goal: `/signup` reduces to GitHub OAuth button (in-page popup). Email/password de-emphasized to "advanced" link. Redirect post-OAuth → wizard step 2 (pre-install warning).
 - Acceptance: agent-browser signs up via OAuth → lands on warning screen.
 - Deps: S0.3.

@@ -14,6 +14,25 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 23 — S3.2 — GitHub-OAuth-first signup
+
+**Attempted:**
+- `src/app/(auth)/signup/page.tsx`: top-level branches on `isLaunchModeRepositioned()`. Repositioned mode shows GitHub OAuth as the primary gold button via `authClient.signIn.social({ provider: "github", callbackURL: "/welcome/install-warning" })`. "Use email instead (advanced)" toggle reveals `EmailSignupForm`. `cameFromPreview` derived from `?source=preview`. Signup metadata stored in `localStorage["bf_signup_meta"]` before OAuth redirect (PostHog `signup_completed` fires post-callback). Legacy mode preserved as `LegacySignup`.
+- `src/app/welcome/install-warning/page.tsx`: server component warning page. Lists what we read / don't read, "Only select repositories" guidance, install + skip CTAs. Install URL built from `NEXT_PUBLIC_GITHUB_APP_SLUG`.
+
+**Verified by agent-browser:**
+- `/signup` (repositioned): "▸ SIGN UP WITH GITHUB" header, "CONTINUE WITH GITHUB" primary, email toggle present.
+- "Use email instead (advanced)" reveals full email form with name/email/password/confirm + terms checkbox.
+- `/welcome/install-warning` renders bullets + Install on GitHub / Skip for now CTAs.
+
+**Deferred / why:** Live OAuth round-trip not exercised (would require real GitHub redirect). Legacy mode unchanged so not re-verified.
+
+**Open questions for user:** None.
+
+**Next session start:** S3.3 — pre-install warning copy polish + install callback handling (warning page already stubbed in S3.2).
+
+---
+
 ## 2026-04-30 — Session 22 — S3.1 — public preview hero on homepage
 
 **Attempted:**
