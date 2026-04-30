@@ -40,7 +40,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser starts install flow → confirms "Only select repositories" pre-selected.
 - Deps: none. Manual step in GitHub App settings; document in `docs/decisions.md`.
 
-### S0.6 — Pre-render content filter (Layer 1) · M
+### S0.6 — Pre-render content filter (Layer 1) · M — `[x]` 2026-04-30
 - Goal: insert keyword + small LLM check before `composeCopy` in: webhook handler + Stripe/PostHog/GA4 scans. Sensitive matches → store as `suppressed_sensitive` event in history feed, do not draft.
 - Acceptance: simulate PR titled "fix CVE in auth" → no draft generated; history feed entry visible. Agent-browser confirms.
 - Deps: S0.3 (PostHog event firing).

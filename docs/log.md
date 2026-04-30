@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 3 — S0.6 pre-render content filter
+
+**Attempted:**
+- New `src/lib/safety/content-filter.ts`: `scanContent(...inputs)` returns `{blocked, matches}` with category + term per match. Four categories (security, confidentiality, sensitive, hr_financial) per PRD §safety Layer 1. Word-boundary regex; case-insensitive; multi-word phrases match across whitespace runs.
+- 9 unit tests in `src/lib/safety/__tests__/content-filter.test.ts` cover happy path, word-boundary (no false `dispatcher` hit), multi-word phrases, case-insensitivity, dedup across inputs, null/undefined inputs.
+- Wired filter into `src/app/api/github/webhooks/route.ts` after opt-out check, before debounce/rollup and fresh-draft paths. Match → `{ok, skipped: "sensitive_content", categories}` + structured console log; never reaches rollup or Haiku.
+- Typecheck clean. All filter tests green. One commit.
+
+**Verified by agent-browser:** N/A — webhook path, not a UI surface. Verification belongs in webhook integration test (deferred, no current GitHub webhook integration test fixture).
+
+**Deferred / why:**
+- Skipped-event UI surface ("This PR may contain sensitive content. Want to draft it manually?") belongs to history feed work — Layer 3 / phase 4, not S0.6 scope.
+- LLM-based second-pass filter mentioned in PRD ("keyword + small LLM check") deferred — keyword pass alone covers MVP launch bar; LLM pass can layer on without breaking the API.
+
+**Open questions for user:** none new.
+
+**Next session start:** S0.2 (naming conventions doc) or S0.4 (tenant isolation audit Layer 5). User to choose ordering, or proceed by sessions.md order.
+
+---
+
 ## 2026-04-30 — Session 2 — S0.3 PostHog wiring
 
 **Attempted:**
