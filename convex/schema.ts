@@ -309,14 +309,18 @@ export default defineSchema({
     .index("by_userId_sourceSystem", ["userId", "sourceSystem"]),
 
   // Sous-Chef: user-defined goals that trigger draft creation when crossed.
+  // S5.3: provider optional (null = custom user goal, no integration scan).
+  // firedAt/firstHitAt/recurring replace the legacy auto-disable-on-fire pattern.
   goals: defineTable({
     userId: v.string(),
     externalId: v.string(),          // "goal_*"
-    provider: v.union(
-      v.literal("stripe"),
-      v.literal("posthog"),
-      v.literal("ga4"),
-      v.literal("github"),
+    provider: v.optional(
+      v.union(
+        v.literal("stripe"),
+        v.literal("posthog"),
+        v.literal("ga4"),
+        v.literal("github"),
+      ),
     ),
     metric: v.union(
       v.literal("mrr"),
@@ -325,11 +329,15 @@ export default defineSchema({
       v.literal("first_sale"),
       v.literal("visitors"),
       v.literal("stars"),
+      v.literal("custom"),
     ),
     target: v.optional(v.number()),  // required for threshold metrics; omitted for first_sale
     scope: v.optional(v.string()),   // owner/repo for stars
     label: v.optional(v.string()),
     enabled: v.boolean(),
+    firedAt: v.optional(v.string()),     // last fire timestamp (recurring) or final fire (one-shot)
+    firstHitAt: v.optional(v.string()),  // first fire ever — drives celebration; never overwritten
+    recurring: v.optional(v.boolean()),  // when true, goal stays enabled after fire
     created_at: v.string(),
     updated_at: v.string(),
   })

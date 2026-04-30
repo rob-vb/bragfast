@@ -280,7 +280,7 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
-  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
+  await ctx.runMutation(internal.goals.markFired, { externalId: goal.externalId });
 }
 
 function buildComposeInput(goal: StripeGoal, snapshot: StripeSnapshot) {

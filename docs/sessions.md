@@ -237,10 +237,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser dashboard renders hero card.
 - Deps: S5.1.
 
-### S5.3 — Goal schema migration: custom + persistent · M
+### S5.3 — Goal schema migration: custom + persistent · M  [x] 2026-04-30
 - Goal: Allow `provider: null` (custom). Replace auto-disable-on-fire with `firedAt` timestamp + recurring flag. Add `firstHitAt` for celebration trigger.
 - Acceptance: existing goals still work; new custom goal fires correctly without provider.
 - Deps: S0.1.
+- **Result:** Schema: `provider` now optional, `metric` adds `"custom"`, new optional fields `firedAt`/`firstHitAt`/`recurring`. New `goals.markFired` internalMutation stamps `firedAt` (always) + `firstHitAt` (once) and only flips `enabled=false` when `!recurring`. All four integration scanners (stripe/posthog/ga4/githubStars) swapped from `disableGoal` → `markFired`. `validateGoalInput` rejects custom-with-provider, custom-without-label, and non-custom-with-null-provider. API route `/api/v1/goals` accepts `provider: null` + `metric: "custom"` + `recurring`. Tests: 812/812 pass; 4 new validator tests cover custom paths. Existing goals untouched (all new fields optional).
 
 ### S5.4 — Toast cap of 1 active goal · S
 - Goal: Enforce in `goals.create` mutation; UI surfaces "Upgrade to Full Plate for unlimited goals."

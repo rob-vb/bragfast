@@ -14,6 +14,27 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 28 — S5.3 — goal schema migration (custom + persistent)
+
+**Attempted:**
+- `convex/schema.ts`: goals table — `provider` now optional, `metric` adds `"custom"`, new optional fields `firedAt` (last fire), `firstHitAt` (first fire ever, drives celebration), `recurring` (when true, goal stays enabled after fire).
+- `src/lib/goals/types.ts`: `GoalProvider | null` everywhere, `GoalMetric` adds `"custom"`, new helpers `isCustomMetric`. `validateGoalInput` covers four new failure modes (custom needs label, custom forbids provider, non-custom needs provider, threshold metrics still need target). `typedMilestoneKey` adds `custom:<target|"any">`.
+- `convex/goals.ts`: `create` accepts optional provider + recurring; `validateGoal` mirrors validator. New `markFired` internalMutation: stamps `firedAt` always, `firstHitAt` only when null, flips `enabled=false` only when `!recurring`. Legacy `disableGoal` retained for non-fire paths. `listByUser` + `listEnabledByUserProvider` now project provider as nullable + return new fields.
+- Integration scanners: `convex/integrations/{stripe,posthog,ga4,githubStars}.ts` all swapped `internal.goals.disableGoal` → `internal.goals.markFired`. Recurring goals now keep firing on subsequent scans (matches PRD intent).
+- `src/lib/goals/defaults.ts`: tightened `DefaultGoal` to non-null provider so seeders still typecheck.
+- `src/app/api/v1/goals/route.ts`: POST accepts `provider: null` + `metric: "custom"` + `recurring`; GET enrichment skips `currentValue` lookup for null-provider goals.
+- Tests: +4 validator cases. 812/812 vitest pass. `convex codegen` clean. `npx tsc --noEmit` clean.
+
+**Verified by agent-browser:** Schema-only change, no UI delta to verify. Live exercise will land with S5.1 (modal) + S5.5 (celebration).
+
+**Deferred / why:** Existing goal rows have no `firedAt`/`firstHitAt`/`recurring` — all optional, default semantics preserved. No backfill needed.
+
+**Open questions for user:** None.
+
+**Next session start:** S5.1 — goal modal + structured form (custom category bypasses provider).
+
+---
+
 ## 2026-04-30 — Session 27 — S3.6 — destination picker
 
 **Attempted:**
