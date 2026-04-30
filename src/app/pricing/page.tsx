@@ -1,3 +1,7 @@
+// MID-REWRITE: This page still uses credit-denominated pricing copy as a
+// temporary stub. Full pricing-model rewrite (post-launch positioning + plan
+// reshape) lands in Phase 4 — see docs/sessions.md S4.x. Until then, only
+// surface-level MCP/API references have been purged.
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -28,15 +32,11 @@ const FAQS = [
   },
   {
     q: "What happens when I run out of credits?",
-    a: "API calls return a 429 error. Upgrade your plan or wait for the next billing cycle.",
+    a: "Rendering pauses until your next billing cycle, or upgrade to keep going.",
   },
   {
     q: "How long are images stored?",
     a: "Images are hosted on our global CDN indefinitely. Hotlink them directly in your posts, blog, or app.",
-  },
-  {
-    q: "How does the MCP / agent integration work?",
-    a: "Add the brag.fast MCP to Claude Desktop or Claude Code and the agent can generate images and video on your behalf — it reads your data, picks your brand, renders the visuals. Same thing over the REST API from any other agent or app.",
   },
   {
     q: "What does AI analysis do?",
@@ -80,8 +80,7 @@ export default function PricingPage() {
             <br className="hidden md:block" /> No surprises.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto mb-3">
-            Images: 1 credit. Videos: 5 credits. Same price whether you render
-            it yourself or your agent does.
+            Images: 1 credit. Videos: 5 credits.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
             New accounts get{" "}
@@ -361,12 +360,6 @@ export default function PricingPage() {
             >
               Start for free
             </CtaLink>
-            <Link
-              href="/#mcp"
-              className="inline-block font-[family-name:var(--font-press-start)] text-[10px] md:text-xs px-5 py-4 text-brand border-2 border-brand bg-transparent shadow-[3px_3px_0_var(--color-brand)] hover:bg-brand hover:text-gold hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              Install MCP
-            </Link>
           </div>
         </div>
       </section>
@@ -391,7 +384,7 @@ export default function PricingPage() {
               href="/docs"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
             >
-              Docs
+              Developers
             </Link>
             <Link
               href="/pricing"
