@@ -10,9 +10,10 @@ import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
+import { RetroDraftHero } from "@/components/admin/retro-draft-hero";
 import Link from "next/link";
 
-export function DashboardClient() {
+export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boolean }) {
   const userId = useUserId();
 
   const stats = useQuery(api.userProfiles.getStats, { userId });
@@ -44,6 +45,8 @@ export function DashboardClient() {
       <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
         Dashboard
       </h1>
+
+      {showRetroHero && <RetroDraftHero />}
 
       {/* Credit meter — primary admin element */}
       <CreditMeter
