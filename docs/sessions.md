@@ -328,11 +328,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S8.1.
 - Deferred reason: depends on S8.1 (no edit-deltas to draw few-shot from yet).
 
-### S8.4 — Settings → Voice page with "trained on N approvals" · S · DEFERRED 2026-04-30
+### S8.4 — Settings → Voice page with "trained on N approvals" · S · [x] 2026-04-30 (preset picker only; counter deferred)
 - Goal: counter + manual edit ability for calibration prompt.
 - Acceptance: agent-browser sees count update post-approval.
 - Deps: S8.3.
-- Deferred reason: depends on S8.3.
+- Result: `VoicePresetPicker` component on `/admin/account` (Card 2.5) — 4 preset cards (casual builder / dry-technical / earnest milestone / deadpan) with one-click save via `api.userProfiles.setVoicePreset`. Reads stored preset via `getVoicePreset`. NES-retro styling matches `PlatformPreferences`. "Trained on N approvals" counter deferred — depends on S8.3 (few-shot data).
 
 ---
 

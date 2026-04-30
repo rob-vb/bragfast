@@ -7,6 +7,7 @@ import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
 import { ManageBillingButton } from "./manage-billing-button";
 import { PlatformPreferences } from "@/components/admin/platform-preferences";
+import { VoicePresetPicker } from "@/components/admin/voice-preset-picker";
 import Link from "next/link";
 
 function CreditBar({ remaining, total }: { remaining: number; total: number }) {
@@ -114,6 +115,11 @@ export default async function AccountPage() {
       {/* Card 2 — Sous-Chef preferences */}
       <PixelCard>
         <PlatformPreferences userId={user._id} />
+      </PixelCard>
+
+      {/* Card 2.5 — Voice */}
+      <PixelCard>
+        <VoicePresetPicker userId={user._id} />
       </PixelCard>
 
       {/* Card 3 — Danger Zone */}
