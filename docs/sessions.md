@@ -143,7 +143,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: opt-out repo returns 403 with `reason: "opted_out"`. Vitest covers cache behavior.
 - Deps: S2.6a.
 
-#### S2.6c — Unauth PR fetch · S
+#### S2.6c — Unauth PR fetch · S  [x] 2026-04-30
 - Goal: helper `fetchPublicLatestPr(repoFullName)` reuses `retro-pr.ts` shape but skips installation token. Handles 404 (private/missing) and 403 (rate-limited by GitHub) distinctly.
 - Acceptance: public repo returns latest merged PR. Private repo → 404 surface. Rate-limit → 503.
 - Deps: S2.6a.

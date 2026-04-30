@@ -14,6 +14,29 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 19 — S2.6c — unauth PR fetch helper
+
+**Attempted:**
+- `src/lib/preview/public-pr.ts`: `fetchPublicLatestPr(repoFullName, fetchImpl?)` — two unauth `api.github.com` calls (repo metadata for default branch, then closed pulls). Returns tagged `{ ok, pr, defaultBranch } | { ok: false, code: "not_found" | "rate_limited" | "no_pr" }`. Maps both 403 and 429 to `rate_limited`; 404 and other non-OK to `not_found`. UA header set to `brag.fast-preview` (GitHub rejects unauth without UA).
+- `src/app/api/preview/route.ts`: wired after opt-out check. 404 → `repo_not_found` or `no_merged_pr` (404). 403 → 503 `github_rate_limited` with `retry-after: 3600`. Happy path returns `{status, repo, pr:{number,title,url}}`.
+
+**Tests:**
+- `src/lib/preview/__tests__/public-pr.test.ts` (6): happy path, 404, 403 on repo, 403 on pulls, no merged PR, default-branch URL encoding.
+- Route tests extended: 200 PR payload, 404 not_found, 404 no_merged_pr, 503 rate_limited. All 31 preview tests pass; tsc clean.
+
+**Verified live (curl against running dev server):**
+- `https://github.com/anthropics/claude-code` → 200 `{status:"pending",repo:"anthropics/claude-code",pr:{number:1,title:"Create SECURITY.md",url:...}}`
+- `https://github.com/this-org-totally/does-not-exist-xyz123` → 404
+- `not-a-url` → 400 invalid_repo_url
+
+**Deferred / why:** Render path (S2.6d) and cache (S2.6e) still pending. Layer 1 content filter not yet wired here — will gate render in d/e.
+
+**Open questions for user:** None.
+
+**Next session start:** S2.6d — low-quality watermarked render + R2 upload.
+
+---
+
 ## 2026-04-30 — Session 18.5 — S2.5 backfill — banner verify + render fix
 
 **Attempted:**
