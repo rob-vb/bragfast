@@ -41,6 +41,9 @@ export const createCheckoutSession = action({
       starter: process.env.STRIPE_STARTER_PRICE_ID,
       pro: process.env.STRIPE_PRO_PRICE_ID,
       scale: process.env.STRIPE_SCALE_PRICE_ID,
+      toast: process.env.STRIPE_TOAST_PRICE_ID,
+      plate: process.env.STRIPE_PLATE_PRICE_ID,
+      buffet: process.env.STRIPE_BUFFET_PRICE_ID,
     };
     const priceId = priceEnvMap[planId];
     if (!priceId) throw new Error(`No price ID configured for plan: ${planId}`);

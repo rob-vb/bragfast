@@ -81,8 +81,12 @@ describe("nextTierFor", () => {
     expect(nextTierFor({ needsFormat: "portrait" })).toBe("plate");
   });
 
-  it("3 platforms → plate", () => {
-    expect(nextTierFor({ needsPlatforms: 3 })).toBe("plate");
+  it("2 platforms → plate (cheapest with multi-platform)", () => {
+    expect(nextTierFor({ needsPlatforms: 2 })).toBe("plate");
+  });
+
+  it("3 platforms → null (no tier supports it; max 2 per PRD §4)", () => {
+    expect(nextTierFor({ needsPlatforms: 3 })).toBeNull();
   });
 
   it("square + 1 platform → toast (cheapest)", () => {

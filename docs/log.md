@@ -14,6 +14,29 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 32 — S4.1 — Pricing page rewrite (outcome-denominated)
+
+**Attempted:**
+- New `src/lib/pricing-data.tsx` exports `NEW_TIERS` (Toast/Plate/Buffet with id/name/price/label/blurb) + `FEATURES` rows per PRD §4 (Posts/month, Sources, Platforms per post, Formats per post, Video posts, Active goals, Voice calibration, History feed). Legacy `src/lib/plans.ts` retained for `/admin/billing` grandfathered surfaces.
+- `src/app/pricing/page.tsx` rewritten: hero "Priced per post. Not per credit.", post-count cards, comparison table with Plate highlighted, "On the House" free-tier callout, FAQ rewritten (no credit math, explains posts/sources/history retention).
+- `src/app/page.tsx` homepage pricing strip migrated to `NEW_TIERS` — "{posts}/month" + tier blurb replaces credit/image/video math.
+- `src/app/(admin)/admin/account/upgrade/page.tsx` migrated to NEW_TIERS. `LEGACY_TO_NEW` maps current `userProfiles.plan` to its new-tier equivalent so the "Current Plan" badge renders correctly for grandfathered customers viewing the new tiers.
+- `convex/stripe.createCheckoutSession.priceEnvMap` extended to accept new planIds (toast/plate/buffet) → reads STRIPE_{TOAST,PLATE,BUFFET}_PRICE_ID.
+- TIER_CONFIG correction: plate.platforms 3→2, buffet.platforms 3→2 (per PRD §4 — both X+LinkedIn only). Fixed in both `convex/plan-tiers.ts` + `src/lib/plan-tiers.ts`. nextTierFor test updated: 2 platforms→plate, 3→null.
+
+**Verified by agent-browser:** GET `/pricing` snapshot shows hero "Priced per post. Not per credit.", three pricing cards (Toast $12 / Full Plate $29 POPULAR / Buffet $79), comparison table all 8 PRD rows correct, "On the House" callout. Zero "credit" language anywhere on the page. Tests 852 pass / 0 fail. tsc clean.
+
+**Deferred / why:**
+- S4.2 source-cap upsell prompts — separate session (deps on this).
+- S4.3 migration plan for grandfathered users → `docs/decisions.md` write-up — separate session.
+- Legacy `PLANS`/`PAID_PLANS` in `src/lib/plans.ts` retained — still referenced by `/admin/billing`-adjacent surfaces and `priceToPlan`. Removal blocked on full grandfathered cohort migration (S4.3).
+
+**Open questions for user:** none.
+
+**Next session start:** S5.2 (goal hero card on dashboard) per user-stated order. Phase 4 chain (S4.2/4.3) can also pick up next; user choice.
+
+---
+
 ## 2026-04-30 — Session 31 — S2.7 — Plan accounting refactor (posts/month + tier gating)
 
 **Attempted:**

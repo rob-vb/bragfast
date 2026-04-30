@@ -1,11 +1,25 @@
+// S4.1: upgrade page surfaces new tiers (Toast/Plate/Buffet) for paid checkout.
+// Legacy plans (starter/pro/scale) remain billable via webhook routing for
+// already-subscribed customers; this page only sells the new model.
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
-import { PAID_PLANS, type PlanConfig } from "@/lib/plans";
-import { FEATURES, FeatureValue } from "@/lib/pricing-data";
+import {
+  NEW_TIERS,
+  FEATURES,
+  FeatureValue,
+  type NewTierConfig,
+} from "@/lib/pricing-data";
 import { UpgradeButton } from "./upgrade-button";
 import Link from "next/link";
+
+const LEGACY_TO_NEW: Record<string, string> = {
+  trial: "free",
+  starter: "toast",
+  pro: "plate",
+  scale: "buffet",
+};
 
 export default async function UpgradePage() {
   const user = await getSessionUser();
@@ -14,6 +28,8 @@ export default async function UpgradePage() {
   const stats = await fetchQuery(api.userProfiles.getStats, {
     userId: user._id,
   });
+
+  const currentTier = LEGACY_TO_NEW[stats.plan] ?? stats.plan;
 
   return (
     <div className="space-y-8">
@@ -31,12 +47,12 @@ export default async function UpgradePage() {
 
       {/* Pricing Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {PAID_PLANS.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            currentPlan={stats.plan}
-            featured={plan.id === "pro"}
+        {NEW_TIERS.map((tier) => (
+          <TierCard
+            key={tier.id}
+            tier={tier}
+            currentTier={currentTier}
+            featured={tier.id === "plate"}
           />
         ))}
       </div>
@@ -44,7 +60,7 @@ export default async function UpgradePage() {
       {/* Feature Comparison */}
       <div>
         <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand text-center mb-6">
-          Compare plans
+          Compare tiers
         </h2>
 
         {/* Desktop table */}
@@ -55,14 +71,14 @@ export default async function UpgradePage() {
                 <th className="text-left px-4 py-3 font-[family-name:var(--font-press-start)] text-[9px]">
                   Feature
                 </th>
-                {PAID_PLANS.map((plan) => (
+                {NEW_TIERS.map((tier) => (
                   <th
-                    key={plan.id}
+                    key={tier.id}
                     className={`px-4 py-3 font-[family-name:var(--font-press-start)] text-[9px] text-center ${
-                      plan.id === "pro" ? "bg-gold" : ""
+                      tier.id === "plate" ? "bg-gold" : ""
                     }`}
                   >
-                    {plan.name}
+                    {tier.name}
                   </th>
                 ))}
               </tr>
@@ -78,14 +94,14 @@ export default async function UpgradePage() {
                   <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
                     {feature.name}
                   </td>
-                  {(["starter", "pro", "scale"] as const).map((planId) => (
+                  {(["toast", "plate", "buffet"] as const).map((tierId) => (
                     <td
-                      key={planId}
+                      key={tierId}
                       className={`px-4 py-3 text-center ${
-                        planId === "pro" ? "bg-gold/10" : ""
+                        tierId === "plate" ? "bg-gold/10" : ""
                       }`}
                     >
-                      <FeatureValue value={feature[planId]} />
+                      <FeatureValue value={feature[tierId]} />
                     </td>
                   ))}
                 </tr>
@@ -96,36 +112,33 @@ export default async function UpgradePage() {
 
         {/* Mobile: stacked cards */}
         <div className="md:hidden space-y-6">
-          {PAID_PLANS.map((plan) => (
+          {NEW_TIERS.map((tier) => (
             <div
-              key={plan.id}
+              key={tier.id}
               className={`border-2 border-brand shadow-[3px_3px_0_var(--color-brand)] overflow-hidden ${
-                plan.id === "pro" ? "bg-gold" : "bg-white"
+                tier.id === "plate" ? "bg-gold" : "bg-white"
               }`}
             >
               <div className="px-4 py-3 border-b-2 border-brand">
                 <span className="font-[family-name:var(--font-press-start)] text-[10px]">
-                  {plan.name}
+                  {tier.name}
                 </span>
                 <span className="font-[family-name:var(--font-geist-sans)] text-sm ml-2 text-brand/70">
-                  ${plan.price}/mo
+                  ${tier.price}/mo
                 </span>
               </div>
               <ul className="divide-y divide-[var(--color-brand)]/10">
-                {FEATURES.map((feature) => {
-                  const value = feature[plan.id as keyof typeof feature];
-                  return (
-                    <li
-                      key={feature.name}
-                      className="flex items-center justify-between px-4 py-2.5"
-                    >
-                      <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
-                        {feature.name}
-                      </span>
-                      <FeatureValue value={value as string | boolean} />
-                    </li>
-                  );
-                })}
+                {FEATURES.map((feature) => (
+                  <li
+                    key={feature.name}
+                    className="flex items-center justify-between px-4 py-2.5"
+                  >
+                    <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+                      {feature.name}
+                    </span>
+                    <FeatureValue value={feature[tier.id]} />
+                  </li>
+                ))}
               </ul>
             </div>
           ))}
@@ -135,16 +148,17 @@ export default async function UpgradePage() {
   );
 }
 
-function PlanCard({
-  plan,
-  currentPlan,
+function TierCard({
+  tier,
+  currentTier,
   featured,
 }: {
-  plan: PlanConfig;
-  currentPlan: string;
+  tier: NewTierConfig;
+  currentTier: string;
   featured?: boolean;
 }) {
-  const isCurrent = plan.id === currentPlan;
+  const isCurrent = tier.id === currentTier;
+  const postsValue = FEATURES[0][tier.id] as string;
 
   return (
     <div
@@ -166,12 +180,12 @@ function PlanCard({
       )}
 
       <h3 className="font-[family-name:var(--font-press-start)] text-[10px] mb-3">
-        {plan.name}
+        {tier.name}
       </h3>
 
       <div className="mb-1">
         <span className="font-[family-name:var(--font-press-start)] text-xl md:text-2xl">
-          ${plan.price}
+          ${tier.price}
         </span>
         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
           /mo
@@ -179,11 +193,11 @@ function PlanCard({
       </div>
 
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 mb-4">
-        {plan.credits.toLocaleString()} credits/mo
+        {postsValue} posts/month
       </p>
 
       <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mb-5">
-        {plan.label}
+        {tier.label}
       </p>
 
       <div className="mt-auto">
@@ -192,7 +206,7 @@ function PlanCard({
             Current Plan
           </span>
         ) : (
-          <UpgradeButton planId={plan.id} />
+          <UpgradeButton planId={tier.id} />
         )}
       </div>
     </div>

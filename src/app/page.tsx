@@ -8,7 +8,7 @@ import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { CtaLink } from "@/components/landing/cta-link";
 import { PreviewHero } from "@/components/landing/preview-hero";
-import { PAID_PLANS } from "@/lib/plans";
+import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
 import { getLaunchMode, isLaunchModeRepositioned } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
@@ -264,18 +264,19 @@ export default function Home() {
               What are you having?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-              Images: 1 credit each. Videos: 5 credits each.
+              One post = one approval. Tier bounds the rest.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {PAID_PLANS.map((plan) => {
-              const isPopular = plan.id === "pro";
+            {NEW_TIERS.map((tier) => {
+              const isPopular = tier.id === "plate";
+              const postsValue = FEATURES[0][tier.id] as string;
               return (
-                <div key={plan.id} className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col">
+                <div key={tier.id} className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col">
                   <div className="bg-brand px-5 py-4 flex items-center justify-between min-h-[56px]">
                     <span className="font-[family-name:var(--font-press-start)] text-[10px] text-gold">
-                      &#9656; {plan.name}
+                      &#9656; {tier.name}
                     </span>
                     {isPopular && (
                       <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-gold text-brand px-2 py-1 border border-gold/60">
@@ -285,25 +286,24 @@ export default function Home() {
                   </div>
                   <div className="bg-white p-5 flex flex-col gap-5 flex-1">
                     <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-                      {plan.label}
+                      {tier.label}
                     </p>
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span className="font-[family-name:var(--font-press-start)] text-3xl">
-                          ${plan.price}
+                          ${tier.price}
                         </span>
                         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50">
                           /mo
                         </span>
                       </div>
                       <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 mt-1.5">
-                        {plan.credits.toLocaleString()} credits/mo
+                        {postsValue} posts/month
                       </p>
                     </div>
                     <div className="border-t-2 border-brand/10 pt-4">
-                      <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40 leading-[2.2]">
-                        {plan.credits.toLocaleString()} images<br />
-                        or {(plan.credits / 5).toLocaleString()} videos
+                      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                        {tier.blurb}
                       </p>
                     </div>
                   </div>

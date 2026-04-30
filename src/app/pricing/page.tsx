@@ -1,54 +1,56 @@
-// MID-REWRITE: This page still uses credit-denominated pricing copy as a
-// temporary stub. Full pricing-model rewrite (post-launch positioning + plan
-// reshape) lands in Phase 4 — see docs/sessions.md S4.x. Until then, only
-// surface-level MCP/API references have been purged.
+// S4.1: outcome-denominated pricing page (Toast / Full Plate / Buffet).
+// Legacy credit-based plans still exist in src/lib/plans.ts for grandfathered
+// /admin/billing usage; this public page surfaces the new model only.
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { CtaLink } from "@/components/landing/cta-link";
-import { PAID_PLANS } from "@/lib/plans";
-import { FEATURES, FeatureValue } from "@/lib/pricing-data";
+import { NEW_TIERS, FEATURES, FeatureValue } from "@/lib/pricing-data";
 
 export const metadata: Metadata = {
   title: "Pricing | brag.fast",
   description:
-    "Simple pricing. Images: 1 credit. Videos: 5 credits. Start with 30 free credits, no credit card needed.",
+    "Subscription tiers priced by posts/month. Start free with 30 lifetime posts — no card required.",
   alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
   {
-    q: "How do credits work?",
-    a: "Images cost 1 credit per format. Videos cost 5 credits per format. Example: one win rendered in all 3 formats = 3 image credits or 15 video credits.",
+    q: "What counts as a post?",
+    a: "One approval event. When you accept a draft and we publish it, that's one post — regardless of how many formats render. Tier bounds what an approval can render (formats, platforms, video).",
   },
   {
-    q: "Do unused credits roll over?",
-    a: "No. Credits reset each billing cycle. Pick the plan that matches your monthly volume.",
+    q: "Do unused posts roll over?",
+    a: "No. Posts reset each billing cycle. Pick the tier that matches your monthly cadence.",
   },
   {
-    q: "Can I change plans anytime?",
+    q: "Can I change tiers anytime?",
     a: "Yes. Upgrade instantly, downgrade at the end of your billing cycle. No lock-in.",
   },
   {
-    q: "What happens when I run out of credits?",
-    a: "Rendering pauses until your next billing cycle, or upgrade to keep going.",
+    q: "What happens when I run out of posts?",
+    a: "Approving new drafts pauses until your next billing cycle, or upgrade to keep shipping.",
   },
   {
-    q: "How long are images stored?",
-    a: "Images are hosted on our global CDN indefinitely. Hotlink them directly in your posts, blog, or app.",
+    q: "How does the free tier work?",
+    a: "On the House gives you 30 lifetime posts — no credit card needed. Same format restrictions as Toast (square, one channel). Designed for trial, not for ongoing use.",
   },
   {
-    q: "What does AI analysis do?",
-    a: "For software releases, our AI reads your changelog and categorizes changes into features, fixes, and breaking changes. For other inputs — stats, milestones, screenshots — you pass the copy directly. Available on all paid plans.",
+    q: "What sources can I connect?",
+    a: "Toast: GitHub. Full Plate: GitHub + Stripe + one of PostHog/GA. Buffet: every source we support, no cap. Source count drives what brag.fast can detect on your behalf.",
+  },
+  {
+    q: "Why posts instead of credits?",
+    a: "A post maps directly to value (something shipped to your audience). Credits make you do math before sharing a milestone — we don't want that friction.",
+  },
+  {
+    q: "How long is my history kept?",
+    a: "Toast keeps 30 days. Full Plate keeps a year. Buffet keeps everything and ships an annual recap.",
   },
   {
     q: "Do you offer refunds?",
-    a: "No. All plans are prepaid and non-refundable. You can cancel or downgrade anytime. Changes take effect at the end of your billing cycle.",
-  },
-  {
-    q: "How does the GitHub integration work?",
-    a: "Install the brag.fast GitHub App on your repos. Every time you publish a release, we generate branded images. Review first or let it run on autopilot.",
+    a: "No. All tiers are prepaid and non-refundable. Cancel or downgrade anytime — changes take effect at the end of your billing cycle.",
   },
 ];
 
@@ -76,16 +78,16 @@ export default function PricingPage() {
             </span>
           </div>
           <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-            Simple prices.
-            <br className="hidden md:block" /> No surprises.
+            Priced per post.
+            <br className="hidden md:block" /> Not per credit.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto mb-3">
-            Images: 1 credit. Videos: 5 credits.
+            Pick a tier by posts/month and what each post can do.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-            New accounts get{" "}
-            <strong className="text-brand">30 free credits</strong> to try it
-            out. No credit card needed.
+            Try it on the house —{" "}
+            <strong className="text-brand">30 free posts, lifetime</strong>. No
+            credit card needed.
           </p>
         </div>
       </section>
@@ -97,28 +99,30 @@ export default function PricingPage() {
             <div className="flex items-center justify-center gap-2.5 mb-5">
               <div className="w-6 h-[3px] bg-gold" />
               <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                Plans
+                Tiers
               </span>
             </div>
             <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4] mb-3">
               What are you having?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-              Images: 1 credit each. Videos: 5 credits each.
+              One post = one approval. Tier bounds the rest.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {PAID_PLANS.map((plan) => {
-              const isPopular = plan.id === "pro";
+            {NEW_TIERS.map((tier) => {
+              const isPopular = tier.id === "plate";
+              const postsRow = FEATURES[0];
+              const postsValue = postsRow[tier.id] as string;
               return (
                 <div
-                  key={plan.id}
+                  key={tier.id}
                   className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col"
                 >
                   <div className="bg-brand px-5 py-4 flex items-center justify-between min-h-[56px]">
                     <span className="font-[family-name:var(--font-press-start)] text-[10px] text-gold">
-                      &#9656; {plan.name}
+                      &#9656; {tier.name}
                     </span>
                     {isPopular && (
                       <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-gold text-brand px-2 py-1 border border-gold/60">
@@ -128,26 +132,24 @@ export default function PricingPage() {
                   </div>
                   <div className="bg-white p-5 flex flex-col gap-5 flex-1">
                     <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-                      {plan.label}
+                      {tier.label}
                     </p>
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span className="font-[family-name:var(--font-press-start)] text-3xl">
-                          ${plan.price}
+                          ${tier.price}
                         </span>
                         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50">
                           /mo
                         </span>
                       </div>
                       <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 mt-1.5">
-                        {plan.credits.toLocaleString()} credits/mo
+                        {postsValue} posts/month
                       </p>
                     </div>
                     <div className="border-t-2 border-brand/10 pt-4">
-                      <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40 leading-[2.2]">
-                        {plan.credits.toLocaleString()} images
-                        <br />
-                        or {(plan.credits / 5).toLocaleString()} videos
+                      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                        {tier.blurb}
                       </p>
                     </div>
                   </div>
@@ -162,10 +164,10 @@ export default function PricingPage() {
               signedInHref="/admin/billing"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Start with 30 Free Credits
+              Start with 30 Free Posts
             </CtaLink>
             <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
-              No credit card needed. Upgrade when you need more.
+              No credit card needed. Upgrade when you outgrow it.
             </p>
           </div>
         </div>
@@ -182,7 +184,7 @@ export default function PricingPage() {
               </span>
             </div>
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
-              Compare plans.
+              Compare tiers.
             </h2>
           </div>
 
@@ -194,16 +196,16 @@ export default function PricingPage() {
                   <th className="bg-brand text-left px-5 py-4 font-[family-name:var(--font-press-start)] text-[9px] text-gold border-b-2 border-brand w-2/5">
                     Feature
                   </th>
-                  {PAID_PLANS.map((plan) => (
+                  {NEW_TIERS.map((tier) => (
                     <th
-                      key={plan.id}
+                      key={tier.id}
                       className={`px-5 py-4 font-[family-name:var(--font-press-start)] text-[9px] text-center border-b-2 border-brand ${
-                        plan.id === "pro"
+                        tier.id === "plate"
                           ? "bg-gold text-brand"
                           : "bg-brand text-gold"
                       }`}
                     >
-                      {plan.name}
+                      {tier.name}
                     </th>
                   ))}
                 </tr>
@@ -219,14 +221,14 @@ export default function PricingPage() {
                     <td className="px-5 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
                       {feature.name}
                     </td>
-                    {(["starter", "pro", "scale"] as const).map((planId) => (
+                    {(["toast", "plate", "buffet"] as const).map((tierId) => (
                       <td
-                        key={planId}
+                        key={tierId}
                         className={`px-5 py-3 text-center ${
-                          planId === "pro" ? "bg-gold/10" : ""
+                          tierId === "plate" ? "bg-gold/10" : ""
                         }`}
                       >
-                        <FeatureValue value={feature[planId]} />
+                        <FeatureValue value={feature[tierId]} />
                       </td>
                     ))}
                   </tr>
@@ -237,22 +239,22 @@ export default function PricingPage() {
 
           {/* Mobile cards */}
           <div className="md:hidden flex flex-col gap-4">
-            {PAID_PLANS.map((plan) => (
+            {NEW_TIERS.map((tier) => (
               <div
-                key={plan.id}
+                key={tier.id}
                 className="border-[3px] border-brand shadow-[4px_4px_0_var(--color-brand)] overflow-hidden"
               >
                 <div className="bg-brand px-5 py-4 flex items-center justify-between">
                   <span className="font-[family-name:var(--font-press-start)] text-[10px] text-gold">
-                    &#9656; {plan.name}
+                    &#9656; {tier.name}
                   </span>
                   <span className="font-[family-name:var(--font-geist-sans)] text-sm text-gold/70">
-                    ${plan.price}/mo
+                    ${tier.price}/mo
                   </span>
                 </div>
                 <ul className="bg-white divide-y divide-brand/10">
                   {FEATURES.map((feature) => {
-                    const value = feature[plan.id as keyof typeof feature];
+                    const value = feature[tier.id];
                     return (
                       <li
                         key={feature.name}
@@ -261,13 +263,25 @@ export default function PricingPage() {
                         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70">
                           {feature.name}
                         </span>
-                        <FeatureValue value={value as string | boolean} />
+                        <FeatureValue value={value} />
                       </li>
                     );
                   })}
                 </ul>
               </div>
             ))}
+          </div>
+
+          {/* Free tier callout */}
+          <div className="mt-10 border-2 border-brand bg-gold/20 p-6 max-w-3xl mx-auto">
+            <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand mb-2">
+              &#9656; On the House
+            </p>
+            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-relaxed">
+              30 lifetime posts, no card required. Same format restrictions as
+              Toast (square posts, one channel). Built for trying it out — not
+              for ongoing use.
+            </p>
           </div>
         </div>
       </section>
@@ -350,7 +364,7 @@ export default function PricingPage() {
             </span>
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
-            30 free credits. No credit card. First render in under a minute.
+            30 free posts. No credit card. First post out in under a minute.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <CtaLink

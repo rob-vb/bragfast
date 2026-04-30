@@ -209,7 +209,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 4 — Pricing rewrite (model + page)
 
-### S4.1 — Pricing page rewrite (builder-outcome bullets) · M
+### S4.1 — Pricing page rewrite (builder-outcome bullets) · M  [x] 2026-04-30
 - Goal: Rewrite `/pricing` around outcomes (sources, posts/month, formats, video, goals, history retention) per PRD §4 table.
 - Acceptance: agent-browser confirms zero credit/MCP language.
 - Deps: S2.7, S1.3.
