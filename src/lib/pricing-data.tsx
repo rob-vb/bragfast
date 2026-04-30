@@ -19,21 +19,21 @@ export const NEW_TIERS: NewTierConfig[] = [
     name: "Toast",
     price: 12,
     label: "Quick and crispy",
-    blurb: "GitHub-powered, one channel, square posts.",
+    blurb: "200 credits — about 200 image posts or 40 videos.",
   },
   {
     id: "plate",
     name: "Full Plate",
     price: 29,
     label: "The full stack",
-    blurb: "Three sources, every format, X + LinkedIn.",
+    blurb: "800 credits — about 800 image posts or 160 videos.",
   },
   {
     id: "buffet",
     name: "Buffet",
     price: 79,
     label: "Big appetite",
-    blurb: "Unlimited sources, video, every channel.",
+    blurb: "2,500 credits — about 2,500 image posts or 500 videos.",
   },
 ];
 
@@ -43,7 +43,7 @@ export const FEATURES: {
   plate: string | boolean;
   buffet: string | boolean;
 }[] = [
-  { name: "Posts / month", toast: "30", plate: "100", buffet: "500" },
+  { name: "Credits / month", toast: "200", plate: "800", buffet: "2,500" },
   {
     name: "Sources",
     toast: "1 (GitHub)",
@@ -58,11 +58,11 @@ export const FEATURES: {
   },
   {
     name: "Formats per post",
-    toast: "Square",
-    plate: "Square + landscape + portrait",
+    toast: "All formats",
+    plate: "All formats",
     buffet: "All formats",
   },
-  { name: "Video posts", toast: false, plate: false, buffet: "1 per post" },
+  { name: "Video posts", toast: true, plate: true, buffet: true },
   { name: "Active goals", toast: "1", plate: "5", buffet: "Unlimited" },
   { name: "Voice calibration", toast: true, plate: true, buffet: true },
   {

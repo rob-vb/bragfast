@@ -193,7 +193,7 @@ function TierCard({
       </div>
 
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 mb-4">
-        {postsValue} posts/month
+        {postsValue} credits/month
       </p>
 
       <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mb-5">

@@ -11,38 +11,38 @@ import { NEW_TIERS, FEATURES, FeatureValue } from "@/lib/pricing-data";
 export const metadata: Metadata = {
   title: "Pricing | brag.fast",
   description:
-    "Subscription tiers priced by posts/month. Start free with 30 lifetime posts — no card required.",
+    "Credit-based pricing. 1 credit per image post, 5 per video. Start free with 30 lifetime credits — no card required.",
   alternates: { canonical: "/pricing" },
 };
 
 const FAQS = [
   {
-    q: "What counts as a post?",
-    a: "One approval event. When you accept a draft and we publish it, that's one post — regardless of how many formats render. Tier bounds what an approval can render (formats, platforms, video).",
+    q: "What's a credit?",
+    a: "1 credit = 1 image render. 1 video = 5 credits. Same rate whether you approve a draft in-app or call the API directly.",
   },
   {
-    q: "Do unused posts roll over?",
-    a: "No. Posts reset each billing cycle. Pick the tier that matches your monthly cadence.",
+    q: "Do unused credits roll over?",
+    a: "No. Credits reset each billing cycle. Pick the tier that matches your monthly cadence.",
   },
   {
     q: "Can I change tiers anytime?",
     a: "Yes. Upgrade instantly, downgrade at the end of your billing cycle. No lock-in.",
   },
   {
-    q: "What happens when I run out of posts?",
-    a: "Approving new drafts pauses until your next billing cycle, or upgrade to keep shipping.",
+    q: "What happens when I run out of credits?",
+    a: "Renders pause until your next billing cycle, or upgrade to keep shipping.",
   },
   {
     q: "How does the free tier work?",
-    a: "On the House gives you 30 lifetime posts — no credit card needed. Same format restrictions as Toast (square, one channel). Designed for trial, not for ongoing use.",
+    a: "On the House gives you 30 lifetime credits — no credit card needed. Same format restrictions as Toast (square, one channel). Designed for trial, not for ongoing use.",
   },
   {
     q: "What sources can I connect?",
     a: "Toast: GitHub. Full Plate: GitHub + Stripe + one of PostHog/GA. Buffet: every source we support, no cap. Source count drives what brag.fast can detect on your behalf.",
   },
   {
-    q: "Why posts instead of credits?",
-    a: "A post maps directly to value (something shipped to your audience). Credits make you do math before sharing a milestone — we don't want that friction.",
+    q: "Why credits instead of per-post pricing?",
+    a: "Credits are honest. An image and a video aren't the same cost to produce, and the API and in-app flows share the same wallet — one rate for everyone.",
   },
   {
     q: "How long is my history kept?",
@@ -78,16 +78,17 @@ export default function PricingPage() {
             </span>
           </div>
           <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-            Priced per post.
-            <br className="hidden md:block" /> Not per credit.
+            Priced per credit.
+            <br className="hidden md:block" /> Same for everyone.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto mb-3">
-            Pick a tier by posts/month and what each post can do.
+            1 image = 1 credit. 1 video = 5 credits. Whether you approve in-app
+            or call the API.
           </p>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
             Try it on the house —{" "}
-            <strong className="text-brand">30 free posts, lifetime</strong>. No
-            credit card needed.
+            <strong className="text-brand">30 free credits, lifetime</strong>.
+            No credit card needed.
           </p>
         </div>
       </section>
@@ -106,7 +107,7 @@ export default function PricingPage() {
               What are you having?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-              One post = one approval. Tier bounds the rest.
+              1 image = 1 credit · 1 video = 5 credits. Tier bounds the rest.
             </p>
           </div>
 
@@ -144,7 +145,7 @@ export default function PricingPage() {
                         </span>
                       </div>
                       <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 mt-1.5">
-                        {postsValue} posts/month
+                        {postsValue} credits/month
                       </p>
                     </div>
                     <div className="border-t-2 border-brand/10 pt-4">
@@ -164,7 +165,7 @@ export default function PricingPage() {
               signedInHref="/admin/billing"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Start with 30 Free Posts
+              Start with 30 Free Credits
             </CtaLink>
             <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
               No credit card needed. Upgrade when you outgrow it.
@@ -278,9 +279,9 @@ export default function PricingPage() {
               &#9656; On the House
             </p>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-relaxed">
-              30 lifetime posts, no card required. Same format restrictions as
-              Toast (square posts, one channel). Built for trying it out — not
-              for ongoing use.
+              30 lifetime credits, no card required. Same format restrictions as
+              Toast (one channel). Built for trying it out — not for ongoing
+              use.
             </p>
           </div>
         </div>
@@ -364,7 +365,7 @@ export default function PricingPage() {
             </span>
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
-            30 free posts. No credit card. First post out in under a minute.
+            30 free credits. No credit card. First post out in under a minute.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <CtaLink
