@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { PickRepoClient } from "./pick-repo-client";
 
 export const metadata: Metadata = {
   title: "Pick a repo",
@@ -19,14 +19,9 @@ export default function PickRepoPage() {
             Install received. Pick the repo we should watch.
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-base leading-relaxed text-brand/80">
-            We&rsquo;ll draft a brag post the next time a PR merges. Repo picker UI lands in S3.4 — for now, head to your dashboard.
+            We&rsquo;ll draft a brag post the next time a PR merges on the repo you pick. You can change this later.
           </p>
-          <Link
-            href="/admin"
-            className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-          >
-            Continue to dashboard
-          </Link>
+          <PickRepoClient />
         </div>
       </div>
     </div>
