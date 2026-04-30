@@ -10,6 +10,7 @@ import {
 import { composeCopy } from "@/lib/drafts/compose-copy";
 import { pickTemplate } from "@/lib/drafts/pick-template";
 import type { DraftConfig } from "@/lib/drafts/types";
+import { scanContent } from "@/lib/safety/content-filter";
 
 export const maxDuration = 60;
 
@@ -76,6 +77,30 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
   });
   if (!repoConfig?.notifyOnPrMerge) {
     return Response.json({ ok: true, skipped: "pr_merge_opt_out" });
+  }
+
+  // Layer 1 safety: pre-render content filter. Skip both fresh and rollup
+  // draft paths if PR title or body matches sensitive keyword patterns.
+  const filter = scanContent(
+    payload.pull_request.title,
+    payload.pull_request.body,
+  );
+  if (filter.blocked) {
+    const categories = [...new Set(filter.matches.map((m) => m.category))];
+    console.log(
+      "[sous-chef] PR draft skipped by content filter",
+      JSON.stringify({
+        userId,
+        repoFullName,
+        prNumber: payload.pull_request.number,
+        categories,
+      }),
+    );
+    return Response.json({
+      ok: true,
+      skipped: "sensitive_content",
+      categories,
+    });
   }
 
   const now = new Date();
