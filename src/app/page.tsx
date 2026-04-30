@@ -7,8 +7,9 @@ import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { CtaLink } from "@/components/landing/cta-link";
+import { PreviewHero } from "@/components/landing/preview-hero";
 import { PAID_PLANS } from "@/lib/plans";
-import { getLaunchMode } from "@/lib/launch-mode";
+import { getLaunchMode, isLaunchModeRepositioned } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
   title: "brag.fast | Build-in-public posts on autopilot",
@@ -57,26 +58,30 @@ export default function Home() {
           }}
         />
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
-          <div>
-            <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Automate your build in public posts
-            </h1>
-            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <CtaLink
-                signedOutHref="/signup"
-                signedInHref="/admin"
-                className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Get Started for Free
-              </CtaLink>
+          {isLaunchModeRepositioned() ? (
+            <PreviewHero />
+          ) : (
+            <div>
+              <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
+                Automate your build in public posts
+              </h1>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
+                Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <CtaLink
+                  signedOutHref="/signup"
+                  signedInHref="/admin"
+                  className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                >
+                  Get Started for Free
+                </CtaLink>
+              </div>
+              <p className="font-[family-name:var(--font-geist-sans)] text-md text-brand/50 mt-4">
+                30 credits. No credit card required.
+              </p>
             </div>
-            <p className="font-[family-name:var(--font-geist-sans)] text-md text-brand/50 mt-4">
-              30 credits. No credit card required.
-            </p>
-          </div>
+          )}
 
           <div className="animate-[fade-in-up_0.6s_ease-out_both]">
             <HeroSocialStack />
