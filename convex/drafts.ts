@@ -1,6 +1,7 @@
 import { action, mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { requireAuthedUser } from "./auth";
 
 const sourceSystem = v.union(
   v.literal("github"),
@@ -256,8 +257,9 @@ export const appendPrMergeRollup = mutation({
 // Count drafts created after the user's last visit to /admin/drafts.
 // Founder-scale: scans all drafts for the user, then filters in JS.
 export const unseenCount = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthedUser(ctx);
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))

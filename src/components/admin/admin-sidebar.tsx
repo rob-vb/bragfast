@@ -23,7 +23,6 @@ import { toast } from "sonner";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 
-import { useUserId } from "@/hooks/use-user-id";
 import {
   Sidebar,
   SidebarContent,
@@ -84,8 +83,7 @@ export function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const planConfig = PLANS[plan];
-  const userId = useUserId();
-  const unseenDrafts = useQuery(api.drafts.unseenCount, { userId }) ?? 0;
+  const unseenDrafts = useQuery(api.drafts.unseenCount, {}) ?? 0;
   const [portalPending, setPortalPending] = useState(false);
 
   function handleLogout() {
