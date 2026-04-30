@@ -7,6 +7,13 @@ import posthog from "posthog-js";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { PixelButton } from "./pixel-button";
+import {
+  tierFor,
+  capsFor,
+  nextTierFor,
+  type Plan,
+  type Format as TierFormat,
+} from "@/lib/plan-tiers";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -81,6 +88,8 @@ export interface ApproveDraftModalProps {
   routingRows: RoutingRow[];
   /** Connected integrations for this user. */
   integrations: IntegrationRow[];
+  /** User's current plan; drives tier-based pre-disable. Optional — when absent, no UI gating (server still enforces). */
+  plan?: string;
   onClose: () => void;
 }
 
@@ -170,8 +179,26 @@ export function ApproveDraftModal({
   draftFormats,
   routingRows,
   integrations,
+  plan,
   onClose,
 }: ApproveDraftModalProps) {
+  // S7.3: tier-driven pre-disable. Legacy plans (tierFor → null) skip gating;
+  // server enforcement is still source of truth.
+  const tier = plan ? tierFor(plan as Plan) : null;
+  const caps = tier ? capsFor(tier) : null;
+  function formatLockedReason(fmt: Format): { locked: boolean; upgrade: string | null } {
+    if (!caps) return { locked: false, upgrade: null };
+    const isVideo = fmt.startsWith("video-");
+    const baseFmt = (isVideo ? fmt.slice("video-".length) : fmt) as TierFormat;
+    const formatOk = caps.formats.includes(baseFmt);
+    const videoOk = !isVideo || caps.video;
+    if (formatOk && videoOk) return { locked: false, upgrade: null };
+    const next = nextTierFor({
+      needsFormat: baseFmt,
+      needsVideo: isVideo,
+    });
+    return { locked: true, upgrade: next };
+  }
   const router = useRouter();
   const approveDraftMutation = useMutation(api.draftPushes.approveDraft);
 
@@ -367,6 +394,24 @@ export function ApproveDraftModal({
 
   const noProviders = !bufferConnected && !postizConnected;
 
+  const distinctChannelCount = useMemo(() => {
+    const set = new Set<string>();
+    for (const key of checked) {
+      const [, prov, channelId] = key.split("::");
+      set.add(`${prov}:${channelId}`);
+    }
+    return set.size;
+  }, [checked]);
+
+  const platformCapWarning =
+    caps && distinctChannelCount > caps.platforms
+      ? {
+          allowed: caps.platforms,
+          actual: distinctChannelCount,
+          upgrade: nextTierFor({ needsPlatforms: distinctChannelCount }),
+        }
+      : null;
+
   const bufferInSelection = useMemo(() => {
     for (const key of checked) {
       if (key.split("::")[1] === "buffer") return true;
@@ -450,10 +495,25 @@ export function ApproveDraftModal({
 
               if (rows.length === 0 && hideUnchecked) return null;
 
+              const lock = formatLockedReason(fmt);
+
               return (
-                <div key={fmt} className="border-2 border-brand/30 p-3 space-y-2">
-                  <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
-                    {FORMAT_LABELS[fmt]}
+                <div
+                  key={fmt}
+                  className={`border-2 border-brand/30 p-3 space-y-2 ${
+                    lock.locked ? "opacity-50" : ""
+                  }`}
+                >
+                  <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase flex items-center justify-between gap-2">
+                    <span>{FORMAT_LABELS[fmt]}</span>
+                    {lock.locked && (
+                      <span
+                        className="text-[9px] text-brand/70 normal-case"
+                        title={`Your plan doesn't include this format. Upgrade to ${lock.upgrade ?? "a higher tier"}.`}
+                      >
+                        🔒 {lock.upgrade ? `Upgrade → ${lock.upgrade}` : "Locked"}
+                      </span>
+                    )}
                   </div>
                   {allChannels.length === 0 ? (
                     <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 italic">
@@ -472,6 +532,7 @@ export function ApproveDraftModal({
                           <input
                             type="checkbox"
                             checked={isChecked}
+                            disabled={lock.locked}
                             onChange={() => toggleChecked(key)}
                             className="accent-current"
                           />
@@ -591,6 +652,17 @@ export function ApproveDraftModal({
               </div>
             ))}
           </div>
+        )}
+
+        {/* Platform cap warning */}
+        {platformCapWarning && (
+          <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand border-2 border-yellow-400 bg-yellow-50 p-2">
+            Your plan allows {platformCapWarning.allowed} destination
+            {platformCapWarning.allowed === 1 ? "" : "s"} per post; you have {platformCapWarning.actual} selected.
+            {platformCapWarning.upgrade
+              ? ` Upgrade to ${platformCapWarning.upgrade}.`
+              : ""}
+          </p>
         )}
 
         {/* Inline error */}

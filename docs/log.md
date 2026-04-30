@@ -14,6 +14,14 @@ Template:
 
 ---
 
+## 2026-04-30 — Session — S7.3 tier gating UI mirror
+
+**Shipped:** ApproveDraftModal now accepts optional `plan`, derives tier via `tierFor`, renders locked-format groups at 50% opacity with "🔒 Upgrade → {tier}" badge and disables their checkboxes. Distinct-channel count compared against `caps.platforms` produces a yellow warning banner with upgrade target. Cook page plumbs `plan` from `api.userProfiles.getStats`. Server in `convex/draftPushes.ts:266-314` remains source of truth — UI is convenience. Legacy plans skip gating client-side. tsc clean, vitest 869/0.
+
+**Next session start:** S7.1 (auto-cook on approve, requires DraftConfig→ReleaseRequest adapter — still deferred) or S9.1 (weekly digest, deferred — needs Resend infra).
+
+---
+
 ## 2026-04-30 — Session — S8.3 few-shot recent approvals
 
 **Shipped:** `convex/drafts.ts:getRecentApprovedEdits` public query joins triggerEvents (decision=approved) → drafts.originalConfig → draftPushes (latest by_draftId), filters out unedited rows, returns up to 3 `{original, edited}` pairs. `compose-copy.ts` adds `examples?: ApprovalExample[]` on every PlatformOpt + `examplesBlock(examples)` rendered in all 7 user prompt templates after `platformLine`. Wired at 6 callsites parallel to voicePreset: 4 convex integrations via `ctx.runQuery(api.drafts.getRecentApprovedEdits, …)`, 2 Next.js paths (webhooks, retro-pr) via `convex.query(...)`. Empty array → empty block → zero-state safe. tsc clean, vitest 869/0.

@@ -208,6 +208,7 @@ export function CookPage({ templates }: CookPageProps) {
 
   // ── Live credit balance ─────────────────────────────────────────────────
   const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
+  const userStats = useQuery(api.userProfiles.getStats, { userId });
 
   // ── Approve flow: integrations + routing defaults ──────────────────────
   const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
@@ -695,6 +696,7 @@ export function CookPage({ templates }: CookPageProps) {
             draftFormats={draftFormats}
             routingRows={routingRows ?? []}
             integrations={integrations ?? []}
+            plan={userStats?.plan}
             onClose={() => setApproveOpen(false)}
           />
         );

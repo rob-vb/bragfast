@@ -300,11 +300,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S7.1.
 - Result: New `convex/draftPushes.ts:approveDraftClipboard` mutation — auth-gated, ownership-checked, enforces posts/month tier counter, decrements counter, marks draft `suppressed=true`, inserts triggerEvent `decision="approved"` with `metadata.destination`. No draftPushes row created. `DestinationPickerModal.onCopy` and `onXIntent` now call the mutation before firing PostHog `post_approved` so history/feed reflect approval. posts_exhausted / posts_pending errors surface in modal. Independent of S7.1 (no render needed for clipboard text).
 
-### S7.3 — Format/platform/video gating in approval UI · M · PARTIAL 2026-04-30
+### S7.3 — Format/platform/video gating in approval UI · M · [x] 2026-04-30
 - Goal: Lower tiers see disabled checkboxes with upsell tooltip. Server-side enforcement matches.
 - Acceptance: Toast user → only square + 1 platform; UI + server agree.
 - Deps: S2.7.
-- Result: Server enforcement complete in `convex/draftPushes.ts:172-261` (approveDraft returns format_blocked / platform_blocked / video_blocked with `upgradeTier`). Approval modal already surfaces error toasts (line 302). UI pre-disable + tooltip layer deferred — server-side rejection is the source of truth and prevents bad approvals; UI hint is polish.
+- Result: Server enforcement in `convex/draftPushes.ts:266-314` returns format_blocked / platform_blocked / video_blocked with `upgradeTier`. UI layer now mirrors: ApproveDraftModal accepts optional `plan`, derives tier via `tierFor`, computes `formatLockedReason(fmt)` per draft format (checks `caps.formats` + `caps.video`, returns `nextTierFor(...)` upgrade target). Locked formats render with 50% opacity, "🔒 Upgrade → {tier}" badge, disabled checkboxes. Distinct-channel count compared against `caps.platforms` shows yellow warning banner with upgrade target above the inline error region. Cook page passes `plan` from `getStats`. Legacy plans (tierFor → null) skip gating; server still enforces.
 
 ---
 
