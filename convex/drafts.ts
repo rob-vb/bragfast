@@ -357,7 +357,11 @@ export const appendPrMergeRollup = mutation({
 export const unseenCount = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuthedUser(ctx);
+    // Sidebar mounts before auth resolves on first paint; return 0 instead of
+    // throwing so the badge silently hides until session is established.
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return 0;
+    const userId = identity.subject;
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
