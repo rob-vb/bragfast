@@ -14,6 +14,30 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 17 — S2.6a — preview API scaffold + URL parser + IP rate limit
+
+**Attempted:**
+- `convex/schema.ts`: added `previewRateLimits` table (ip, hourStart, hourCount, dayStart, dayCount) indexed `by_ip`.
+- `convex/previewLimit.ts`: `check` mutation atomically resets per-window counters and returns `{ allowed, retryAfterMs?, scope? }`. Caps: 10/hr + 50/day.
+- `src/lib/preview/parse-repo-url.ts`: `parseRepoUrl()` accepts `https://`, bare `github.com/...`, and `git@github.com:...` forms; strips `.git`/trailing slashes/path tail; rejects non-GitHub hosts and malformed segments. `extractClientIp()` reads first hop of `x-forwarded-for`, falls back to `x-real-ip`, then `"unknown"`.
+- `src/app/api/preview/route.ts`: `POST` handler — parses body, validates URL, extracts IP, calls Convex rate limiter, returns 400 (invalid_json/missing_repo_url/invalid_repo_url), 429 (rate_limited with `retry-after` header + scope), or 200 stub `{ status: "pending", repo }`.
+
+**Tests:**
+- `src/lib/preview/__tests__/parse-repo-url.test.ts`: parametric coverage of valid + invalid URL forms; IP extraction from headers.
+- `src/app/api/preview/__tests__/route.test.ts`: malformed JSON, missing field, non-GitHub URL, happy path with mutation called with parsed IP, 429 path with scope + retry-after.
+- All 20 preview tests pass; full `tsc --noEmit` clean after `convex codegen`.
+
+**Verified by agent-browser:** N/A — no UI; route returns JSON only. End-to-end browser verify deferred to S2.6e.
+
+**Deferred / why:**
+- No render yet; route returns stub. S2.6b–e cover opt-out, PR fetch, render, cache wiring.
+
+**Open questions for user:** None new. Q1–Q5 from Session 0 remain.
+
+**Next session start:** S2.6b — `bragfast.txt` opt-out helper + cache.
+
+---
+
 ## 2026-04-30 — Session 16 — S2.5 — org-pending detection on install
 
 **Attempted:**

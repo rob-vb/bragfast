@@ -133,7 +133,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - **`bragfast.txt` opt-out:** raw GitHub `https://raw.githubusercontent.com/{repo}/{default}/bragfast.txt`. Existence alone blocks (no parsing). 1h cache in Convex `previewBlocks` table or in-memory LRU.
 - **Watermark:** Sharp composite — bottom-right corner, "brag.fast preview" text on semi-transparent dark bar, full image width across bottom 40px. Sub-text "sign up to remove watermark" under the brag bar.
 
-#### S2.6a — Preview API scaffold + URL parser + rate limit · M
+#### S2.6a — Preview API scaffold + URL parser + rate limit · M  [x] 2026-04-30
 - Goal: `POST /api/preview` accepts `{ repoUrl: string }`. Parse `github.com/{owner}/{name}` (any URL form). Validate. Hit rateLimits. Return `{ status, error? }` shape. No render yet.
 - Acceptance: invalid URL → 400. Rate-limit exceeded → 429 with retry-after. Valid URL → 200 with stub `{ status: "ok" }`.
 - Deps: S0.1.
