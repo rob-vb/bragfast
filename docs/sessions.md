@@ -168,7 +168,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 3 — Onboarding wizard (Phase 2 must be done)
 
-### S3.1 — Public preview hero on homepage · M
+### S3.1 — Public preview hero on homepage · M  [x] 2026-04-30
 - Goal: Replace current hero with paste-repo-URL form → inline preview (calls S2.6 endpoint). PostHog `preview_repo_pasted` + `preview_render_started/completed`.
 - Acceptance: agent-browser pastes a URL → sees preview within 5s; events fire.
 - Deps: S2.6, S0.3.

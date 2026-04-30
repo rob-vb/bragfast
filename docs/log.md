@@ -14,6 +14,27 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 22 — S3.1 — public preview hero on homepage
+
+**Attempted:**
+- `src/components/landing/preview-hero.tsx`: client component. Paste GitHub URL → POST `/api/preview` → render `<img>` inline + "Get unwatermarked posts →" CTA to `/signup?source=preview`. Loading/error/ready states. Error mapping covers all `/api/preview` codes (invalid_repo_url, repo_not_found, no_merged_pr, opted_out, sensitive_content, rate_limited, github_rate_limited, render_failed, network_error).
+- `src/app/page.tsx`: hero swap gated by `isLaunchModeRepositioned()`. Legacy CTA path preserved for `legacy` mode.
+- PostHog events per `docs/conventions.md`: `preview_repo_pasted` (`repo_host`, `is_returning_visitor`), `preview_render_started` (`repo_host`), `preview_render_completed` (`render_duration_ms`, `was_successful`, `failure_reason`). `is_returning_visitor` tracked via `localStorage["bf_pv_seen"]`. No PII (raw URL stays client-side, only host + status leaves).
+- `.env.example` documents `NEXT_PUBLIC_LAUNCH_MODE`. Local set to `repositioned` for verify.
+
+**Verified by agent-browser:**
+- `/` with `NEXT_PUBLIC_LAUNCH_MODE=repositioned`: hero shows "See your last PR as a brag post" + paste form. Legacy CTA replaced.
+- Pasted `https://github.com/sindresorhus/slugify` → preview image renders, "sindresorhus/slugify · PR #73" caption, signup CTA.
+- Pasted `https://github.com/anthropics/claude-code` → safety alert "Latest PR looks sensitive (security/private). We don't render those."
+
+**Deferred / why:** Invalid-URL alert path covered by route unit tests; not separately re-clicked in agent-browser this session. S3.2 (GitHub-OAuth-first signup) follows.
+
+**Open questions for user:** None.
+
+**Next session start:** S3.2 — GitHub-OAuth-first signup, with `came_from_preview` derived from `?source=preview` query param.
+
+---
+
 ## 2026-04-30 — Session 21 — S2.6e — content filter gate
 
 **Attempted:**
