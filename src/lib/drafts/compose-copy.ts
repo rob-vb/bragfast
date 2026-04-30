@@ -18,7 +18,20 @@ export type CopyByPlatform = Partial<
   Record<Platform, { title: string; description: string }>
 >;
 
-type PlatformOpt = { platform?: Platform; voicePreset?: VoicePreset | null };
+// S8.3: optional few-shot examples drawn from the user's recent approvals.
+// Each example is the agent's original draft copy paired with the copy the
+// user actually shipped. Injected into the system prompt to bias Haiku toward
+// this user's voice without retraining.
+export type ApprovalExample = {
+  original: { title: string; description: string };
+  edited: { title: string; description: string };
+};
+
+type PlatformOpt = {
+  platform?: Platform;
+  voicePreset?: VoicePreset | null;
+  examples?: ApprovalExample[] | null;
+};
 
 export type ComposeCopyInput =
   | ({
@@ -122,6 +135,23 @@ function platformLine(input: { platform?: Platform }): string {
   return input.platform ? PLATFORM_GUIDE[input.platform] : "";
 }
 
+// S8.3: render the few-shot block. Empty string when no examples — callers
+// concat unconditionally without needing a guard.
+export function examplesBlock(
+  examples: ApprovalExample[] | null | undefined,
+): string {
+  if (!examples || examples.length === 0) return "";
+  const lines = examples
+    .slice(0, 3)
+    .map((ex, i) => {
+      const o = `${ex.original.title} — ${ex.original.description}`.trim();
+      const e = `${ex.edited.title} — ${ex.edited.description}`.trim();
+      return `Example ${i + 1}:\n  Agent draft: ${o}\n  User shipped: ${e}`;
+    })
+    .join("\n");
+  return `Past approvals from this user (the user's edits show their voice — match it, don't copy verbatim):\n${lines}`;
+}
+
 /**
  * Compose copy for multiple platforms in parallel. Returns one Copy per
  * requested platform. Confidence is assumed equal across platforms — the
@@ -205,6 +235,7 @@ If the PR contains one real feature plus cleanup/fixes, announce only the featur
   const user = `Repo: ${input.repoFullName}
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 PR title: ${input.title}
 PR body:
 ---
@@ -236,6 +267,7 @@ You celebrate a revenue milestone. The title should prominently feature the doll
   const user = `Milestone: ${amount} MRR
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
 
@@ -261,6 +293,7 @@ You celebrate the first paying customer. Title should feel momentous but not che
   const user = `Milestone: first paying customer
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
 
@@ -287,6 +320,7 @@ You celebrate a visitor/traffic milestone. Title leads with the number. Descript
   const user = `Milestone: ${n} visitors (rolling 30 days, via ${input.source})
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
 
@@ -313,6 +347,7 @@ You celebrate a total revenue milestone. Title leads with the dollar amount. Des
   const user = `Milestone: ${amount} in total revenue
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
 
@@ -335,6 +370,7 @@ You celebrate a paying subscriber milestone. Title leads with the number. Descri
   const user = `Milestone: ${n} paying subscribers
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
 
@@ -357,6 +393,7 @@ You celebrate a GitHub star milestone. Title names the number and the repo. Desc
   const user = `Milestone: ${n} GitHub stars on ${input.repoFullName}
 ${brandLine(input)}
 ${platformLine(input)}
+${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
 

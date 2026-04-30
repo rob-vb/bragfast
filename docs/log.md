@@ -14,6 +14,14 @@ Template:
 
 ---
 
+## 2026-04-30 — Session — S8.3 few-shot recent approvals
+
+**Shipped:** `convex/drafts.ts:getRecentApprovedEdits` public query joins triggerEvents (decision=approved) → drafts.originalConfig → draftPushes (latest by_draftId), filters out unedited rows, returns up to 3 `{original, edited}` pairs. `compose-copy.ts` adds `examples?: ApprovalExample[]` on every PlatformOpt + `examplesBlock(examples)` rendered in all 7 user prompt templates after `platformLine`. Wired at 6 callsites parallel to voicePreset: 4 convex integrations via `ctx.runQuery(api.drafts.getRecentApprovedEdits, …)`, 2 Next.js paths (webhooks, retro-pr) via `convex.query(...)`. Empty array → empty block → zero-state safe. tsc clean, vitest 869/0.
+
+**Next session start:** S9.1 (weekly digest cron + email) or S7.1 (auto-cook on approve) per user direction.
+
+---
+
 ## 2026-04-30 — Session — Phases 7–11 batch (autonomous)
 
 **Attempted:** ship what's clean, defer what's not, audit launch readiness.

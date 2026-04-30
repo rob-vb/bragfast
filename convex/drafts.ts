@@ -1,4 +1,9 @@
-import { action, mutation, query, internalMutation } from "./_generated/server";
+import {
+  action,
+  mutation,
+  query,
+  internalMutation,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
@@ -32,6 +37,71 @@ export const create = mutation({
       created_at: now,
     });
     return { id: externalId, created_at: now };
+  },
+});
+
+// S8.3: few-shot. Returns recent (original → edited) pairs for a user, drawn
+// from approved drafts whose user-edited title or description differs from the
+// frozen `originalConfig`. Used by composeCopy to bias Haiku toward this
+// user's voice. Capped at `limit` (default 3) and ordered newest first.
+export const getRecentApprovedEdits = query({
+  args: { userId: v.string(), limit: v.optional(v.number()) },
+  handler: async (ctx, { userId, limit }) => {
+    const cap = limit ?? 3;
+    // Pull most recent approved triggerEvents — these reference drafts that
+    // were pushed. We need a few extras since not every approval was edited.
+    const events = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .filter((q) => q.eq(q.field("decision"), "approved"))
+      .take(cap * 4);
+
+    const examples: Array<{
+      original: { title: string; description: string };
+      edited: { title: string; description: string };
+    }> = [];
+
+    for (const evt of events) {
+      if (examples.length >= cap) break;
+      if (!evt.draftExternalId) continue;
+      const draft = await ctx.db
+        .query("drafts")
+        .withIndex("by_externalId", (q) =>
+          q.eq("externalId", evt.draftExternalId!),
+        )
+        .first();
+      if (!draft?.originalConfig) continue;
+      let original: {
+        objectContent?: { title?: { text?: string }; description?: { text?: string } };
+      };
+      try {
+        original = JSON.parse(draft.originalConfig);
+      } catch {
+        continue;
+      }
+      const origTitle = original?.objectContent?.title?.text?.trim() ?? "";
+      const origDescription = original?.objectContent?.description?.text?.trim() ?? "";
+
+      const push = await ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", evt.draftExternalId!))
+        .first();
+      if (!push) continue;
+      const finalTitle = push.title.trim();
+      const finalDescription = push.description.trim();
+      if (
+        finalTitle === origTitle &&
+        finalDescription === origDescription
+      ) {
+        continue;
+      }
+      examples.push({
+        original: { title: origTitle, description: origDescription },
+        edited: { title: finalTitle, description: finalDescription },
+      });
+    }
+    return examples;
   },
 });
 

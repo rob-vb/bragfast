@@ -247,10 +247,10 @@ async function fireDraft(
     goalMilestoneKey(goal.externalId),
   );
 
-  const profile = await ctx.runQuery(
-    internal.userProfiles.getByUserIdInternal,
-    { userId },
-  );
+  const [profile, examples] = await Promise.all([
+    ctx.runQuery(internal.userProfiles.getByUserIdInternal, { userId }),
+    ctx.runQuery(api.drafts.getRecentApprovedEdits, { userId }),
+  ]);
   const voicePreset = (profile?.voicePreset ?? null) as
     | "casual_builder"
     | "dry_technical"
@@ -264,6 +264,7 @@ async function fireDraft(
       source: "ga4",
       threshold: goal.target ?? visitors,
       voicePreset,
+      examples,
     }),
   ]);
 

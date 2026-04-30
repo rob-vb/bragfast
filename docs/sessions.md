@@ -322,11 +322,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: schema field added.
 - Result: schema field `userProfiles.voicePreset` + validated `getVoicePreset` / `setVoicePreset` shipped earlier in batch. Wiring now landed: `composeCopy` accepts `voicePreset` on every input variant, `brandLine` injects `voicePresetLine(...)` into the user prompt. All 5 callsites fetch and pass through: `convex/integrations/{stripe,ga4,posthog,githubStars}.ts` via `internal.userProfiles.getByUserIdInternal`; `src/app/api/github/webhooks/route.ts` + `src/lib/github/retro-pr.ts` via `api.userProfiles.getVoicePreset`. Settings UI page = S8.4.
 
-### S8.3 — Few-shot recent approvals into Haiku prompt · M · DEFERRED 2026-04-30
+### S8.3 — Few-shot recent approvals into Haiku prompt · M · [x] 2026-04-30
 - Goal: composeCopy fetches last N approved-and-edited drafts for user, injects as examples.
 - Acceptance: 3 approvals later, agent-browser sees voice consistency improvement (qualitative).
 - Deps: S8.1.
-- Deferred reason: depends on S8.1 (no edit-deltas to draw few-shot from yet).
+- Result: `convex/drafts.ts` exports public query `getRecentApprovedEdits(userId, limit?)` — joins recent approved triggerEvents → drafts.originalConfig + draftPushes (latest), filters out unedited, returns up to 3 `{original, edited}` pairs. `compose-copy.ts` adds `examples?: ApprovalExample[]` on every PlatformOpt and `examplesBlock(examples)` helper rendering "Past approvals from this user… Example 1: Agent draft / User shipped" injected after `platformLine` in all 7 user prompt templates. All 6 callsites fetch + pass examples in parallel with voicePreset: `convex/integrations/{stripe,ga4,posthog,githubStars}.ts` via `api.drafts.getRecentApprovedEdits`; `src/app/api/github/webhooks/route.ts` + `src/lib/github/retro-pr.ts` via `convex.query(api.drafts.getRecentApprovedEdits, …)`. Empty examples array → empty block → no prompt change (zero-state safe).
 
 ### S8.4 — Settings → Voice page with "trained on N approvals" · S · [x] 2026-04-30 (preset picker only; counter deferred)
 - Goal: counter + manual edit ability for calibration prompt.
