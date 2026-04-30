@@ -14,6 +14,28 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 5 — S0.4a auth foundation
+
+**Attempted:**
+- **S0.4a.1** — `src/lib/auth-client.ts` adds `convexClient()` plugin from `@convex-dev/better-auth/client/plugins`. `src/components/convex-provider.tsx` swaps `ConvexProvider` for `ConvexBetterAuthProvider`, passing the authClient. Browser now carries Better Auth tokens to Convex.
+- **S0.4a.2** — `convex/auth.ts` exports `requireAuthedUser(ctx)` returning the `_id` from `authComponent.getAuthUser(ctx)`, throwing `ConvexError("Unauthenticated")` otherwise. Canonical pattern for converting RISKY functions.
+- **S0.4a.3 (canary)** — converted `drafts.unseenCount`. Dropped `userId: v.string()` arg, derives from `requireAuthedUser`. Updated lone caller `src/components/admin/admin-sidebar.tsx`; dropped now-dead `useUserId` import.
+- Typecheck clean. All 729 tests pass.
+
+**Verified by agent-browser:** N/A — no rendered UI change. Real verification needs an authed admin session in the dev server, deferred to next session start when we'll convert more browser-only functions and verify in batch.
+
+**Deferred / why:**
+- Full S0.4a.3 conversion is multi-session. Two caller classes:
+  1. **Browser useQuery/useMutation** — auth flows through ConvexBetterAuthProvider; conversion is a straight `requireAuthedUser` swap.
+  2. **Server `ConvexHttpClient` / `fetchQuery`** — currently unauthenticated. Need to thread Better Auth token (`auth.fetchAuthQuery` from `convexBetterAuthNextJs`) through every Next.js route call site before converting the underlying Convex function. Otherwise routes 500.
+- Plan for next session: walk `src/` for `api.*` references, classify by caller class, convert all browser-only call sites first (lower risk, no Next.js plumbing needed). Then tackle the server-side bridge.
+
+**Open questions for user:** none new.
+
+**Next session start:** continue S0.4a.3 — browser-only RISKY functions: `drafts.markSeen`, `releases.listByUser` (history-client), `userProfiles.getStats` (dashboard-client browser path), `integrationSecrets.listByUser` (browser callers).
+
+---
+
 ## 2026-04-30 — Session 4 — S0.2 + S0.4 + S0.5 (P0 sweep)
 
 **Attempted:**
