@@ -199,10 +199,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S3.5.
 - **Result:** `DestinationPickerModal` wired into `RetroDraftHero`. Buffer/Postiz route to existing kitchen approve flow (`/admin/kitchen?draft=…&approve=1&provider=…`). Copy uses `navigator.clipboard.writeText` over X copy (`copyByPlatform.x` → `objectContent` text → fallback title). X intent opens `twitter.com/intent/tweet?text=…` in new tab. PostHog `post_approved` fires with `approval_surface: "dashboard_hero"` + `destination`. Live UI verify deferred — requires seeded agent+github draft on test account; permission denied on direct DB seed. Code-level lint + typecheck clean.
 
-### S3.7 — Brand → Goal → Integration prompt sequence · M
+### S3.7 — Brand → Goal → Integration prompt sequence · M  [x] 2026-04-30
 - Goal: Three sequential post-activation prompts. Brand kit (logo + primary color, skippable). Goal-setting modal (full-screen, structured form). Integration prompt driven by goal type.
 - Acceptance: agent-browser walks all three; PostHog `goal_set` + `source_connected` fire.
 - Deps: S3.6, goals UX (Phase 5).
+- **Result:** Three new pages: `/welcome/brand` (name + primary color picker + optional logo URL, Skip allowed), `/welcome/goal` (reuses `GoalCreateModal` with new `hideClose` prop, pushes `/welcome/integration?cat=<category>` on creation), `/welcome/integration` (route-driven plan: revenue/users → Stripe, traffic → PostHog/GA4, custom → "No source needed", skip → generic). Entry redirects updated: `pick-repo-client.tsx` and `install-warning/page.tsx` route to `/welcome/brand` when `isLaunchModeRepositioned()`. `GoalCreateModal.onCreated` now passes `(category)` so the wizard can route by goal type. agent-browser verified: brand Skip → goal Custom + label "S3.7 wizard test goal" → integration step shows "No source needed" + "Open dashboard". Direct hit to `/welcome/integration?cat=revenue` shows Stripe connect plan. `goal_set` fires from existing modal path; `source_connected` continues to fire from existing /admin/sous-chef tile flow that the wizard's "Connect" CTA links to.
 
 ---
 

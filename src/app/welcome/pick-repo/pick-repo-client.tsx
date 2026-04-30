@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 
 type Repo = {
   full_name: string;
@@ -15,7 +16,8 @@ type Installation = {
   status: "active" | "suspended" | "removed";
 };
 
-const POST_PICK_PATH = "/admin";
+const POST_PICK_PATH_LEGACY = "/admin";
+const POST_PICK_PATH_REPOSITIONED = "/welcome/brand";
 
 export function PickRepoClient() {
   const router = useRouter();
@@ -79,7 +81,10 @@ export function PickRepoClient() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? "Failed to save selection");
       }
-      router.push(POST_PICK_PATH);
+      const next = isLaunchModeRepositioned()
+        ? POST_PICK_PATH_REPOSITIONED
+        : POST_PICK_PATH_LEGACY;
+      router.push(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
       setSubmitting(false);

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
   title: "Install brag.fast on GitHub",
@@ -12,6 +13,7 @@ export default function InstallWarningPage() {
   const installUrl = appSlug
     ? `https://github.com/apps/${appSlug}/installations/new`
     : "#";
+  const skipPath = isLaunchModeRepositioned() ? "/welcome/brand" : "/admin";
 
   return (
     <div className="min-h-screen bg-surface text-brand flex items-center justify-center px-4 py-12">
@@ -52,7 +54,7 @@ export default function InstallWarningPage() {
               Install on GitHub
             </Link>
             <Link
-              href="/admin"
+              href={skipPath}
               className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
               Skip for now

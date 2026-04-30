@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 30 — S3.7 — Brand → Goal → Integration wizard
+
+**Attempted:**
+- Three new pages under `src/app/welcome/`: `brand/` (name + primary color + optional logo URL, POSTs `/api/v1/brands` with sane defaults for background/text, Skip-allowed), `goal/` (renders `GoalCreateModal` forced-open with new `hideClose` prop; on create routes to `/welcome/integration?cat=<category>`), `integration/` (route-driven plan dictionary: revenue/users → Stripe, traffic → PostHog/GA4, custom → "No source needed", skip → generic dashboard nudge).
+- `GoalCreateModal.onCreated` now passes `(category: GoalCategory)` so the wizard can route by goal type. New `hideClose` prop suppresses overlay-close + ✕ for wizard mode.
+- Entry redirects when `isLaunchModeRepositioned()`: `pick-repo-client.tsx` POST_PICK_PATH → `/welcome/brand`; `install-warning/page.tsx` "Skip for now" → `/welcome/brand`.
+- Typecheck clean. Lint clean for new files.
+
+**Verified by agent-browser:** Logged-in test account walked the chain: `/welcome/brand` → Skip → `/welcome/goal` → Custom category + label "S3.7 wizard test goal" → submit → `/welcome/integration?cat=custom` shows "No source needed" plan. Direct hit `/welcome/integration?cat=revenue` shows "Connect Stripe" plan with correct CTA.
+
+**Deferred / why:**
+- `source_connected` PostHog event already fires from existing `/admin/sous-chef` integration tiles (not part of this wizard's surface). Wizard's "Connect" CTA links to `/admin/sous-chef?connect=<provider>`; deep-link handling on that page (auto-open the provider's connect form) not yet implemented — separate small task if desired.
+- Welcome-step completion tracking (avoid showing wizard twice) deferred — current behavior: any direct visit to a welcome path renders it. Not a launch blocker because pick-repo + install-warning are the only entry redirects, both single-shot post-activation.
+
+**Open questions for user:** none new.
+
+**Next session start:** S5.2 (goal hero card on dashboard) or S2.7 (plan accounting refactor) or S4.1 (pricing rewrite). Phase 5 dep chain unblocked; pricing chain (S4.x) still gated on S2.7.
+
+---
+
 ## 2026-04-30 — Session 29 — S5.1 — goal create modal (category → form)
 
 **Attempted:**

@@ -14,9 +14,10 @@ type ConnectedProviders = {
 type Props = {
   open: boolean;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (category: GoalCategory) => void;
   isFirstGoal: boolean;
   connected: ConnectedProviders;
+  hideClose?: boolean;
 };
 
 type RevenueMetric = "mrr" | "total_revenue" | "first_sale";
@@ -29,6 +30,7 @@ export function GoalCreateModal({
   onCreated,
   isFirstGoal,
   connected,
+  hideClose,
 }: Props) {
   const [step, setStep] = useState<Step>("category");
   const [category, setCategory] = useState<GoalCategory | null>(null);
@@ -89,7 +91,7 @@ export function GoalCreateModal({
             : connected.stripe || connected.posthog || connected.ga4,
       });
       reset();
-      onCreated();
+      onCreated(goalCategory);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -156,7 +158,7 @@ export function GoalCreateModal({
   return (
     <div
       className="fixed inset-0 z-50 bg-brand/40 flex items-stretch sm:items-center justify-center p-0 sm:p-6 overflow-y-auto"
-      onClick={close}
+      onClick={hideClose ? undefined : close}
     >
       <div
         className="bg-white border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] w-full max-w-2xl my-auto"
@@ -164,14 +166,16 @@ export function GoalCreateModal({
       >
         <div className="bg-brand text-gold px-5 py-3 font-mono text-xs uppercase tracking-widest flex items-center justify-between">
           <span>▸ Set a goal</span>
-          <button
-            type="button"
-            onClick={close}
-            className="text-gold hover:text-white px-2"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+          {!hideClose && (
+            <button
+              type="button"
+              onClick={close}
+              className="text-gold hover:text-white px-2"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         {step === "category" && (
