@@ -79,7 +79,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser screenshots `/` — no MCP, no API, no agent language.
 - Deps: S0.1.
 
-### S1.2 — Footer rename + nav demotion · S
+### S1.2 — Footer rename + nav demotion · S [x] 2026-04-30
 - Goal: footer "Docs" → "Developers"; landing nav Docs link demoted (footer-only or aria-hidden on hero nav).
 - Acceptance: agent-browser confirms nav + footer updated.
 - Deps: S1.1.

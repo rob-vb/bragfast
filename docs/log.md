@@ -14,6 +14,23 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 9 — S1.2 — footer rename + nav demotion
+
+**Attempted:**
+- Footer "Docs" → "Developers" on landing page (`src/app/page.tsx`).
+- Removed `/docs` link from `LandingNav` desktop and mobile menus. Docs entry is now footer-only.
+- Typecheck clean. 729 tests pass.
+
+**Verified by agent-browser:** pending — will batch with S1.3/S1.4 sweep.
+
+**Deferred / why:** none.
+
+**Open questions for user:** none new.
+
+**Next session start:** S1.3 — pricing page MCP/credits purge.
+
+---
+
 ## 2026-04-30 — Session 8 — S1.1 — MCP/API purged from homepage
 
 **Attempted:**
