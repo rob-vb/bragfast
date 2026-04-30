@@ -253,10 +253,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S5.3, S2.7.
 - **Result:** `convex/goals.ts` `create` handler now reads the user's tier and rejects when `enabled` would push active count past `TIER_CONFIG[tier].goals` — throws `goal_cap_reached:<tier>:<cap>`. Legacy plans (`tierFor=null`) bypass. `/api/v1/goals` POST parses the structured error and returns 403 `{error: "goal_cap_reached", tier, cap}`. `goal-create-modal.tsx` catches the 403 and surfaces `UpsellModal` reason="goals" pointing at the next tier with a higher (or unlimited) goals cap. Tests: 1 new in `goals-route.test.ts` covers the 403 mapping — 14/14 pass; full suite 855/855 pass.
 
-### S5.5 — Goal-hit celebration + email + next-goal prompt · M
+### S5.5 — Goal-hit celebration + email + next-goal prompt · M  [x] 2026-04-30
 - Goal: Real-time subscription on dashboard fires confetti modal. Resend email with one-click approve link. After approval, "Set your next goal?" prompt.
 - Acceptance: agent-browser triggers fake hit → sees celebration + email logged + prompt.
 - Deps: S5.3.
+- **Result:** `convex/goals.ts` `markFired` now returns `{firstHit, userId, label, metric, target, scope}`. All four scanners (stripe/ga4/posthog/githubStars) check `firstHit` and `ctx.scheduler.runAfter(0, internal.goalEmails.sendCelebrationEmail, ...)` exactly once per goal lifetime. New `convex/goalEmails.ts` internalAction looks up email via new `userProfiles.getByUserIdInternal`, then POSTs to `/api/internal/send-email` (existing pattern) — added `case "goal-hit"` there → `sendGoalHitEmail` → new `src/lib/emails/goal-hit.tsx` template (one-click `/admin/drafts` deep-link). Client: `GoalHeroCard` tracks `firstHitAt` transitions in a ref + sessionStorage and surfaces new `GoalCelebrationModal` (CSS-only confetti, NES-retro styling). Hero card hit state now also renders inline "Review draft" + "Set next goal" CTAs (the next-goal prompt). Tests: 855/855 pass; tsc clean. Live agent-browser walk-through deferred to S5.x e2e sweep.
 
 ---
 

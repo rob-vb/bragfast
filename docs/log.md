@@ -801,3 +801,25 @@ Template:
 **Open questions:** none.
 
 **Next session start:** S5.5 (goal-hit celebration + email + next-goal prompt).
+
+---
+
+## 2026-04-30 — S5.5 goal-hit celebration + email + next-goal prompt
+
+**Attempted:**
+- `convex/goals.ts` `markFired` returns `{firstHit, userId, label, metric, target, scope}`. Backwards-compatible: previous `void` return; no existing callers consumed the value.
+- All four scanners (stripe/ga4/posthog/githubStars) call `ctx.scheduler.runAfter(0, internal.goalEmails.sendCelebrationEmail, …)` exactly when `firstHit === true`. Recurring re-fires do not retrigger email.
+- `convex/goalEmails.ts` (no `"use node"` needed): looks up profile via new `internal.userProfiles.getByUserIdInternal` for the email, then POSTs to `/api/internal/send-email` with `Authorization: Bearer INTERNAL_API_SECRET`. Mirrors the convex/auth.ts reset-password path.
+- `src/lib/emails/goal-hit.tsx` (React Email) + `sendGoalHitEmail` in `src/lib/email.ts`. `case "goal-hit"` added to the internal email route handler.
+- Client: `GoalHeroCard` keeps a `prevFirstHitRef` map and triggers `GoalCelebrationModal` once per `externalId` per session (sessionStorage seen-marker). Modal has CSS-only confetti animation (`animate-confetti` keyframes added to `globals.css`).
+- Hero hit state now renders inline `Review draft` + `Set next goal` CTAs.
+
+**Verified by agent-browser:** Deferred — confetti + Resend send needs end-to-end exercise with a forced firstHit. Will roll up into S5.x e2e sweep.
+
+**Deferred / why:**
+- Approve-with-token deep link (true one-click approve from email) — currently links to `/admin/drafts`. Token-based one-click approve carries auth/CSRF complexity; deferred to a follow-up.
+- Recurring-hit notifications (silent on subsequent fires) — by design; only first-hit emails to avoid spam.
+
+**Open questions:** none.
+
+**Next session start:** TBD — Phase 5 closed.
