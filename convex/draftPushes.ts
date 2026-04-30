@@ -18,6 +18,7 @@ import { mutation, query, internalMutation, internalQuery } from "./_generated/s
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
+import { insertTriggerEvent } from "./triggerEvents";
 
 const formatValidator = v.union(
   v.literal("square"),
@@ -252,6 +253,27 @@ export const approveDraft = mutation({
       await ctx.scheduler.runAfter(0, internal.pushFanout.run, {
         draftId,
         userId,
+      });
+
+      // Record the approval as a trigger event. We look up the draft's
+      // sourceSystem/triggerType so the feed shows what was approved.
+      const draftRow = await ctx.db
+        .query("drafts")
+        .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
+        .first();
+      const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
+      await insertTriggerEvent(ctx, {
+        userId,
+        sourceSystem: draftRow?.sourceSystem ?? "manual",
+        triggerType,
+        decision: "approved",
+        confidence: draftRow?.confidence ?? undefined,
+        sourceReference: draftRow?.eventReference ?? undefined,
+        draftExternalId: draftId,
+        metadata: JSON.stringify({
+          pushCount: pushIds.length,
+          postState,
+        }),
       });
     }
 

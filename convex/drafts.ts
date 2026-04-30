@@ -2,6 +2,7 @@ import { action, mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
+import { insertTriggerEvent } from "./triggerEvents";
 
 const sourceSystem = v.union(
   v.literal("github"),
@@ -321,6 +322,20 @@ export const remove = mutation({
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .first();
     if (!row || row.userId !== userId) return false;
+    // Record user_skipped for agent-fired drafts so the feed reflects the user
+    // dismissing a Sous-Chef trigger. User-created drafts aren't trigger events.
+    if (row.source === "agent") {
+      const triggerType = row.milestoneKey?.split(":")[0] ?? "manual";
+      await insertTriggerEvent(ctx, {
+        userId,
+        sourceSystem: row.sourceSystem ?? "manual",
+        triggerType,
+        decision: "user_skipped",
+        confidence: row.confidence ?? undefined,
+        sourceReference: row.eventReference ?? undefined,
+        draftExternalId: externalId,
+      });
+    }
     await ctx.db.delete(row._id);
     return true;
   },

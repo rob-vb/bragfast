@@ -329,6 +329,41 @@ export default defineSchema({
     .index("by_userId_provider_enabled", ["userId", "provider", "enabled"])
     .index("by_externalId", ["externalId"]),
 
+  // Sous-Chef: append-only event log of every trigger seen + decision taken.
+  // Powers the /admin/sous-chef/history feed. Decision enum:
+  //   drafted        — a draft (fresh or rolled-up) was inserted
+  //   auto_skipped   — system declined (content filter, rate cap, low confidence)
+  //   user_skipped   — user deleted/dismissed an agent-fired draft
+  //   approved       — user approved & dispatched pushes
+  //   ignored_48h    — draft sat untouched for 48h (reserved; no auto-emitter yet)
+  triggerEvents: defineTable({
+    userId: v.string(),
+    externalId: v.string(),                  // "evt_*"
+    sourceSystem: v.union(
+      v.literal("github"),
+      v.literal("stripe"),
+      v.literal("posthog"),
+      v.literal("ga4"),
+      v.literal("manual"),
+    ),
+    triggerType: v.string(),                 // "pr_merged", "mrr", "first_sale", ...
+    decision: v.union(
+      v.literal("drafted"),
+      v.literal("auto_skipped"),
+      v.literal("user_skipped"),
+      v.literal("approved"),
+      v.literal("ignored_48h"),
+    ),
+    reason: v.optional(v.string()),          // "content_filter", "rate_cap", "low_confidence", "rollup", ...
+    confidence: v.optional(v.number()),
+    sourceReference: v.optional(v.string()), // PR URL, milestoneKey, etc.
+    draftExternalId: v.optional(v.string()),
+    metadata: v.optional(v.string()),        // JSON blob for trigger-specific extras
+    created_at: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_draftExternalId", ["draftExternalId"]),
+
   uploads: defineTable({
     userId: v.string(),
     externalId: v.string(),

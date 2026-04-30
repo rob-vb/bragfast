@@ -102,6 +102,19 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
         categories,
       }),
     );
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: "auto_skipped",
+        reason: "content_filter",
+        sourceReference: payload.pull_request.html_url,
+        metadata: JSON.stringify({ categories }),
+      })
+      .catch((err) =>
+        console.error("[sous-chef] recordAction (content_filter) failed", err),
+      );
     return Response.json({
       ok: true,
       skipped: "sensitive_content",
@@ -118,6 +131,18 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
     { userId, repoFullName, sinceIso: dayAgoIso },
   );
   if (recentCount >= PR_MERGE_DAILY_CAP) {
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: "auto_skipped",
+        reason: "rate_cap",
+        sourceReference: payload.pull_request.html_url,
+      })
+      .catch((err) =>
+        console.error("[sous-chef] recordAction (rate_cap) failed", err),
+      );
     return Response.json({ ok: true, skipped: "rate_cap" });
   }
 
@@ -138,6 +163,19 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
       prTitle: payload.pull_request.title,
       prNumber: payload.pull_request.number,
     });
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: "drafted",
+        reason: "rollup",
+        sourceReference: payload.pull_request.html_url,
+        draftExternalId: recent.id,
+      })
+      .catch((err) =>
+        console.error("[sous-chef] recordAction (rollup) failed", err),
+      );
     return Response.json({
       ok: true,
       rollup: recent.id,
@@ -196,6 +234,27 @@ async function createPrMergeDraft(
       confidence: primary.confidence,
       suppressed,
     });
+
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: suppressed ? "auto_skipped" : "drafted",
+        reason: suppressed ? "low_confidence" : undefined,
+        confidence: primary.confidence,
+        sourceReference: input.eventReference,
+        // We don't have the draft's externalId after the idempotent insert
+        // (action returns void). Carry the milestoneKey instead so the feed
+        // row is still tied back to the draft via drafts.milestoneKey.
+        metadata: JSON.stringify({ milestoneKey: input.milestoneKey }),
+      })
+      .catch((err) =>
+        console.error(
+          "[sous-chef] recordAction (createPrMergeDraft) failed",
+          err,
+        ),
+      );
 
     await captureServer({
       event: "draft_generated",

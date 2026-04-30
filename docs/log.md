@@ -14,6 +14,31 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 14 — S2.3 — skipped-PR history storage
+
+**Attempted:**
+- Added `triggerEvents` table (append-only) with decision enum (`drafted | auto_skipped | user_skipped | approved | ignored_48h`), reason, confidence, sourceReference, draftExternalId, metadata.
+- New `convex/triggerEvents.ts`: `record` (internalMutation), `recordAction` (action wrapper for Next.js callers), `listByUser` (authed query, newest-first, optional limit), and an `insertTriggerEvent` helper for inline use from sibling Convex mutations.
+- Threaded webhook insertion at every PR-merge decision branch: content-filter skip → `auto_skipped:content_filter`; rate-cap skip → `auto_skipped:rate_cap`; rollup → `drafted:rollup` (with `draftExternalId`); fresh draft → `drafted` (or `auto_skipped:low_confidence` when suppressed). All wrapped in `.catch()` so logging failure never breaks webhook ack.
+- `approveDraft` now records an `approved` event tied to the draft, with `pushCount` + `postState` in metadata.
+- `drafts.remove` records `user_skipped` when `source === "agent"` (user dismissing a Sous-Chef draft); user-created drafts skip the event.
+- New `/admin/sous-chef/history` page + `SousChefHistoryFeed` client component: pixel-styled table of every event, newest-first, with badge styling per decision and a clickable PR link when the source reference is a URL.
+
+**Verified by agent-browser:** Pending live verification — added `data-testid="trigger-event-feed"` and per-row `data-testid="trigger-event-row-<id>"` plus `data-decision` so agent-browser can assert one row per trigger in dev.
+
+**Tests:** 7 new tests in `convex/__tests__/triggerEvents.test.ts` covering record + listByUser ordering, user scoping, limit, auth requirement, `drafts.remove` user_skipped emission for agent vs user drafts, and `approveDraft` approved-event emission. All pass; typecheck clean; pre-existing 5-file vitest failure baseline (unrelated postiz mock hoisting issue) unchanged.
+
+**Deferred / why:**
+- `ignored_48h` decision is reserved in the enum but no auto-emitter exists — needs a cron sweep that flags drafts untouched for 48h. Hold for a later session (likely S2.4 or S4.x routing/visibility work).
+- Other Sous-Chef triggers (mrr, first_sale, visitors, star, total_revenue, subscribers) currently call `composeCopy` directly without a webhook-style entry path; their decision-branch event logging will land alongside the unified milestone runner.
+- `/admin/sous-chef/history` not linked from the main sidebar yet — direct-URL access only. Will revisit once we decide whether the feed lives under Sous-Chef or gets a top-level slot.
+
+**Open questions for user:** none new (Q1–Q5 from Session 0 still open).
+
+**Next session start:** S2.4 — Retro PR rendering on signup.
+
+---
+
 ## 2026-04-30 — Session 13 — S2.2 — per-platform copy generation
 
 **Attempted:**

@@ -108,7 +108,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser approves a draft → both platform copies visible and editable.
 - Deps: S2.1.
 
-### S2.3 — Skipped-PR history storage · M
+### S2.3 — Skipped-PR history storage · M [x] 2026-04-30
 - Goal: Event log table queryable for history feed: every trigger seen (PR/scan/manual) stored with decision (`drafted` | `auto_skipped` | `user_skipped` | `approved` | `ignored_48h`), confidence, source IDs.
 - Acceptance: agent-browser sees a feed row for every trigger event in dev.
 - Deps: S2.1.
