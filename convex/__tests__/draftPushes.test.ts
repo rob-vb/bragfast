@@ -20,6 +20,11 @@ const USER_ID = "user_test_001";
 const DRAFT_ID = "drf_abc123";
 const NONCE = "nonce-00000000-0000-0000-0000-000000000001";
 
+function setupT() {
+  const t = convexTest(schema, modules);
+  return { t, asUser: t.withIdentity({ subject: USER_ID }) };
+}
+
 const BUFFER_EXTRA = JSON.stringify({
   orgId: "org1",
   orgName: "Acme",
@@ -66,14 +71,13 @@ describe("approveDraft — happy path", () => {
   });
 
   it("creates N rows and schedules fanout when valid selections", async () => {
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
     await seedIntegration(t, "postiz", POSTIZ_EXTRA);
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "Big Launch",
       description: "We shipped something great",
       selections: [
@@ -91,9 +95,8 @@ describe("approveDraft — happy path", () => {
     expect(result.skipped).toHaveLength(0);
 
     // Verify rows were inserted.
-    const rows = await t.query(api.draftPushes.listByDraft, {
+    const rows = await asUser.query(api.draftPushes.listByDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
     });
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.state === "pending")).toBe(true);
@@ -105,13 +108,12 @@ describe("approveDraft — happy path", () => {
 
 describe("approveDraft — edge cases", () => {
   it("returns nothing_selected when selections is empty", async () => {
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [],
@@ -125,12 +127,11 @@ describe("approveDraft — edge cases", () => {
   });
 
   it("returns no_providers_connected when no buffer/postiz integration exists", async () => {
-    const t = convexTest(schema, modules);
+    const { asUser } = setupT();
     // No integrations seeded.
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [
@@ -146,7 +147,7 @@ describe("approveDraft — edge cases", () => {
   });
 
   it("returns no_providers_connected when integrations exist but are all disabled", async () => {
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await t.run(async (ctx) => {
       const now = new Date().toISOString();
@@ -163,9 +164,8 @@ describe("approveDraft — edge cases", () => {
       });
     });
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [
@@ -181,13 +181,12 @@ describe("approveDraft — edge cases", () => {
   });
 
   it("skips stale channelId and returns it in skipped[]", async () => {
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [
@@ -210,13 +209,12 @@ describe("approveDraft — edge cases", () => {
   });
 
   it("returns duplicate_approval for same nonce within 60s", async () => {
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
     const args = {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [
@@ -227,11 +225,11 @@ describe("approveDraft — edge cases", () => {
     };
 
     // First call — should succeed
-    const first = await t.mutation(api.draftPushes.approveDraft, args);
+    const first = await asUser.mutation(api.draftPushes.approveDraft, args);
     expect(first.ok).toBe(true);
 
     // Second call with same nonce — should return duplicate_approval
-    const second = await t.mutation(api.draftPushes.approveDraft, args);
+    const second = await asUser.mutation(api.draftPushes.approveDraft, args);
     expect(second.ok).toBe(false);
     if (second.ok) return;
     expect(second.error).toBe("duplicate_approval");
@@ -240,13 +238,12 @@ describe("approveDraft — edge cases", () => {
 
 describe("approveDraft — video draft formats", () => {
   it("accepts video format strings without special handling", async () => {
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: "drf_video_001",
-      userId: USER_ID,
       title: "Video Launch",
       description: "Watch this",
       selections: [
@@ -261,9 +258,8 @@ describe("approveDraft — video draft formats", () => {
     if (!result.ok) return;
     expect(result.pushIds).toHaveLength(2);
 
-    const rows = await t.query(api.draftPushes.listByDraft, {
+    const rows = await asUser.query(api.draftPushes.listByDraft, {
       draftId: "drf_video_001",
-      userId: USER_ID,
     });
     expect(rows.map((r) => r.format)).toEqual(
       expect.arrayContaining(["video-landscape", "video-square"]),
@@ -275,13 +271,12 @@ describe("approveDraft — video draft formats", () => {
 describe("approveDraft — fanout scheduling", () => {
   it("schedules the fanout action when at least one row is inserted", async () => {
     vi.useFakeTimers();
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [
@@ -300,13 +295,12 @@ describe("approveDraft — fanout scheduling", () => {
 
   it("does not schedule fanout when all selections are skipped", async () => {
     vi.useFakeTimers();
-    const t = convexTest(schema, modules);
+    const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
-    const result = await t.mutation(api.draftPushes.approveDraft, {
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
       draftId: DRAFT_ID,
-      userId: USER_ID,
       title: "T",
       description: "D",
       selections: [

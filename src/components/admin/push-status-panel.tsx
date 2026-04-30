@@ -28,7 +28,6 @@ type PushRow = {
 
 interface Props {
   draftId: string;
-  userId: string;
 }
 
 // ── Format label map ──────────────────────────────────────────────────────────
@@ -124,13 +123,7 @@ function StatusBadge({ state }: BadgeProps) {
 
 // ── Retry button ──────────────────────────────────────────────────────────────
 
-function RetryButton({
-  rowId,
-  userId,
-}: {
-  rowId: string;
-  userId: string;
-}) {
+function RetryButton({ rowId }: { rowId: string }) {
   const retryMutation = useMutation(api.draftPushes.retryPush);
 
   async function handleRetry(e: React.MouseEvent) {
@@ -140,7 +133,6 @@ function RetryButton({
       // directly from a listByDraft query result.
       const result = await retryMutation({
         rowId: rowId as Parameters<typeof retryMutation>[0]["rowId"],
-        userId,
       });
       if (result.ok) {
         toast.success("Retry queued", {
@@ -182,8 +174,8 @@ function RetryButton({
  * Live updates are provided by Convex's `useQuery` reactive subscription —
  * no manual polling required.
  */
-export function PushStatusPanel({ draftId, userId }: Props) {
-  const rows = useQuery(api.draftPushes.listByDraft, { draftId, userId });
+export function PushStatusPanel({ draftId }: Props) {
+  const rows = useQuery(api.draftPushes.listByDraft, { draftId });
 
   // Render nothing while loading or when no push rows exist.
   if (rows === undefined || rows.length === 0) return null;
@@ -260,7 +252,7 @@ export function PushStatusPanel({ draftId, userId }: Props) {
                 {/* Action */}
                 <td className="px-3 py-2">
                   {row.state === "failed" && (
-                    <RetryButton rowId={row._id} userId={userId} />
+                    <RetryButton rowId={row._id} />
                   )}
                 </td>
               </tr>

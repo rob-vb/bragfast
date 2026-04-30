@@ -17,6 +17,7 @@
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { requireAuthedUser } from "./auth";
 
 const formatValidator = v.union(
   v.literal("square"),
@@ -72,7 +73,6 @@ function parseExtra<T>(raw: string | null): T | null {
 export const approveDraft = mutation({
   args: {
     draftId: v.string(),
-    userId: v.string(),
     title: v.string(),
     description: v.string(),
     selections: v.array(
@@ -86,7 +86,8 @@ export const approveDraft = mutation({
     clientNonce: v.string(),
   },
   handler: async (ctx, args) => {
-    const { draftId, userId, title, description, selections, postState, clientNonce } = args;
+    const userId = await requireAuthedUser(ctx);
+    const { draftId, title, description, selections, postState, clientNonce } = args;
 
     // ── Validation: nothing selected ──────────────────────────────────────────
     if (selections.length === 0) {
@@ -354,8 +355,9 @@ export const scheduleRetry = internalMutation({
 // ── listByDraft query ─────────────────────────────────────────────────────────
 
 export const listByDraft = query({
-  args: { draftId: v.string(), userId: v.string() },
-  handler: async (ctx, { draftId, userId }) => {
+  args: { draftId: v.string() },
+  handler: async (ctx, { draftId }) => {
+    const userId = await requireAuthedUser(ctx);
     const rows = await ctx.db
       .query("draftPushes")
       .withIndex("by_draftId", (q) => q.eq("draftId", draftId))
@@ -387,9 +389,9 @@ export const listByDraft = query({
 export const retryPush = mutation({
   args: {
     rowId: v.id("draftPushes"),
-    userId: v.string(),
   },
-  handler: async (ctx, { rowId, userId }) => {
+  handler: async (ctx, { rowId }) => {
+    const userId = await requireAuthedUser(ctx);
     const row = await ctx.db.get(rowId);
     if (!row) {
       return { ok: false as const, error: "not_found" as const };

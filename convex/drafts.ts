@@ -275,8 +275,9 @@ export const unseenCount = query({
 
 // Stamp the user's last-visit time. Idempotent; safe to call on every mount.
 export const markSeen = mutation({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthedUser(ctx);
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))

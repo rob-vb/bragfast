@@ -88,14 +88,16 @@ export const getCurrentUser = query({
  * client-supplied `userId` arg — caller's session is the only source of truth.
  *
  * Returns the Better Auth user `_id` string (matches what's stored in
- * `userId` columns across the app).
+ * `userId` columns across the app). Derived from `identity.subject`, which
+ * the Convex Better Auth plugin sets to the user `_id` on JWT issuance.
+ * Avoids the session+user DB roundtrip in `authComponent.getAuthUser`.
  */
 export async function requireAuthedUser(
   ctx: GenericCtx<DataModel>,
 ): Promise<string> {
-  const user = await authComponent.getAuthUser(ctx);
-  if (!user) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
     throw new ConvexError("Unauthenticated");
   }
-  return user._id as string;
+  return identity.subject;
 }

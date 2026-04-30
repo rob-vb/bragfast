@@ -59,7 +59,6 @@ interface IntegrationRow {
 
 export interface ApproveDraftModalProps {
   draftId: string;
-  userId: string;
   /** Pre-filled title from composed copy. User-editable. */
   initialTitle: string;
   /** Pre-filled description from composed copy. User-editable. */
@@ -153,7 +152,6 @@ function selKey(format: Format, provider: PostingProvider, channelId: string): s
 
 export function ApproveDraftModal({
   draftId,
-  userId,
   initialTitle,
   initialDescription,
   draftFormats,
@@ -239,7 +237,6 @@ export function ApproveDraftModal({
     try {
       const result = await approveDraftMutation({
         draftId,
-        userId,
         title,
         description,
         selections,

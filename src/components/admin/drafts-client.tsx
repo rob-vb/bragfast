@@ -92,7 +92,7 @@ export function DraftsClient() {
   // Re-fires when drafts arrive while the page is open.
   useEffect(() => {
     if (!userId || drafts === undefined) return;
-    void markSeen({ userId });
+    void markSeen({});
   }, [userId, drafts?.length, markSeen]);
 
   if (!drafts) {
@@ -318,7 +318,7 @@ function DraftCard({
         </DraftPreviewBoundary>
       </div>
 
-      <PushStatusPanel draftId={row.id} userId={userId} />
+      <PushStatusPanel draftId={row.id} />
 
       {titleBlock}
       {metaRow}

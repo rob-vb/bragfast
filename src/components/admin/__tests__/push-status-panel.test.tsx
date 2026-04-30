@@ -44,7 +44,6 @@ vi.mock("convex/react", () => ({
 
 // ── Shared fixtures ────────────────────────────────────────────────────────────
 
-const USER_ID = "user_test_001";
 const DRAFT_ID = "drf_abc";
 
 interface RowFixture {
@@ -83,7 +82,6 @@ function makeRow(overrides: Partial<RowFixture> = {}): RowFixture {
 
 const BASE_PROPS = {
   draftId: DRAFT_ID,
-  userId: USER_ID,
 };
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
@@ -265,7 +263,6 @@ describe("PushStatusPanel — failed rows + retry", () => {
     expect(mockMutationFn).toHaveBeenCalledOnce();
     const callArgs = mockMutationFn.mock.calls[0][0];
     expect(callArgs.rowId).toBe(ROW_ID);
-    expect(callArgs.userId).toBe(USER_ID);
   });
 
   it("shows success toast on successful retry", async () => {

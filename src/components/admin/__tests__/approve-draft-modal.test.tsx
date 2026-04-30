@@ -74,7 +74,6 @@ const ROUTING_ROW = {
 
 const BASE_PROPS = {
   draftId: "drf_abc",
-  userId: "user_001",
   initialTitle: "Test Title",
   initialDescription: "Test description",
   draftFormats: ["square" as const],
@@ -163,7 +162,6 @@ describe("ApproveDraftModal — confirmation", () => {
     expect(mockMutationFn).toHaveBeenCalledOnce();
     const callArgs = mockMutationFn.mock.calls[0][0];
     expect(callArgs.draftId).toBe("drf_abc");
-    expect(callArgs.userId).toBe("user_001");
     expect(callArgs.title).toBe("Updated Title");
     expect(callArgs.postState).toBe("queue");
     expect(callArgs.clientNonce).toBeTypeOf("string");

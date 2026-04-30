@@ -685,7 +685,6 @@ export function CookPage({ templates }: CookPageProps) {
         return (
           <ApproveDraftModal
             draftId={draftId}
-            userId={userId}
             initialTitle={title}
             initialDescription={description}
             draftFormats={draftFormats}
