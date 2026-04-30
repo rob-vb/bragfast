@@ -7,10 +7,11 @@ import {
   buildPrMergeDraftInput,
   type GitHubPullRequestPayload,
 } from "@/lib/github/pr-merge";
-import { composeCopy } from "@/lib/drafts/compose-copy";
+import { composeCopy, SUPPRESS_THRESHOLD } from "@/lib/drafts/compose-copy";
 import { pickTemplate } from "@/lib/drafts/pick-template";
 import type { DraftConfig } from "@/lib/drafts/types";
 import { scanContent } from "@/lib/safety/content-filter";
+import { captureServer } from "@/lib/analytics/posthog-server";
 
 export const maxDuration = 60;
 
@@ -167,6 +168,8 @@ async function createPrMergeDraft(
       notes: `Sous-Chef: PR #${input.prNumber} merged to ${payload.repository.default_branch} in ${input.repoFullName}`,
     };
 
+    const suppressed = copy.confidence < SUPPRESS_THRESHOLD;
+
     await convex.action(api.drafts.insertDraftIfNewAction, {
       userId,
       idempotencyKey: input.idempotencyKey,
@@ -176,6 +179,22 @@ async function createPrMergeDraft(
       name: copy.title,
       config: JSON.stringify(draftConfig),
       createdBy: "sous-chef",
+      confidence: copy.confidence,
+      suppressed,
+    });
+
+    await captureServer({
+      event: "draft_generated",
+      distinctId: userId,
+      properties: {
+        trigger_type: "pr_merged",
+        source_type: "github",
+        confidence_score: copy.confidence,
+        was_suppressed: suppressed,
+        has_visual_asset: true,
+        formats_to_render: ["landscape"],
+        video_requested: false,
+      },
     });
   } catch (err) {
     console.error("[sous-chef] createPrMergeDraft failed:", err);

@@ -3,7 +3,14 @@ import { callHaikuJson } from "../haiku-call";
 
 // Text-only draft copy for Sous-Chef. Keep this intentionally short:
 // drafts are starting points for social cards, not changelog summaries.
-export type Copy = { title: string; description: string };
+//
+// `confidence` ∈ [0, 1] — Haiku's self-rating for whether this trigger is
+// worth posting about. Drafts with confidence < SUPPRESS_THRESHOLD get
+// inserted in suppressed state and don't surface by default; the user can
+// override on the drafts page. Fallbacks return 0.
+export type Copy = { title: string; description: string; confidence: number };
+
+export const SUPPRESS_THRESHOLD = 0.5;
 
 export type ComposeCopyInput =
   | {
@@ -55,6 +62,12 @@ export type ComposeCopyInput =
 const CopySchema = z.object({
   title: z.string().transform((s) => s.slice(0, 80)),
   description: z.string().transform((s) => s.slice(0, 220)),
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .catch(0)
+    .default(0),
 });
 
 function brandLine(input: { brandName?: string; brandVoice?: string }): string {
@@ -65,10 +78,17 @@ function brandLine(input: { brandName?: string; brandVoice?: string }): string {
 }
 
 const BASE_SYSTEM = `You write short, honest brag posts for indie makers.
-Output JSON only: {"title": "...", "description": "..."}. No markdown.
+Output JSON only: {"title": "...", "description": "...", "confidence": 0.0-1.0}. No markdown.
 Keep titles punchy (one line, usually 3-6 words). Description is usually one short sentence, two only when needed.
 Pick the one thing worth announcing. Ignore implementation details, refactors, polish, tests, dependency bumps, and minor bug fixes unless they are the main user-facing win.
-Avoid hype stock phrases ("game-changing", "revolutionary").`;
+Avoid hype stock phrases ("game-changing", "revolutionary").
+
+Confidence rubric (0..1, two decimals): how brag-worthy is this trigger for an indie maker's audience?
+- 0.85+ → user-facing feature ship, milestone hit, externally noteworthy event.
+- 0.55–0.85 → real change but niche, internal, or thin context (sparse PR body, unclear user impact).
+- 0.30–0.55 → mostly polish, copy tweaks, dependency bumps, or refactors.
+- < 0.30 → almost certainly not worth a post (CI fixes, formatting, internal docs, lint).
+Score conservatively. The user sees suppressed (low-confidence) drafts only on demand.`;
 
 function formatThresholdUsd(n: number): string {
   if (n >= 1000) return `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
@@ -127,6 +147,7 @@ Write the brag post JSON.`;
     fallback: {
       title: input.title.slice(0, 80),
       description: "",
+      confidence: 0,
     },
     maxTokens: 250,
   });
@@ -151,6 +172,7 @@ Write the brag post JSON.`;
     fallback: {
       title: `${amount} MRR`,
       description: "",
+      confidence: 0,
     },
     maxTokens: 200,
   });
@@ -174,6 +196,7 @@ Write the brag post JSON.`;
     fallback: {
       title: "First paying customer",
       description: "",
+      confidence: 0,
     },
     maxTokens: 200,
   });
@@ -198,6 +221,7 @@ Write the brag post JSON.`;
     fallback: {
       title: `${n} visitors`,
       description: "",
+      confidence: 0,
     },
     maxTokens: 200,
   });
@@ -219,7 +243,7 @@ Write the brag post JSON.`;
     system,
     user,
     schema: CopySchema,
-    fallback: { title: `${amount} in revenue`, description: "" },
+    fallback: { title: `${amount} in revenue`, description: "", confidence: 0 },
     maxTokens: 200,
   });
 }
@@ -240,7 +264,7 @@ Write the brag post JSON.`;
     system,
     user,
     schema: CopySchema,
-    fallback: { title: `${n} subscribers`, description: "" },
+    fallback: { title: `${n} subscribers`, description: "", confidence: 0 },
     maxTokens: 200,
   });
 }
@@ -264,6 +288,7 @@ Write the brag post JSON.`;
     fallback: {
       title: `${n} stars on ${input.repoFullName}`,
       description: "",
+      confidence: 0,
     },
     maxTokens: 200,
   });

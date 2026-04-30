@@ -171,6 +171,60 @@ describe("composeCopy — truncation", () => {
   });
 });
 
+describe("composeCopy — confidence", () => {
+  it("parses confidence when Haiku returns it", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse(
+        '{"title":"New widget","description":"d","confidence":0.82}',
+      ),
+    );
+    const copy = await composeCopy({
+      type: "pr_merged",
+      title: "Add widget",
+      body: "Adds widget.",
+      repoFullName: "rob/brag.fast",
+    });
+    expect(copy.confidence).toBe(0.82);
+  });
+
+  it("defaults confidence to 0 when omitted", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y"}'),
+    );
+    const copy = await composeCopy({ type: "mrr", threshold: 1000 });
+    expect(copy.confidence).toBe(0);
+  });
+
+  it("clamps confidence into [0,1] via .catch when out of range", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y","confidence":2.5}'),
+    );
+    const copy = await composeCopy({ type: "mrr", threshold: 1000 });
+    expect(copy.confidence).toBe(0);
+  });
+
+  it("fallback returns confidence 0 on SDK failure", async () => {
+    mockCreate.mockRejectedValue(new Error("down"));
+    const copy = await composeCopy({
+      type: "pr_merged",
+      title: "Fix",
+      body: "",
+      repoFullName: "rob/brag.fast",
+    });
+    expect(copy.confidence).toBe(0);
+  });
+
+  it("system prompt includes confidence rubric", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y","confidence":0.9}'),
+    );
+    await composeCopy({ type: "mrr", threshold: 1000 });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toContain("Confidence rubric");
+    expect(callArgs.system).toContain("Score conservatively");
+  });
+});
+
 describe("composeCopy — brand voice", () => {
   it("passes brandName and brandVoice into the prompt", async () => {
     mockCreate.mockResolvedValue(

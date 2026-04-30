@@ -50,6 +50,8 @@ export const listByUser = query({
       milestoneKey: r.milestoneKey ?? null,
       eventReference: r.eventReference ?? null,
       config: r.config,
+      confidence: r.confidence ?? null,
+      suppressed: r.suppressed ?? false,
       created_at: r.created_at,
     }));
   },
@@ -71,6 +73,8 @@ export const getByExternalId = query({
       milestoneKey: row.milestoneKey ?? null,
       eventReference: row.eventReference ?? null,
       config: row.config,
+      confidence: row.confidence ?? null,
+      suppressed: row.suppressed ?? false,
       created_at: row.created_at,
     };
   },
@@ -89,6 +93,8 @@ export const insertDraftIfNew = internalMutation({
     name: v.optional(v.string()),
     config: v.string(),
     createdBy: v.optional(v.string()),
+    confidence: v.optional(v.number()),
+    suppressed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -118,6 +124,8 @@ export const insertDraftIfNew = internalMutation({
       milestoneKey: args.milestoneKey,
       eventReference: args.eventReference,
       idempotencyKey: args.idempotencyKey,
+      confidence: args.confidence,
+      suppressed: args.suppressed,
       created_at: now,
     });
     await ctx.db.insert("milestoneHits", {
@@ -145,9 +153,27 @@ export const insertDraftIfNewAction = action({
     name: v.optional(v.string()),
     config: v.string(),
     createdBy: v.optional(v.string()),
+    confidence: v.optional(v.number()),
+    suppressed: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
+  },
+});
+
+// Override: flip a suppressed draft to visible. Auth-gated to caller's drafts.
+export const unsuppressDraft = mutation({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const userId = await requireAuthedUser(ctx);
+    const row = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row || row.userId !== userId) return false;
+    if (!row.suppressed) return true;
+    await ctx.db.patch(row._id, { suppressed: false });
+    return true;
   },
 });
 

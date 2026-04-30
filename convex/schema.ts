@@ -162,6 +162,11 @@ export default defineSchema({
     milestoneKey: v.optional(v.string()),      // e.g. "mrr:1000", "pr_merged:owner/repo#42"
     eventReference: v.optional(v.string()),    // human pointer (PR URL, Stripe evt id, etc.)
     idempotencyKey: v.optional(v.string()),    // `${userId}:${sourceSystem}:${milestoneKey}`
+    // Haiku self-rated brag-worthiness ∈ [0,1]. Drafts below SUPPRESS_THRESHOLD
+    // (see src/lib/drafts/compose-copy.ts) land with `suppressed=true` and
+    // don't surface by default. Override via `unsuppressDraft`.
+    confidence: v.optional(v.number()),
+    suppressed: v.optional(v.boolean()),
     created_at: v.string(),
   })
     .index("by_userId", ["userId"])

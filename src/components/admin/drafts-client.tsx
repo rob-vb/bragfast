@@ -37,6 +37,8 @@ type Row = {
   sourceSystem?: SourceSystem | null;
   milestoneKey?: string | null;
   config: string;
+  confidence?: number | null;
+  suppressed?: boolean;
   created_at: string;
 };
 
@@ -86,7 +88,9 @@ export function DraftsClient() {
   const router = useRouter();
   const drafts = useQuery(api.drafts.listByUser, { userId });
   const markSeen = useMutation(api.drafts.markSeen);
+  const unsuppress = useMutation(api.drafts.unsuppressDraft);
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
+  const [overriding, setOverriding] = useState<Set<string>>(new Set());
 
   // Stamp last-visit time so the sidebar "new drafts" badge clears.
   // Re-fires when drafts arrive while the page is open.
@@ -163,8 +167,20 @@ export function DraftsClient() {
               key={row.id}
               row={row as Row}
               userId={userId}
-              busy={deleting.has(row.id)}
+              busy={deleting.has(row.id) || overriding.has(row.id)}
               onDelete={() => handleDelete(row.id)}
+              onOverride={async () => {
+                setOverriding((prev) => new Set(prev).add(row.id));
+                try {
+                  await unsuppress({ externalId: row.id });
+                } finally {
+                  setOverriding((prev) => {
+                    const next = new Set(prev);
+                    next.delete(row.id);
+                    return next;
+                  });
+                }
+              }}
             />
           ))}
         </Masonry>
@@ -178,11 +194,13 @@ function DraftCard({
   userId,
   busy,
   onDelete,
+  onOverride,
 }: {
   row: Row;
   userId: string;
   busy: boolean;
   onDelete: () => void;
+  onOverride: () => void;
 }) {
   const router = useRouter();
   const config = useMemo(() => parseConfig(row.config), [row.config]);
@@ -208,6 +226,9 @@ function DraftCard({
       ) : null}
       <OutputBadge output={config.output} />
       {empty ? <EmptyBadge /> : null}
+      {row.suppressed ? (
+        <SuppressedBadge confidence={row.confidence ?? null} />
+      ) : null}
     </div>
   );
 
@@ -259,6 +280,7 @@ function DraftCard({
         transition-shadow cursor-pointer
         focus:outline-2 focus:outline-offset-2 focus:outline-gold
         ${busy ? "opacity-50 pointer-events-none" : ""}
+        ${row.suppressed ? "opacity-70 bg-surface" : ""}
       `}
       aria-label={`Open draft: ${title}`}
     >
@@ -322,7 +344,33 @@ function DraftCard({
 
       {titleBlock}
       {metaRow}
+
+      {row.suppressed ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOverride();
+          }}
+          className="mt-3 w-full font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          disabled={busy}
+        >
+          Draft anyway
+        </button>
+      ) : null}
     </div>
+  );
+}
+
+function SuppressedBadge({ confidence }: { confidence: number | null }) {
+  const score = confidence == null ? "—" : confidence.toFixed(2);
+  return (
+    <span
+      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-brand text-gold"
+      title={`Haiku rated this trigger ${score} brag-worthy. Drafts below ${0.5} are suppressed.`}
+    >
+      Low conf · {score}
+    </span>
   );
 }
 
