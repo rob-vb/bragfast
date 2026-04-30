@@ -44,7 +44,9 @@ export async function GET(request: NextRequest) {
       { installationId: Number(installationId) }
     );
 
+    let accountType: "User" | "Organization" = "User";
     if (existing) {
+      accountType = existing.accountType;
       await convex.action(api.githubInstallations.upsertAction, {
         installationId: Number(installationId),
         userId: user._id,
@@ -71,6 +73,19 @@ export async function GET(request: NextRequest) {
         installationId: Number(installationId),
       });
     }
+
+    // S10.1: github_app_installed (PRD §13). install_scope + repo_count not
+    // available without a separate App API call — surface what we have.
+    await captureServer({
+      event: "github_app_installed",
+      distinctId: user._id,
+      properties: {
+        install_scope: null,
+        repo_count: null,
+        org_install: accountType === "Organization",
+        action: setupAction,
+      },
+    });
   }
 
   const successPath = isLaunchModeRepositioned()

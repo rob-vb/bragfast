@@ -29,6 +29,7 @@ import type * as migrations from "../migrations.js";
 import type * as milestoneHits from "../milestoneHits.js";
 import type * as oauthState from "../oauthState.js";
 import type * as planTiers from "../planTiers.js";
+import type * as posthogCapture from "../posthogCapture.js";
 import type * as previewLimit from "../previewLimit.js";
 import type * as pushFanout from "../pushFanout.js";
 import type * as rateLimit from "../rateLimit.js";
@@ -74,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   milestoneHits: typeof milestoneHits;
   oauthState: typeof oauthState;
   planTiers: typeof planTiers;
+  posthogCapture: typeof posthogCapture;
   previewLimit: typeof previewLimit;
   pushFanout: typeof pushFanout;
   rateLimit: typeof rateLimit;

@@ -130,9 +130,11 @@ export function DraftsClient() {
         throw new Error(`Delete failed: ${res.status}`);
       }
       // S6.3: surface user-skip reason capture in analytics.
-      posthog.capture("draft_dismissed", {
-        draft_id: id,
-        has_reason: Boolean(reason && reason.trim()),
+      posthog.capture("draft_skipped", {
+        trigger_type: "pr_merged",
+        skip_reason: reason && reason.trim() ? reason : null,
+        confidence_score: null,
+        time_from_draft_seconds: null,
       });
       router.refresh();
     } catch (err) {

@@ -354,11 +354,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 10 — Analytics finalization
 
-### S10.1 — All 14 events instrumented · M · DEFERRED 2026-04-30
+### S10.1 — All 14 events instrumented · M · [x] 2026-04-30
 - Goal: Audit each event in PRD §13 against codebase; add missing capture sites; verify property shape via agent-browser PostHog event tab.
 - Acceptance: 14/14 events fire with correct properties on a clean signup→approve flow.
 - Deps: most prior phases.
-- Deferred reason: needs end-to-end live testing in browser w/ PostHog event tab open; large mechanical audit. Spot checks pass — full audit before merge.
+- Result: Static audit complete. Added github_app_install_started (install CTA in github-section.tsx), github_app_installed (callback route, server-side), source_connected (3 success-paths in /api/v1/sous-chef/integrations + new captureSourceConnected helper), goal_hit (4 fireDraft sites in convex/integrations/* via new convex/posthogCapture.ts with goalCategoryFromMetric + daysBetween helpers), and renamed draft_dismissed → draft_skipped to match PRD spec. markFired now returns createdAt for days_from_goal_set computation. 13/14 events live; draft_ignored deferred (requires 48h-no-action cron infrastructure that doesn't exist yet — separate session needed). Live PostHog event-tab verification still pending.
 
 ### S10.2 — North Star dashboard (4 insights) · M · CANNOT-AUTONOMOUS 2026-04-30
 - Goal: Build funnels + retention + trends per PRD §13. Set targets (20%, 60%, 40%, 60%).

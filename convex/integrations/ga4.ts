@@ -15,6 +15,11 @@ import type { GoalMetric } from "../../src/lib/goals/types";
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
+import {
+  captureFromConvex,
+  goalCategoryFromMetric,
+  daysBetween,
+} from "../posthogCapture";
 
 type Ga4Extra = {
   propertyId: string;
@@ -292,6 +297,17 @@ async function fireDraft(
       metric: fireResult.metric,
       target: fireResult.target,
       scope: fireResult.scope,
+    });
+    await captureFromConvex({
+      event: "goal_hit",
+      distinctId: fireResult.userId,
+      properties: {
+        goal_category: goalCategoryFromMetric(fireResult.metric),
+        days_from_goal_set: daysBetween(
+          fireResult.createdAt,
+          new Date().toISOString(),
+        ),
+      },
     });
   }
 }

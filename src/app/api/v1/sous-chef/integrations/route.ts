@@ -14,8 +14,37 @@ import {
   fetchChannels as fetchBufferChannels,
   BufferAuthError,
 } from "@/lib/integrations/buffer/client";
+import { captureServer } from "@/lib/analytics/posthog-server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+async function captureSourceConnected(
+  userId: string,
+  sourceType: "stripe" | "posthog" | "ga4" | "buffer" | "postiz",
+): Promise<void> {
+  try {
+    const [integrations, ghInstalls] = await Promise.all([
+      convex.query(api.integrationSecrets.listByUser, { userId }),
+      convex.query(api.githubInstallations.listByUserId, { userId }),
+    ]);
+    const nonGithubCount = integrations.filter((r) => r.enabled).length;
+    const githubConnected = ghInstalls.some(
+      (i) => i.status === "active" && i.enabled,
+    );
+    await captureServer({
+      event: "source_connected",
+      distinctId: userId,
+      properties: {
+        source_type: sourceType,
+        is_first_non_github_source: nonGithubCount === 1,
+        total_sources_connected: nonGithubCount + (githubConnected ? 1 : 0),
+        was_prompted_by_goal: null,
+      },
+    });
+  } catch (err) {
+    console.warn("[source_connected] capture failed:", err);
+  }
+}
 
 type StripeBody = { provider: "stripe"; apiKey: string };
 type PostHogBody = {
@@ -232,6 +261,7 @@ export async function POST(request: Request) {
       extra,
     });
 
+    await captureSourceConnected(userId, "buffer");
     return Response.json({
       ok: true,
       provider: "buffer",
@@ -286,6 +316,7 @@ export async function POST(request: Request) {
     });
 
     // No seedAction for Postiz — posting providers skip scan/seed semantics.
+    await captureSourceConnected(userId, "postiz");
     return Response.json({ ok: true, provider: "postiz", channelCount: channels.length });
   }
 
@@ -329,6 +360,7 @@ export async function POST(request: Request) {
     );
   }
 
+  await captureSourceConnected(userId, body.provider);
   return Response.json({ ok: true, provider: body.provider });
 }
 

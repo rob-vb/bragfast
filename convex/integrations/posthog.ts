@@ -14,6 +14,11 @@ import { goalMilestoneKey } from "../../src/lib/drafts/idempotency-key";
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
+import {
+  captureFromConvex,
+  goalCategoryFromMetric,
+  daysBetween,
+} from "../posthogCapture";
 import { ALLOWED_POSTHOG_HOSTS } from "../../src/lib/integrations/posthog-hosts";
 
 type PostHogExtra = {
@@ -274,6 +279,17 @@ async function fireDraft(
       metric: fireResult.metric,
       target: fireResult.target,
       scope: fireResult.scope,
+    });
+    await captureFromConvex({
+      event: "goal_hit",
+      distinctId: fireResult.userId,
+      properties: {
+        goal_category: goalCategoryFromMetric(fireResult.metric),
+        days_from_goal_set: daysBetween(
+          fireResult.createdAt,
+          new Date().toISOString(),
+        ),
+      },
     });
   }
 }

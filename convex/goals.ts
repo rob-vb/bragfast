@@ -234,6 +234,7 @@ export const markFired = internalMutation({
         metric: null as string | null,
         target: null as number | null,
         scope: null as string | null,
+        createdAt: null as string | null,
       };
     }
     const now = new Date().toISOString();
@@ -257,6 +258,7 @@ export const markFired = internalMutation({
       metric: row.metric,
       target: row.target ?? null,
       scope: row.scope ?? null,
+      createdAt: row.created_at,
     };
   },
 });
