@@ -25,7 +25,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: file committed; referenced from CLAUDE.md.
 - Deps: none.
 
-### S0.3 — PostHog wiring overhaul · M
+### S0.3 — PostHog wiring overhaul · M — `[x]` 2026-04-30
 - Goal: flip `autocapture: false` (`src/components/posthog-provider.tsx`); add `posthog.identify()` hook in auth-success path with person properties (`signup_date`, `signup_source`, `github_app_installed`, `source_count`, `plan`); enable person profiles in PostHog project.
 - Acceptance: agent-browser signs up a fresh user → PostHog → person profile appears with all five properties; no autocapture events firing.
 - Deps: S0.1.

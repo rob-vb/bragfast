@@ -14,6 +14,25 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 2 — S0.3 PostHog wiring
+
+**Attempted:**
+- `posthog-provider.tsx`: `autocapture: true` → `false`.
+- New `src/components/admin/posthog-identifier.tsx`: client component, `useQuery` for githubInstallations + integrationSecrets, calls `posthog.identify(userId, {plan, github_app_installed, source_count}, {signup_date})` on mount; fires `signup_completed` once per user via `localStorage` guard (covers OAuth path).
+- Mounted `<PostHogIdentifier>` in `(admin)/layout.tsx`.
+- Added explicit `signup_completed` capture in `(auth)/signup/page.tsx` after successful email signup.
+- Typecheck clean. One commit.
+
+**Verified by agent-browser:** Skipped — PostHog initializes only when `NEXT_PUBLIC_VERCEL_ENV === "production"`, so dev render proves nothing. Verification deferred to staging deploy.
+
+**Deferred / why:** Live event verification (PostHog Live Events tab) requires staging/prod deploy. Track in S0.3 follow-up.
+
+**Open questions for user:** none new.
+
+**Next session start:** S0.6 — pre-render content filter (Layer 1 safety).
+
+---
+
 ## 2026-04-30 — Session 1 — S0.1 launch flag scaffold
 
 **Attempted:**
