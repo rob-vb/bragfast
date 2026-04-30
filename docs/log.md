@@ -14,6 +14,27 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 21 — S2.6e — content filter gate
+
+**Attempted:**
+- `src/app/api/preview/route.ts`: `scanContent(pr.title, pr.body)` after PR fetch, before render. Blocked → 422 `{error:"sensitive_content", reason:"sensitive_content", categories:[…]}`. Render skipped on block.
+- Cache lookup + e2e wiring already shipped in S2.6d (headObject short-circuit), so this session is the gating piece.
+
+**Tests:**
+- Route test added: blocked path returns 422 with `categories` including `security` and never calls render. 46/46 preview+safety tests pass; tsc clean.
+
+**Verified live (curl, dev server):**
+- `anthropics/claude-code` (latest merged PR title "Create SECURITY.md") → 422 `{categories:["security"]}`. Render not invoked.
+- `sindresorhus/slugify` (PR #73 "Perform contraction/possession replacement…") → 200 ready with image URL. Clean path still works.
+
+**Deferred / why:** S2.7 plan-accounting refactor still blocked (needs Q1 answered). PRD §safety mentions "history feed entry" for sensitive matches on the webhook path — that's S0.6 territory and already shipped; preview path doesn't persist history.
+
+**Open questions for user:** None.
+
+**Next session start:** S2.7 (blocked on Q1) or S2.6 follow-on UX (homepage paste → inline preview, S2.8 in plan).
+
+---
+
 ## 2026-04-30 — Session 20 — S2.6d — preview render + R2 cache
 
 **Attempted:**

@@ -153,7 +153,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: render output ≤80KB; watermark visible bottom-bar; cache key deterministic per `(repo, prNumber)`.
 - Deps: S2.6a.
 
-#### S2.6e — Cache lookup + wire end-to-end · S
+#### S2.6e — Cache lookup + wire end-to-end · S  [x] 2026-04-30
 - Goal: preview API checks R2 HEAD before rendering. Cache hit → return cached URL. Cache miss → run b → c → d → return URL.
 - Acceptance: agent-browser pastes URL → first call renders, second call returns same URL <200ms (cache hit). Layer 1 content filter still gates render (PR title with secret → 422).
 - Deps: S2.6a–d, S0.6.
