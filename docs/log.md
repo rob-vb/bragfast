@@ -857,3 +857,24 @@ Template:
 **Open questions:** none.
 
 **Next session start:** S7+ or another Phase 6 item.
+
+---
+
+## 2026-04-30 — S0.4b OAuth state hardening
+
+**What shipped:** `convex/oauthState.ts` public wrappers gated behind `requireAuthedUser`. `issueStateAction` no longer accepts a client-supplied `userId` — nonce binds to the caller's session. `consumeStateAction` requires auth and throws `OAuth state mismatch` when the consumed row's userId differs from the caller, closing the forge-then-intercept path.
+
+**Files touched:**
+- `convex/oauthState.ts` — auth-gate + ownership check on consume; internal `issueState`/`consumeState` preserved as dormant infra per Buffer-pivot decision.
+- `convex/__tests__/oauthState.test.ts` (new) — anon-rejection, cross-user forge-fail, single-use replay, happy path.
+- `docs/sessions.md` — S0.4b marked `[x]` with Result block.
+
+**Verified:** tsc clean. `vitest convex/__tests__/oauthState.test.ts` PASS 5/5. agent-browser walkthrough not required — no live caller of these wrappers exists post-Buffer-pivot; auth contract verified at unit level.
+
+**Deferred:**
+- Drop `oauthStates` schema table — dormant infrastructure kept for future OAuth-bearing providers; separate cleanup session can remove if it stays unused.
+- S0.4c (`githubRepoConfigs` ownership scope) and S0.4d (cross-tenant integration test) still queued under Phase 0.4.
+
+**Open questions:** none.
+
+**Next session start:** open — pick S7+, S0.4c, or another Phase 0/6 item.

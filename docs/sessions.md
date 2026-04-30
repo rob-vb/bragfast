@@ -45,10 +45,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
   - S0.4a.4 — server-side auth bridge. **DEFERRED to post-launch** (decision 2026-04-30). Server-side `fetchQuery`/`fetchMutation`/`ConvexHttpClient` calls go through Next.js, which gates them via `authenticate()` (API key or session) before computing `userId`. Not externally exploitable — the public-Convex-URL exfil path is closed by S0.4a.3. Defense-in-depth at Convex layer postponed until Better Auth api-key plugin migration (option C) is planned as its own phase.
   - S0.4a.5 — convert MIXED RISKY. **DEFERRED with S0.4a.4.** Same rationale.
 
-### S0.4b — OAuth state issue/consume hardening · S
+### S0.4b — OAuth state issue/consume hardening · S — `[x]` 2026-04-30
 - Goal: gate `oauthState.issueStateAction` / `consumeStateAction` behind authed entry; remove the forgery surface where any caller can mint a CSRF state for any userId.
 - Acceptance: forging a state nonce for another userId fails; OAuth happy path still works.
 - Deps: S0.4a.
+- Result: `issueStateAction` drops client-supplied `userId` arg; binds nonce to `requireAuthedUser(ctx)`. `consumeStateAction` now requires auth and throws `OAuth state mismatch` when the row's userId differs from the caller, so a foreign session that intercepts a nonce cannot complete the flow under their own account. Internal mutations (`issueState`, `consumeState`) preserved as dormant infra per Buffer-pivot decision (kept for future OAuth-bearing providers). New `convex/__tests__/oauthState.test.ts` covers anon-rejection, cross-user forge-fail, single-use replay, happy path. tsc clean. 5/5 tests pass.
 
 ### S0.4c — `githubRepoConfigs` ownership scope · S
 - Goal: every `githubRepoConfigs` mutation/query verifies the caller's installation ownership. Drop reliance on `repoFullName`/`installationId` alone.

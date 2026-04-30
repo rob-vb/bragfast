@@ -1,6 +1,7 @@
 import { mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
+import { requireAuthedUser } from "./auth";
 
 const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -59,23 +60,31 @@ export const consumeState = internalMutation({
 });
 
 /**
- * Public mutation wrapper for issueState — allows Next.js route handlers to issue
- * a state nonce via ConvexHttpClient (which cannot call internalMutation directly).
+ * Public mutation wrapper for issueState — allows authed Next.js callers to
+ * mint a CSRF nonce bound to their session. S0.4b: userId is derived from the
+ * caller's session, never accepted as a client arg, so a nonce cannot be
+ * forged for another user.
  */
 export const issueStateAction = mutation({
   args: {
-    userId: v.string(),
     provider: v.union(v.literal("buffer")),
     state: v.string(),
   },
   handler: async (ctx, args): Promise<void> => {
-    await ctx.runMutation(internal.oauthState.issueState, args);
+    const userId = await requireAuthedUser(ctx);
+    await ctx.runMutation(internal.oauthState.issueState, {
+      userId,
+      provider: args.provider,
+      state: args.state,
+    });
   },
 });
 
 /**
- * Public mutation wrapper for consumeState — allows Next.js route handlers to
- * consume a state nonce atomically.
+ * Public mutation wrapper for consumeState. S0.4b: gated behind an authed
+ * session, and only returns the consumed row if its userId matches the
+ * caller. A foreign session that intercepts a nonce cannot complete the
+ * OAuth flow under their own account.
  */
 export const consumeStateAction = mutation({
   args: { state: v.string() },
@@ -83,6 +92,14 @@ export const consumeStateAction = mutation({
     ctx,
     args,
   ): Promise<{ userId: string; provider: "buffer" } | null> => {
-    return ctx.runMutation(internal.oauthState.consumeState, { state: args.state });
+    const callerId = await requireAuthedUser(ctx);
+    const result = await ctx.runMutation(internal.oauthState.consumeState, {
+      state: args.state,
+    });
+    if (!result) return null;
+    if (result.userId !== callerId) {
+      throw new ConvexError("OAuth state mismatch");
+    }
+    return result;
   },
 });
