@@ -14,6 +14,45 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 10 — S1.3 — pricing page MCP/credits purge
+
+**Attempted:**
+- Removed "How does the MCP / agent integration work?" FAQ entry from `src/app/pricing/page.tsx`.
+- Removed "Install MCP" CTA from the bottom-of-page CTA stack.
+- Reworded hero subhead (dropped "Same price whether you render it yourself or your agent does").
+- Reworded credit-exhaustion FAQ (was "API calls return a 429 error").
+- Renamed footer "Docs" → "Developers".
+- Added top-of-file mid-rewrite banner comment pointing to Phase 4 for the full pricing-model rewrite.
+- Typecheck clean. 729 tests pass.
+
+**Verified by agent-browser:** pending — batch sweep planned at end of P1.
+
+**Deferred / why:** credit-denominated pricing model itself unchanged (per S1.3 spec — full rewrite is Phase 4 work).
+
+**Open questions for user:** none new.
+
+**Next session start:** S1.4 — README + GitHub App description + X bio purge.
+
+---
+
+## 2026-04-30 — Session 11 — S1.4 — README rewrite; GH App + X bio queued
+
+**Attempted:**
+- Repo had no `README.md`. Wrote one framed around build-in-public posts on autopilot — the post-pivot positioning. Lists how it works, getting started, repo orientation, local dev commands.
+- GitHub App "description" and X profile bio cannot be changed from this repo — those are settings on github.com (App settings) and x.com respectively.
+
+**Verified by agent-browser:** N/A — README; GH App description and X bio are user-side.
+
+**Deferred / why:**
+- GitHub App description rewrite — queued for user. Suggested copy: "Auto-drafts a build-in-public post in your voice every time you ship a PR. Review or autopilot." (Edit on github.com/settings/apps/{slug}.)
+- X bio rewrite — queued for user. Suggested copy: "build-in-public posts on autopilot · brag.fast".
+
+**Open questions for user:** none new (queued items above are actions, not questions).
+
+**Next session start:** P1 closed. Move to P2 — S2.1 (confidence scoring on Haiku).
+
+---
+
 ## 2026-04-30 — Session 9 — S1.2 — footer rename + nav demotion
 
 **Attempted:**

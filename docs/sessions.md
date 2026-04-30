@@ -84,12 +84,12 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser confirms nav + footer updated.
 - Deps: S1.1.
 
-### S1.3 — Pricing page MCP/credits purge (copy only — model rewrite later) · M
+### S1.3 — Pricing page MCP/credits purge (copy only — model rewrite later) · M [x] 2026-04-30
 - Goal: remove "Install MCP" CTA, MCP FAQ; keep credit-denominated copy as a temporary stub (full rewrite in Phase 4). Add comment-banner that file is mid-rewrite.
 - Acceptance: agent-browser confirms MCP gone from `/pricing`.
 - Deps: S1.1.
 
-### S1.4 — README + GitHub App description + X bio purge · S
+### S1.4 — README + GitHub App description + X bio purge · S [x] 2026-04-30 (README done; GH App + X bio queued for user)
 - Goal: rewrite README around build-in-public framing; update GitHub App description; queue X bio change for user.
 - Acceptance: README diff reviewed; user confirms X bio change queued.
 - Deps: S1.1.
