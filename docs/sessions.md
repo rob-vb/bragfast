@@ -30,10 +30,29 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser signs up a fresh user → PostHog → person profile appears with all five properties; no autocapture events firing.
 - Deps: S0.1.
 
-### S0.4 — Tenant isolation audit (Layer 5) · M
-- Goal: Walk every Convex query/mutation, confirm `userId` enforcement; add automated test that creates two users and asserts user A can't read user B's drafts/releases/integrationSecrets/goals.
-- Acceptance: test suite green; written audit summary appended to `docs/audit.md`.
-- Deps: none.
+### S0.4 — Tenant isolation audit (Layer 5) · M — `[x]` 2026-04-30 (audit only; enforcement split out)
+- Goal: Walk every Convex query/mutation, confirm `userId` enforcement; written audit summary in `docs/audit.md`.
+- Outcome: audit done in `docs/audit.md` §M. Enforcement is missing system-wide — split into S0.4a–d below. Original "cross-tenant test" acceptance moved to S0.4d (post-enforcement).
+
+### S0.4a — Convex auth enforcement: data reads/writes · M
+- Goal: replace client-supplied `userId` args with `authComponent.getAuthUser(ctx)` across all RISKY functions in `docs/audit.md` §M. Add `requireAuthedUser(ctx)` helper in `convex/auth.ts`. Update call sites to drop redundant `userId` arg.
+- Acceptance: every RISKY function listed in audit §M now derives userId from auth; typecheck + existing tests green.
+- Deps: S0.4 (audit).
+
+### S0.4b — OAuth state issue/consume hardening · S
+- Goal: gate `oauthState.issueStateAction` / `consumeStateAction` behind authed entry; remove the forgery surface where any caller can mint a CSRF state for any userId.
+- Acceptance: forging a state nonce for another userId fails; OAuth happy path still works.
+- Deps: S0.4a.
+
+### S0.4c — `githubRepoConfigs` ownership scope · S
+- Goal: every `githubRepoConfigs` mutation/query verifies the caller's installation ownership. Drop reliance on `repoFullName`/`installationId` alone.
+- Acceptance: caller cannot toggle another user's repo config.
+- Deps: S0.4a.
+
+### S0.4d — Cross-tenant integration test · S
+- Goal: vitest test creates two users, attempts cross-tenant reads/writes on drafts, releases, integrationSecrets, goals; asserts every attempt fails.
+- Acceptance: test suite green.
+- Deps: S0.4a, S0.4b, S0.4c.
 
 ### S0.5 — GitHub App scope = "select repositories" default · S
 - Goal: update App manifest / config so install screen defaults to scoped, not "all repositories."

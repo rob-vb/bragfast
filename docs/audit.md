@@ -318,3 +318,56 @@ Highest-risk rewrite areas, in priority order:
 - **NEEDS-REWRITE:** Credits→posts, public marketing copy, dashboard hierarchy.
 - **MISSING (build new):** Onboarding wizard, public preview + watermark, content filter, confidence scoring, voice calibration, per-platform draft copy, weekly digest, goal-hit celebration, full PostHog instrumentation, custom-category goals, history feed primary surface.
 - **NEEDS-PURGE:** MCP/API public mentions, "credits" language on consumer surfaces.
+
+---
+
+## M. Tenant Isolation (S0.4 audit, 2026-04-30)
+
+**Critical pre-existing gap.** No file in `convex/*.ts` calls `ctx.auth.getUserIdentity()` or the equivalent `authComponent.getAuthUser(ctx)` available via `convex/auth.ts`. Every public Convex query/mutation that scopes by user trusts a `userId: v.string()` arg passed directly from the client. The convex-provider in `src/components/convex-provider.tsx` exposes Convex to the browser, and components like `src/components/admin/posthog-identifier.tsx`, `src/components/admin/history-client.tsx`, `src/components/admin/admin-sidebar.tsx`, `src/components/admin/dashboard-client.tsx` call `useQuery(api.X.listByUser, { userId })` with a userId minted server-side and threaded through `UserIdProvider`.
+
+**Practical exploit.** Anyone with the public Convex URL and another user's userId can call any RISKY function below directly. Real impact ranges from data read (drafts, releases, goals, integration-secrets including OAuth tokens) to data mutation (delete account, refund credits, mint upload tokens, toggle GitHub repo configs).
+
+### RISKY findings (auth not enforced)
+
+Public functions reading or writing user-owned tables, gated only on a client-supplied `userId`:
+
+- `account.ts` — `deleteAccount`
+- `apiKeys.ts` — `create`, `listByUser`, `remove`
+- `brands.ts` — `create`, `getByExternalId`, `listByUser`, `update`, `remove`
+- `drafts.ts` — `create`, `listByUser`, `getByExternalId`, `countRecentPrMergesByRepo`, `findRecentPrMergeForRepo`, `appendPrMergeRollup`, `unseenCount`, `markSeen`, `remove`
+- `draftPushes.ts` — `approveDraft`, `listByDraft`, `retryPush`
+- `goals.ts` — `listByUser`, `create`, `remove`, `setEnabled`
+- `integrationSecrets.ts` — `getByUserProvider` (leaks OAuth tokens), `listByUser`
+- `milestoneHits.ts` — `listByUser`, `listByUserSource`
+- `rateLimit.ts` — `check`
+- `releases.ts` — `create`, `listByUser`, `updateSocialCopy`, `scheduleVideoRender`, `createAndScheduleVideo`
+- `routingDefaults.ts` — `listByUser`, `upsert`
+- `sousChef.ts` — `seedAction`
+- `templates.ts` — `create`, `update`, `remove`, `clone`, `listByUser`
+- `uploadTokens.ts` — `mint`
+- `uploads.ts` — `create`, `createCompleted`, `createMultipart`, `recordPart`, `completeMultipart`, `abortMultipart`
+- `userProfiles.ts` — `getByUserId`, `create`, `getBalance`, `reserve`, `getStats`, `refund` (credit mutation with no auth)
+- `githubInstallations.ts` — `listByUserId`, `toggle`
+
+### NEEDS_REVIEW
+
+- `githubRepoConfigs.ts` — `upsert`, `toggle`, `setNotifyOnPrMerge`, `getByRepo`, `listByInstallation`: no userId at all; mutates by `repoFullName`/`installationId`. Anyone can toggle any repo's config.
+- `oauthState.ts` — `issueStateAction`, `consumeStateAction`: public mutations that issue/consume CSRF nonces with caller-supplied `userId`. Forging a state nonce can lead to OAuth account takeover.
+- `githubInstallations.ts` — `upsertAction`, `removeAction`, `suspendAction`, `unsuspendAction`: webhook-driven, must be confirmed unreachable from the public Convex URL or wrapped behind verified HMAC.
+- `releases.ts` — `markCompleted`, `markFailed`: no userId check; completes any release by cookId.
+- `uploads.ts` — `completeByExternalId`, `markCompleted`, `getByExternalId`: no ownership check.
+- `templates.ts` — `getByExternalId`, `seedDefaults`: no ownership check.
+- `uploadTokens.ts` — `getByToken`, `consume`, `expireStale`: token-string-only ownership; benign for short-lived tokens but worth confirming.
+- `drafts.ts` — `insertDraftIfNewAction`: public action wrapper around an internal mutation; takes `userId` arg.
+
+### Mitigation plan
+
+The S0.4 acceptance ("test that user A can't read user B's data") doesn't make sense yet — there's no enforcement to test. Convert S0.4 deliverable into this audit + follow-up sessions:
+
+- **S0.4a** (M): wire `authComponent.getAuthUser(ctx)` into every RISKY function. Pattern: drop the `userId` arg, derive from auth, error if absent. Co-locate a small `requireAuthedUser(ctx)` helper in `convex/auth.ts`.
+- **S0.4b** (S): re-route OAuth state issue/consume through authed entry points; close the `issueStateAction` forgery surface.
+- **S0.4c** (S): scope `githubRepoConfigs` by installation→user; add ownership check in `upsert`/`toggle`/`setNotifyOnPrMerge`.
+- **S0.4d** (S): cross-tenant integration test once enforcement is in place.
+
+Server-side callers (Next.js route handlers + admin layout) already have a session via `getSessionUser()`; switching from "thread userId through args" to "let Convex resolve from auth" is a mechanical rewrite per call site. Browser callers already authenticate via Better Auth cookies — the auth context should reach Convex automatically through `@convex-dev/better-auth`.
+
