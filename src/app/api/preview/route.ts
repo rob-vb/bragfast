@@ -5,6 +5,7 @@ import { parseRepoUrl, extractClientIp } from "@/lib/preview/parse-repo-url";
 import { isRepoOptedOut } from "@/lib/preview/opt-out";
 import { fetchPublicLatestPr } from "@/lib/preview/public-pr";
 import { renderAndUploadPreview } from "@/lib/preview/render-preview";
+import { scanContent } from "@/lib/safety/content-filter";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -55,6 +56,18 @@ export async function POST(request: NextRequest) {
     }
     // no_pr — repo exists but has no merged PR yet
     return Response.json({ error: "no_merged_pr" }, { status: 404 });
+  }
+
+  const filter = scanContent(prResult.pr.title, prResult.pr.body);
+  if (filter.blocked) {
+    return Response.json(
+      {
+        error: "sensitive_content",
+        reason: "sensitive_content",
+        categories: Array.from(new Set(filter.matches.map((m) => m.category))),
+      },
+      { status: 422 },
+    );
   }
 
   let imageUrl: string;

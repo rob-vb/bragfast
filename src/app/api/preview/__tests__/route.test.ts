@@ -100,6 +100,27 @@ describe("POST /api/preview", () => {
     );
   });
 
+  it("returns 422 sensitive_content when PR title matches filter", async () => {
+    mutation.mockResolvedValue({ allowed: true });
+    publicPr.mockResolvedValue({
+      ok: true,
+      pr: {
+        number: 9,
+        title: "fix CVE in auth bypass",
+        body: null,
+        html_url: "u",
+        merged_at: "2026-04-29T00:00:00Z",
+      },
+      defaultBranch: "main",
+    });
+    const res = await POST(makeReq({ repoUrl: "https://github.com/rob/bragfast" }));
+    expect(res.status).toBe(422);
+    const json = await res.json();
+    expect(json).toMatchObject({ error: "sensitive_content", reason: "sensitive_content" });
+    expect(json.categories).toContain("security");
+    expect(renderUpload).not.toHaveBeenCalled();
+  });
+
   it("returns 500 render_failed when render throws", async () => {
     mutation.mockResolvedValue({ allowed: true });
     renderUpload.mockRejectedValueOnce(new Error("boom"));
