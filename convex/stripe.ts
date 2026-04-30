@@ -2,7 +2,7 @@ import { action, internalMutation } from "./_generated/server";
 import { internal, components } from "./_generated/api";
 import { StripeSubscriptions } from "@convex-dev/stripe";
 import { v } from "convex/values";
-import { TIER_CONFIG, type Tier } from "./plan-tiers";
+import { TIER_CONFIG, type Tier } from "./planTiers";
 
 const stripeClient = new StripeSubscriptions(components.stripe, {});
 

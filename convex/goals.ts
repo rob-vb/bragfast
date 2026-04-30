@@ -6,7 +6,7 @@ import {
   DEFAULT_GOALS_BY_PROVIDER,
   DEFAULT_STAR_THRESHOLDS,
 } from "../src/lib/goals/defaults";
-import { TIER_CONFIG, tierFor } from "./plan-tiers";
+import { TIER_CONFIG, tierFor } from "./planTiers";
 
 const providerV = v.union(
   v.literal("stripe"),

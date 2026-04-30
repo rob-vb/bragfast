@@ -24,7 +24,7 @@ import {
   tierFor,
   nextTierFor,
   type Format,
-} from "./plan-tiers";
+} from "./planTiers";
 
 const formatValidator = v.union(
   v.literal("square"),

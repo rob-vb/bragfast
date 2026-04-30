@@ -1,6 +1,6 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { TIER_CONFIG } from "./plan-tiers";
+import { TIER_CONFIG } from "./planTiers";
 
 export const getByUserId = query({
   args: { userId: v.string() },

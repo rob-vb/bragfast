@@ -5,7 +5,7 @@ import {
   capsFor,
   nextTierFor,
 } from "../plan-tiers";
-import { TIER_CONFIG as CONVEX_TIER_CONFIG } from "../../../convex/plan-tiers";
+import { TIER_CONFIG as CONVEX_TIER_CONFIG } from "../../../convex/planTiers";
 
 describe("plan-tiers TIER_CONFIG", () => {
   it("has expected post caps per tier", () => {
