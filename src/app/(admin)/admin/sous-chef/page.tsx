@@ -8,9 +8,10 @@ export default async function SousChefPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
-  const installations = await fetchQuery(api.githubInstallations.listByUserId, {
-    userId: user._id,
-  });
+  const [installations, profile] = await Promise.all([
+    fetchQuery(api.githubInstallations.listByUserId, { userId: user._id }),
+    fetchQuery(api.userProfiles.getByUserId, { userId: user._id }),
+  ]);
 
   return (
     <SousChefClient
@@ -18,6 +19,7 @@ export default async function SousChefPage() {
         installations,
         appSlug: process.env.NEXT_PUBLIC_GITHUB_APP_SLUG ?? "",
       }}
+      plan={profile?.plan ?? "trial"}
     />
   );
 }
