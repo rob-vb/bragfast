@@ -19,6 +19,12 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
 import { insertTriggerEvent } from "./triggerEvents";
+import {
+  TIER_CONFIG,
+  tierFor,
+  nextTierFor,
+  type Format,
+} from "./plan-tiers";
 
 const formatValidator = v.union(
   v.literal("square"),
@@ -163,6 +169,97 @@ export const approveDraft = mutation({
       }
     }
 
+    // ── S2.7: Tier-cap gating (new accounting model only) ─────────────────────
+    // Legacy plans (trial/starter/pro/scale) bypass — `tierFor` returns null,
+    // preserving R9 until U6 backfill runs.
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    const tier = profile ? tierFor(profile.plan) : null;
+
+    if (tier && profile) {
+      const caps = TIER_CONFIG[tier];
+
+      // Derive base formats + video flag from selections (format may be
+      // "video-square" etc. — these are video formats).
+      const baseFormats = new Set<Format>();
+      let includesVideo = false;
+      for (const s of selections) {
+        if (s.format.startsWith("video-")) {
+          includesVideo = true;
+          baseFormats.add(s.format.slice("video-".length) as Format);
+        } else {
+          baseFormats.add(s.format as Format);
+        }
+      }
+
+      // Video gating
+      if (includesVideo && !caps.video) {
+        return {
+          ok: false as const,
+          error: "video_blocked" as const,
+          upgradeTier: nextTierFor({ needsVideo: true }) ?? undefined,
+        };
+      }
+
+      // Format gating
+      for (const f of baseFormats) {
+        if (!caps.formats.includes(f)) {
+          return {
+            ok: false as const,
+            error: "format_blocked" as const,
+            blockedFormat: f,
+            upgradeTier: nextTierFor({ needsFormat: f }) ?? undefined,
+          };
+        }
+      }
+
+      // Platform/destination gating (distinct channels per approval)
+      const distinctChannels = new Set(
+        selections.map((s) => `${s.provider}:${s.channelId}`),
+      );
+      if (distinctChannels.size > caps.platforms) {
+        return {
+          ok: false as const,
+          error: "platform_blocked" as const,
+          upgradeTier:
+            nextTierFor({ needsPlatforms: distinctChannels.size }) ?? undefined,
+        };
+      }
+
+      // Counter availability
+      const counter = profile[caps.counterField];
+      if (counter === undefined) {
+        // Free tier without seeded counter → block until backfill.
+        // Paid tier without counter → webhook hasn't fired yet; surface distinct error.
+        return {
+          ok: false as const,
+          error:
+            tier === "free"
+              ? ("posts_exhausted" as const)
+              : ("posts_pending" as const),
+          upgradeTier:
+            tier === "free" ? ("toast" as const) : undefined,
+        };
+      }
+      if (counter <= 0) {
+        const upgrade =
+          tier === "free"
+            ? "toast"
+            : tier === "toast"
+              ? "plate"
+              : tier === "plate"
+                ? "buffet"
+                : undefined;
+        return {
+          ok: false as const,
+          error: "posts_exhausted" as const,
+          upgradeTier: upgrade,
+        };
+      }
+    }
+
     // ── Build provider extra maps for channel validation ──────────────────────
     const bufferRow = postingProviders.find((r) => r.provider === "buffer");
     const postizRow = postingProviders.find((r) => r.provider === "postiz");
@@ -250,6 +347,14 @@ export const approveDraft = mutation({
 
     // ── Schedule fanout (noop stub in U7, real logic in U8) ───────────────────
     if (pushIds.length > 0) {
+      // S2.7: decrement post counter atomically with the inserts (same mutation tx).
+      // 1 approval = 1 post regardless of fanout selection count (R7).
+      if (tier && profile) {
+        const field = TIER_CONFIG[tier].counterField;
+        const current = profile[field] ?? 0;
+        await ctx.db.patch(profile._id, { [field]: current - 1 });
+      }
+
       await ctx.scheduler.runAfter(0, internal.pushFanout.run, {
         draftId,
         userId,

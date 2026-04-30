@@ -14,6 +14,31 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 31 — S2.7 — Plan accounting refactor (posts/month + tier gating)
+
+**Attempted:**
+- Schema: `convex/schema.ts` plan union expanded to include `free|toast|plate|buffet`; added optional `postsRemainingThisMonth`, `postsLifetime` (legacy `creditsRemaining` retained for `/api/v1/cook` paths).
+- Tier config single source of truth: `convex/plan-tiers.ts` (server) + mirror at `src/lib/plan-tiers.ts` (client). Exports `TIER_CONFIG`, `tierFor()` (returns null for legacy), `nextTierFor()` for upgrade hint.
+- Stripe dual-tree webhook (`convex/stripe.ts`): `priceToTier()` tries new tiers first → writes `postsRemainingThisMonth`/`plan`; falls through to legacy `priceToPlan()` → writes `creditsRemaining`. `handleSubscriptionDeleted` branches by current plan: new-tier → `free` + posts=0; legacy → `trial` + credits=0.
+- Approval gating in `convex/draftPushes.approveDraft`: derives tier; checks format/video/platforms against `TIER_CONFIG[tier]`; counter check returns `posts_pending` (paid, no counter) or `posts_exhausted` (counter ≤0); returns structured `{ok:false, error, upgradeTier}`. Legacy plans bypass entirely. On success, atomic decrement of the tier's counterField via `ctx.db.patch`.
+- One-shot idempotent backfill: `convex/userProfiles.backfillToNewAccounting` (internalMutation). Maps trial→free(+30 lifetime), starter→toast(+30), pro→plate(+100), scale→buffet(+500). Skips rows already on new accounting. Run manually from Convex dashboard at flag flip.
+- UI: `approve-draft-modal.tsx` extended error map (format_blocked/video_blocked/platform_blocked/posts_exhausted/posts_pending) with " Upgrade to ${upgradeTier}." appended. `dashboard-client.tsx` branches CreditMeter: new-tier shows posts meter, legacy shows credits meter.
+- `.env.example`: added STRIPE_{TOAST,PLATE,BUFFET}_PRICE_ID alongside legacy STARTER/PRO/SCALE.
+- Tests: 39 new (stripe 10, draftPushes-tier-gating 12, plan-tiers parity 13, userProfiles backfill 4). Full suite 851 pass / 0 fail. tsc clean.
+
+**Verified by agent-browser:** N/A — no UI flow change visible without paid Stripe roundtrip; gating logic covered exhaustively by convex-test suite (happy paths per tier, all rejection codes, legacy bypass, atomic decrement).
+
+**Deferred / why:**
+- Pricing page rewrite to surface new tiers → S4.1 (next session).
+- Posts meter visual polish (warn near zero, "renews on X" date copy) — not in S2.7 scope.
+- `/api/v1/cook/*` migration to posts accounting deferred indefinitely (R8): legacy credits stay for API surface to avoid breaking existing customers.
+
+**Open questions for user:** none. Q1 (price-IDs), Q2 (video=1 post on Buffet), Q3 (manual backfill at flag flip) all resolved during planning.
+
+**Next session start:** S4.1 — Pricing page rewrite (Toast/Plate/Buffet + free tier).
+
+---
+
 ## 2026-04-30 — Session 30 — S3.7 — Brand → Goal → Integration wizard
 
 **Attempted:**

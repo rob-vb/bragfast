@@ -158,7 +158,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser pastes URL → first call renders, second call returns same URL <200ms (cache hit). Layer 1 content filter still gates render (PR title with secret → 422).
 - Deps: S2.6a–d, S0.6.
 
-### S2.7 — Plan accounting refactor: posts/month + format/platform/video gating · L (split)
+### S2.7 — Plan accounting refactor: posts/month + format/platform/video gating · L (split)  [x] 2026-04-30
 - Goal: New `userProfiles.postsRemainingThisMonth` (subscription tiers) + `userProfiles.postsLifetime` (free tier). Per-tier format/platform/video caps enforced at approval time. Stripe webhook resets `postsRemainingThisMonth` on `invoice.paid`. Credits stay only on `/api/v1` cook routes (legacy paths).
 - Acceptance: Toast user can't approve a video; Free user can't approve more than 30 posts lifetime; agent-browser confirms gating UI.
 - Deps: S0.1.

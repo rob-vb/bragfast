@@ -298,8 +298,17 @@ export function ApproveDraftModal({
           nothing_selected: "Select at least one channel to push to.",
           no_providers_connected: "Connect Buffer or Postiz first.",
           duplicate_approval: "This draft was already approved. Reload to see the status.",
+          format_blocked: "Your plan doesn't include this format.",
+          video_blocked: "Video posts require Buffet.",
+          platform_blocked: "Your plan limits the number of destinations per post.",
+          posts_exhausted: "You're out of posts. Upgrade to keep going.",
+          posts_pending: "New posts arrive when your subscription syncs (try again in a moment).",
         };
-        setInlineError(messages[result.error] ?? result.error);
+        const upgrade =
+          "upgradeTier" in result && result.upgradeTier
+            ? ` Upgrade to ${result.upgradeTier}.`
+            : "";
+        setInlineError((messages[result.error] ?? result.error) + upgrade);
         return;
       }
 

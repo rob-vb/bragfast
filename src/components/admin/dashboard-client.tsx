@@ -5,6 +5,7 @@ import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
 import { PLANS } from "@/lib/plans";
 import type { PlanId } from "@/lib/plans";
+import { TIER_CONFIG, tierFor } from "@/lib/plan-tiers";
 import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
@@ -31,7 +32,26 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
     );
   }
 
-  const plan = PLANS[stats.plan as PlanId];
+  // S2.7: branch on accounting model — new tiers render posts meter, legacy renders credits.
+  const tier = tierFor(stats.plan as never);
+  const newTierMeter = tier
+    ? {
+        remaining:
+          (tier === "free"
+            ? stats.postsLifetime
+            : stats.postsRemainingThisMonth) ?? 0,
+        total: TIER_CONFIG[tier].posts,
+        name:
+          tier === "free"
+            ? "On the House"
+            : tier === "toast"
+              ? "Toast"
+              : tier === "plate"
+                ? "Full Plate"
+                : "Buffet",
+      }
+    : null;
+  const plan = !newTierMeter ? PLANS[stats.plan as PlanId] : null;
   const recent = releases.slice(0, 10);
 
   const statCards = [
@@ -48,12 +68,20 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
 
       {showRetroHero && <RetroDraftHero />}
 
-      {/* Credit meter — primary admin element */}
-      <CreditMeter
-        remaining={stats.creditsRemaining}
-        total={plan.credits}
-        plan={plan.name}
-      />
+      {/* Posts meter (new tier) or credits meter (legacy) */}
+      {newTierMeter ? (
+        <CreditMeter
+          remaining={newTierMeter.remaining}
+          total={newTierMeter.total}
+          plan={newTierMeter.name}
+        />
+      ) : plan ? (
+        <CreditMeter
+          remaining={stats.creditsRemaining}
+          total={plan.credits}
+          plan={plan.name}
+        />
+      ) : null}
 
       {/* Secondary stats */}
       <div className="grid grid-cols-3 gap-4">
