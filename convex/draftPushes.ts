@@ -390,6 +390,83 @@ export const approveDraft = mutation({
   },
 });
 
+// ── S7.2: Clipboard/X-intent approval (no draftPushes row) ────────────────────
+//
+// Approving via clipboard or X intent doesn't go through a posting provider, so
+// we skip draftPushes entirely. We still:
+//  - enforce the posts/month tier counter (clipboard is still a "post"),
+//  - mark the draft suppressed so it leaves the visible queue,
+//  - record a triggerEvent decision="approved" so history reflects it.
+export const approveDraftClipboard = mutation({
+  args: {
+    draftId: v.string(),
+    destination: v.union(v.literal("clipboard"), v.literal("x_intent")),
+  },
+  handler: async (ctx, { draftId, destination }) => {
+    const userId = await requireAuthedUser(ctx);
+    const draftRow = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
+      .first();
+    if (!draftRow || draftRow.userId !== userId) {
+      return { ok: false as const, error: "not_found" as const };
+    }
+
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    const tier = profile ? tierFor(profile.plan) : null;
+
+    if (tier && profile) {
+      const caps = TIER_CONFIG[tier];
+      const counter = profile[caps.counterField];
+      if (counter === undefined) {
+        return {
+          ok: false as const,
+          error:
+            tier === "free"
+              ? ("posts_exhausted" as const)
+              : ("posts_pending" as const),
+          upgradeTier: tier === "free" ? ("toast" as const) : undefined,
+        };
+      }
+      if (counter <= 0) {
+        const upgrade =
+          tier === "free"
+            ? "toast"
+            : tier === "toast"
+              ? "plate"
+              : tier === "plate"
+                ? "buffet"
+                : undefined;
+        return {
+          ok: false as const,
+          error: "posts_exhausted" as const,
+          upgradeTier: upgrade,
+        };
+      }
+      await ctx.db.patch(profile._id, { [caps.counterField]: counter - 1 });
+    }
+
+    await ctx.db.patch(draftRow._id, { suppressed: true });
+
+    const triggerType = draftRow.milestoneKey?.split(":")[0] ?? "manual";
+    await insertTriggerEvent(ctx, {
+      userId,
+      sourceSystem: draftRow.sourceSystem ?? "manual",
+      triggerType,
+      decision: "approved",
+      confidence: draftRow.confidence ?? undefined,
+      sourceReference: draftRow.eventReference ?? undefined,
+      draftExternalId: draftId,
+      metadata: JSON.stringify({ destination, pushCount: 0 }),
+    });
+
+    return { ok: true as const };
+  },
+});
+
 // ── Internal queries and mutations used by pushFanout ─────────────────────────
 
 const pushStateValidator = v.union(

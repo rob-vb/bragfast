@@ -294,11 +294,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Deps: S2.7.
 - Deferred reason: requires DraftConfig→ReleaseRequest adapter that does not exist; render pipeline needs cross-process orchestration (Convex action → Next.js internal cook endpoint → R2 → patch row). Current fallback is acceptable: pushFanout finalizes failed("media") with message "draft not yet rendered for this format — cook before approving". Workaround: cook via Kitchen before approving from UI. Restore in next iteration; tracked in `docs/launch-readiness.md` blockers.
 
-### S7.2 — Clipboard as first-class destination · S · DEFERRED 2026-04-30
+### S7.2 — Clipboard as first-class destination · S · [x] 2026-04-30
 - Goal: Approval modal "Copy" option returns text + opens X intent URL. No `draftPushes` row.
 - Acceptance: agent-browser uses clipboard path → draft marked approved + history reflects.
 - Deps: S7.1.
-- Deferred reason: depends on S7.1; UI work in approve modal non-trivial. Workaround: users select-and-copy text from approve modal manually. Restore next iteration.
+- Result: New `convex/draftPushes.ts:approveDraftClipboard` mutation — auth-gated, ownership-checked, enforces posts/month tier counter, decrements counter, marks draft `suppressed=true`, inserts triggerEvent `decision="approved"` with `metadata.destination`. No draftPushes row created. `DestinationPickerModal.onCopy` and `onXIntent` now call the mutation before firing PostHog `post_approved` so history/feed reflect approval. posts_exhausted / posts_pending errors surface in modal. Independent of S7.1 (no render needed for clipboard text).
 
 ### S7.3 — Format/platform/video gating in approval UI · M · PARTIAL 2026-04-30
 - Goal: Lower tiers see disabled checkboxes with upsell tooltip. Server-side enforcement matches.

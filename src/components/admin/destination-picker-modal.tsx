@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import posthog from "posthog-js";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 import type { DraftConfig } from "@/lib/drafts/types";
 
 type Props = {
@@ -46,6 +48,7 @@ export function DestinationPickerModal({
 }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const approveClipboard = useMutation(api.draftPushes.approveDraftClipboard);
 
   const xText = useMemo(
     () => pickXCopy(config, fallbackTitle),
@@ -53,6 +56,28 @@ export function DestinationPickerModal({
   );
 
   if (!open) return null;
+
+  async function recordClipboardApproval(
+    destination: "clipboard" | "x_intent",
+  ): Promise<boolean> {
+    try {
+      const res = await approveClipboard({ draftId, destination });
+      if (!res.ok) {
+        const msg =
+          res.error === "posts_exhausted"
+            ? "Posts/month limit reached. Upgrade to keep posting."
+            : res.error === "posts_pending"
+              ? "Plan refresh in flight — try again in a moment."
+              : "Approval failed. Try again.";
+        setError(msg);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Approval failed");
+      return false;
+    }
+  }
 
   function captureApproved(destination: "buffer" | "postiz" | "clipboard" | "x_intent") {
     posthog.capture("post_approved", {
@@ -74,16 +99,21 @@ export function DestinationPickerModal({
     setError(null);
     try {
       await navigator.clipboard.writeText(xText);
-      setCopied(true);
-      captureApproved("clipboard");
-      onApproved();
     } catch {
       setError("Clipboard write failed. Copy manually from the kitchen.");
+      return;
     }
+    setCopied(true);
+    const approved = await recordClipboardApproval("clipboard");
+    if (!approved) return;
+    captureApproved("clipboard");
+    onApproved();
   }
 
-  function onXIntent() {
+  async function onXIntent() {
     setError(null);
+    const approved = await recordClipboardApproval("x_intent");
+    if (!approved) return;
     const url = buildXIntentUrl(xText);
     window.open(url, "_blank", "noopener,noreferrer");
     captureApproved("x_intent");
