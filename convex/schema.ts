@@ -172,6 +172,10 @@ export default defineSchema({
     source: v.union(v.literal("agent"), v.literal("user")),
     createdBy: v.optional(v.string()), // apiKey externalId or "dashboard"
     config: v.string(),               // JSON.stringify of DraftConfig
+    // S8.1: snapshot of the agent's first-pass copy. Frozen at insert; never
+    // patched. Compared against `config` at approve-time to compute
+    // post_approved.was_edited / edit_type. Optional for legacy rows.
+    originalConfig: v.optional(v.string()),
     // Sous-Chef agent provenance (all optional; set only for agent-fired drafts).
     sourceSystem: v.optional(
       v.union(

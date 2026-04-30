@@ -94,6 +94,78 @@ function channelLabelFromPostiz(
   return ch?.name ?? ch?.identifier;
 }
 
+// S8.1: derive was_edited + edit_type by comparing the agent's original
+// objectContent against the user's submitted title/description/platform copy.
+// Returns editType=null when no change. Categories: title, description, both,
+// platform_copy, multiple.
+type EditDelta = {
+  wasEdited: boolean;
+  editType: "title" | "description" | "both" | "platform_copy" | "multiple" | null;
+};
+
+function computeEditDelta(
+  originalConfigJson: string | null,
+  submitted: {
+    title: string;
+    description: string;
+    copyByPlatform: {
+      x?: { title: string; description: string };
+      linkedin?: { title: string; description: string };
+    } | null;
+  },
+): EditDelta {
+  if (!originalConfigJson) return { wasEdited: false, editType: null };
+  let original: {
+    objectContent?: { title?: { text?: string }; description?: { text?: string } };
+    copyByPlatform?: typeof submitted.copyByPlatform;
+  };
+  try {
+    original = JSON.parse(originalConfigJson);
+  } catch {
+    return { wasEdited: false, editType: null };
+  }
+  const origTitle = original?.objectContent?.title?.text ?? "";
+  const origDescription = original?.objectContent?.description?.text ?? "";
+  const titleChanged = origTitle.trim() !== submitted.title.trim();
+  const descriptionChanged =
+    origDescription.trim() !== submitted.description.trim();
+
+  const origByPlatform = original?.copyByPlatform ?? null;
+  const subByPlatform = submitted.copyByPlatform ?? null;
+  let platformChanged = false;
+  if (subByPlatform) {
+    for (const p of ["x", "linkedin"] as const) {
+      const sub = subByPlatform[p];
+      const orig = origByPlatform?.[p];
+      if (!sub) continue;
+      if (!orig) {
+        // Original lacked per-platform copy; user added one — counts as edit
+        // only if it differs from the top-level original copy.
+        if (
+          sub.title.trim() !== origTitle.trim() ||
+          sub.description.trim() !== origDescription.trim()
+        ) {
+          platformChanged = true;
+        }
+      } else if (
+        orig.title.trim() !== sub.title.trim() ||
+        orig.description.trim() !== sub.description.trim()
+      ) {
+        platformChanged = true;
+      }
+    }
+  }
+
+  const flags = [titleChanged, descriptionChanged, platformChanged].filter(
+    Boolean,
+  ).length;
+  if (flags === 0) return { wasEdited: false, editType: null };
+  if (flags > 1) return { wasEdited: true, editType: "multiple" };
+  if (titleChanged) return { wasEdited: true, editType: "title" };
+  if (descriptionChanged) return { wasEdited: true, editType: "description" };
+  return { wasEdited: true, editType: "platform_copy" };
+}
+
 function parseExtra<T>(raw: string | null): T | null {
   if (!raw) return null;
   try {
@@ -154,6 +226,19 @@ export const approveDraft = mutation({
     if (postingProviders.length === 0) {
       return { ok: false as const, error: "no_providers_connected" as const };
     }
+
+    // S8.1: fetch draftRow once for edit-delta + telemetry. Also probe
+    // is_first_post_for_user via a single approved-event lookup.
+    const draftRow = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
+      .first();
+    const priorApproval = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("decision"), "approved"))
+      .first();
+    const isFirstApproved = priorApproval === null;
 
     // ── Idempotency: duplicate nonce within 60 seconds ────────────────────────
     const existing = await ctx.db
@@ -362,10 +447,6 @@ export const approveDraft = mutation({
 
       // Record the approval as a trigger event. We look up the draft's
       // sourceSystem/triggerType so the feed shows what was approved.
-      const draftRow = await ctx.db
-        .query("drafts")
-        .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
-        .first();
       const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
       await insertTriggerEvent(ctx, {
         userId,
@@ -382,10 +463,25 @@ export const approveDraft = mutation({
       });
     }
 
+    // ── S8.1: edit-delta for post_approved telemetry ──────────────────────────
+    const editDelta = computeEditDelta(
+      draftRow?.originalConfig ?? null,
+      { title, description, copyByPlatform: copyByPlatform ?? null },
+    );
+    const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
+
     return {
       ok: true as const,
       pushIds: pushIds as string[],
       skipped,
+      meta: {
+        wasEdited: editDelta.wasEdited,
+        editType: editDelta.editType,
+        triggerType,
+        confidence: draftRow?.confidence ?? null,
+        draftCreatedAt: draftRow?.created_at ?? null,
+        isFirstPostForUser: isFirstApproved,
+      },
     };
   },
 });

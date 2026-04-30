@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { PixelButton } from "./pixel-button";
@@ -315,6 +316,36 @@ export function ApproveDraftModal({
       if (result.skipped.length > 0) {
         setSkippedWarnings(result.skipped);
       }
+
+      // S8.1 + S10.1: post_approved telemetry with edit-delta from server.
+      const meta = result.meta;
+      const destinations = [
+        ...new Set(selections.map((s) => s.provider)),
+      ];
+      const formats = [...new Set(selections.map((s) => s.format))];
+      const videoRendered = formats.some((f) => f.startsWith("video-"));
+      const timeFromDraftSeconds =
+        meta?.draftCreatedAt
+          ? Math.max(
+              0,
+              Math.round(
+                (Date.now() - new Date(meta.draftCreatedAt).getTime()) / 1000,
+              ),
+            )
+          : null;
+      posthog.capture("post_approved", {
+        trigger_type: meta?.triggerType ?? "manual",
+        was_edited: meta?.wasEdited ?? false,
+        edit_type: meta?.editType ?? null,
+        time_from_draft_seconds: timeFromDraftSeconds,
+        confidence_score: meta?.confidence ?? null,
+        is_first_post_for_user: meta?.isFirstPostForUser ?? false,
+        approval_surface: "kitchen",
+        destination: destinations.length === 1 ? destinations[0] : "multiple",
+        formats_rendered: formats,
+        video_rendered: videoRendered,
+        total_render_count: result.pushIds.length,
+      });
 
       const providerNames = [
         ...new Set(selections.map((s) => PROVIDER_LABELS[s.provider])),

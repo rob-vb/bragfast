@@ -310,11 +310,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 8 — Voice calibration
 
-### S8.1 — Approval edit-delta capture · M · DEFERRED 2026-04-30
+### S8.1 — Approval edit-delta capture · M · [x] 2026-04-30
 - Goal: `post_approved` event captures `was_edited`, `edit_type`, original copy, final copy. Persist on draft row.
 - Acceptance: agent-browser edits + approves → PostHog event has full delta.
 - Deps: S0.3, S7.1.
-- Deferred reason: needs original-copy snapshot at draft time + diff at approve time + PostHog payload extension. Mid-sized refactor of approve modal + analytics layer. Current `post_approved` fires without delta; voice learning loop blocked until S8.1 + S8.3 ship together.
+- Result: schema gained `drafts.originalConfig` (frozen at insert via `insertDraftIfNew`). `approveDraft` now computes server-side `editDelta` (computeEditDelta in convex/draftPushes.ts — categories: title / description / both / platform_copy / multiple) by parsing original objectContent vs submitted title/description/copyByPlatform, and returns `meta: { wasEdited, editType, triggerType, confidence, draftCreatedAt, isFirstPostForUser }` alongside pushIds. `is_first_post_for_user` is derived from a triggerEvents-by-userId scan filtered on decision="approved". `approve-draft-modal.tsx` consumes meta and emits a complete `post_approved` event (trigger_type, was_edited, edit_type, time_from_draft_seconds, confidence_score, is_first_post_for_user, approval_surface=kitchen, destination, formats_rendered, video_rendered, total_render_count). Unblocks S8.3 few-shot.
 
 ### S8.2 — Voice presets (4) for new users · S · [x] 2026-04-30
 - Goal: Settings → Voice page shows preset picker (casual builder / dry-technical / earnest milestone / deadpan). Stored on `userProfiles.voicePreset`.

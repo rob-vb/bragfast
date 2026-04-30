@@ -121,6 +121,7 @@ export const insertDraftIfNew = internalMutation({
       source: "agent",
       createdBy: args.createdBy ?? "sous-chef",
       config: args.config,
+      originalConfig: args.config,
       sourceSystem: args.sourceSystem,
       milestoneKey: args.milestoneKey,
       eventReference: args.eventReference,
