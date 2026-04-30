@@ -14,6 +14,30 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 6 — S0.4a.3 browser-only RISKY conversion
+
+**Attempted:**
+- Converted 4 browser-only RISKY Convex functions to drop client-supplied `userId` and call `requireAuthedUser(ctx)`:
+  - `drafts.markSeen`
+  - `draftPushes.approveDraft`
+  - `draftPushes.listByDraft`
+  - `draftPushes.retryPush`
+- Switched `requireAuthedUser` to read `ctx.auth.getUserIdentity().subject` directly (the Convex Better Auth plugin sets `subject` to the user `_id` on JWT issuance). Drops a session+user DB roundtrip per call and unlocks `convex-test` `t.withIdentity({ subject })` in unit tests.
+- Updated 4 browser callers: `approve-draft-modal`, `push-status-panel` (also dropped the now-unused `userId` prop from `PushStatusPanel`/`RetryButton`), `drafts-client`, `cook-page`.
+- Updated 3 test files: `convex/__tests__/draftPushes.test.ts` (wrap mutation/query calls with `withIdentity`), `approve-draft-modal.test.tsx` (drop `userId` from `BASE_PROPS`), `push-status-panel.test.tsx` (drop `userId` prop, drop unused `USER_ID` const).
+- Typecheck clean. All 729 tests pass.
+
+**Verified by agent-browser:** N/A — no rendered UI change. Approve flow + retry button changes need a manual smoke once we deploy; reactive sidebar badge already verified by browser earlier.
+
+**Deferred / why:**
+- 10 MIXED RISKY functions remain (`brands.listByUser`, `drafts.listByUser`, `githubInstallations.listByUserId`, `integrationSecrets.listByUser`, `releases.getByExternalId`/`listByUser`, `routingDefaults.listByUser`, `userProfiles.getBalance`/`getStats`/`refund`). Cannot convert until Next.js server-side `fetchQuery`/`ConvexHttpClient` calls carry a Better Auth token. That's S0.4a.4.
+
+**Open questions for user:** none new.
+
+**Next session start:** S0.4a.4 — server-side auth bridge: route Next.js Convex calls through the Better Auth Next.js helper (`auth.fetchAuthQuery` from `convexBetterAuthNextJs`) so they carry tokens. Then S0.4a.5 — convert MIXED RISKY functions in batch.
+
+---
+
 ## 2026-04-30 — Session 5 — S0.4a auth foundation
 
 **Attempted:**
