@@ -40,4 +40,11 @@ crons.daily(
   internal.refreshChannelsAction.refreshAllChannels,
 );
 
+// S9.1: weekly digest. Sunday 16:00 UTC ≈ Sunday morning US, Sunday evening EU.
+crons.weekly(
+  "weekly-digest",
+  { dayOfWeek: "sunday", hourUTC: 16, minuteUTC: 0 },
+  internal.digestEmails.sendAllWeeklyDigests,
+);
+
 export default crons;

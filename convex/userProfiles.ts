@@ -23,6 +23,17 @@ export const getByUserIdInternal = internalQuery({
   },
 });
 
+// S9.1: list all profiles with an email — fan-out for weekly digest cron.
+export const listAllWithEmailInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("userProfiles").collect();
+    return rows
+      .filter((r) => typeof r.email === "string" && r.email.length > 0)
+      .map((r) => ({ userId: r.userId, email: r.email as string }));
+  },
+});
+
 export const create = mutation({
   args: { userId: v.string(), email: v.string() },
   handler: async (ctx, { userId, email }) => {

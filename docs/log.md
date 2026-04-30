@@ -993,3 +993,26 @@ Template:
 **Open questions:** none.
 
 **Next session start:** S6.1 closes Phase 6 alongside S6.2 / S6.3 already done — user's call on next phase.
+
+## 2026-04-30 — S9.1 weekly digest cron + email
+
+**What shipped:** Sunday weekly digest. Convex `crons.weekly("weekly-digest", sunday 16:00 UTC)` invokes `internal.digestEmails.sendAllWeeklyDigests`, which fans out per-user via `scheduler.runAfter`. Each `sendWeeklyDigest({userId})` aggregates the rolling 7-day window via new `internal.triggerEvents.aggregateForUserBetween`, skips users with `approved === 0` (no spam on silent weeks), and POSTs to `/api/internal/send-email`. Email renders approved / drafted / skipped totals + approved-by-source + top-5 references + dashboard CTA.
+
+**Files touched:**
+- `convex/crons.ts` — `crons.weekly("weekly-digest", { dayOfWeek: "sunday", hourUTC: 16, minuteUTC: 0 }, internal.digestEmails.sendAllWeeklyDigests)`.
+- `convex/digestEmails.ts` (new) — `sendWeeklyDigest({userId})` + `sendAllWeeklyDigests()` fan-out. Mirrors goalEmails.ts Convex→Next pattern.
+- `convex/triggerEvents.ts` — new `aggregateForUserBetween({userId,startISO,endISO})` internalQuery returning total/approved/drafted/auto_skipped/user_skipped/ignored_48h + approvedBySource + top-5 references.
+- `convex/userProfiles.ts` — new `listAllWithEmailInternal` internalQuery for fan-out (filters profiles with non-empty email).
+- `src/lib/emails/weekly-digest.tsx` (new) — react-email template, NES-retro yellow stats card + per-source + top references + CTA.
+- `src/lib/email.ts` — new `sendWeeklyDigestEmail(to, data)` exporting via Resend. Subject `Your brag.fast week: N brag(s) shipped`.
+- `src/app/api/internal/send-email/route.ts` — added `case "weekly-digest"` branch.
+- `docs/sessions.md` — S9.1 DEFERRED → `[x]` with implementation result.
+
+**Verified:** `npx tsc --noEmit` clean. `npx vitest run` 869/0.
+
+**Deferred:**
+- Live agent-browser cron-fire smoke test in dev → pre-launch QA.
+
+**Open questions:** none.
+
+**Next session start:** S9.1 closes Phase 9 (S9.2 already done). Remaining open: S7.1 (post-launch), S8.1 (edit-delta capture), S10.2/S10.3/S11.1/S11.3 (cannot-autonomous).

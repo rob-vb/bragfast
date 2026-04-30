@@ -338,11 +338,11 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 
 ## Phase 9 — Retention infrastructure
 
-### S9.1 — Weekly digest cron + template · M · DEFERRED 2026-04-30
+### S9.1 — Weekly digest cron + template · M · [x] 2026-04-30
 - Goal: Sunday cron aggregates week's events per user → digest-style template render → Resend email with approve link.
 - Acceptance: agent-browser triggers cron in dev → email arrives with draft.
 - Deps: S2.3.
-- Deferred reason: requires Convex cron + Resend template + email aggregation logic. In-product history feed + dashboard widget cover near-term retention. Restore once launch metrics show retention drop after week 1.
+- Result: `crons.weekly("weekly-digest", sunday 16:00 UTC, internal.digestEmails.sendAllWeeklyDigests)` fans out per-user via `scheduler.runAfter`. `convex/digestEmails.ts:sendWeeklyDigest` calls new `internal.triggerEvents.aggregateForUserBetween({userId,startISO,endISO})` for the rolling 7-day window, skips users with `approved === 0` (no spam on silent weeks), and POSTs to `/api/internal/send-email` with `type: "weekly-digest"`. New `WeeklyDigestEmail` (`src/lib/emails/weekly-digest.tsx`) renders approved/drafted/skipped totals + approved-by-source + top-5 references + dashboard CTA. `sendWeeklyDigestEmail` added to `src/lib/email.ts`; route handler routes the new type. New `internal.userProfiles.listAllWithEmailInternal` powers the fan-out. tsc clean, vitest 869/0.
 
 ### S9.2 — Annual recap data layer · S · [x] 2026-04-30
 - Goal: ensure events stored with timestamp + metadata sufficient for year-end aggregation. No UI yet.

@@ -14,6 +14,7 @@
 import {
   action,
   internalMutation,
+  internalQuery,
   mutation,
   query,
   type MutationCtx,
@@ -206,6 +207,62 @@ export const aggregateForYear = query({
       year,
       total: inYear.length,
       byDecision,
+      approvedBySource,
+      topReferences,
+    };
+  },
+});
+
+/**
+ * S9.1: aggregate a user's trigger events between two ISO timestamps. Powers
+ * the weekly digest email. Returns counts per decision + approved-by-source +
+ * top sourceReferences for the window. Internal-only — fan-out from cron.
+ */
+export const aggregateForUserBetween = internalQuery({
+  args: {
+    userId: v.string(),
+    startISO: v.string(),
+    endISO: v.string(),
+  },
+  handler: async (ctx, { userId, startISO, endISO }) => {
+    const rows = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+    const inWindow = rows.filter(
+      (r) => r.created_at >= startISO && r.created_at < endISO,
+    );
+
+    const byDecision: Record<string, number> = {};
+    const approvedBySource: Record<string, number> = {};
+    const refCounts = new Map<string, number>();
+
+    for (const r of inWindow) {
+      byDecision[r.decision] = (byDecision[r.decision] ?? 0) + 1;
+      if (r.decision === "approved") {
+        approvedBySource[r.sourceSystem] =
+          (approvedBySource[r.sourceSystem] ?? 0) + 1;
+        if (r.sourceReference) {
+          refCounts.set(
+            r.sourceReference,
+            (refCounts.get(r.sourceReference) ?? 0) + 1,
+          );
+        }
+      }
+    }
+
+    const topReferences = [...refCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([reference, count]) => ({ reference, count }));
+
+    return {
+      total: inWindow.length,
+      approved: byDecision["approved"] ?? 0,
+      drafted: byDecision["drafted"] ?? 0,
+      auto_skipped: byDecision["auto_skipped"] ?? 0,
+      user_skipped: byDecision["user_skipped"] ?? 0,
+      ignored_48h: byDecision["ignored_48h"] ?? 0,
       approvedBySource,
       topReferences,
     };

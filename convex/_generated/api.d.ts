@@ -13,6 +13,7 @@ import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
 import type * as brands from "../brands.js";
 import type * as crons from "../crons.js";
+import type * as digestEmails from "../digestEmails.js";
 import type * as draftPushes from "../draftPushes.js";
 import type * as drafts from "../drafts.js";
 import type * as githubInstallations from "../githubInstallations.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   brands: typeof brands;
   crons: typeof crons;
+  digestEmails: typeof digestEmails;
   draftPushes: typeof draftPushes;
   drafts: typeof drafts;
   githubInstallations: typeof githubInstallations;
