@@ -188,7 +188,7 @@ Complexity: **S** ≤2 hr · **M** 2–4 hr · **L** 4–6 hr (split before star
 - Acceptance: agent-browser picks repo → moves to retro-render step.
 - Deps: S3.3, S2.4.
 
-### S3.5 — Retro draft + approval UI on dashboard load · M
+### S3.5 — Retro draft + approval UI on dashboard load · M  [x] 2026-04-30
 - Goal: First dashboard load after wizard shows pre-rendered draft (from S2.4). Approval UI: rendered post + raw PR title + first description line + confidence score + Approve/Edit/Skip CTAs.
 - Acceptance: agent-browser hits dashboard → sees draft → can approve.
 - Deps: S2.4, S3.4.

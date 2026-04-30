@@ -14,6 +14,25 @@ Template:
 
 ---
 
+## 2026-04-30 — Session 26 — S3.5 — retro draft + approval UI on dashboard load
+
+**Attempted:**
+- `src/components/admin/retro-draft-hero.tsx`: client component. Subscribes to `api.drafts.listByUser`, picks first `source==="agent" && sourceSystem==="github" && !suppressed`. Renders preview (DraftPreview + DraftPreviewBoundary) at primary format aspect ratio + derived title + first description line + confidence score. Three CTAs: Approve → `/admin/kitchen?draft=<id>&approve=1`, Edit → `/admin/kitchen?draft=<id>`, Skip → DELETE `/api/v1/drafts/<id>`.
+- `src/components/admin/dashboard-client.tsx`: accepts `showRetroHero` prop, renders `<RetroDraftHero/>` above credit meter when set.
+- `src/app/(admin)/admin/page.tsx`: passes `isLaunchModeRepositioned()` as `showRetroHero`.
+
+**Verified by agent-browser:**
+- Dashboard renders without hero when no qualifying retro draft exists (tight filter correctly excludes the test user's lone Untitled draft).
+- Typecheck + lint pass on touched files.
+
+**Deferred / why:** Live "see hero + approve" path needs a retro draft on the test account. Skipped seeding via off→on repo toggle to avoid mutating prod-ish data; will be exercised end-to-end in S3.6 (destination picker) once the Approve target is implemented.
+
+**Open questions for user:** None.
+
+**Next session start:** S3.6 — destination picker (Buffer / Postiz / Copy + X intent URL).
+
+---
+
 ## 2026-04-30 — Session 25 — S3.4 — repo picker (single repo)
 
 **Attempted:**
