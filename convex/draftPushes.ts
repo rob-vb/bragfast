@@ -636,7 +636,11 @@ export const scheduleRetry = internalMutation({
 export const listByDraft = query({
   args: { draftId: v.string() },
   handler: async (ctx, { draftId }) => {
-    const userId = await requireAuthedUser(ctx);
+    // Modal mounts before auth resolves on first paint; return [] instead of
+    // throwing so the panel silently hides until session is established.
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
     const rows = await ctx.db
       .query("draftPushes")
       .withIndex("by_draftId", (q) => q.eq("draftId", draftId))
