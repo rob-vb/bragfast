@@ -56,7 +56,7 @@ interface CreatePostResponse {
 // ---------------------------------------------------------------------------
 
 const CREATE_POST_MUTATION = `
-  mutation CreatePost($input: PostCreateInput!) {
+  mutation CreatePost($input: CreatePostInput!) {
     createPost(input: $input) {
       __typename
       ... on PostActionSuccess {
