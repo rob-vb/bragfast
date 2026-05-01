@@ -12,10 +12,7 @@ import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { RetroDraftHero } from "@/components/admin/retro-draft-hero";
-import { GoalHeroCard } from "@/components/admin/goal-hero-card";
 import { SousChefHistoryFeed } from "@/components/admin/sous-chef-history-feed";
-import { DashboardSourcesWidget } from "@/components/admin/dashboard-sources-widget";
-import { DashboardDraftsWidget } from "@/components/admin/dashboard-drafts-widget";
 import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import Link from "next/link";
 
@@ -69,29 +66,7 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
 
         {showRetroHero && <RetroDraftHero />}
 
-        {/* 1. Goal hero (S5.2) */}
-        <GoalHeroCard userId={userId} />
-
-        {/* 2. History feed (S2.3, compact) */}
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-              Recent activity
-            </h2>
-            <Link
-              href="/admin/sous-chef/history"
-              className="text-xs underline underline-offset-4 hover:text-gold"
-            >
-              Full history →
-            </Link>
-          </div>
-          <SousChefHistoryFeed limit={10} />
-        </div>
-
-        {/* 3. Sources */}
-        <DashboardSourcesWidget />
-
-        {/* 4. Posts remaining (replaces credits meter on new tiers) */}
+        {/* Posts/credits meter */}
         {newTierMeter ? (
           <CreditMeter
             remaining={newTierMeter.remaining}
@@ -106,8 +81,21 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
           />
         ) : null}
 
-        {/* 5. Pending drafts queue */}
-        <DashboardDraftsWidget />
+        {/* Recent activity */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+              Recent activity
+            </h2>
+            <Link
+              href="/admin/sous-chef/history"
+              className="text-xs underline underline-offset-4 hover:text-gold"
+            >
+              Full history →
+            </Link>
+          </div>
+          <SousChefHistoryFeed limit={10} />
+        </div>
       </div>
     );
   }

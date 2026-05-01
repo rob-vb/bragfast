@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -22,11 +21,9 @@ type Props = {
 
 export function RepoConfigCard({ repo, config, installationId, onSaved }: Props) {
   const [enabled, setEnabled] = useState(config?.enabled ?? false);
-  const [notifyOnPrMerge, setNotifyOnPrMerge] = useState(config?.notifyOnPrMerge ?? false);
   const [saving, setSaving] = useState(false);
-  const [expanded, setExpanded] = useState(!!config?.enabled);
 
-  async function handleSave() {
+  async function persist(nextEnabled: boolean) {
     setSaving(true);
     try {
       const res = await fetch("/api/github/configs", {
@@ -35,8 +32,9 @@ export function RepoConfigCard({ repo, config, installationId, onSaved }: Props)
         body: JSON.stringify({
           installationId,
           repoFullName: repo.full_name,
-          enabled,
-          notifyOnPrMerge,
+          enabled: nextEnabled,
+          // Enabled = always draft on PR merge. No separate toggle.
+          notifyOnPrMerge: nextEnabled,
         }),
       });
       if (!res.ok) console.error("Save failed:", await res.text());
@@ -46,49 +44,36 @@ export function RepoConfigCard({ repo, config, installationId, onSaved }: Props)
     }
   }
 
+  function handleToggle(next: boolean) {
+    setEnabled(next);
+    void persist(next);
+  }
+
   return (
     <PixelCard>
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-left"
-        >
-          <span className="text-xs text-brand/40">{expanded ? "▼" : "▶"}</span>
+        <div className="flex items-center gap-2">
           <span className="font-mono text-sm text-brand font-bold">{repo.full_name}</span>
           {repo.private && (
             <span className="text-[10px] text-brand/40 border border-brand/20 px-1">private</span>
           )}
-        </button>
+        </div>
         <div className="flex items-center gap-2">
-          <Label htmlFor={`enabled-${repo.full_name}`} className="text-xs text-brand/60">Enabled</Label>
+          <Label htmlFor={`enabled-${repo.full_name}`} className="text-xs text-brand/60">
+            {saving ? "Saving..." : "Enabled"}
+          </Label>
           <Switch
             id={`enabled-${repo.full_name}`}
             checked={enabled}
-            onCheckedChange={setEnabled}
+            onCheckedChange={handleToggle}
+            disabled={saving}
           />
         </div>
       </div>
 
-      {expanded && (
-        <div className="mt-4 space-y-3">
-          {repo.description && (
-            <p className="text-xs text-brand/50">{repo.description}</p>
-          )}
-
-          <div className="flex items-center gap-2">
-            <Switch
-              id={`notify-pr-merge-${repo.full_name}`}
-              checked={notifyOnPrMerge}
-              onCheckedChange={setNotifyOnPrMerge}
-            />
-            <Label htmlFor={`notify-pr-merge-${repo.full_name}`} className="text-xs text-brand cursor-pointer">
-              Draft a brag post when a PR is merged to the default branch
-            </Label>
-          </div>
-
-          <PixelButton onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save"}
-          </PixelButton>
+      {repo.description && (
+        <div className="mt-4">
+          <p className="text-xs text-brand/50">{repo.description}</p>
         </div>
       )}
     </PixelCard>

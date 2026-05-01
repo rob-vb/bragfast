@@ -67,8 +67,7 @@ export function VoicePresetPicker({ userId }: { userId: string }) {
           Voice
         </h2>
         <p className="mt-1 text-xs text-brand/60">
-          Shapes how Haiku writes your draft titles and descriptions. Brand
-          voice (set per brand) overrides this when both are present.
+          Shapes how Haiku writes your draft titles and descriptions.
         </p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">

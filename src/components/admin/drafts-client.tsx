@@ -11,7 +11,7 @@ import { useUserId } from "@/hooks/use-user-id";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { derivePreviewTitle } from "@/lib/drafts/preview";
-import type { DraftConfig, DraftObjectContent, DraftSource } from "@/lib/drafts/types";
+import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
 import type { FormatKey } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import { DraftPreview } from "./draft-preview";
@@ -65,13 +65,6 @@ function parseConfig(raw: string): DraftConfig {
   } catch {
     return { output: "image" };
   }
-}
-
-function isDraftEmpty(objectContent: Record<string, DraftObjectContent> | undefined): boolean {
-  if (!objectContent) return true;
-  const values = Object.values(objectContent);
-  if (values.length === 0) return true;
-  return values.every((c) => !c?.text && !c?.image_url && !c?.video_url);
 }
 
 const VALID_FORMATS: FormatKey[] = ["landscape", "square", "portrait"];
@@ -219,7 +212,6 @@ function DraftCard({
   const isAgent = row.source === "agent";
   const [skipReason, setSkipReason] = useState("");
   const title = derivePreviewTitle(config, row.name);
-  const empty = isDraftEmpty(config.objectContent);
   const fmt = primaryFormat(config);
   const dims = FORMAT_DIMENSIONS[fmt];
   const aspectStyle: React.CSSProperties = {
@@ -229,22 +221,6 @@ function DraftCard({
   function open() {
     router.push(`/admin/kitchen?draft=${encodeURIComponent(row.id)}`);
   }
-
-  const badgeRow = (
-    <div className="flex items-center gap-2 mb-3 px-10 flex-wrap">
-      {row.sourceSystem ? (
-        <SourceSystemBadge
-          system={row.sourceSystem}
-          milestoneKey={row.milestoneKey ?? undefined}
-        />
-      ) : null}
-      <OutputBadge output={config.output} />
-      {empty ? <EmptyBadge /> : null}
-      {row.suppressed ? (
-        <SuppressedBadge confidence={row.confidence ?? null} />
-      ) : null}
-    </div>
-  );
 
   const titleBlock = (
     <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
@@ -298,66 +274,6 @@ function DraftCard({
       `}
       aria-label={`Open draft: ${title}`}
     >
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button
-            type="button"
-            onClick={(e) => e.stopPropagation()}
-            className="absolute top-2 right-2 h-7 w-7 border-2 border-brand bg-white hover:bg-red-100 shadow-[2px_2px_0_var(--color-brand)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-[family-name:var(--font-press-start)] text-[10px] text-brand leading-none"
-            aria-label="Delete draft"
-            disabled={busy}
-          >
-            X
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete draft</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &ldquo;{title}&rdquo;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {/* S6.3: capture skip reason for agent-fired drafts so the Sous-Chef
-              feed shows *why* the user dismissed. Optional. */}
-          {isAgent ? (
-            <div className="space-y-2">
-              <label
-                htmlFor={`skip-reason-${row.id}`}
-                className="block font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase tracking-wider"
-              >
-                Reason (optional)
-              </label>
-              <Textarea
-                id={`skip-reason-${row.id}`}
-                value={skipReason}
-                onChange={(e) => setSkipReason(e.target.value)}
-                placeholder="e.g. off-brand, too soon, already shared"
-                maxLength={200}
-                className="text-sm"
-              />
-            </div>
-          ) : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <PixelButton variant="ghost" onClick={(e) => e.stopPropagation()}>Cancel</PixelButton>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <PixelButton
-                variant="danger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(skipReason.trim() || undefined);
-                }}
-              >
-                Delete
-              </PixelButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {badgeRow}
-
       <div className="mb-3">
         <DraftPreviewBoundary key={row.id} fallback={boundaryFallback}>
           <LazyMount
@@ -379,79 +295,82 @@ function DraftCard({
       {titleBlock}
       {metaRow}
 
-      {row.suppressed ? (
-        <button
-          type="button"
+      <div className="mt-3 flex gap-2">
+        <PixelButton
           onClick={(e) => {
             e.stopPropagation();
-            onOverride();
+            open();
           }}
-          className="mt-3 w-full font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
           disabled={busy}
         >
-          Draft anyway
-        </button>
-      ) : null}
+          Edit
+        </PixelButton>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <PixelButton
+              variant="danger"
+              onClick={(e) => e.stopPropagation()}
+              disabled={busy}
+            >
+              Delete
+            </PixelButton>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete draft</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &ldquo;{title}&rdquo;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {isAgent ? (
+              <div className="space-y-2">
+                <label
+                  htmlFor={`skip-reason-${row.id}`}
+                  className="block font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase tracking-wider"
+                >
+                  Reason (optional)
+                </label>
+                <Textarea
+                  id={`skip-reason-${row.id}`}
+                  value={skipReason}
+                  onChange={(e) => setSkipReason(e.target.value)}
+                  placeholder="e.g. off-brand, too soon, already shared"
+                  maxLength={200}
+                  className="text-sm"
+                />
+              </div>
+            ) : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <PixelButton variant="ghost" onClick={(e) => e.stopPropagation()}>Cancel</PixelButton>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <PixelButton
+                  variant="danger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(skipReason.trim() || undefined);
+                  }}
+                >
+                  Delete
+                </PixelButton>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {row.suppressed ? (
+          <PixelButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onOverride();
+            }}
+            disabled={busy}
+          >
+            Draft anyway
+          </PixelButton>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-function SuppressedBadge({ confidence }: { confidence: number | null }) {
-  const score = confidence == null ? "—" : confidence.toFixed(2);
-  return (
-    <span
-      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-brand text-gold"
-      title={`Haiku rated this trigger ${score} brag-worthy. Drafts below ${0.5} are suppressed.`}
-    >
-      Low conf · {score}
-    </span>
-  );
-}
-
-function SourceSystemBadge({
-  system,
-  milestoneKey,
-}: {
-  system: SourceSystem;
-  milestoneKey?: string;
-}) {
-  const label = {
-    github: "GitHub",
-    stripe: "Stripe",
-    posthog: "PostHog",
-    ga4: "GA4",
-  }[system];
-  return (
-    <span
-      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-surface text-brand"
-      title={milestoneKey ?? undefined}
-    >
-      {label}
-    </span>
-  );
-}
-
-function OutputBadge({ output }: { output: "image" | "video" }) {
-  return (
-    <span
-      className={`
-        font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1
-        border-2 border-brand uppercase tracking-wider
-        ${output === "video" ? "bg-brand text-gold" : "bg-surface text-brand"}
-      `}
-    >
-      {output}
-    </span>
-  );
-}
-
-function EmptyBadge() {
-  return (
-    <span
-      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-surface text-brand"
-      title="This draft has no content yet — preview shows template placeholder text."
-    >
-      Empty
-    </span>
-  );
-}

@@ -11,12 +11,13 @@ import {
   LayoutTemplate,
   Palette,
   KeyRound,
-  GitPullRequestArrow,
   ChevronsUpDown,
   CreditCard,
   Sparkles,
   LogOut,
   UserCircle,
+  Settings,
+  Target,
 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { toast } from "sonner";
@@ -58,9 +59,14 @@ type NavItem = {
 // to Developers group — kept reachable but off the primary path.
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Sous-Chef", href: "/admin/sous-chef", icon: GitPullRequestArrow },
+  { label: "Kitchen", href: "/admin/kitchen", icon: ChefHat },
   { label: "Drafts", href: "/admin/drafts", icon: FileText },
-  { label: "History", href: "/admin/history", icon: History },
+];
+
+const sousChefNav: NavItem[] = [
+  { label: "Settings", href: "/admin/sous-chef", icon: Settings },
+  { label: "History", href: "/admin/sous-chef/history", icon: History },
+  { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
 ];
 
 const configureNav: NavItem[] = [
@@ -69,12 +75,15 @@ const configureNav: NavItem[] = [
 ];
 
 const developersNav: NavItem[] = [
-  { label: "Kitchen", href: "/admin/kitchen", icon: ChefHat },
+  { label: "API history", href: "/admin/history", icon: History },
   { label: "API Keys", href: "/admin/keys", icon: KeyRound },
 ];
 
 function isItemActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
+  // Exact match for Sous-Chef Settings so deeper sous-chef sub-routes
+  // (history, goals) don't also light up Settings.
+  if (href === "/admin/sous-chef") return pathname === "/admin/sous-chef";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -180,6 +189,31 @@ export function AdminSidebar({
                             {unseenDrafts > 99 ? "99+" : unseenDrafts}
                           </span>
                         ) : null}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Sous-Chef</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sousChefNav.map((item) => {
+                const active = isItemActive(pathname, item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.label}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -65,19 +65,20 @@ export function PixelEmptyState({
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60 mb-6 max-w-sm mx-auto">
         {description}
       </p>
-      <div className="flex items-center justify-center gap-3">
-        <Link
-          href={cta.href}
-          className={noPrimary ? secondaryClass : primaryClass}
-        >
-          {cta.label}
-        </Link>
-        {allSecondary.map((s) => (
-          <Link key={s.href} href={s.href} className={secondaryClass}>
-            {s.label}
-          </Link>
-        ))}
-      </div>
+      {(!noPrimary || allSecondary.length > 0) && (
+        <div className="flex items-center justify-center gap-3">
+          {!noPrimary && (
+            <Link href={cta.href} className={primaryClass}>
+              {cta.label}
+            </Link>
+          )}
+          {allSecondary.map((s) => (
+            <Link key={s.href} href={s.href} className={secondaryClass}>
+              {s.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

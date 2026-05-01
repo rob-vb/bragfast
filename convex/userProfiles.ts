@@ -116,6 +116,14 @@ export const getStats = query({
         return sum + Object.values(imgs).reduce((s, formats) => s + Object.keys(formats).length, 0);
       }, 0);
 
+    const totalVideos = releases
+      .filter((r) => r.status === "completed" && r.videos)
+      .reduce((sum, r) => {
+        const vids = r.videos as Record<string, unknown> | undefined;
+        if (!vids) return sum;
+        return sum + Object.keys(vids).length;
+      }, 0);
+
     return {
       creditsRemaining: profile?.creditsRemaining ?? 0,
       plan: profile?.plan ?? "trial",
@@ -125,6 +133,7 @@ export const getStats = query({
       creditsUsedThisMonth,
       totalReleases: releases.length,
       totalImages,
+      totalVideos,
     };
   },
 });

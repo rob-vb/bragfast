@@ -7,10 +7,6 @@ import { PixelButton } from "./pixel-button";
 import { PixelCard } from "./pixel-card";
 import { GitHubSection } from "./github-section";
 import { OrgPendingBanner } from "./org-pending-banner";
-import { GoalsSection } from "./goals-section";
-import type { Goal } from "./goals-section";
-import { GoalCreateModal } from "./goal-create-modal";
-import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import { tierFor, capsFor, type Plan, type Tier } from "@/lib/plan-tiers";
 import { UpsellModal } from "./upsell-modal";
 import {
@@ -324,30 +320,20 @@ export function SousChefClient({
   plan: Plan;
 }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
-  const [goals, setGoals] = useState<Goal[]>([]);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
-  const [showGoalModal, setShowGoalModal] = useState(false);
   const [upsell, setUpsell] = useState<{ tier: Tier; target: Tier } | null>(
     null,
   );
-  const repositioned = isLaunchModeRepositioned();
   const tier = tierFor(plan);
 
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const reload = useCallback(async () => {
-    const [intRes, goalRes] = await Promise.all([
-      fetch("/api/v1/sous-chef/integrations"),
-      fetch("/api/v1/goals"),
-    ]);
+    const intRes = await fetch("/api/v1/sous-chef/integrations");
     if (intRes.ok) {
       const data = (await intRes.json()) as { integrations: IntegrationRow[] };
       setRows(data.integrations);
-    }
-    if (goalRes.ok) {
-      const data = (await goalRes.json()) as { goals: Goal[] };
-      setGoals(data.goals);
     }
   }, []);
 
@@ -435,18 +421,6 @@ export function SousChefClient({
         </span>
       </div>
 
-      {repositioned && (
-        <div className="flex justify-start">
-          <button
-            type="button"
-            onClick={() => setShowGoalModal(true)}
-            className="bg-gold text-brand border-2 border-brand px-4 py-3 font-mono text-xs uppercase tracking-widest font-bold shadow-[3px_3px_0_var(--color-brand)] transition-all hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px]"
-          >
-            ▸ New goal
-          </button>
-        </div>
-      )}
-
       <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 max-w-prose">
         Sous-Chef watches your connected apps for milestones and drafts brag
         posts automatically. You still approve every post — Sous-Chef just
@@ -465,14 +439,6 @@ export function SousChefClient({
             installations={github.installations}
             appSlug={github.appSlug}
           />
-          <div className="border-t-2 border-brand/20 pt-4">
-            <GoalsSection
-              provider="github"
-              connected={githubConnected}
-              goals={goals.filter((g) => g.provider === "github")}
-              onReload={reload}
-            />
-          </div>
         </div>
       </PixelCard>
 
@@ -493,7 +459,6 @@ export function SousChefClient({
           key={provider}
           provider={provider}
           row={byProvider.get(provider) ?? null}
-          goals={goals.filter((g) => g.provider === provider)}
           onConnect={() => {
             if (
               requestConnect(provider, byProvider.get(provider)?.enabled ?? false)
@@ -526,20 +491,6 @@ export function SousChefClient({
         />
       )}
 
-      <GoalCreateModal
-        open={showGoalModal}
-        onClose={() => setShowGoalModal(false)}
-        onCreated={async () => {
-          setShowGoalModal(false);
-          await reload();
-        }}
-        isFirstGoal={goals.length === 0}
-        connected={{
-          stripe: byProvider.get("stripe")?.enabled ?? false,
-          posthog: byProvider.get("posthog")?.enabled ?? false,
-          ga4: byProvider.get("ga4")?.enabled ?? false,
-        }}
-      />
     </div>
   );
 }
@@ -547,13 +498,11 @@ export function SousChefClient({
 function IntegrationBlock({
   provider,
   row,
-  goals,
   onConnect,
   onReload,
 }: {
   provider: SousChefProvider;
   row: IntegrationRow | null;
-  goals: Goal[];
   onConnect: () => void;
   onReload: () => void;
 }) {
@@ -647,15 +596,6 @@ function IntegrationBlock({
           </div>
         )}
 
-        {/* Goals */}
-        <div className="border-t-2 border-brand/20 pt-4">
-          <GoalsSection
-            provider={provider}
-            connected={connected}
-            goals={goals}
-            onReload={onReload}
-          />
-        </div>
       </div>
     </PixelCard>
   );

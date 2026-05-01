@@ -6,8 +6,6 @@ import { PixelCard } from "@/components/admin/pixel-card";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
 import { ManageBillingButton } from "./manage-billing-button";
-import { PlatformPreferences } from "@/components/admin/platform-preferences";
-import { VoicePresetPicker } from "@/components/admin/voice-preset-picker";
 import Link from "next/link";
 
 function CreditBar({ remaining, total }: { remaining: number; total: number }) {
@@ -89,7 +87,7 @@ export default async function AccountPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 pt-2 border-t border-brand/10">
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-brand/10 sm:grid-cols-4">
             <div>
               <p className="font-[family-name:var(--font-press-start)] text-lg text-brand">
                 {stats.creditsUsedThisMonth}
@@ -108,21 +106,17 @@ export default async function AccountPage() {
               </p>
               <p className="text-xs text-brand/60">Total images</p>
             </div>
+            <div>
+              <p className="font-[family-name:var(--font-press-start)] text-lg text-brand">
+                {stats.totalVideos ?? 0}
+              </p>
+              <p className="text-xs text-brand/60">Total videos</p>
+            </div>
           </div>
         </div>
       </PixelCard>
 
-      {/* Card 2 — Sous-Chef preferences */}
-      <PixelCard>
-        <PlatformPreferences userId={user._id} />
-      </PixelCard>
-
-      {/* Card 2.5 — Voice */}
-      <PixelCard>
-        <VoicePresetPicker userId={user._id} />
-      </PixelCard>
-
-      {/* Card 3 — Danger Zone */}
+      {/* Danger Zone */}
       <div className="border-2 border-red-700 bg-red-50/80 p-5 shadow-[4px_4px_0_var(--color-brand)]">
         <h2 className="font-[family-name:var(--font-press-start)] text-sm text-red-700 mb-2">
           Danger Zone
