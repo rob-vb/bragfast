@@ -68,8 +68,9 @@ export async function bufferGraphQL<T = unknown>(
   }
 
   if (!res.ok) {
+    const body = await res.text().catch(() => "");
     throw new BufferHttpError(
-      `Buffer GraphQL HTTP ${res.status}: ${res.statusText}`,
+      `Buffer GraphQL HTTP ${res.status}: ${res.statusText}${body ? ` — ${body.slice(0, 500)}` : ""}`,
       res.status,
     );
   }
