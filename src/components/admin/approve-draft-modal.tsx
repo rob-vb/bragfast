@@ -4,8 +4,6 @@ import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import posthog from "posthog-js";
-import { useMutation } from "convex/react";
-import { api } from "@convex/_generated/api";
 import { PixelButton } from "./pixel-button";
 import {
   tierFor,
@@ -200,7 +198,6 @@ export function ApproveDraftModal({
     return { locked: true, upgrade: next };
   }
   const router = useRouter();
-  const approveDraftMutation = useMutation(api.draftPushes.approveDraft);
 
   // Stable nonce generated once on modal mount.
   const clientNonce = useRef(crypto.randomUUID()).current;
@@ -232,7 +229,9 @@ export function ApproveDraftModal({
   }, [draftFormats, routingRows, bufferConnected, postizConnected]);
 
   const [checked, setChecked] = useState<Set<string>>(initialChecked);
-  const [postState, setPostState] = useState<"queue" | "draft">("queue");
+  // Buffer ignores draft mode and Postiz-only drafting added confusion; the
+  // modal always pushes to queue. Keep the value as a constant for telemetry.
+  const postState = "queue" as const;
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
 
@@ -270,7 +269,6 @@ export function ApproveDraftModal({
       },
     }));
   }
-  const [hideUnchecked, setHideUnchecked] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [skippedWarnings, setSkippedWarnings] = useState<
@@ -310,16 +308,51 @@ export function ApproveDraftModal({
 
     setSubmitting(true);
     try {
-      const result = await approveDraftMutation({
-        draftId,
-        title,
-        description,
-        copyByPlatform:
-          platformsPresent.length > 0 ? copyByPlatform : undefined,
-        selections,
-        postState,
-        clientNonce,
-      });
+      const res = await fetch(
+        `/api/v1/drafts/${encodeURIComponent(draftId)}/approve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            description,
+            copyByPlatform:
+              platformsPresent.length > 0 ? copyByPlatform : undefined,
+            selections,
+            postState,
+            clientNonce,
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setInlineError(data.error ?? "Push failed. Try again.");
+        return;
+      }
+
+      const result = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        upgradeTier?: string;
+        pushIds?: string[];
+        skipped?: Array<{
+          format: string;
+          provider: string;
+          channelId: string;
+          reason: string;
+        }>;
+        meta?: {
+          wasEdited?: boolean;
+          editType?: string | null;
+          triggerType?: string;
+          confidence?: number | null;
+          draftCreatedAt?: string | null;
+          isFirstPostForUser?: boolean;
+        };
+      };
 
       if (!result.ok) {
         const messages: Record<string, string> = {
@@ -330,15 +363,12 @@ export function ApproveDraftModal({
           video_blocked: "Video posts require Buffet.",
           platform_blocked: "Your plan limits the number of destinations per post.",
         };
-        const upgrade =
-          "upgradeTier" in result && result.upgradeTier
-            ? ` Upgrade to ${result.upgradeTier}.`
-            : "";
-        setInlineError((messages[result.error] ?? result.error) + upgrade);
+        const upgrade = result.upgradeTier ? ` Upgrade to ${result.upgradeTier}.` : "";
+        setInlineError((messages[result.error ?? ""] ?? result.error ?? "Push failed.") + upgrade);
         return;
       }
 
-      if (result.skipped.length > 0) {
+      if (result.skipped && result.skipped.length > 0) {
         setSkippedWarnings(result.skipped);
       }
 
@@ -347,17 +377,16 @@ export function ApproveDraftModal({
       const destinations = [
         ...new Set(selections.map((s) => s.provider)),
       ];
-      const formats = [...new Set(selections.map((s) => s.format))];
-      const videoRendered = formats.some((f) => f.startsWith("video-"));
-      const timeFromDraftSeconds =
-        meta?.draftCreatedAt
-          ? Math.max(
-              0,
-              Math.round(
-                (Date.now() - new Date(meta.draftCreatedAt).getTime()) / 1000,
-              ),
-            )
-          : null;
+      const formatsTouched = [...new Set(selections.map((s) => s.format))];
+      const videoRendered = formatsTouched.some((f) => f.startsWith("video-"));
+      const timeFromDraftSeconds = meta?.draftCreatedAt
+        ? Math.max(
+            0,
+            Math.round(
+              (Date.now() - new Date(meta.draftCreatedAt).getTime()) / 1000,
+            ),
+          )
+        : null;
       posthog.capture("post_approved", {
         trigger_type: meta?.triggerType ?? "manual",
         was_edited: meta?.wasEdited ?? false,
@@ -367,9 +396,9 @@ export function ApproveDraftModal({
         is_first_post_for_user: meta?.isFirstPostForUser ?? false,
         approval_surface: "kitchen",
         destination: destinations.length === 1 ? destinations[0] : "multiple",
-        formats_rendered: formats,
+        formats_rendered: formatsTouched,
         video_rendered: videoRendered,
-        total_render_count: result.pushIds.length,
+        total_render_count: result.pushIds?.length ?? 0,
       });
 
       const providerNames = [
@@ -377,10 +406,10 @@ export function ApproveDraftModal({
       ].join(" & ");
 
       toast.success(
-        `Pushed ${result.pushIds.length} item(s) to ${providerNames}`,
+        `Pushed ${result.pushIds?.length ?? 0} item(s) to ${providerNames}`,
       );
       onClose();
-      router.refresh();
+      router.push("/admin/history");
     } catch (err) {
       setInlineError(
         err instanceof Error ? err.message : "Unexpected error. Please try again.",
@@ -409,15 +438,6 @@ export function ApproveDraftModal({
           upgrade: nextTierFor({ needsPlatforms: distinctChannelCount }),
         }
       : null;
-
-  const bufferInSelection = useMemo(() => {
-    for (const key of checked) {
-      if (key.split("::")[1] === "buffer") return true;
-    }
-    return false;
-  }, [checked]);
-
-  const showBufferDraftNote = postState === "draft" && bufferInSelection;
 
   return (
     <div className="fixed inset-0 z-50 bg-brand/30 flex items-center justify-center p-4">
@@ -465,33 +485,15 @@ export function ApproveDraftModal({
         {/* Format × Channel grid */}
         {!noProviders && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase">
-                Channels
-              </span>
-              <label className="flex items-center gap-2 font-[family-name:var(--font-geist-sans)] text-xs text-brand/60 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={hideUnchecked}
-                  onChange={(e) => setHideUnchecked(e.target.checked)}
-                  className="accent-current"
-                />
-                Hide unchecked
-              </label>
-            </div>
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase">
+              Channels
+            </span>
 
             {draftFormats.map((fmt) => {
               const allChannels: FlatChannel[] = [
                 ...(bufferConnected ? channelsByProvider.buffer : []),
                 ...(postizConnected ? channelsByProvider.postiz : []),
               ];
-
-              const rows = allChannels.filter((ch) => {
-                const key = selKey(fmt, ch.provider, ch.channelId);
-                return !hideUnchecked || checked.has(key);
-              });
-
-              if (rows.length === 0 && hideUnchecked) return null;
 
               const lock = formatLockedReason(fmt);
 
@@ -521,7 +523,6 @@ export function ApproveDraftModal({
                     allChannels.map((ch) => {
                       const key = selKey(fmt, ch.provider, ch.channelId);
                       const isChecked = checked.has(key);
-                      if (hideUnchecked && !isChecked) return null;
                       return (
                         <label
                           key={key}
@@ -545,38 +546,6 @@ export function ApproveDraftModal({
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Post state */}
-        {!noProviders && (
-          <div className="space-y-2">
-            <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase">
-              Post as
-            </span>
-            <div className="flex gap-4">
-              {(["queue", "draft"] as const).map((state) => (
-                <label
-                  key={state}
-                  className="flex items-center gap-2 font-[family-name:var(--font-geist-sans)] text-sm text-brand cursor-pointer select-none"
-                >
-                  <input
-                    type="radio"
-                    name="postState"
-                    value={state}
-                    checked={postState === state}
-                    onChange={() => setPostState(state)}
-                    className="accent-current"
-                  />
-                  {state === "queue" ? "Add to queue" : "Save as draft"}
-                </label>
-              ))}
-            </div>
-            {showBufferDraftNote && (
-              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70 border-2 border-yellow-400 bg-yellow-50 p-2">
-                Buffer doesn&apos;t support drafts via API; Buffer pushes will go to queue. Postiz pushes will save as draft.
-              </p>
-            )}
           </div>
         )}
 
@@ -698,7 +667,7 @@ export function ApproveDraftModal({
               onClick={handleConfirm}
               disabled={submitting || checked.size === 0}
             >
-              {submitting ? "Pushing..." : `Confirm (${checked.size})`}
+              {submitting ? "Cooking & pushing..." : `Push to queue (${checked.size})`}
             </PixelButton>
           )}
         </div>

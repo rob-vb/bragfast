@@ -14,8 +14,6 @@
  *
  * Retry policy: max 3 attempts, exponential backoff 2^(attempts-1) seconds,
  * capped at 30s. Auth failures for Buffer/Postiz also call setEnabled(false).
- *
- * TODO(post-U8): auto-cook on approve when renders are missing (see mediaUrl check below).
  */
 
 import { internalAction } from "./_generated/server";
@@ -98,17 +96,16 @@ export const run = internalAction({
         continue;
       }
 
-      // 2. Check mediaUrl — if empty, no render exists yet.
-      // TODO(post-U8): auto-cook on approve when renders are missing.
-      // For now, fail immediately so the status panel can surface a clear message.
+      // 2. Defensive guard: mediaUrl must be populated by approveDraft (cook-and-approve
+      // endpoint resolves it before insert). An empty mediaUrl here means the caller
+      // bypassed the orchestrator — fail loudly.
       if (!row.mediaUrl) {
-        console.warn(`${prefix} mediaUrl is empty — draft not yet rendered for format ${row.format}`);
+        console.error(`${prefix} mediaUrl missing — caller bypassed cook-and-approve`);
         await ctx.runMutation(internal.draftPushes.finalizePush, {
           rowId: row._id,
           state: "failed",
           errorClass: "media",
-          errorMessage:
-            "draft not yet rendered for this format — cook before approving",
+          errorMessage: "media URL not resolved before push",
         });
         continue;
       }
