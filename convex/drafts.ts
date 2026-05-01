@@ -40,6 +40,32 @@ export const create = mutation({
   },
 });
 
+// Session-aware: creates a draft for the currently authenticated user. Used by
+// the Kitchen flow to materialize a draft on-demand when the user clicks
+// "Send to ..." after a non-draft cook, so the existing approve/push pipeline
+// can run unchanged.
+export const createUserDraft = mutation({
+  args: {
+    name: v.optional(v.string()),
+    config: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuthedUser(ctx);
+    const externalId = `drf_${crypto.randomUUID().slice(0, 10)}`;
+    const now = new Date().toISOString();
+    await ctx.db.insert("drafts", {
+      userId,
+      externalId,
+      name: args.name,
+      source: "user",
+      createdBy: "dashboard",
+      config: args.config,
+      created_at: now,
+    });
+    return { id: externalId, created_at: now };
+  },
+});
+
 // S8.3: few-shot. Returns recent (original → edited) pairs for a user, drawn
 // from approved drafts whose user-edited title or description differs from the
 // frozen `originalConfig`. Used by composeCopy to bias Haiku toward this

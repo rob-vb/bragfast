@@ -445,7 +445,14 @@ export function ApproveDraftModal({
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <h2 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed">
-            Approve &amp; Push
+            {(() => {
+              const connected = (["buffer", "postiz"] as PostingProvider[]).filter(
+                (p) => (p === "buffer" ? bufferConnected : postizConnected),
+              );
+              if (connected.length === 0) return "Send";
+              const names = connected.map((p) => PROVIDER_LABELS[p]).join(" & ");
+              return `Send to ${names}`;
+            })()}
           </h2>
           <button
             type="button"
@@ -462,25 +469,6 @@ export function ApproveDraftModal({
             No posting providers connected. Connect Buffer or Postiz in Sous-Chef settings first.
           </p>
         )}
-
-        {/* Provider summary */}
-        <div className="flex gap-3">
-          {(["buffer", "postiz"] as PostingProvider[]).map((prov) => {
-            const connected = prov === "buffer" ? bufferConnected : postizConnected;
-            return (
-              <span
-                key={prov}
-                className={`font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand ${
-                  connected
-                    ? "bg-gold text-brand"
-                    : "bg-surface text-brand/40 line-through"
-                }`}
-              >
-                {PROVIDER_LABELS[prov]}
-              </span>
-            );
-          })}
-        </div>
 
         {/* Format × Channel grid */}
         {!noProviders && (
@@ -661,15 +649,30 @@ export function ApproveDraftModal({
           <PixelButton variant="ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </PixelButton>
-          {!noProviders && (
-            <PixelButton
-              variant="primary"
-              onClick={handleConfirm}
-              disabled={submitting || checked.size === 0}
-            >
-              {submitting ? "Cooking & pushing..." : `Push to queue (${checked.size})`}
-            </PixelButton>
-          )}
+          {!noProviders && (() => {
+            const selectedProviders = new Set<PostingProvider>();
+            for (const key of checked) {
+              const [, prov] = key.split("::");
+              selectedProviders.add(prov as PostingProvider);
+            }
+            const providerLabel =
+              selectedProviders.size === 0
+                ? bufferConnected
+                  ? PROVIDER_LABELS.buffer
+                  : PROVIDER_LABELS.postiz
+                : [...selectedProviders].map((p) => PROVIDER_LABELS[p]).join(" & ");
+            return (
+              <PixelButton
+                variant="primary"
+                onClick={handleConfirm}
+                disabled={submitting || checked.size === 0}
+              >
+                {submitting
+                  ? "Sending..."
+                  : `Send to ${providerLabel} (${checked.size})`}
+              </PixelButton>
+            );
+          })()}
         </div>
       </div>
     </div>

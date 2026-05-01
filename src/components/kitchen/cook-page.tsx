@@ -2,7 +2,7 @@
 
 import { useReducer, useEffect, useCallback, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { KitchenScene3D } from "@/components/kitchen/kitchen-scene-3d";
 import { CookSection } from "@/components/ui/cook-section";
@@ -198,7 +198,6 @@ export function CookPage({ templates }: CookPageProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const hydratedDraftRef = useRef<string | null>(null);
-  const autoApprovedCookRef = useRef<string | null>(null);
 
   // Progressive disclosure
   const hasTemplate = !!state.templateId;
@@ -331,14 +330,44 @@ export function CookPage({ templates }: CookPageProps) {
     }
   }, [releaseStatus, releaseProgressPct, state.status, state.cookId]);
 
-  // Auto-open Approve modal once a draft cook finishes
-  useEffect(() => {
-    if (state.status !== "done") return;
-    if (!draftId || !state.cookId) return;
-    if (autoApprovedCookRef.current === state.cookId) return;
-    autoApprovedCookRef.current = state.cookId;
-    setApproveOpen(true);
-  }, [state.status, state.cookId, draftId]);
+  // Materialize a draft from current Kitchen state on demand. Used by the
+  // "Send to ..." button so non-draft cooks flow through the same approve path.
+  const createUserDraft = useMutation(api.drafts.createUserDraft);
+  const [creatingDraft, setCreatingDraft] = useState(false);
+  async function handleOpenSend() {
+    if (draftId) {
+      setApproveOpen(true);
+      return;
+    }
+    if (!state.templateId) return;
+    setCreatingDraft(true);
+    try {
+      const config: DraftConfig = {
+        output: state.outputType,
+        templateId: state.templateId,
+        ...(state.brandId ? { brandId: state.brandId } : { colors: state.colors }),
+        formats: state.formats,
+        objectContent: state.objectContent,
+        ...(state.animationPreset
+          ? { video: { preset: state.animationPreset } }
+          : {}),
+      };
+      const texts = Object.values(state.objectContent)
+        .map((m) => m.text)
+        .filter((t): t is string => !!t);
+      const name = (texts[0] ?? "Untitled draft").slice(0, 80);
+      const result = await createUserDraft({
+        name,
+        config: JSON.stringify(config),
+      });
+      setDraftId(result.id);
+      setApproveOpen(true);
+    } catch (err) {
+      console.error("[cook-page] createUserDraft failed:", err);
+    } finally {
+      setCreatingDraft(false);
+    }
+  }
 
   // Safety timeout
   useEffect(() => {
@@ -659,6 +688,28 @@ export function CookPage({ templates }: CookPageProps) {
             Order Up!
           </h2>
           <CookResults result={state.results} />
+          {(() => {
+            const bufferOn =
+              integrations?.some((r) => r.provider === "buffer" && r.enabled) ?? false;
+            const postizOn =
+              integrations?.some((r) => r.provider === "postiz" && r.enabled) ?? false;
+            if (!bufferOn && !postizOn) return null;
+            const label = [bufferOn ? "Buffer" : null, postizOn ? "Postiz" : null]
+              .filter(Boolean)
+              .join(" & ");
+            return (
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={handleOpenSend}
+                  disabled={creatingDraft}
+                  className="font-[family-name:var(--font-press-start)] text-[11px] px-5 py-3 border-2 border-brand bg-gold text-brand shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-60"
+                >
+                  {creatingDraft ? "Preparing..." : `Send to ${label}`}
+                </button>
+              </div>
+            );
+          })()}
         </div>
       )}
     </>
