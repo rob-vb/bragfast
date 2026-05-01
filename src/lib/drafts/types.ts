@@ -21,6 +21,13 @@ export interface DraftVideo {
   preset?: AnimationPreset;
 }
 
+export type DraftPlatform = "x" | "linkedin";
+
+export interface DraftPlatformCopy {
+  title: string;
+  description: string;
+}
+
 export interface DraftConfig {
   output: DraftOutput;
   templateId?: string;
@@ -30,6 +37,12 @@ export interface DraftConfig {
   objectContent?: Record<string, DraftObjectContent>;
   video?: DraftVideo;
   notes?: string;
+  /**
+   * Platform-specific copy variants generated at draft time. The image render
+   * uses `objectContent.title/description` as the canonical visual; this map
+   * carries the per-platform post text, edited in the approve modal.
+   */
+  copyByPlatform?: Partial<Record<DraftPlatform, DraftPlatformCopy>>;
 }
 
 export interface Draft {

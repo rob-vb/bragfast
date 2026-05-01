@@ -2,15 +2,26 @@ import { action, internalMutation } from "./_generated/server";
 import { internal, components } from "./_generated/api";
 import { StripeSubscriptions } from "@convex-dev/stripe";
 import { v } from "convex/values";
+import { TIER_CONFIG, type Tier } from "./planTiers";
 
 const stripeClient = new StripeSubscriptions(components.stripe, {});
 
-// Map env var price IDs to plan IDs
+// Legacy: map env var price IDs to legacy plan IDs (credit-based, /api/v1/cook).
 function priceToPlan(priceId: string): "starter" | "pro" | "scale" | null {
   const map: Record<string, "starter" | "pro" | "scale"> = {
     [process.env.STRIPE_STARTER_PRICE_ID!]: "starter",
     [process.env.STRIPE_PRO_PRICE_ID!]: "pro",
     [process.env.STRIPE_SCALE_PRICE_ID!]: "scale",
+  };
+  return map[priceId] ?? null;
+}
+
+// New tier price IDs → Toast/Plate/Buffet.
+function priceToTier(priceId: string): Tier | null {
+  const map: Record<string, Tier> = {
+    [process.env.STRIPE_TOAST_PRICE_ID!]: "toast",
+    [process.env.STRIPE_PLATE_PRICE_ID!]: "plate",
+    [process.env.STRIPE_BUFFET_PRICE_ID!]: "buffet",
   };
   return map[priceId] ?? null;
 }
@@ -30,6 +41,9 @@ export const createCheckoutSession = action({
       starter: process.env.STRIPE_STARTER_PRICE_ID,
       pro: process.env.STRIPE_PRO_PRICE_ID,
       scale: process.env.STRIPE_SCALE_PRICE_ID,
+      toast: process.env.STRIPE_TOAST_PRICE_ID,
+      plate: process.env.STRIPE_PLATE_PRICE_ID,
+      buffet: process.env.STRIPE_BUFFET_PRICE_ID,
     };
     const priceId = priceEnvMap[planId];
     if (!priceId) throw new Error(`No price ID configured for plan: ${planId}`);
@@ -100,8 +114,6 @@ export const handleSubscriptionChange = internalMutation({
     status: v.string(),
   },
   handler: async (ctx, { userId, priceId, status }) => {
-    const planId = priceToPlan(priceId);
-    if (!planId) return;
     if (status !== "active" && status !== "trialing") return;
 
     const profile = await ctx.db
@@ -109,6 +121,19 @@ export const handleSubscriptionChange = internalMutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (!profile) return;
+
+    // New tier price IDs: set plan + reset creditsRemaining.
+    const tier = priceToTier(priceId);
+    if (tier) {
+      await ctx.db.patch(profile._id, {
+        plan: tier,
+        creditsRemaining: TIER_CONFIG[tier].credits,
+      });
+      return;
+    }
+
+    const planId = priceToPlan(priceId);
+    if (!planId) return;
 
     const isFirstSubscription = profile.plan === "trial";
     const newCredits = PLAN_CREDITS[planId];
@@ -125,16 +150,26 @@ export const handleSubscriptionChange = internalMutation({
 export const handleInvoicePaid = internalMutation({
   args: { userId: v.string(), priceId: v.string() },
   handler: async (ctx, { userId, priceId }) => {
-    const planId = priceToPlan(priceId);
-    if (!planId) return;
-
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (!profile) return;
 
-    // Monthly reset — no rollover
+    // New tier price IDs: reset creditsRemaining on renewal, no rollover.
+    const tier = priceToTier(priceId);
+    if (tier) {
+      await ctx.db.patch(profile._id, {
+        plan: tier,
+        creditsRemaining: TIER_CONFIG[tier].credits,
+      });
+      return;
+    }
+
+    const planId = priceToPlan(priceId);
+    if (!planId) return;
+
+    // Legacy: monthly credit reset — no rollover.
     await ctx.db.patch(profile._id, {
       plan: planId,
       creditsRemaining: PLAN_CREDITS[planId],
@@ -150,6 +185,19 @@ export const handleSubscriptionDeleted = internalMutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (!profile) return;
+
+    // New-tier subscribers drop to free (0 credits); legacy stays on trial+0 credits.
+    const isNewTier =
+      profile.plan === "toast" ||
+      profile.plan === "plate" ||
+      profile.plan === "buffet";
+    if (isNewTier) {
+      await ctx.db.patch(profile._id, {
+        plan: "free",
+        creditsRemaining: 0,
+      });
+      return;
+    }
 
     await ctx.db.patch(profile._id, {
       plan: "trial",

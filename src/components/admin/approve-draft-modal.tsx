@@ -3,9 +3,17 @@
 import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { PixelButton } from "./pixel-button";
+import {
+  tierFor,
+  capsFor,
+  nextTierFor,
+  type Plan,
+  type Format as TierFormat,
+} from "@/lib/plan-tiers";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -57,19 +65,31 @@ interface IntegrationRow {
 
 // ── ApproveDraftModal props ────────────────────────────────────────────────────
 
+type Platform = "x" | "linkedin";
+
+const PLATFORM_LABELS: Record<Platform, string> = {
+  x: "X",
+  linkedin: "LinkedIn",
+};
+
 export interface ApproveDraftModalProps {
   draftId: string;
-  userId: string;
-  /** Pre-filled title from composed copy. User-editable. */
+  /** Pre-filled title from composed copy. User-editable. Used as fallback when no per-platform copy exists. */
   initialTitle: string;
-  /** Pre-filled description from composed copy. User-editable. */
+  /** Pre-filled description from composed copy. User-editable. Used as fallback. */
   initialDescription: string;
+  /** Per-platform copy from Sous-Chef (X + LinkedIn variants). When present, the modal renders one editable group per platform. */
+  initialCopyByPlatform?: Partial<
+    Record<Platform, { title: string; description: string }>
+  >;
   /** Formats present on this draft (from config.formats). */
   draftFormats: Format[];
   /** Current routing defaults for this user. */
   routingRows: RoutingRow[];
   /** Connected integrations for this user. */
   integrations: IntegrationRow[];
+  /** User's current plan; drives tier-based pre-disable. Optional — when absent, no UI gating (server still enforces). */
+  plan?: string;
   onClose: () => void;
 }
 
@@ -153,14 +173,32 @@ function selKey(format: Format, provider: PostingProvider, channelId: string): s
 
 export function ApproveDraftModal({
   draftId,
-  userId,
   initialTitle,
   initialDescription,
+  initialCopyByPlatform,
   draftFormats,
   routingRows,
   integrations,
+  plan,
   onClose,
 }: ApproveDraftModalProps) {
+  // S7.3: tier-driven pre-disable. Legacy plans (tierFor → null) skip gating;
+  // server enforcement is still source of truth.
+  const tier = plan ? tierFor(plan as Plan) : null;
+  const caps = tier ? capsFor(tier) : null;
+  function formatLockedReason(fmt: Format): { locked: boolean; upgrade: string | null } {
+    if (!caps) return { locked: false, upgrade: null };
+    const isVideo = fmt.startsWith("video-");
+    const baseFmt = (isVideo ? fmt.slice("video-".length) : fmt) as TierFormat;
+    const formatOk = caps.formats.includes(baseFmt);
+    const videoOk = !isVideo || caps.video;
+    if (formatOk && videoOk) return { locked: false, upgrade: null };
+    const next = nextTierFor({
+      needsFormat: baseFmt,
+      needsVideo: isVideo,
+    });
+    return { locked: true, upgrade: next };
+  }
   const router = useRouter();
   const approveDraftMutation = useMutation(api.draftPushes.approveDraft);
 
@@ -197,6 +235,41 @@ export function ApproveDraftModal({
   const [postState, setPostState] = useState<"queue" | "draft">("queue");
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
+
+  // Per-platform copy state. When the draft was created with platform variants,
+  // each platform has its own editable title+description; otherwise these stay
+  // empty and the top-level title/description applies to all channels.
+  const platformsPresent: Platform[] = useMemo(() => {
+    const out: Platform[] = [];
+    if (initialCopyByPlatform?.x) out.push("x");
+    if (initialCopyByPlatform?.linkedin) out.push("linkedin");
+    return out;
+  }, [initialCopyByPlatform]);
+
+  const [copyByPlatform, setCopyByPlatform] = useState<
+    Partial<Record<Platform, { title: string; description: string }>>
+  >(() => {
+    const seed: Partial<Record<Platform, { title: string; description: string }>> = {};
+    if (initialCopyByPlatform?.x) seed.x = { ...initialCopyByPlatform.x };
+    if (initialCopyByPlatform?.linkedin)
+      seed.linkedin = { ...initialCopyByPlatform.linkedin };
+    return seed;
+  });
+
+  function updatePlatformCopy(
+    platform: Platform,
+    field: "title" | "description",
+    value: string,
+  ) {
+    setCopyByPlatform((prev) => ({
+      ...prev,
+      [platform]: {
+        title: prev[platform]?.title ?? "",
+        description: prev[platform]?.description ?? "",
+        [field]: value,
+      },
+    }));
+  }
   const [hideUnchecked, setHideUnchecked] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -239,9 +312,10 @@ export function ApproveDraftModal({
     try {
       const result = await approveDraftMutation({
         draftId,
-        userId,
         title,
         description,
+        copyByPlatform:
+          platformsPresent.length > 0 ? copyByPlatform : undefined,
         selections,
         postState,
         clientNonce,
@@ -252,14 +326,51 @@ export function ApproveDraftModal({
           nothing_selected: "Select at least one channel to push to.",
           no_providers_connected: "Connect Buffer or Postiz first.",
           duplicate_approval: "This draft was already approved. Reload to see the status.",
+          format_blocked: "Your plan doesn't include this format.",
+          video_blocked: "Video posts require Buffet.",
+          platform_blocked: "Your plan limits the number of destinations per post.",
         };
-        setInlineError(messages[result.error] ?? result.error);
+        const upgrade =
+          "upgradeTier" in result && result.upgradeTier
+            ? ` Upgrade to ${result.upgradeTier}.`
+            : "";
+        setInlineError((messages[result.error] ?? result.error) + upgrade);
         return;
       }
 
       if (result.skipped.length > 0) {
         setSkippedWarnings(result.skipped);
       }
+
+      // S8.1 + S10.1: post_approved telemetry with edit-delta from server.
+      const meta = result.meta;
+      const destinations = [
+        ...new Set(selections.map((s) => s.provider)),
+      ];
+      const formats = [...new Set(selections.map((s) => s.format))];
+      const videoRendered = formats.some((f) => f.startsWith("video-"));
+      const timeFromDraftSeconds =
+        meta?.draftCreatedAt
+          ? Math.max(
+              0,
+              Math.round(
+                (Date.now() - new Date(meta.draftCreatedAt).getTime()) / 1000,
+              ),
+            )
+          : null;
+      posthog.capture("post_approved", {
+        trigger_type: meta?.triggerType ?? "manual",
+        was_edited: meta?.wasEdited ?? false,
+        edit_type: meta?.editType ?? null,
+        time_from_draft_seconds: timeFromDraftSeconds,
+        confidence_score: meta?.confidence ?? null,
+        is_first_post_for_user: meta?.isFirstPostForUser ?? false,
+        approval_surface: "kitchen",
+        destination: destinations.length === 1 ? destinations[0] : "multiple",
+        formats_rendered: formats,
+        video_rendered: videoRendered,
+        total_render_count: result.pushIds.length,
+      });
 
       const providerNames = [
         ...new Set(selections.map((s) => PROVIDER_LABELS[s.provider])),
@@ -280,6 +391,24 @@ export function ApproveDraftModal({
   }
 
   const noProviders = !bufferConnected && !postizConnected;
+
+  const distinctChannelCount = useMemo(() => {
+    const set = new Set<string>();
+    for (const key of checked) {
+      const [, prov, channelId] = key.split("::");
+      set.add(`${prov}:${channelId}`);
+    }
+    return set.size;
+  }, [checked]);
+
+  const platformCapWarning =
+    caps && distinctChannelCount > caps.platforms
+      ? {
+          allowed: caps.platforms,
+          actual: distinctChannelCount,
+          upgrade: nextTierFor({ needsPlatforms: distinctChannelCount }),
+        }
+      : null;
 
   const bufferInSelection = useMemo(() => {
     for (const key of checked) {
@@ -364,10 +493,25 @@ export function ApproveDraftModal({
 
               if (rows.length === 0 && hideUnchecked) return null;
 
+              const lock = formatLockedReason(fmt);
+
               return (
-                <div key={fmt} className="border-2 border-brand/30 p-3 space-y-2">
-                  <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
-                    {FORMAT_LABELS[fmt]}
+                <div
+                  key={fmt}
+                  className={`border-2 border-brand/30 p-3 space-y-2 ${
+                    lock.locked ? "opacity-50" : ""
+                  }`}
+                >
+                  <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase flex items-center justify-between gap-2">
+                    <span>{FORMAT_LABELS[fmt]}</span>
+                    {lock.locked && (
+                      <span
+                        className="text-[9px] text-brand/70 normal-case"
+                        title={`Your plan doesn't include this format. Upgrade to ${lock.upgrade ?? "a higher tier"}.`}
+                      >
+                        🔒 {lock.upgrade ? `Upgrade → ${lock.upgrade}` : "Locked"}
+                      </span>
+                    )}
                   </div>
                   {allChannels.length === 0 ? (
                     <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 italic">
@@ -386,6 +530,7 @@ export function ApproveDraftModal({
                           <input
                             type="checkbox"
                             checked={isChecked}
+                            disabled={lock.locked}
                             onChange={() => toggleChecked(key)}
                             className="accent-current"
                           />
@@ -435,8 +580,8 @@ export function ApproveDraftModal({
           </div>
         )}
 
-        {/* Title + description */}
-        {!noProviders && (
+        {/* Title + description (per-platform when copyByPlatform was generated) */}
+        {!noProviders && platformsPresent.length === 0 && (
           <div className="space-y-3">
             <div className="space-y-1">
               <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
@@ -463,6 +608,59 @@ export function ApproveDraftModal({
               />
             </div>
           </div>
+        )}
+
+        {!noProviders && platformsPresent.length > 0 && (
+          <div className="space-y-4">
+            {platformsPresent.map((p) => (
+              <div
+                key={p}
+                className="space-y-2 border-2 border-brand/30 p-3"
+                data-testid={`platform-copy-${p}`}
+              >
+                <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
+                  {PLATFORM_LABELS[p]} copy
+                </div>
+                <div className="space-y-1">
+                  <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={copyByPlatform[p]?.title ?? ""}
+                    onChange={(e) => updatePlatformCopy(p, "title", e.target.value)}
+                    maxLength={80}
+                    className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
+                    Description
+                  </label>
+                  <textarea
+                    value={copyByPlatform[p]?.description ?? ""}
+                    onChange={(e) =>
+                      updatePlatformCopy(p, "description", e.target.value)
+                    }
+                    maxLength={220}
+                    rows={3}
+                    className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Platform cap warning */}
+        {platformCapWarning && (
+          <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand border-2 border-yellow-400 bg-yellow-50 p-2">
+            Your plan allows {platformCapWarning.allowed} destination
+            {platformCapWarning.allowed === 1 ? "" : "s"} per post; you have {platformCapWarning.actual} selected.
+            {platformCapWarning.upgrade
+              ? ` Upgrade to ${platformCapWarning.upgrade}.`
+              : ""}
+          </p>
         )}
 
         {/* Inline error */}

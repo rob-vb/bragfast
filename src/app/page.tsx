@@ -6,14 +6,14 @@ import { BeforeAfter } from "@/components/landing/before-after";
 import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
-import { McpInstallInstructions } from "@/components/landing/mcp-install-instructions";
 import { CtaLink } from "@/components/landing/cta-link";
-import { PAID_PLANS } from "@/lib/plans";
+import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
+import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Automated Image and Video generation for your wins",
+  title: "brag.fast | Build-in-public posts on autopilot",
   description:
-    "brag.fast turns your wins into branded images and video. Ship a new feature for your app, hit an MRR milestone, gain Github stars, and your Sous-Chef (agent) drafts the post for you.",
+    "brag.fast turns your wins into branded posts. Ship a feature, hit an MRR milestone, gain GitHub stars — your Sous-Chef drafts the post, you approve it, it goes out.",
   alternates: { canonical: "/" },
 };
 
@@ -27,10 +27,6 @@ const FAQ = [
     a: "Upload your logo. Set colors and fonts. Every image out the door looks like you made it on purpose.",
   },
   {
-    q: "Can an AI agent use this for me?",
-    a: "Yes. MCP works in Claude Desktop and Claude Code. REST API works with anything else. Agents send the data, brag.fast sends back branded visuals.",
-  },
-  {
     q: "Will video eat all my credits?",
     a: "5 credits per video per format. One video in all three formats = 15. Toast gives you 200 a month.",
   },
@@ -40,13 +36,13 @@ const FAQ = [
   },
   {
     q: "How does Sous-Chef (agent) know what to post?",
-    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef scans them on a schedule, drafts a post when it spots a win, and waits for you to cook it. You approve every post. Disconnect any integration any time.",
+    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef both reacts in real time (a PR merges, a milestone hits) and sweeps on a schedule, drafting a post the moment it spots a win and leaving it for you to cook. You approve every post. Disconnect any integration any time.",
   },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-surface text-brand">
+    <div className="min-h-screen bg-surface text-brand" data-launch-mode={getLaunchMode()}>
       <LandingNav />
 
       {/* S1: Hero */}
@@ -63,10 +59,10 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Automate your build in public posts
+              You build apps. Nobody notices.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you.
+              Automate your build in public posts. Your own Sous-Chef (agent) keeps track of your milestones: features your ship, an MRR record, or a stars count for your repo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -103,15 +99,60 @@ export default function Home() {
                 Your Sous-Chef (agent) spots your wins so you can focus on building.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.
+                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to approve and cook.
               </p>
-              <CtaLink
-                signedOutHref="/signup"
-                signedInHref="/admin/sous-chef"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Connect an integration
-              </CtaLink>
+              <div className="flex flex-col gap-3 mt-2">
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60 uppercase tracking-wider">
+                  Plugs into
+                </span>
+                <div className="flex items-center gap-3">
+                  {[
+                    {
+                      name: "GitHub",
+                      path: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
+                    },
+                    {
+                      name: "Stripe",
+                      path: "M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z",
+                    },
+                    {
+                      name: "PostHog",
+                      path: "M9.197 5.564a1.06 1.06 0 0 0-1.81-.748L.31 11.892a1.06 1.06 0 0 0 0 1.498l7.077 7.076a1.06 1.06 0 0 0 1.81-.748v-3.297l3.13 3.13a1.06 1.06 0 0 0 1.81-.749v-3.55l3.13 3.13a1.06 1.06 0 0 0 1.81-.749V5.565a1.06 1.06 0 0 0-1.06-1.061h-8.82zM2.554 14.764a.53.53 0 0 1 0-.75l.84-.84a.53.53 0 0 1 .75 0l3.39 3.39a.53.53 0 0 1-.375.905H4.534a.53.53 0 0 1-.375-.156l-1.605-1.604zm5.643-5.643a.53.53 0 0 1 .905.375v6.625l-3.92-3.92a.53.53 0 0 1 0-.75l3.015-3.015zm5.81 0a.53.53 0 0 1 .905.375v6.625l-3.92-3.92a.53.53 0 0 1 0-.75L13.84 9.12h.166z",
+                    },
+                    {
+                      name: "Google Analytics",
+                      path: "M22.84 2.998v17.999a2.983 2.983 0 0 1-2.967 2.998 2.98 2.98 0 0 1-2.965-2.998V3.193C16.908 1.561 18.245.103 19.876.003a2.984 2.984 0 0 1 2.964 2.995zM4.133 18.03a2.97 2.97 0 1 0 0 5.94 2.97 2.97 0 0 0 0-5.94zm7.872-9.012a2.987 2.987 0 0 0-2.964 3.097v8.014c0 2.085.92 3.349 2.265 3.617 1.55.31 3.025-.87 3.661-2.21.217-.453.298-.905.298-1.42v-8.046c0-1.658-1.34-2.991-2.998-2.991z",
+                    },
+                  ].map((logo) => (
+                    <div
+                      key={logo.name}
+                      className="group relative w-12 h-12 flex items-center justify-center border-2 border-brand bg-cream shadow-[3px_3px_0_var(--color-brand)]"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="w-6 h-6 fill-brand"
+                        aria-label={logo.name}
+                        role="img"
+                      >
+                        <path d={logo.path} />
+                      </svg>
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider px-2 py-1.5 border-2 border-brand bg-white text-brand shadow-[2px_2px_0_var(--color-brand)] opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        {logo.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {/* <CtaLink
+                  signedOutHref="/signup"
+                  signedInHref="/admin/sous-chef"
+                  className="font-[family-name:var(--font-geist-sans)] text-sm text-brand underline underline-offset-4 self-start hover:text-gold transition-colors"
+                >
+                  Connect an integration &#9656;
+                </CtaLink> */}
+              </div>
             </div>
             <div className="relative self-stretch hidden md:block">
               <Image
@@ -145,9 +186,9 @@ export default function Home() {
                 Cook it yourself.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Drop a screenshot, a stat, or a screen recording. Pick a template. Get landscape, square, portrait, and video back, on brand, in under a minute.
+                Add content, upload a screenshot or screen recording, pick a template, and you've got landscape, square, and portrait versions ready to post. Takes about a minute.
               </p>
-              <div className="flex flex-wrap gap-2 pt-1">
+              {/* <div className="flex flex-wrap gap-2 pt-1">
                 {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
                   (t) => (
                     <span
@@ -158,7 +199,7 @@ export default function Home() {
                     </span>
                   ),
                 )}
-              </div>
+              </div> */}
               <CtaLink
                 signedOutHref="/signup"
                 signedInHref="/admin/kitchen"
@@ -185,83 +226,6 @@ export default function Home() {
                 src="/demo/bragfast_cook_demo.mp4"
                 className="w-full border border-brand"
               />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Your AI as cook (MCP) section */}
-      <section
-        id="mcp"
-        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
-      >
-        <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14 items-start">
-            <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  MCP
-                </span>
-              </div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your AI in the kitchen.
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Works in Claude Desktop, Claude Code, Cursor, any HTTP MCP client. Your agent calls brag.fast, gets a branded image or video back, and keeps working.
-              </p>
-              <Link
-                href="/docs"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Read MCP docs
-              </Link>
-            </div>
-            <div>
-              <McpInstallInstructions />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Full control (REST API) section */}
-      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
-        <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 items-center">
-            <div className="md:order-2 flex flex-col gap-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  REST API
-                </span>
-              </div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Wire it into anything.
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Send your data to one endpoint. Get branded visuals back in every format. Drop it into CI, a bot, your own app, whatever you&apos;re building.
-              </p>
-              <Link
-                href="/docs"
-                className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                Read the docs
-              </Link>
-            </div>
-            <div className="md:order-1">
-              <pre className="font-[family-name:var(--font-geist-mono)] text-xs md:text-sm bg-brand text-surface p-5 border-2 border-brand shadow-[4px_4px_0_var(--color-brand)] overflow-x-auto leading-relaxed whitespace-pre">
-{`curl https://brag.fast/api/v1/cook/image \\
-  -H "Authorization: Bearer $KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "template": "standard-browser",
-    "brand": "brand_abc123",
-    "data": {
-      "headline": "v2.0 shipped",
-      "subhead": "30% faster renders"
-    }
-  }'`}
-              </pre>
             </div>
           </div>
         </div>
@@ -340,18 +304,19 @@ export default function Home() {
               What are you having?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-              Images: 1 credit each. Videos: 5 credits each.
+              One post = one approval. Tier bounds the rest.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {PAID_PLANS.map((plan) => {
-              const isPopular = plan.id === "pro";
+            {NEW_TIERS.map((tier) => {
+              const isPopular = tier.id === "plate";
+              const postsValue = FEATURES[0][tier.id] as string;
               return (
-                <div key={plan.id} className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col">
+                <div key={tier.id} className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col">
                   <div className="bg-brand px-5 py-4 flex items-center justify-between min-h-[56px]">
                     <span className="font-[family-name:var(--font-press-start)] text-[10px] text-gold">
-                      &#9656; {plan.name}
+                      &#9656; {tier.name}
                     </span>
                     {isPopular && (
                       <span className="font-[family-name:var(--font-press-start)] text-[7px] bg-gold text-brand px-2 py-1 border border-gold/60">
@@ -361,25 +326,24 @@ export default function Home() {
                   </div>
                   <div className="bg-white p-5 flex flex-col gap-5 flex-1">
                     <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-                      {plan.label}
+                      {tier.label}
                     </p>
                     <div>
                       <div className="flex items-baseline gap-1">
                         <span className="font-[family-name:var(--font-press-start)] text-3xl">
-                          ${plan.price}
+                          ${tier.price}
                         </span>
                         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50">
                           /mo
                         </span>
                       </div>
                       <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/50 mt-1.5">
-                        {plan.credits.toLocaleString()} credits/mo
+                        {postsValue} credits/month
                       </p>
                     </div>
                     <div className="border-t-2 border-brand/10 pt-4">
-                      <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40 leading-[2.2]">
-                        {plan.credits.toLocaleString()} images<br />
-                        or {(plan.credits / 5).toLocaleString()} videos
+                      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                        {tier.blurb}
                       </p>
                     </div>
                   </div>
@@ -509,7 +473,7 @@ export default function Home() {
               href="/docs"
               className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 hover:text-brand/80 transition-colors"
             >
-              Docs
+              Developers
             </Link>
             <Link
               href="/pricing"

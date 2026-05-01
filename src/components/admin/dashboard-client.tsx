@@ -5,14 +5,18 @@ import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
 import { PLANS } from "@/lib/plans";
 import type { PlanId } from "@/lib/plans";
+import { TIER_CONFIG, tierFor } from "@/lib/plan-tiers";
 import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
+import { RetroDraftHero } from "@/components/admin/retro-draft-hero";
+import { SousChefHistoryFeed } from "@/components/admin/sous-chef-history-feed";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import Link from "next/link";
 
-export function DashboardClient() {
+export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boolean }) {
   const userId = useUserId();
 
   const stats = useQuery(api.userProfiles.getStats, { userId });
@@ -30,9 +34,71 @@ export function DashboardClient() {
     );
   }
 
-  const plan = PLANS[stats.plan as PlanId];
-  const recent = releases.slice(0, 10);
+  // New tiers use creditsRemaining with credits cap from TIER_CONFIG; legacy plans use PLANS map.
+  const tier = tierFor(stats.plan as never);
+  const newTierMeter = tier
+    ? {
+        remaining: stats.creditsRemaining,
+        total: TIER_CONFIG[tier].credits,
+        name:
+          tier === "free"
+            ? "On the House"
+            : tier === "toast"
+              ? "Toast"
+              : tier === "plate"
+                ? "Full Plate"
+                : "Buffet",
+      }
+    : null;
+  const plan = !newTierMeter ? PLANS[stats.plan as PlanId] : null;
+  const repositioned = isLaunchModeRepositioned();
 
+  // S6.1: launch-mode dashboard — Goal hero → History → Sources → Posts → Drafts.
+  if (repositioned) {
+    return (
+      <div className="space-y-8">
+        <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
+          Dashboard
+        </h1>
+
+        {showRetroHero && <RetroDraftHero />}
+
+        {/* Posts/credits meter */}
+        {newTierMeter ? (
+          <CreditMeter
+            remaining={newTierMeter.remaining}
+            total={newTierMeter.total}
+            plan={newTierMeter.name}
+          />
+        ) : plan ? (
+          <CreditMeter
+            remaining={stats.creditsRemaining}
+            total={plan.credits}
+            plan={plan.name}
+          />
+        ) : null}
+
+        {/* Recent activity */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+              Recent activity
+            </h2>
+            <Link
+              href="/admin/sous-chef/history"
+              className="text-xs underline underline-offset-4 hover:text-gold"
+            >
+              Full history →
+            </Link>
+          </div>
+          <SousChefHistoryFeed limit={10} />
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy dashboard (pre-launch / off-mode).
+  const recent = releases.slice(0, 10);
   const statCards = [
     { label: "Used (Month)", value: stats.creditsUsedThisMonth },
     { label: "Releases", value: stats.totalReleases },
@@ -45,14 +111,22 @@ export function DashboardClient() {
         Dashboard
       </h1>
 
-      {/* Credit meter — primary admin element */}
-      <CreditMeter
-        remaining={stats.creditsRemaining}
-        total={plan.credits}
-        plan={plan.name}
-      />
+      {showRetroHero && <RetroDraftHero />}
 
-      {/* Secondary stats */}
+      {newTierMeter ? (
+        <CreditMeter
+          remaining={newTierMeter.remaining}
+          total={newTierMeter.total}
+          plan={newTierMeter.name}
+        />
+      ) : plan ? (
+        <CreditMeter
+          remaining={stats.creditsRemaining}
+          total={plan.credits}
+          plan={plan.name}
+        />
+      ) : null}
+
       <div className="grid grid-cols-3 gap-4">
         {statCards.map((s) => (
           <PixelCard key={s.label}>
@@ -64,7 +138,6 @@ export function DashboardClient() {
         ))}
       </div>
 
-      {/* Recent releases */}
       <div>
         <h2 className="mb-4 font-[family-name:var(--font-press-start)] text-sm text-brand">
           Recent Releases

@@ -4,12 +4,14 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import posthog from "posthog-js";
 import Masonry from "react-masonry-css";
+import { Textarea } from "@/components/ui/textarea";
 import { useUserId } from "@/hooks/use-user-id";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { derivePreviewTitle } from "@/lib/drafts/preview";
-import type { DraftConfig, DraftObjectContent, DraftSource } from "@/lib/drafts/types";
+import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
 import type { FormatKey } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
 import { DraftPreview } from "./draft-preview";
@@ -37,6 +39,8 @@ type Row = {
   sourceSystem?: SourceSystem | null;
   milestoneKey?: string | null;
   config: string;
+  confidence?: number | null;
+  suppressed?: boolean;
   created_at: string;
 };
 
@@ -63,13 +67,6 @@ function parseConfig(raw: string): DraftConfig {
   }
 }
 
-function isDraftEmpty(objectContent: Record<string, DraftObjectContent> | undefined): boolean {
-  if (!objectContent) return true;
-  const values = Object.values(objectContent);
-  if (values.length === 0) return true;
-  return values.every((c) => !c?.text && !c?.image_url && !c?.video_url);
-}
-
 const VALID_FORMATS: FormatKey[] = ["landscape", "square", "portrait"];
 
 function primaryFormat(config: DraftConfig): FormatKey {
@@ -86,13 +83,15 @@ export function DraftsClient() {
   const router = useRouter();
   const drafts = useQuery(api.drafts.listByUser, { userId });
   const markSeen = useMutation(api.drafts.markSeen);
+  const unsuppress = useMutation(api.drafts.unsuppressDraft);
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
+  const [overriding, setOverriding] = useState<Set<string>>(new Set());
 
   // Stamp last-visit time so the sidebar "new drafts" badge clears.
   // Re-fires when drafts arrive while the page is open.
   useEffect(() => {
     if (!userId || drafts === undefined) return;
-    void markSeen({ userId });
+    void markSeen({});
   }, [userId, drafts?.length, markSeen]);
 
   if (!drafts) {
@@ -113,13 +112,23 @@ export function DraftsClient() {
     );
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, reason?: string) {
     setDeleting((prev) => new Set(prev).add(id));
     try {
-      const res = await fetch(`/api/v1/drafts/${id}`, { method: "DELETE" });
+      const url = reason
+        ? `/api/v1/drafts/${id}?reason=${encodeURIComponent(reason)}`
+        : `/api/v1/drafts/${id}`;
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok && res.status !== 404) {
         throw new Error(`Delete failed: ${res.status}`);
       }
+      // S6.3: surface user-skip reason capture in analytics.
+      posthog.capture("draft_skipped", {
+        trigger_type: "pr_merged",
+        skip_reason: reason && reason.trim() ? reason : null,
+        confidence_score: null,
+        time_from_draft_seconds: null,
+      });
       router.refresh();
     } catch (err) {
       console.error("Delete draft failed", err);
@@ -163,8 +172,20 @@ export function DraftsClient() {
               key={row.id}
               row={row as Row}
               userId={userId}
-              busy={deleting.has(row.id)}
-              onDelete={() => handleDelete(row.id)}
+              busy={deleting.has(row.id) || overriding.has(row.id)}
+              onDelete={(reason) => handleDelete(row.id, reason)}
+              onOverride={async () => {
+                setOverriding((prev) => new Set(prev).add(row.id));
+                try {
+                  await unsuppress({ externalId: row.id });
+                } finally {
+                  setOverriding((prev) => {
+                    const next = new Set(prev);
+                    next.delete(row.id);
+                    return next;
+                  });
+                }
+              }}
             />
           ))}
         </Masonry>
@@ -178,16 +199,19 @@ function DraftCard({
   userId,
   busy,
   onDelete,
+  onOverride,
 }: {
   row: Row;
   userId: string;
   busy: boolean;
-  onDelete: () => void;
+  onDelete: (reason?: string) => void;
+  onOverride: () => void;
 }) {
   const router = useRouter();
   const config = useMemo(() => parseConfig(row.config), [row.config]);
+  const isAgent = row.source === "agent";
+  const [skipReason, setSkipReason] = useState("");
   const title = derivePreviewTitle(config, row.name);
-  const empty = isDraftEmpty(config.objectContent);
   const fmt = primaryFormat(config);
   const dims = FORMAT_DIMENSIONS[fmt];
   const aspectStyle: React.CSSProperties = {
@@ -197,19 +221,6 @@ function DraftCard({
   function open() {
     router.push(`/admin/kitchen?draft=${encodeURIComponent(row.id)}`);
   }
-
-  const badgeRow = (
-    <div className="flex items-center gap-2 mb-3 px-10 flex-wrap">
-      {row.sourceSystem ? (
-        <SourceSystemBadge
-          system={row.sourceSystem}
-          milestoneKey={row.milestoneKey ?? undefined}
-        />
-      ) : null}
-      <OutputBadge output={config.output} />
-      {empty ? <EmptyBadge /> : null}
-    </div>
-  );
 
   const titleBlock = (
     <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2 mb-3">
@@ -259,49 +270,10 @@ function DraftCard({
         transition-shadow cursor-pointer
         focus:outline-2 focus:outline-offset-2 focus:outline-gold
         ${busy ? "opacity-50 pointer-events-none" : ""}
+        ${row.suppressed ? "opacity-70 bg-surface" : ""}
       `}
       aria-label={`Open draft: ${title}`}
     >
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button
-            type="button"
-            onClick={(e) => e.stopPropagation()}
-            className="absolute top-2 right-2 h-7 w-7 border-2 border-brand bg-white hover:bg-red-100 shadow-[2px_2px_0_var(--color-brand)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all font-[family-name:var(--font-press-start)] text-[10px] text-brand leading-none"
-            aria-label="Delete draft"
-            disabled={busy}
-          >
-            X
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete draft</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &ldquo;{title}&rdquo;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <PixelButton variant="ghost" onClick={(e) => e.stopPropagation()}>Cancel</PixelButton>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <PixelButton
-                variant="danger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-              >
-                Delete
-              </PixelButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {badgeRow}
-
       <div className="mb-3">
         <DraftPreviewBoundary key={row.id} fallback={boundaryFallback}>
           <LazyMount
@@ -318,58 +290,87 @@ function DraftCard({
         </DraftPreviewBoundary>
       </div>
 
-      <PushStatusPanel draftId={row.id} userId={userId} />
+      <PushStatusPanel draftId={row.id} />
 
       {titleBlock}
       {metaRow}
+
+      <div className="mt-3 flex gap-2">
+        <PixelButton
+          onClick={(e) => {
+            e.stopPropagation();
+            open();
+          }}
+          disabled={busy}
+        >
+          Edit
+        </PixelButton>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <PixelButton
+              variant="danger"
+              onClick={(e) => e.stopPropagation()}
+              disabled={busy}
+            >
+              Delete
+            </PixelButton>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete draft</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &ldquo;{title}&rdquo;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {isAgent ? (
+              <div className="space-y-2">
+                <label
+                  htmlFor={`skip-reason-${row.id}`}
+                  className="block font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase tracking-wider"
+                >
+                  Reason (optional)
+                </label>
+                <Textarea
+                  id={`skip-reason-${row.id}`}
+                  value={skipReason}
+                  onChange={(e) => setSkipReason(e.target.value)}
+                  placeholder="e.g. off-brand, too soon, already shared"
+                  maxLength={200}
+                  className="text-sm"
+                />
+              </div>
+            ) : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <PixelButton variant="ghost" onClick={(e) => e.stopPropagation()}>Cancel</PixelButton>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <PixelButton
+                  variant="danger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(skipReason.trim() || undefined);
+                  }}
+                >
+                  Delete
+                </PixelButton>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {row.suppressed ? (
+          <PixelButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onOverride();
+            }}
+            disabled={busy}
+          >
+            Draft anyway
+          </PixelButton>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-function SourceSystemBadge({
-  system,
-  milestoneKey,
-}: {
-  system: SourceSystem;
-  milestoneKey?: string;
-}) {
-  const label = {
-    github: "GitHub",
-    stripe: "Stripe",
-    posthog: "PostHog",
-    ga4: "GA4",
-  }[system];
-  return (
-    <span
-      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-surface text-brand"
-      title={milestoneKey ?? undefined}
-    >
-      {label}
-    </span>
-  );
-}
-
-function OutputBadge({ output }: { output: "image" | "video" }) {
-  return (
-    <span
-      className={`
-        font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1
-        border-2 border-brand uppercase tracking-wider
-        ${output === "video" ? "bg-brand text-gold" : "bg-surface text-brand"}
-      `}
-    >
-      {output}
-    </span>
-  );
-}
-
-function EmptyBadge() {
-  return (
-    <span
-      className="font-[family-name:var(--font-press-start)] text-[10px] px-2 py-1 border-2 border-brand uppercase tracking-wider bg-surface text-brand"
-      title="This draft has no content yet — preview shows template placeholder text."
-    >
-      Empty
-    </span>
-  );
-}

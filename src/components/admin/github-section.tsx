@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import posthog from "posthog-js";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { RepoConfigList } from "@/components/admin/github-repo-list";
@@ -48,9 +49,13 @@ export function GitHubSection({ installations, appSlug }: Props) {
         <a
           href={`https://github.com/apps/${appSlug}/installations/new`}
           className="inline-block"
+          onClick={() => posthog.capture("github_app_install_started")}
         >
           <PixelButton>Install GitHub App</PixelButton>
         </a>
+        <p className="mt-3 text-xs text-brand/60">
+          On the next screen, choose <span className="font-bold">Only select repositories</span> and pick the repos you want to brag about.
+        </p>
       </div>
     );
   }

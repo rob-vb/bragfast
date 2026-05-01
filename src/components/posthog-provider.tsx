@@ -15,7 +15,7 @@ if (typeof window !== "undefined" && enabled) {
     api_host: host,
     persistence: "memory",
     disable_session_recording: true,
-    autocapture: true,
+    autocapture: false,
     capture_pageview: false,
   });
 }

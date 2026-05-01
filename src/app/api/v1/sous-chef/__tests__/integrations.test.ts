@@ -24,6 +24,12 @@ vi.mock("@convex/_generated/api", () => ({
     sousChef: {
       seedAction: "api.sousChef.seedAction",
     },
+    userProfiles: {
+      getByUserId: "api.userProfiles.getByUserId",
+    },
+    githubInstallations: {
+      listByUserId: "api.githubInstallations.listByUserId",
+    },
   },
 }));
 
@@ -48,6 +54,15 @@ describe("/api/v1/sous-chef/integrations", () => {
       ciphertext: "ciphertext",
       iv: "iv",
       tag: "tag",
+    });
+    queryMock.mockImplementation((name: string) => {
+      if (name === "api.integrationSecrets.listByUser") {
+        return Promise.resolve([]);
+      }
+      if (name === "api.githubInstallations.listByUserId") {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve(null);
     });
   });
 

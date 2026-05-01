@@ -1,30 +1,72 @@
+// S4.1: pricing-page data — outcome-denominated rows per PRD §4.
+// New-tier surface (Toast/Plate/Buffet). Legacy credit data lives in src/lib/plans.ts
+// and is consumed only by /admin/billing for grandfathered customers.
 import { Check, X } from "lucide-react";
+
+export type NewTierId = "toast" | "plate" | "buffet";
+
+export interface NewTierConfig {
+  id: NewTierId;
+  name: string;
+  price: number; // monthly USD
+  label: string;
+  blurb: string;
+}
+
+export const NEW_TIERS: NewTierConfig[] = [
+  {
+    id: "toast",
+    name: "Toast",
+    price: 12,
+    label: "Quick and crispy",
+    blurb: "200 credits — about 200 image posts or 40 videos.",
+  },
+  {
+    id: "plate",
+    name: "Full Plate",
+    price: 29,
+    label: "The full stack",
+    blurb: "800 credits — about 800 image posts or 160 videos.",
+  },
+  {
+    id: "buffet",
+    name: "Buffet",
+    price: 79,
+    label: "Big appetite",
+    blurb: "2,500 credits — about 2,500 image posts or 500 videos.",
+  },
+];
 
 export const FEATURES: {
   name: string;
-  starter: string | boolean;
-  pro: string | boolean;
-  scale: string | boolean;
+  toast: string | boolean;
+  plate: string | boolean;
+  buffet: string | boolean;
 }[] = [
-  { name: "Credits / month", starter: "200", pro: "800", scale: "2,500" },
-  { name: "Templates", starter: "All", pro: "All", scale: "All" },
-  { name: "Custom templates", starter: true, pro: true, scale: true },
-  { name: "Brand kits", starter: "3", pro: "10", scale: "Unlimited" },
-  { name: "Video generation", starter: true, pro: true, scale: true },
-  { name: "MCP / AI skill", starter: true, pro: true, scale: true },
-  { name: "AI analysis", starter: true, pro: true, scale: true },
-  { name: "GitHub auto-publish", starter: true, pro: true, scale: true },
-  { name: "Webhooks", starter: true, pro: true, scale: true },
-  { name: "API rate limit", starter: "30/min", pro: "60/min", scale: "120/min" },
-  { name: "CDN image hosting", starter: true, pro: true, scale: true },
-  { name: "Priority support", starter: false, pro: true, scale: true },
+  { name: "Credits / month", toast: "200", plate: "800", buffet: "2,500" },
+  { name: "Sous-Chef (agent)", toast: true, plate: true, buffet: true },
+  { name: "Video", toast: false, plate: true, buffet: true },
+  { name: "Goals", toast: "Unlimited", plate: "Unlimited", buffet: "Unlimited" },
+  {
+    name: "History feed",
+    toast: "30 days",
+    plate: "1 year",
+    buffet: "Forever (annual recap)",
+  },
 ];
 
-export function FeatureValue({ value }: { value: string | boolean }) {
+export function FeatureValue({
+  value,
+  align = "center",
+}: {
+  value: string | boolean;
+  align?: "center" | "right";
+}) {
+  const iconAlign = align === "center" ? "mx-auto" : "ml-auto";
   if (value === true)
-    return <Check className="mx-auto h-4 w-4 text-brand" />;
+    return <Check className={`${iconAlign} h-4 w-4 text-brand`} />;
   if (value === false)
-    return <X className="mx-auto h-4 w-4 text-brand/30" />;
+    return <X className={`${iconAlign} h-4 w-4 text-brand/30`} />;
   return (
     <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand">
       {value}

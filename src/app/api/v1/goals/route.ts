@@ -12,18 +12,19 @@ function parseCreateBody(raw: unknown): GoalInput | { error: string } {
 
   const PROVIDERS: GoalProvider[] = ["stripe", "posthog", "ga4", "github"];
   const METRICS: GoalMetric[] = [
-    "mrr", "total_revenue", "subscribers", "first_sale", "visitors", "stars",
+    "mrr", "total_revenue", "subscribers", "first_sale", "visitors", "stars", "custom",
   ];
 
-  if (!PROVIDERS.includes(b.provider as GoalProvider)) {
-    return { error: "provider must be one of: stripe, posthog, ga4, github" };
+  const providerOk = b.provider == null || PROVIDERS.includes(b.provider as GoalProvider);
+  if (!providerOk) {
+    return { error: "provider must be one of: stripe, posthog, ga4, github (or null for custom)" };
   }
   if (!METRICS.includes(b.metric as GoalMetric)) {
-    return { error: "metric must be one of: mrr, total_revenue, subscribers, first_sale, visitors, stars" };
+    return { error: "metric must be one of: mrr, total_revenue, subscribers, first_sale, visitors, stars, custom" };
   }
 
   const input: GoalInput = {
-    provider: b.provider as GoalProvider,
+    provider: (b.provider ?? null) as GoalProvider | null,
     metric: b.metric as GoalMetric,
     enabled: b.enabled !== false,
   };
@@ -41,6 +42,10 @@ function parseCreateBody(raw: unknown): GoalInput | { error: string } {
 
   if (typeof b.label === "string" && b.label) {
     input.label = b.label;
+  }
+
+  if (typeof b.recurring === "boolean") {
+    input.recurring = b.recurring;
   }
 
   const validationError = validateGoalInput(input);
@@ -111,7 +116,10 @@ export async function GET(request: Request) {
 
   const enriched = goals.map((g) => ({
     ...g,
-    currentValue: currentValueForGoal(g.provider, g.metric, g.scope, secretSnaps, githubStarMap),
+    currentValue:
+      g.provider == null
+        ? null
+        : currentValueForGoal(g.provider, g.metric, g.scope, secretSnaps, githubStarMap),
   }));
 
   return Response.json({ goals: enriched });
@@ -138,17 +146,18 @@ export async function POST(request: Request) {
   try {
     const goal = await fetchMutation(api.goals.create, {
       userId: auth.userId,
-      provider: body.provider,
+      provider: body.provider ?? undefined,
       metric: body.metric,
       target: body.target,
       scope: body.scope,
       label: body.label,
       enabled: body.enabled,
+      recurring: body.recurring,
     });
     return Response.json(goal, { status: 201 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("requires")) {
+    if (msg.includes("requires") || msg.includes("must")) {
       return Response.json({ error: msg }, { status: 400 });
     }
     console.error("[goals] create failed:", err);

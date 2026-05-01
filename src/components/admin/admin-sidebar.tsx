@@ -11,19 +11,19 @@ import {
   LayoutTemplate,
   Palette,
   KeyRound,
-  GitPullRequestArrow,
   ChevronsUpDown,
   CreditCard,
   Sparkles,
   LogOut,
   UserCircle,
+  Settings,
+  Target,
 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 
-import { useUserId } from "@/hooks/use-user-id";
 import {
   Sidebar,
   SidebarContent,
@@ -55,22 +55,35 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
+// S6.2: promote Sous-Chef (sources + goals) to Main. Demote Kitchen + API Keys
+// to Developers group — kept reachable but off the primary path.
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Kitchen", href: "/admin/kitchen", icon: ChefHat },
   { label: "Drafts", href: "/admin/drafts", icon: FileText },
-  { label: "History", href: "/admin/history", icon: History },
+];
+
+const sousChefNav: NavItem[] = [
+  { label: "Settings", href: "/admin/sous-chef", icon: Settings },
+  { label: "History", href: "/admin/sous-chef/history", icon: History },
+  { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
 ];
 
 const configureNav: NavItem[] = [
   { label: "Templates", href: "/admin/templates", icon: LayoutTemplate },
   { label: "Brands", href: "/admin/brands", icon: Palette },
-  { label: "Sous-Chef", href: "/admin/sous-chef", icon: GitPullRequestArrow },
+];
+
+const developersNav: NavItem[] = [
+  { label: "API history", href: "/admin/history", icon: History },
   { label: "API Keys", href: "/admin/keys", icon: KeyRound },
 ];
 
 function isItemActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
+  // Exact match for Sous-Chef Settings so deeper sous-chef sub-routes
+  // (history, goals) don't also light up Settings.
+  if (href === "/admin/sous-chef") return pathname === "/admin/sous-chef";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -84,8 +97,7 @@ export function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const planConfig = PLANS[plan];
-  const userId = useUserId();
-  const unseenDrafts = useQuery(api.drafts.unseenCount, { userId }) ?? 0;
+  const unseenDrafts = useQuery(api.drafts.unseenCount, {}) ?? 0;
   const [portalPending, setPortalPending] = useState(false);
 
   function handleLogout() {
@@ -187,10 +199,60 @@ export function AdminSidebar({
         </SidebarGroup>
 
         <SidebarGroup>
+          <SidebarGroupLabel>Sous-Chef</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sousChefNav.map((item) => {
+                const active = isItemActive(pathname, item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.label}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>Configure</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {configureNav.map((item) => {
+                const active = isItemActive(pathname, item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.label}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Developers</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {developersNav.map((item) => {
                 const active = isItemActive(pathname, item.href);
                 return (
                   <SidebarMenuItem key={item.href}>

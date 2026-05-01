@@ -14,6 +14,8 @@ const providerV = v.union(
   v.literal("github"),
 );
 
+const providerArgV = v.optional(providerV);
+
 const metricV = v.union(
   v.literal("mrr"),
   v.literal("total_revenue"),
@@ -21,13 +23,28 @@ const metricV = v.union(
   v.literal("first_sale"),
   v.literal("visitors"),
   v.literal("stars"),
+  v.literal("custom"),
 );
 
 function makeExternalId(): string {
   return `goal_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
 }
 
-function validateGoal(metric: GoalMetric, target: number | undefined, scope: string | undefined): void {
+function validateGoal(
+  metric: GoalMetric,
+  provider: GoalProvider | undefined,
+  target: number | undefined,
+  scope: string | undefined,
+  label: string | undefined,
+): void {
+  if (metric === "custom") {
+    if (provider != null) throw new Error(`metric "custom" must not have a provider`);
+    if (!label || !label.trim()) throw new Error(`metric "custom" requires a label`);
+    return;
+  }
+  if (provider == null) {
+    throw new Error(`metric "${metric}" requires a provider`);
+  }
   if (isThresholdMetric(metric) && (target == null || target <= 0)) {
     throw new Error(`metric "${metric}" requires a positive target`);
   }
@@ -60,13 +77,16 @@ export const listByUser = query({
 
     return rows.map((r) => ({
       externalId: r.externalId,
-      provider: r.provider as GoalProvider,
+      provider: (r.provider ?? null) as GoalProvider | null,
       metric: r.metric as GoalMetric,
       target: r.target ?? null,
       scope: r.scope ?? null,
       label: r.label ?? null,
       enabled: r.enabled,
-      fired: firedIds.has(r.externalId),
+      fired: firedIds.has(r.externalId) || r.firedAt != null,
+      firedAt: r.firedAt ?? null,
+      firstHitAt: r.firstHitAt ?? null,
+      recurring: r.recurring ?? false,
       created_at: r.created_at,
       updated_at: r.updated_at,
     }));
@@ -85,12 +105,15 @@ export const listEnabledByUserProvider = internalQuery({
       .collect();
     return rows.map((r) => ({
       externalId: r.externalId,
-      provider: r.provider as GoalProvider,
+      provider: (r.provider ?? null) as GoalProvider | null,
       metric: r.metric as GoalMetric,
       target: r.target ?? null,
       scope: r.scope ?? null,
       label: r.label ?? null,
       enabled: r.enabled,
+      recurring: r.recurring ?? false,
+      firedAt: r.firedAt ?? null,
+      firstHitAt: r.firstHitAt ?? null,
     }));
   },
 });
@@ -98,15 +121,17 @@ export const listEnabledByUserProvider = internalQuery({
 export const create = mutation({
   args: {
     userId: v.string(),
-    provider: providerV,
+    provider: providerArgV,
     metric: metricV,
     target: v.optional(v.number()),
     scope: v.optional(v.string()),
     label: v.optional(v.string()),
     enabled: v.boolean(),
+    recurring: v.optional(v.boolean()),
   },
-  handler: async (ctx, { userId, provider, metric, target, scope, label, enabled }) => {
-    validateGoal(metric as GoalMetric, target, scope);
+  handler: async (ctx, { userId, provider, metric, target, scope, label, enabled, recurring }) => {
+    validateGoal(metric as GoalMetric, provider as GoalProvider | undefined, target, scope, label);
+
     const externalId = makeExternalId();
     const now = new Date().toISOString();
     await ctx.db.insert("goals", {
@@ -118,17 +143,21 @@ export const create = mutation({
       scope,
       label,
       enabled,
+      recurring,
       created_at: now,
       updated_at: now,
     });
     return {
       externalId,
-      provider: provider as GoalProvider,
+      provider: (provider ?? null) as GoalProvider | null,
       metric: metric as GoalMetric,
       target: target ?? null,
       scope: scope ?? null,
       label: label ?? null,
       enabled,
+      recurring: recurring ?? false,
+      firedAt: null,
+      firstHitAt: null,
       created_at: now,
       updated_at: now,
     };
@@ -149,6 +178,7 @@ export const remove = mutation({
   },
 });
 
+// Legacy: hard-disable a goal. Retained for non-fire disable paths if needed.
 export const disableGoal = internalMutation({
   args: { externalId: v.string() },
   handler: async (ctx, { externalId }) => {
@@ -158,6 +188,53 @@ export const disableGoal = internalMutation({
       .first();
     if (!row) return;
     await ctx.db.patch(row._id, { enabled: false, updated_at: new Date().toISOString() });
+  },
+});
+
+// S5.3 fire path: stamp firedAt + firstHitAt; disable only when !recurring.
+// S5.5: returns { firstHit, userId, label, metric, target, scope } so callers
+// can schedule the celebration email exactly once per goal lifetime.
+export const markFired = internalMutation({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const row = await ctx.db
+      .query("goals")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row) {
+      return {
+        firstHit: false,
+        userId: null as string | null,
+        label: null as string | null,
+        metric: null as string | null,
+        target: null as number | null,
+        scope: null as string | null,
+        createdAt: null as string | null,
+      };
+    }
+    const now = new Date().toISOString();
+    const firstHit = !row.firstHitAt;
+    const patch: {
+      firedAt: string;
+      updated_at: string;
+      firstHitAt?: string;
+      enabled?: boolean;
+    } = {
+      firedAt: now,
+      updated_at: now,
+    };
+    if (firstHit) patch.firstHitAt = now;
+    if (!row.recurring) patch.enabled = false;
+    await ctx.db.patch(row._id, patch);
+    return {
+      firstHit,
+      userId: row.userId,
+      label: row.label ?? null,
+      metric: row.metric,
+      target: row.target ?? null,
+      scope: row.scope ?? null,
+      createdAt: row.created_at,
+    };
   },
 });
 

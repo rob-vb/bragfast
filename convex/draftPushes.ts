@@ -17,6 +17,14 @@
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { requireAuthedUser } from "./auth";
+import { insertTriggerEvent } from "./triggerEvents";
+import {
+  tierFor,
+  capsFor,
+  nextTierFor,
+  type Format,
+} from "./planTiers";
 
 const formatValidator = v.union(
   v.literal("square"),
@@ -42,6 +50,34 @@ interface PostizExtra {
   channels?: Array<{ id: string; identifier?: string; name?: string }>;
 }
 
+type Platform = "x" | "linkedin";
+
+/**
+ * Map a (provider, channelId) → platform copy bucket. Buffer's `service`
+ * ("twitter" | "linkedin" | ...) and Postiz's `identifier` ("x" | "linkedin")
+ * are the source of truth. Returns null if the channel isn't an X/LinkedIn
+ * surface — caller falls back to top-level title/description.
+ */
+function platformForChannel(
+  provider: "buffer" | "postiz",
+  channelId: string,
+  bufferExtra: BufferExtra | null,
+  postizExtra: PostizExtra | null,
+): Platform | null {
+  if (provider === "buffer") {
+    const ch = bufferExtra?.channels?.find((c) => c.id === channelId);
+    const svc = ch?.service?.toLowerCase();
+    if (svc === "twitter" || svc === "x") return "x";
+    if (svc === "linkedin") return "linkedin";
+    return null;
+  }
+  const ch = postizExtra?.channels?.find((c) => c.id === channelId);
+  const id = ch?.identifier?.toLowerCase();
+  if (id === "x" || id === "twitter") return "x";
+  if (id === "linkedin") return "linkedin";
+  return null;
+}
+
 function channelLabelFromBuffer(
   extra: BufferExtra,
   channelId: string,
@@ -58,6 +94,78 @@ function channelLabelFromPostiz(
   return ch?.name ?? ch?.identifier;
 }
 
+// S8.1: derive was_edited + edit_type by comparing the agent's original
+// objectContent against the user's submitted title/description/platform copy.
+// Returns editType=null when no change. Categories: title, description, both,
+// platform_copy, multiple.
+type EditDelta = {
+  wasEdited: boolean;
+  editType: "title" | "description" | "both" | "platform_copy" | "multiple" | null;
+};
+
+function computeEditDelta(
+  originalConfigJson: string | null,
+  submitted: {
+    title: string;
+    description: string;
+    copyByPlatform: {
+      x?: { title: string; description: string };
+      linkedin?: { title: string; description: string };
+    } | null;
+  },
+): EditDelta {
+  if (!originalConfigJson) return { wasEdited: false, editType: null };
+  let original: {
+    objectContent?: { title?: { text?: string }; description?: { text?: string } };
+    copyByPlatform?: typeof submitted.copyByPlatform;
+  };
+  try {
+    original = JSON.parse(originalConfigJson);
+  } catch {
+    return { wasEdited: false, editType: null };
+  }
+  const origTitle = original?.objectContent?.title?.text ?? "";
+  const origDescription = original?.objectContent?.description?.text ?? "";
+  const titleChanged = origTitle.trim() !== submitted.title.trim();
+  const descriptionChanged =
+    origDescription.trim() !== submitted.description.trim();
+
+  const origByPlatform = original?.copyByPlatform ?? null;
+  const subByPlatform = submitted.copyByPlatform ?? null;
+  let platformChanged = false;
+  if (subByPlatform) {
+    for (const p of ["x", "linkedin"] as const) {
+      const sub = subByPlatform[p];
+      const orig = origByPlatform?.[p];
+      if (!sub) continue;
+      if (!orig) {
+        // Original lacked per-platform copy; user added one — counts as edit
+        // only if it differs from the top-level original copy.
+        if (
+          sub.title.trim() !== origTitle.trim() ||
+          sub.description.trim() !== origDescription.trim()
+        ) {
+          platformChanged = true;
+        }
+      } else if (
+        orig.title.trim() !== sub.title.trim() ||
+        orig.description.trim() !== sub.description.trim()
+      ) {
+        platformChanged = true;
+      }
+    }
+  }
+
+  const flags = [titleChanged, descriptionChanged, platformChanged].filter(
+    Boolean,
+  ).length;
+  if (flags === 0) return { wasEdited: false, editType: null };
+  if (flags > 1) return { wasEdited: true, editType: "multiple" };
+  if (titleChanged) return { wasEdited: true, editType: "title" };
+  if (descriptionChanged) return { wasEdited: true, editType: "description" };
+  return { wasEdited: true, editType: "platform_copy" };
+}
+
 function parseExtra<T>(raw: string | null): T | null {
   if (!raw) return null;
   try {
@@ -72,9 +180,18 @@ function parseExtra<T>(raw: string | null): T | null {
 export const approveDraft = mutation({
   args: {
     draftId: v.string(),
-    userId: v.string(),
     title: v.string(),
     description: v.string(),
+    copyByPlatform: v.optional(
+      v.object({
+        x: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        linkedin: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+      }),
+    ),
     selections: v.array(
       v.object({
         format: formatValidator,
@@ -86,7 +203,8 @@ export const approveDraft = mutation({
     clientNonce: v.string(),
   },
   handler: async (ctx, args) => {
-    const { draftId, userId, title, description, selections, postState, clientNonce } = args;
+    const userId = await requireAuthedUser(ctx);
+    const { draftId, title, description, copyByPlatform, selections, postState, clientNonce } = args;
 
     // ── Validation: nothing selected ──────────────────────────────────────────
     if (selections.length === 0) {
@@ -109,6 +227,19 @@ export const approveDraft = mutation({
       return { ok: false as const, error: "no_providers_connected" as const };
     }
 
+    // S8.1: fetch draftRow once for edit-delta + telemetry. Also probe
+    // is_first_post_for_user via a single approved-event lookup.
+    const draftRow = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
+      .first();
+    const priorApproval = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("decision"), "approved"))
+      .first();
+    const isFirstApproved = priorApproval === null;
+
     // ── Idempotency: duplicate nonce within 60 seconds ────────────────────────
     const existing = await ctx.db
       .query("draftPushes")
@@ -121,6 +252,67 @@ export const approveDraft = mutation({
       if (nowMs - createdAt < 60_000) {
         return { ok: false as const, error: "duplicate_approval" as const };
       }
+    }
+
+    // ── S2.7: Tier-cap gating (new accounting model only) ─────────────────────
+    // Legacy plans (trial/starter/pro/scale) bypass — `tierFor` returns null,
+    // preserving R9 until U6 backfill runs.
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    const tier = profile ? tierFor(profile.plan) : null;
+
+    if (tier && profile) {
+      const caps = capsFor(tier);
+
+      // Derive base formats + video flag from selections (format may be
+      // "video-square" etc. — these are video formats).
+      const baseFormats = new Set<Format>();
+      let includesVideo = false;
+      for (const s of selections) {
+        if (s.format.startsWith("video-")) {
+          includesVideo = true;
+          baseFormats.add(s.format.slice("video-".length) as Format);
+        } else {
+          baseFormats.add(s.format as Format);
+        }
+      }
+
+      // Video gating
+      if (includesVideo && !caps.video) {
+        return {
+          ok: false as const,
+          error: "video_blocked" as const,
+          upgradeTier: nextTierFor({ needsVideo: true }) ?? undefined,
+        };
+      }
+
+      // Format gating
+      for (const f of baseFormats) {
+        if (!caps.formats.includes(f)) {
+          return {
+            ok: false as const,
+            error: "format_blocked" as const,
+            blockedFormat: f,
+            upgradeTier: nextTierFor({ needsFormat: f }) ?? undefined,
+          };
+        }
+      }
+
+      // Platform/destination gating (distinct channels per approval)
+      const distinctChannels = new Set(
+        selections.map((s) => `${s.provider}:${s.channelId}`),
+      );
+      if (distinctChannels.size > caps.platforms) {
+        return {
+          ok: false as const,
+          error: "platform_blocked" as const,
+          upgradeTier:
+            nextTierFor({ needsPlatforms: distinctChannels.size }) ?? undefined,
+        };
+      }
+
     }
 
     // ── Build provider extra maps for channel validation ──────────────────────
@@ -177,6 +369,17 @@ export const approveDraft = mutation({
         continue;
       }
 
+      // Route per-platform copy when available; fall back to top-level title/description.
+      const platform = platformForChannel(
+        provider,
+        channelId,
+        bufferExtra,
+        postizExtra,
+      );
+      const platformCopy = platform ? copyByPlatform?.[platform] : undefined;
+      const rowTitle = platformCopy?.title ?? title;
+      const rowDescription = platformCopy?.description ?? description;
+
       const id = await ctx.db.insert("draftPushes", {
         draftId,
         userId,
@@ -187,8 +390,8 @@ export const approveDraft = mutation({
         state: "pending",
         postState,
         mediaUrl: "", // TBD: U8 resolves this during fanout
-        title,
-        description,
+        title: rowTitle,
+        description: rowDescription,
         attempts: 0,
         clientNonce,
         created_at: now,
@@ -203,13 +406,84 @@ export const approveDraft = mutation({
         draftId,
         userId,
       });
+
+      // Record the approval as a trigger event. We look up the draft's
+      // sourceSystem/triggerType so the feed shows what was approved.
+      const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
+      await insertTriggerEvent(ctx, {
+        userId,
+        sourceSystem: draftRow?.sourceSystem ?? "manual",
+        triggerType,
+        decision: "approved",
+        confidence: draftRow?.confidence ?? undefined,
+        sourceReference: draftRow?.eventReference ?? undefined,
+        draftExternalId: draftId,
+        metadata: JSON.stringify({
+          pushCount: pushIds.length,
+          postState,
+        }),
+      });
     }
+
+    // ── S8.1: edit-delta for post_approved telemetry ──────────────────────────
+    const editDelta = computeEditDelta(
+      draftRow?.originalConfig ?? null,
+      { title, description, copyByPlatform: copyByPlatform ?? null },
+    );
+    const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
 
     return {
       ok: true as const,
       pushIds: pushIds as string[],
       skipped,
+      meta: {
+        wasEdited: editDelta.wasEdited,
+        editType: editDelta.editType,
+        triggerType,
+        confidence: draftRow?.confidence ?? null,
+        draftCreatedAt: draftRow?.created_at ?? null,
+        isFirstPostForUser: isFirstApproved,
+      },
     };
+  },
+});
+
+// ── S7.2: Clipboard/X-intent approval (no draftPushes row) ────────────────────
+//
+// Approving via clipboard or X intent doesn't go through a posting provider, so
+// we skip draftPushes entirely. We still:
+//  - mark the draft suppressed so it leaves the visible queue,
+//  - record a triggerEvent decision="approved" so history reflects it.
+export const approveDraftClipboard = mutation({
+  args: {
+    draftId: v.string(),
+    destination: v.union(v.literal("clipboard"), v.literal("x_intent")),
+  },
+  handler: async (ctx, { draftId, destination }) => {
+    const userId = await requireAuthedUser(ctx);
+    const draftRow = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
+      .first();
+    if (!draftRow || draftRow.userId !== userId) {
+      return { ok: false as const, error: "not_found" as const };
+    }
+
+    await ctx.db.patch(draftRow._id, { suppressed: true });
+
+    const triggerType = draftRow.milestoneKey?.split(":")[0] ?? "manual";
+    await insertTriggerEvent(ctx, {
+      userId,
+      sourceSystem: draftRow.sourceSystem ?? "manual",
+      triggerType,
+      decision: "approved",
+      confidence: draftRow.confidence ?? undefined,
+      sourceReference: draftRow.eventReference ?? undefined,
+      draftExternalId: draftId,
+      metadata: JSON.stringify({ destination, pushCount: 0 }),
+    });
+
+    return { ok: true as const };
   },
 });
 
@@ -354,8 +628,9 @@ export const scheduleRetry = internalMutation({
 // ── listByDraft query ─────────────────────────────────────────────────────────
 
 export const listByDraft = query({
-  args: { draftId: v.string(), userId: v.string() },
-  handler: async (ctx, { draftId, userId }) => {
+  args: { draftId: v.string() },
+  handler: async (ctx, { draftId }) => {
+    const userId = await requireAuthedUser(ctx);
     const rows = await ctx.db
       .query("draftPushes")
       .withIndex("by_draftId", (q) => q.eq("draftId", draftId))
@@ -387,9 +662,9 @@ export const listByDraft = query({
 export const retryPush = mutation({
   args: {
     rowId: v.id("draftPushes"),
-    userId: v.string(),
   },
-  handler: async (ctx, { rowId, userId }) => {
+  handler: async (ctx, { rowId }) => {
+    const userId = await requireAuthedUser(ctx);
     const row = await ctx.db.get(rowId);
     if (!row) {
       return { ok: false as const, error: "not_found" as const };

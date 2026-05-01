@@ -188,6 +188,9 @@ export function CookPage({ templates }: CookPageProps) {
   const searchParams = useSearchParams();
   const draftParam = searchParams.get("draft");
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftCopyByPlatform, setDraftCopyByPlatform] = useState<
+    DraftConfig["copyByPlatform"] | undefined
+  >(undefined);
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftMissingTemplate, setDraftMissingTemplate] = useState<string | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -205,6 +208,7 @@ export function CookPage({ templates }: CookPageProps) {
 
   // ── Live credit balance ─────────────────────────────────────────────────
   const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
+  const userStats = useQuery(api.userProfiles.getStats, { userId });
 
   // ── Approve flow: integrations + routing defaults ──────────────────────
   const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
@@ -276,6 +280,7 @@ export function CookPage({ templates }: CookPageProps) {
         }
 
         setDraftId(draftParam);
+        setDraftCopyByPlatform(cfg.copyByPlatform);
       } catch (err) {
         console.error("Draft hydration failed", err);
         if (!cancelled) setDraftError("Failed to load draft.");
@@ -685,12 +690,13 @@ export function CookPage({ templates }: CookPageProps) {
         return (
           <ApproveDraftModal
             draftId={draftId}
-            userId={userId}
             initialTitle={title}
             initialDescription={description}
+            initialCopyByPlatform={draftCopyByPlatform}
             draftFormats={draftFormats}
             routingRows={routingRows ?? []}
             integrations={integrations ?? []}
+            plan={userStats?.plan}
             onClose={() => setApproveOpen(false)}
           />
         );

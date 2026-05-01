@@ -11,9 +11,19 @@ export default defineSchema({
       v.literal("trial"),
       v.literal("starter"),
       v.literal("pro"),
-      v.literal("scale")
+      v.literal("scale"),
+      v.literal("free"),
+      v.literal("toast"),
+      v.literal("plate"),
+      v.literal("buffet")
     ),
     lastDraftsVisitAt: v.optional(v.number()),
+    // Sous-Chef draft generation skips composeCopy for these platforms.
+    // Values: "x" | "linkedin". Empty/missing = both enabled.
+    disabledPlatforms: v.optional(v.array(v.string())),
+    // S8.2: voice preset shapes Haiku draft tone.
+    // Values: "casual_builder" | "dry_technical" | "earnest_milestone" | "deadpan".
+    voicePreset: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),
@@ -64,6 +74,14 @@ export default defineSchema({
     windowStart: v.number(),
     requestCount: v.number(),
   }).index("by_userId", ["userId"]),
+
+  previewRateLimits: defineTable({
+    ip: v.string(),
+    hourStart: v.number(),
+    hourCount: v.number(),
+    dayStart: v.number(),
+    dayCount: v.number(),
+  }).index("by_ip", ["ip"]),
 
   releases: defineTable({
     userId: v.string(),
@@ -150,6 +168,10 @@ export default defineSchema({
     source: v.union(v.literal("agent"), v.literal("user")),
     createdBy: v.optional(v.string()), // apiKey externalId or "dashboard"
     config: v.string(),               // JSON.stringify of DraftConfig
+    // S8.1: snapshot of the agent's first-pass copy. Frozen at insert; never
+    // patched. Compared against `config` at approve-time to compute
+    // post_approved.was_edited / edit_type. Optional for legacy rows.
+    originalConfig: v.optional(v.string()),
     // Sous-Chef agent provenance (all optional; set only for agent-fired drafts).
     sourceSystem: v.optional(
       v.union(
@@ -162,6 +184,11 @@ export default defineSchema({
     milestoneKey: v.optional(v.string()),      // e.g. "mrr:1000", "pr_merged:owner/repo#42"
     eventReference: v.optional(v.string()),    // human pointer (PR URL, Stripe evt id, etc.)
     idempotencyKey: v.optional(v.string()),    // `${userId}:${sourceSystem}:${milestoneKey}`
+    // Haiku self-rated brag-worthiness ∈ [0,1]. Drafts below SUPPRESS_THRESHOLD
+    // (see src/lib/drafts/compose-copy.ts) land with `suppressed=true` and
+    // don't surface by default. Override via `unsuppressDraft`.
+    confidence: v.optional(v.number()),
+    suppressed: v.optional(v.boolean()),
     created_at: v.string(),
   })
     .index("by_userId", ["userId"])
@@ -293,14 +320,18 @@ export default defineSchema({
     .index("by_userId_sourceSystem", ["userId", "sourceSystem"]),
 
   // Sous-Chef: user-defined goals that trigger draft creation when crossed.
+  // S5.3: provider optional (null = custom user goal, no integration scan).
+  // firedAt/firstHitAt/recurring replace the legacy auto-disable-on-fire pattern.
   goals: defineTable({
     userId: v.string(),
     externalId: v.string(),          // "goal_*"
-    provider: v.union(
-      v.literal("stripe"),
-      v.literal("posthog"),
-      v.literal("ga4"),
-      v.literal("github"),
+    provider: v.optional(
+      v.union(
+        v.literal("stripe"),
+        v.literal("posthog"),
+        v.literal("ga4"),
+        v.literal("github"),
+      ),
     ),
     metric: v.union(
       v.literal("mrr"),
@@ -309,17 +340,56 @@ export default defineSchema({
       v.literal("first_sale"),
       v.literal("visitors"),
       v.literal("stars"),
+      v.literal("custom"),
     ),
     target: v.optional(v.number()),  // required for threshold metrics; omitted for first_sale
     scope: v.optional(v.string()),   // owner/repo for stars
     label: v.optional(v.string()),
     enabled: v.boolean(),
+    firedAt: v.optional(v.string()),     // last fire timestamp (recurring) or final fire (one-shot)
+    firstHitAt: v.optional(v.string()),  // first fire ever — drives celebration; never overwritten
+    recurring: v.optional(v.boolean()),  // when true, goal stays enabled after fire
     created_at: v.string(),
     updated_at: v.string(),
   })
     .index("by_userId", ["userId"])
     .index("by_userId_provider_enabled", ["userId", "provider", "enabled"])
     .index("by_externalId", ["externalId"]),
+
+  // Sous-Chef: append-only event log of every trigger seen + decision taken.
+  // Powers the /admin/sous-chef/history feed. Decision enum:
+  //   drafted        — a draft (fresh or rolled-up) was inserted
+  //   auto_skipped   — system declined (content filter, rate cap, low confidence)
+  //   user_skipped   — user deleted/dismissed an agent-fired draft
+  //   approved       — user approved & dispatched pushes
+  //   ignored_48h    — draft sat untouched for 48h (reserved; no auto-emitter yet)
+  triggerEvents: defineTable({
+    userId: v.string(),
+    externalId: v.string(),                  // "evt_*"
+    sourceSystem: v.union(
+      v.literal("github"),
+      v.literal("stripe"),
+      v.literal("posthog"),
+      v.literal("ga4"),
+      v.literal("manual"),
+    ),
+    triggerType: v.string(),                 // "pr_merged", "mrr", "first_sale", ...
+    decision: v.union(
+      v.literal("drafted"),
+      v.literal("auto_skipped"),
+      v.literal("user_skipped"),
+      v.literal("approved"),
+      v.literal("ignored_48h"),
+    ),
+    reason: v.optional(v.string()),          // "content_filter", "rate_cap", "low_confidence", "rollup", ...
+    confidence: v.optional(v.number()),
+    sourceReference: v.optional(v.string()), // PR URL, milestoneKey, etc.
+    draftExternalId: v.optional(v.string()),
+    metadata: v.optional(v.string()),        // JSON blob for trigger-specific extras
+    created_at: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_draftExternalId", ["draftExternalId"]),
 
   uploads: defineTable({
     userId: v.string(),

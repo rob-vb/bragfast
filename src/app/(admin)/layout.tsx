@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "@/components/convex-provider";
 import { UserIdProvider } from "@/hooks/use-user-id";
+import { PostHogIdentifier } from "@/components/admin/posthog-identifier";
 import type { PlanId } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default async function AdminLayout({
   return (
     <ConvexClientProvider>
       <UserIdProvider value={user._id}>
+        <PostHogIdentifier userId={user._id} plan={plan} />
         <SidebarProvider>
           <AdminSidebar email={email} plan={plan} />
           <SidebarInset className="min-w-0">

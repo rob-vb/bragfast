@@ -169,4 +169,38 @@ describe("validateGoalInput", () => {
       validateGoalInput({ provider: "github", metric: "stars", target: 100, scope: "foo/bar", enabled: true }),
     ).toBeNull();
   });
+
+  it("accepts custom goal with null provider + label", () => {
+    expect(
+      validateGoalInput({
+        provider: null,
+        metric: "custom",
+        label: "100 mailing-list subs",
+        enabled: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects custom goal without label", () => {
+    expect(
+      validateGoalInput({ provider: null, metric: "custom", enabled: true }),
+    ).toBeTruthy();
+  });
+
+  it("rejects custom goal with provider attached", () => {
+    expect(
+      validateGoalInput({
+        provider: "stripe",
+        metric: "custom",
+        label: "x",
+        enabled: true,
+      }),
+    ).toBeTruthy();
+  });
+
+  it("rejects non-custom metric with null provider", () => {
+    expect(
+      validateGoalInput({ provider: null, metric: "mrr", target: 100, enabled: true }),
+    ).toBeTruthy();
+  });
 });

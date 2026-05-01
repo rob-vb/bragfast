@@ -7,9 +7,16 @@ import {
   buildPrMergeDraftInput,
   type GitHubPullRequestPayload,
 } from "@/lib/github/pr-merge";
-import { composeCopy } from "@/lib/drafts/compose-copy";
+import {
+  composeCopyByPlatform,
+  SUPPRESS_THRESHOLD,
+  PLATFORMS,
+  type Platform,
+} from "@/lib/drafts/compose-copy";
 import { pickTemplate } from "@/lib/drafts/pick-template";
 import type { DraftConfig } from "@/lib/drafts/types";
+import { scanContent } from "@/lib/safety/content-filter";
+import { captureServer } from "@/lib/analytics/posthog-server";
 
 export const maxDuration = 60;
 
@@ -71,11 +78,49 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
   const userId = installation.userId;
   const repoFullName = payload.repository.full_name;
   const repoConfig = await convex.query(api.githubRepoConfigs.getByRepo, {
+    userId,
     installationId,
     repoFullName,
   });
   if (!repoConfig?.notifyOnPrMerge) {
     return Response.json({ ok: true, skipped: "pr_merge_opt_out" });
+  }
+
+  // Layer 1 safety: pre-render content filter. Skip both fresh and rollup
+  // draft paths if PR title or body matches sensitive keyword patterns.
+  const filter = scanContent(
+    payload.pull_request.title,
+    payload.pull_request.body,
+  );
+  if (filter.blocked) {
+    const categories = [...new Set(filter.matches.map((m) => m.category))];
+    console.log(
+      "[sous-chef] PR draft skipped by content filter",
+      JSON.stringify({
+        userId,
+        repoFullName,
+        prNumber: payload.pull_request.number,
+        categories,
+      }),
+    );
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: "auto_skipped",
+        reason: "content_filter",
+        sourceReference: payload.pull_request.html_url,
+        metadata: JSON.stringify({ categories }),
+      })
+      .catch((err) =>
+        console.error("[sous-chef] recordAction (content_filter) failed", err),
+      );
+    return Response.json({
+      ok: true,
+      skipped: "sensitive_content",
+      categories,
+    });
   }
 
   const now = new Date();
@@ -87,6 +132,18 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
     { userId, repoFullName, sinceIso: dayAgoIso },
   );
   if (recentCount >= PR_MERGE_DAILY_CAP) {
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: "auto_skipped",
+        reason: "rate_cap",
+        sourceReference: payload.pull_request.html_url,
+      })
+      .catch((err) =>
+        console.error("[sous-chef] recordAction (rate_cap) failed", err),
+      );
     return Response.json({ ok: true, skipped: "rate_cap" });
   }
 
@@ -107,6 +164,19 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
       prTitle: payload.pull_request.title,
       prNumber: payload.pull_request.number,
     });
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: "drafted",
+        reason: "rollup",
+        sourceReference: payload.pull_request.html_url,
+        draftExternalId: recent.id,
+      })
+      .catch((err) =>
+        console.error("[sous-chef] recordAction (rollup) failed", err),
+      );
     return Response.json({
       ok: true,
       rollup: recent.id,
@@ -127,20 +197,42 @@ async function createPrMergeDraft(
 ) {
   try {
     const input = buildPrMergeDraftInput(payload, userId);
-    const [pick, copy] = await Promise.all([
-      pickTemplate(input.pickTemplateInput),
-      composeCopy(input.composeCopyInput),
+    const [disabled, voicePreset, examples] = await Promise.all([
+      convex.query(api.userProfiles.getDisabledPlatforms, { userId }),
+      convex.query(api.userProfiles.getVoicePreset, { userId }),
+      convex.query(api.drafts.getRecentApprovedEdits, { userId }),
     ]);
+    const enabledPlatforms: Platform[] = PLATFORMS.filter(
+      (p) => !disabled.includes(p),
+    );
+    const composeInput = {
+      ...input.composeCopyInput,
+      voicePreset: voicePreset as
+        | "casual_builder"
+        | "dry_technical"
+        | "earnest_milestone"
+        | "deadpan"
+        | null,
+      examples,
+    };
+    const [pick, composed] = await Promise.all([
+      pickTemplate(input.pickTemplateInput),
+      composeCopyByPlatform(composeInput, enabledPlatforms),
+    ]);
+    const { copies, primary } = composed;
 
     const draftConfig: DraftConfig = {
       output: "image",
       templateId: pick.templateId,
       objectContent: {
-        title: { text: copy.title },
-        description: { text: copy.description },
+        title: { text: primary.title },
+        description: { text: primary.description },
       },
+      copyByPlatform: copies,
       notes: `Sous-Chef: PR #${input.prNumber} merged to ${payload.repository.default_branch} in ${input.repoFullName}`,
     };
+
+    const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
 
     await convex.action(api.drafts.insertDraftIfNewAction, {
       userId,
@@ -148,9 +240,47 @@ async function createPrMergeDraft(
       sourceSystem: "github",
       milestoneKey: input.milestoneKey,
       eventReference: input.eventReference,
-      name: copy.title,
+      name: primary.title,
       config: JSON.stringify(draftConfig),
       createdBy: "sous-chef",
+      confidence: primary.confidence,
+      suppressed,
+    });
+
+    await convex
+      .action(api.triggerEvents.recordAction, {
+        userId,
+        sourceSystem: "github",
+        triggerType: "pr_merged",
+        decision: suppressed ? "auto_skipped" : "drafted",
+        reason: suppressed ? "low_confidence" : undefined,
+        confidence: primary.confidence,
+        sourceReference: input.eventReference,
+        // We don't have the draft's externalId after the idempotent insert
+        // (action returns void). Carry the milestoneKey instead so the feed
+        // row is still tied back to the draft via drafts.milestoneKey.
+        metadata: JSON.stringify({ milestoneKey: input.milestoneKey }),
+      })
+      .catch((err) =>
+        console.error(
+          "[sous-chef] recordAction (createPrMergeDraft) failed",
+          err,
+        ),
+      );
+
+    await captureServer({
+      event: "draft_generated",
+      distinctId: userId,
+      properties: {
+        trigger_type: "pr_merged",
+        source_type: "github",
+        confidence_score: primary.confidence,
+        was_suppressed: suppressed,
+        has_visual_asset: true,
+        formats_to_render: ["landscape"],
+        video_requested: false,
+        platforms_generated: Object.keys(copies),
+      },
     });
   } catch (err) {
     console.error("[sous-chef] createPrMergeDraft failed:", err);

@@ -46,9 +46,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  // S6.3: optional `reason` query string lets the drafts UI capture why a user
+  // skipped a Sous-Chef draft. Threads through to the trigger event.
+  const url = new URL(request.url);
+  const reason = url.searchParams.get("reason") ?? undefined;
   const removed = await fetchMutation(api.drafts.remove, {
     externalId: id,
     userId: auth.userId,
+    reason,
   });
   if (!removed) return Response.json({ error: "Not found" }, { status: 404 });
 

@@ -14,6 +14,11 @@ import type { GoalMetric } from "../../src/lib/goals/types";
 import { composeCopy } from "../../src/lib/drafts/compose-copy";
 import { pickTemplate } from "../../src/lib/drafts/pick-template";
 import type { DraftConfig } from "../../src/lib/drafts/types";
+import {
+  captureFromConvex,
+  goalCategoryFromMetric,
+  daysBetween,
+} from "../posthogCapture";
 
 type RepoConfig = {
   installationId: number;
@@ -60,7 +65,7 @@ export const scan = internalAction({
       const token = await getInstallationToken(installationId);
 
       const configs = (await ctx.runQuery(
-        api.githubRepoConfigs.listByInstallation,
+        internal.githubRepoConfigs.internalListByInstallation,
         { installationId },
       )) as RepoConfig[];
       const enabledRepos = configs.filter((c) => c.enabled);
@@ -130,7 +135,7 @@ export const seedFromCurrentState = internalAction({
   handler: async (ctx, { userId, installationId }) => {
     const token = await getInstallationToken(installationId);
     const configs = (await ctx.runQuery(
-      api.githubRepoConfigs.listByInstallation,
+      internal.githubRepoConfigs.internalListByInstallation,
       { installationId },
     )) as RepoConfig[];
 
@@ -220,12 +225,24 @@ async function fireDraft(
     goalMilestoneKey(goal.externalId),
   );
 
+  const [profile, examples] = await Promise.all([
+    ctx.runQuery(internal.userProfiles.getByUserIdInternal, { userId }),
+    ctx.runQuery(api.drafts.getRecentApprovedEdits, { userId }),
+  ]);
+  const voicePreset = (profile?.voicePreset ?? null) as
+    | "casual_builder"
+    | "dry_technical"
+    | "earnest_milestone"
+    | "deadpan"
+    | null;
   const [pick, copy] = await Promise.all([
     pickTemplate({ milestoneKey }),
     composeCopy({
       type: "star",
       repoFullName: goal.scope ?? "",
       threshold: goal.target ?? 0,
+      voicePreset,
+      examples,
     }),
   ]);
 
@@ -248,5 +265,28 @@ async function fireDraft(
     config: JSON.stringify(draftConfig),
     createdBy: "sous-chef",
   });
-  await ctx.runMutation(internal.goals.disableGoal, { externalId: goal.externalId });
+  const fireResult = await ctx.runMutation(internal.goals.markFired, {
+    externalId: goal.externalId,
+  });
+  // S5.5: schedule celebration email exactly once (first hit only).
+  if (fireResult.firstHit && fireResult.userId) {
+    await ctx.scheduler.runAfter(0, internal.goalEmails.sendCelebrationEmail, {
+      userId: fireResult.userId,
+      label: fireResult.label,
+      metric: fireResult.metric,
+      target: fireResult.target,
+      scope: fireResult.scope,
+    });
+    await captureFromConvex({
+      event: "goal_hit",
+      distinctId: fireResult.userId,
+      properties: {
+        goal_category: goalCategoryFromMetric(fireResult.metric),
+        days_from_goal_set: daysBetween(
+          fireResult.createdAt,
+          new Date().toISOString(),
+        ),
+      },
+    });
+  }
 }

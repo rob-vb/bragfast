@@ -110,6 +110,24 @@ Queries = reads, mutations = writes. Heavy compute → `internalAction` + `"use 
 
 Local dev (`OUTPUT_LOCAL=true`): `.output/:id/`, `.brands/:id/`. Prod: Convex + R2.
 
+## Conventions
+
+See `docs/conventions.md` for PostHog naming/setup, the 14 launch events, and `NEXT_PUBLIC_LAUNCH_MODE` flag. New analytics events must conform.
+
 ## Brand & Design
 
 See `BRAND_VOICE.md` (diner metaphor, NES-retro) and `DESIGN.md` (color tokens, Press Start 2P + Geist, hard-offset shadows, zero border-radius). Light mode only.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `rob-vb/bragfast`, accessed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles map 1:1 to label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.

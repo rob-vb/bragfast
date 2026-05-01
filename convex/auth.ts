@@ -1,5 +1,6 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { ConvexError } from "convex/values";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
@@ -80,3 +81,23 @@ export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => authComponent.getAuthUser(ctx),
 });
+
+/**
+ * Resolve the authed userId from Convex auth or throw. Use in every public
+ * function that touches user-owned data. Drops the need to accept a
+ * client-supplied `userId` arg — caller's session is the only source of truth.
+ *
+ * Returns the Better Auth user `_id` string (matches what's stored in
+ * `userId` columns across the app). Derived from `identity.subject`, which
+ * the Convex Better Auth plugin sets to the user `_id` on JWT issuance.
+ * Avoids the session+user DB roundtrip in `authComponent.getAuthUser`.
+ */
+export async function requireAuthedUser(
+  ctx: GenericCtx<DataModel>,
+): Promise<string> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new ConvexError("Unauthenticated");
+  }
+  return identity.subject;
+}

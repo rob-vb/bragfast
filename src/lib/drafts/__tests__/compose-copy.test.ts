@@ -9,7 +9,7 @@ vi.mock("@anthropic-ai/sdk", () => {
   return { default: MockAnthropic };
 });
 
-import { composeCopy } from "../compose-copy";
+import { composeCopy, composeCopyByPlatform } from "../compose-copy";
 
 beforeEach(() => {
   mockCreate.mockReset();
@@ -168,6 +168,142 @@ describe("composeCopy — truncation", () => {
     );
     const copy = await composeCopy({ type: "mrr", threshold: 1000 });
     expect(copy.description.length).toBe(220);
+  });
+});
+
+describe("composeCopy — confidence", () => {
+  it("parses confidence when Haiku returns it", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse(
+        '{"title":"New widget","description":"d","confidence":0.82}',
+      ),
+    );
+    const copy = await composeCopy({
+      type: "pr_merged",
+      title: "Add widget",
+      body: "Adds widget.",
+      repoFullName: "rob/brag.fast",
+    });
+    expect(copy.confidence).toBe(0.82);
+  });
+
+  it("defaults confidence to 0 when omitted", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y"}'),
+    );
+    const copy = await composeCopy({ type: "mrr", threshold: 1000 });
+    expect(copy.confidence).toBe(0);
+  });
+
+  it("clamps confidence into [0,1] via .catch when out of range", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y","confidence":2.5}'),
+    );
+    const copy = await composeCopy({ type: "mrr", threshold: 1000 });
+    expect(copy.confidence).toBe(0);
+  });
+
+  it("fallback returns confidence 0 on SDK failure", async () => {
+    mockCreate.mockRejectedValue(new Error("down"));
+    const copy = await composeCopy({
+      type: "pr_merged",
+      title: "Fix",
+      body: "",
+      repoFullName: "rob/brag.fast",
+    });
+    expect(copy.confidence).toBe(0);
+  });
+
+  it("system prompt includes confidence rubric", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y","confidence":0.9}'),
+    );
+    await composeCopy({ type: "mrr", threshold: 1000 });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.system).toContain("Confidence rubric");
+    expect(callArgs.system).toContain("Score conservatively");
+  });
+});
+
+describe("composeCopy — platform variants", () => {
+  it("includes X platform guide when platform=x", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y"}'),
+    );
+    await composeCopy({ type: "mrr", threshold: 1000, platform: "x" });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).toContain("X (Twitter)");
+  });
+
+  it("includes LinkedIn platform guide when platform=linkedin", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y"}'),
+    );
+    await composeCopy({
+      type: "mrr",
+      threshold: 1000,
+      platform: "linkedin",
+    });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).toContain("LinkedIn");
+  });
+
+  it("omits platform line when platform is undefined", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"x","description":"y"}'),
+    );
+    await composeCopy({ type: "mrr", threshold: 1000 });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).not.toContain("Target platform");
+  });
+});
+
+describe("composeCopyByPlatform", () => {
+  it("returns one Copy per platform requested", async () => {
+    mockCreate
+      .mockResolvedValueOnce(
+        textResponse('{"title":"X title","description":"X desc","confidence":0.8}'),
+      )
+      .mockResolvedValueOnce(
+        textResponse('{"title":"LI title","description":"LI desc","confidence":0.8}'),
+      );
+    const { copies, primary, primaryPlatform } = await composeCopyByPlatform(
+      { type: "mrr", threshold: 1000 },
+      ["x", "linkedin"],
+    );
+    expect(copies.x?.title).toBe("X title");
+    expect(copies.linkedin?.title).toBe("LI title");
+    expect(primary.title).toBe("X title");
+    expect(primaryPlatform).toBe("x");
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns empty copies map when no platforms enabled, but still calls Haiku once for primary", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"t","description":"d","confidence":0.7}'),
+    );
+    const { copies, primary, primaryPlatform } = await composeCopyByPlatform(
+      { type: "mrr", threshold: 1000 },
+      [],
+    );
+    expect(copies).toEqual({});
+    expect(primary.title).toBe("t");
+    expect(primaryPlatform).toBe(null);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("single-platform request still produces a primary", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"only","description":"d","confidence":0.6}'),
+    );
+    const { copies, primary, primaryPlatform } = await composeCopyByPlatform(
+      { type: "mrr", threshold: 1000 },
+      ["linkedin"],
+    );
+    expect(copies.linkedin?.title).toBe("only");
+    expect(copies.x).toBeUndefined();
+    expect(primary.title).toBe("only");
+    expect(primaryPlatform).toBe("linkedin");
   });
 });
 

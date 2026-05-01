@@ -1,6 +1,13 @@
-import { action, mutation, query, internalMutation } from "./_generated/server";
+import {
+  action,
+  mutation,
+  query,
+  internalMutation,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { requireAuthedUser } from "./auth";
+import { insertTriggerEvent } from "./triggerEvents";
 
 const sourceSystem = v.union(
   v.literal("github"),
@@ -33,6 +40,71 @@ export const create = mutation({
   },
 });
 
+// S8.3: few-shot. Returns recent (original → edited) pairs for a user, drawn
+// from approved drafts whose user-edited title or description differs from the
+// frozen `originalConfig`. Used by composeCopy to bias Haiku toward this
+// user's voice. Capped at `limit` (default 3) and ordered newest first.
+export const getRecentApprovedEdits = query({
+  args: { userId: v.string(), limit: v.optional(v.number()) },
+  handler: async (ctx, { userId, limit }) => {
+    const cap = limit ?? 3;
+    // Pull most recent approved triggerEvents — these reference drafts that
+    // were pushed. We need a few extras since not every approval was edited.
+    const events = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .filter((q) => q.eq(q.field("decision"), "approved"))
+      .take(cap * 4);
+
+    const examples: Array<{
+      original: { title: string; description: string };
+      edited: { title: string; description: string };
+    }> = [];
+
+    for (const evt of events) {
+      if (examples.length >= cap) break;
+      if (!evt.draftExternalId) continue;
+      const draft = await ctx.db
+        .query("drafts")
+        .withIndex("by_externalId", (q) =>
+          q.eq("externalId", evt.draftExternalId!),
+        )
+        .first();
+      if (!draft?.originalConfig) continue;
+      let original: {
+        objectContent?: { title?: { text?: string }; description?: { text?: string } };
+      };
+      try {
+        original = JSON.parse(draft.originalConfig);
+      } catch {
+        continue;
+      }
+      const origTitle = original?.objectContent?.title?.text?.trim() ?? "";
+      const origDescription = original?.objectContent?.description?.text?.trim() ?? "";
+
+      const push = await ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", evt.draftExternalId!))
+        .first();
+      if (!push) continue;
+      const finalTitle = push.title.trim();
+      const finalDescription = push.description.trim();
+      if (
+        finalTitle === origTitle &&
+        finalDescription === origDescription
+      ) {
+        continue;
+      }
+      examples.push({
+        original: { title: origTitle, description: origDescription },
+        edited: { title: finalTitle, description: finalDescription },
+      });
+    }
+    return examples;
+  },
+});
+
 export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -49,6 +121,8 @@ export const listByUser = query({
       milestoneKey: r.milestoneKey ?? null,
       eventReference: r.eventReference ?? null,
       config: r.config,
+      confidence: r.confidence ?? null,
+      suppressed: r.suppressed ?? false,
       created_at: r.created_at,
     }));
   },
@@ -70,6 +144,8 @@ export const getByExternalId = query({
       milestoneKey: row.milestoneKey ?? null,
       eventReference: row.eventReference ?? null,
       config: row.config,
+      confidence: row.confidence ?? null,
+      suppressed: row.suppressed ?? false,
       created_at: row.created_at,
     };
   },
@@ -88,6 +164,8 @@ export const insertDraftIfNew = internalMutation({
     name: v.optional(v.string()),
     config: v.string(),
     createdBy: v.optional(v.string()),
+    confidence: v.optional(v.number()),
+    suppressed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -113,10 +191,13 @@ export const insertDraftIfNew = internalMutation({
       source: "agent",
       createdBy: args.createdBy ?? "sous-chef",
       config: args.config,
+      originalConfig: args.config,
       sourceSystem: args.sourceSystem,
       milestoneKey: args.milestoneKey,
       eventReference: args.eventReference,
       idempotencyKey: args.idempotencyKey,
+      confidence: args.confidence,
+      suppressed: args.suppressed,
       created_at: now,
     });
     await ctx.db.insert("milestoneHits", {
@@ -144,9 +225,27 @@ export const insertDraftIfNewAction = action({
     name: v.optional(v.string()),
     config: v.string(),
     createdBy: v.optional(v.string()),
+    confidence: v.optional(v.number()),
+    suppressed: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
+  },
+});
+
+// Override: flip a suppressed draft to visible. Auth-gated to caller's drafts.
+export const unsuppressDraft = mutation({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const userId = await requireAuthedUser(ctx);
+    const row = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row || row.userId !== userId) return false;
+    if (!row.suppressed) return true;
+    await ctx.db.patch(row._id, { suppressed: false });
+    return true;
   },
 });
 
@@ -256,8 +355,13 @@ export const appendPrMergeRollup = mutation({
 // Count drafts created after the user's last visit to /admin/drafts.
 // Founder-scale: scans all drafts for the user, then filters in JS.
 export const unseenCount = query({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Sidebar mounts before auth resolves on first paint; return 0 instead of
+    // throwing so the badge silently hides until session is established.
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return 0;
+    const userId = identity.subject;
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -273,8 +377,9 @@ export const unseenCount = query({
 
 // Stamp the user's last-visit time. Idempotent; safe to call on every mount.
 export const markSeen = mutation({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthedUser(ctx);
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -285,13 +390,35 @@ export const markSeen = mutation({
 });
 
 export const remove = mutation({
-  args: { externalId: v.string(), userId: v.string() },
-  handler: async (ctx, { externalId, userId }) => {
+  // S6.3: optional `reason` lets the drafts UI capture *why* the user skipped
+  // — surfaced on the Sous-Chef history feed as the trigger event's reason.
+  args: {
+    externalId: v.string(),
+    userId: v.string(),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, { externalId, userId, reason }) => {
     const row = await ctx.db
       .query("drafts")
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .first();
     if (!row || row.userId !== userId) return false;
+    // Record user_skipped for agent-fired drafts so the feed reflects the user
+    // dismissing a Sous-Chef trigger. User-created drafts aren't trigger events.
+    if (row.source === "agent") {
+      const triggerType = row.milestoneKey?.split(":")[0] ?? "manual";
+      const trimmedReason = reason?.trim().slice(0, 200);
+      await insertTriggerEvent(ctx, {
+        userId,
+        sourceSystem: row.sourceSystem ?? "manual",
+        triggerType,
+        decision: "user_skipped",
+        reason: trimmedReason ? trimmedReason : undefined,
+        confidence: row.confidence ?? undefined,
+        sourceReference: row.eventReference ?? undefined,
+        draftExternalId: externalId,
+      });
+    }
     await ctx.db.delete(row._id);
     return true;
   },

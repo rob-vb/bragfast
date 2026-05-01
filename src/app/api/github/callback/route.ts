@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
+import { captureServer } from "@/lib/analytics/posthog-server";
+import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -14,6 +16,20 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const installationId = searchParams.get("installation_id");
   const setupAction = searchParams.get("setup_action");
+
+  // Org-admin-pending: a non-admin tried to install on an org. GitHub redirects
+  // with setup_action=request and no installation_id. Surface a fallback UI so
+  // the user can request admin approval or fall back to a personal repo.
+  if (setupAction === "request") {
+    await captureServer({
+      event: "github_app_install_blocked",
+      distinctId: user._id,
+      properties: { block_reason: "org_admin_required" },
+    });
+    return Response.redirect(
+      new URL("/admin/sous-chef?install_state=pending", request.url),
+    );
+  }
 
   if (!installationId) {
     return Response.redirect(
@@ -28,7 +44,9 @@ export async function GET(request: NextRequest) {
       { installationId: Number(installationId) }
     );
 
+    let accountType: "User" | "Organization" = "User";
     if (existing) {
+      accountType = existing.accountType;
       await convex.action(api.githubInstallations.upsertAction, {
         installationId: Number(installationId),
         userId: user._id,
@@ -55,7 +73,23 @@ export async function GET(request: NextRequest) {
         installationId: Number(installationId),
       });
     }
+
+    // S10.1: github_app_installed (PRD §13). install_scope + repo_count not
+    // available without a separate App API call — surface what we have.
+    await captureServer({
+      event: "github_app_installed",
+      distinctId: user._id,
+      properties: {
+        install_scope: null,
+        repo_count: null,
+        org_install: accountType === "Organization",
+        action: setupAction,
+      },
+    });
   }
 
-  return Response.redirect(new URL("/admin/account", request.url));
+  const successPath = isLaunchModeRepositioned()
+    ? "/welcome/pick-repo"
+    : "/admin/account";
+  return Response.redirect(new URL(successPath, request.url));
 }

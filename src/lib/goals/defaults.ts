@@ -1,6 +1,6 @@
-import type { GoalInput } from "./types";
+import type { GoalInput, GoalProvider } from "./types";
 
-type DefaultGoal = GoalInput & { enabled: true };
+type DefaultGoal = Omit<GoalInput, "provider"> & { provider: GoalProvider; enabled: true };
 
 export const DEFAULT_GOALS_BY_PROVIDER: {
   stripe: DefaultGoal[];

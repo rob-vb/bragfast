@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { PixelButton } from "./pixel-button";
 import { PixelCard } from "./pixel-card";
 import { GitHubSection } from "./github-section";
-import { GoalsSection } from "./goals-section";
-import type { Goal } from "./goals-section";
+import { OrgPendingBanner } from "./org-pending-banner";
+import type { Plan } from "@/lib/plan-tiers";
 import {
   ConnectDialog,
   PROVIDER_LABELS,
@@ -311,26 +311,24 @@ function PostingProvidersSection({
 
 // ── Main client ─────────────────────────────────────────────────────────────
 
-export function SousChefClient({ github }: { github: GitHubPropShape }) {
+export function SousChefClient({
+  github,
+  plan: _plan,
+}: {
+  github: GitHubPropShape;
+  plan: Plan;
+}) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
-  const [goals, setGoals] = useState<Goal[]>([]);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const reload = useCallback(async () => {
-    const [intRes, goalRes] = await Promise.all([
-      fetch("/api/v1/sous-chef/integrations"),
-      fetch("/api/v1/goals"),
-    ]);
+    const intRes = await fetch("/api/v1/sous-chef/integrations");
     if (intRes.ok) {
       const data = (await intRes.json()) as { integrations: IntegrationRow[] };
       setRows(data.integrations);
-    }
-    if (goalRes.ok) {
-      const data = (await goalRes.json()) as { goals: Goal[] };
-      setGoals(data.goals);
     }
   }, []);
 
@@ -372,10 +370,6 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
     }
   }, [searchParams, router]);
 
-  const githubConnected = github.installations.some(
-    (i) => i.status === "active" && i.enabled,
-  );
-
   const byProvider = new Map<Provider, IntegrationRow>(
     (rows ?? []).map((r) => [r.provider, r]),
   );
@@ -397,6 +391,8 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
         catches the moments you&apos;d otherwise miss.
       </p>
 
+      <OrgPendingBanner appSlug={github.appSlug} />
+
       {/* GitHub */}
       <PixelCard>
         <div className="space-y-4">
@@ -407,14 +403,6 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
             installations={github.installations}
             appSlug={github.appSlug}
           />
-          <div className="border-t-2 border-brand/20 pt-4">
-            <GoalsSection
-              provider="github"
-              connected={githubConnected}
-              goals={goals.filter((g) => g.provider === "github")}
-              onReload={reload}
-            />
-          </div>
         </div>
       </PixelCard>
 
@@ -431,7 +419,6 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
           key={provider}
           provider={provider}
           row={byProvider.get(provider) ?? null}
-          goals={goals.filter((g) => g.provider === provider)}
           onConnect={() => setActiveForm(provider)}
           onReload={reload}
         />
@@ -447,6 +434,7 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
           }}
         />
       )}
+
     </div>
   );
 }
@@ -454,13 +442,11 @@ export function SousChefClient({ github }: { github: GitHubPropShape }) {
 function IntegrationBlock({
   provider,
   row,
-  goals,
   onConnect,
   onReload,
 }: {
   provider: SousChefProvider;
   row: IntegrationRow | null;
-  goals: Goal[];
   onConnect: () => void;
   onReload: () => void;
 }) {
@@ -554,15 +540,6 @@ function IntegrationBlock({
           </div>
         )}
 
-        {/* Goals */}
-        <div className="border-t-2 border-brand/20 pt-4">
-          <GoalsSection
-            provider={provider}
-            connected={connected}
-            goals={goals}
-            onReload={onReload}
-          />
-        </div>
       </div>
     </PixelCard>
   );
