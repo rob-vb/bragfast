@@ -320,7 +320,7 @@ describe("pushFanout.run — mediaUrl missing", () => {
     const row = await getRow(t, rowId);
     expect(row?.state).toBe("failed");
     expect(row?.errorClass).toBe("media");
-    expect(row?.errorMessage).toContain("not yet rendered");
+    expect(row?.errorMessage).toContain("media URL not resolved");
     expect(mockDispatch).not.toHaveBeenCalled();
   });
 });

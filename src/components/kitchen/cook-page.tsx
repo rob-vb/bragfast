@@ -242,7 +242,16 @@ export function CookPage({ templates }: CookPageProps) {
       try {
         const res = await fetch(`/api/v1/drafts/${encodeURIComponent(draftParam)}`);
         if (!res.ok) {
-          setDraftError(res.status === 404 ? "Draft not found." : "Failed to load draft.");
+          if (res.status === 404) {
+            // Draft is gone — most commonly because it was just approved.
+            // Strip ?draft= so a refresh doesn't re-trigger this path, and
+            // stay silent rather than showing a scary "not found" error.
+            const url = new URL(window.location.href);
+            url.searchParams.delete("draft");
+            window.history.replaceState({}, "", url.toString());
+            return;
+          }
+          setDraftError("Failed to load draft.");
           return;
         }
         const data: { id: string; name: string | null; config: DraftConfig } = await res.json();

@@ -2,10 +2,9 @@
  * Component tests for ApproveDraftModal.
  *
  * Mocks:
- *  - convex/react: useMutation (the approve mutation)
+ *  - global fetch (the cook-and-approve POST endpoint)
  *  - next/navigation: useRouter
  *  - sonner: toast
- *  - @convex/_generated/api: returns a stub api object
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -14,33 +13,38 @@ import { ApproveDraftModal } from "../approve-draft-modal";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
-// Mock next/navigation
-const mockRefresh = vi.fn();
+const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mockRefresh }),
+  useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
 }));
 
-// Mock sonner
 const mockToastSuccess = vi.fn();
 vi.mock("sonner", () => ({
   toast: { success: (...args: unknown[]) => mockToastSuccess(...args) },
 }));
 
-// Mock convex generated api
-vi.mock("@convex/_generated/api", () => ({
-  api: {
-    draftPushes: {
-      approveDraft: "draftPushes:approveDraft",
-    },
-  },
+vi.mock("posthog-js", () => ({
+  default: { capture: vi.fn() },
 }));
 
-// The approve mutation stub — replaced per test
-let mockMutationFn = vi.fn();
+let mockFetch: ReturnType<typeof vi.fn>;
 
-vi.mock("convex/react", () => ({
-  useMutation: (_ref: unknown) => mockMutationFn,
-}));
+function mockFetchOk(body: unknown) {
+  mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => body,
+  });
+  global.fetch = mockFetch as unknown as typeof fetch;
+}
+
+function mockFetchErr(status: number, body: unknown) {
+  mockFetch = vi.fn().mockResolvedValue({
+    ok: false,
+    status,
+    json: async () => body,
+  });
+  global.fetch = mockFetch as unknown as typeof fetch;
+}
 
 // ── Shared props ───────────────────────────────────────────────────────────────
 
@@ -87,7 +91,6 @@ const BASE_PROPS = {
 describe("ApproveDraftModal — rendering", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMutationFn = vi.fn();
   });
 
   it("renders title and description fields pre-filled", () => {
@@ -98,7 +101,6 @@ describe("ApproveDraftModal — rendering", () => {
 
   it("shows provider badges for connected providers", () => {
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    // "Buffer" appears in the badge AND in channel labels, so use getAllBy
     expect(screen.getAllByText("Buffer").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Postiz").length).toBeGreaterThan(0);
   });
@@ -123,7 +125,6 @@ describe("ApproveDraftModal — rendering", () => {
   it("pre-checks channels from routing defaults", () => {
     render(<ApproveDraftModal {...BASE_PROPS} />);
     const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
-    // Should have at least the routing-defaults channels checked
     const checked = checkboxes.filter((cb) => cb.checked);
     expect(checked.length).toBeGreaterThan(0);
   });
@@ -142,77 +143,55 @@ describe("ApproveDraftModal — confirmation", () => {
     vi.clearAllMocks();
   });
 
-  it("calls mutation with correct args on confirm", async () => {
-    mockMutationFn = vi.fn().mockResolvedValue({
-      ok: true,
-      pushIds: ["id1", "id2"],
-      skipped: [],
-    });
+  it("POSTs to the approve endpoint with correct body", async () => {
+    mockFetchOk({ ok: true, pushIds: ["id1", "id2"], skipped: [] });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
 
-    // Change title
     const titleInput = screen.getByDisplayValue("Test Title");
     fireEvent.change(titleInput, { target: { value: "Updated Title" } });
 
-    // Click confirm
-    const confirmBtn = screen.getByRole("button", { name: /Confirm/i });
+    const confirmBtn = screen.getByRole("button", { name: /Push to queue/i });
     await userEvent.click(confirmBtn);
 
-    expect(mockMutationFn).toHaveBeenCalledOnce();
-    const callArgs = mockMutationFn.mock.calls[0][0];
-    expect(callArgs.draftId).toBe("drf_abc");
-    expect(callArgs.title).toBe("Updated Title");
-    expect(callArgs.postState).toBe("queue");
-    expect(callArgs.clientNonce).toBeTypeOf("string");
-    expect(callArgs.clientNonce.length).toBeGreaterThan(0);
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledOnce());
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/v1/drafts/drf_abc/approve");
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.title).toBe("Updated Title");
+    expect(body.postState).toBe("queue");
+    expect(typeof body.clientNonce).toBe("string");
+    expect(body.clientNonce.length).toBeGreaterThan(0);
   });
 
-  it("shows toast and closes on success", async () => {
+  it("shows toast and navigates to history on success", async () => {
     const onClose = vi.fn();
-    mockMutationFn = vi.fn().mockResolvedValue({
-      ok: true,
-      pushIds: ["id1"],
-      skipped: [],
-    });
+    mockFetchOk({ ok: true, pushIds: ["id1"], skipped: [] });
 
     render(<ApproveDraftModal {...BASE_PROPS} onClose={onClose} />);
-    const confirmBtn = screen.getByRole("button", { name: /Confirm/i });
-    await userEvent.click(confirmBtn);
+    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
 
-    await waitFor(() => {
-      expect(mockToastSuccess).toHaveBeenCalledOnce();
-    });
+    await waitFor(() => expect(mockToastSuccess).toHaveBeenCalledOnce());
     expect(onClose).toHaveBeenCalledOnce();
-    expect(mockRefresh).toHaveBeenCalledOnce();
+    expect(mockPush).toHaveBeenCalledWith("/admin/history");
   });
 
   it("shows inline error on nothing_selected response", async () => {
-    mockMutationFn = vi.fn().mockResolvedValue({
-      ok: false,
-      error: "nothing_selected",
-    });
+    mockFetchOk({ ok: false, error: "nothing_selected" });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    const confirmBtn = screen.getByRole("button", { name: /Confirm/i });
-    await userEvent.click(confirmBtn);
+    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Select at least one channel/i),
-      ).toBeTruthy();
+      expect(screen.getByText(/Select at least one channel/i)).toBeTruthy();
     });
   });
 
   it("shows inline error on no_providers_connected response", async () => {
-    mockMutationFn = vi.fn().mockResolvedValue({
-      ok: false,
-      error: "no_providers_connected",
-    });
+    mockFetchOk({ ok: false, error: "no_providers_connected" });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    const confirmBtn = screen.getByRole("button", { name: /Confirm/i });
-    await userEvent.click(confirmBtn);
+    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Connect Buffer or Postiz/i)).toBeTruthy();
@@ -220,22 +199,29 @@ describe("ApproveDraftModal — confirmation", () => {
   });
 
   it("shows inline error on duplicate_approval response", async () => {
-    mockMutationFn = vi.fn().mockResolvedValue({
-      ok: false,
-      error: "duplicate_approval",
-    });
+    mockFetchOk({ ok: false, error: "duplicate_approval" });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    const confirmBtn = screen.getByRole("button", { name: /Confirm/i });
-    await userEvent.click(confirmBtn);
+    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/already approved/i)).toBeTruthy();
     });
   });
 
-  it("shows skipped warnings when mutation returns skipped items", async () => {
-    mockMutationFn = vi.fn().mockResolvedValue({
+  it("shows server error message on non-ok HTTP response", async () => {
+    mockFetchErr(500, { error: "Render failed." });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Render failed/i)).toBeTruthy();
+    });
+  });
+
+  it("shows skipped warnings when endpoint returns skipped items", async () => {
+    mockFetchOk({
       ok: true,
       pushIds: ["id1"],
       skipped: [
@@ -249,44 +235,11 @@ describe("ApproveDraftModal — confirmation", () => {
     });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    const confirmBtn = screen.getByRole("button", { name: /Confirm/i });
-    await userEvent.click(confirmBtn);
+    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Some channels were skipped/i)).toBeTruthy();
       expect(screen.getByText(/channel_not_found/i)).toBeTruthy();
     });
-  });
-});
-
-describe("ApproveDraftModal — post state toggle", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockMutationFn = vi.fn().mockResolvedValue({
-      ok: true,
-      pushIds: ["id1"],
-      skipped: [],
-    });
-  });
-
-  it("defaults to queue post state", () => {
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    const queueRadio = screen.getByRole("radio", {
-      name: /Add to queue/i,
-    }) as HTMLInputElement;
-    expect(queueRadio.checked).toBe(true);
-  });
-
-  it("switches to draft post state when selected", async () => {
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    const draftRadio = screen.getByRole("radio", {
-      name: /Save as draft/i,
-    });
-    await userEvent.click(draftRadio);
-
-    await userEvent.click(screen.getByRole("button", { name: /Confirm/i }));
-
-    const callArgs = mockMutationFn.mock.calls[0][0];
-    expect(callArgs.postState).toBe("draft");
   });
 });

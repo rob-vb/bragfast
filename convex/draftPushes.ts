@@ -201,10 +201,25 @@ export const approveDraft = mutation({
     ),
     postState: v.union(v.literal("queue"), v.literal("draft")),
     clientNonce: v.string(),
+    mediaUrlByFormat: v.optional(
+      v.object({
+        square: v.optional(v.string()),
+        landscape: v.optional(v.string()),
+        portrait: v.optional(v.string()),
+        "video-square": v.optional(v.string()),
+        "video-landscape": v.optional(v.string()),
+        "video-portrait": v.optional(v.string()),
+      }),
+    ),
+    // Trusted server override: the cook-and-approve endpoint already
+    // authenticated the request, then needs to act as that user. Same trust
+    // pattern as `api.drafts.remove`. Browser clients omit this and the
+    // authed identity is used.
+    actingUserId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuthedUser(ctx);
-    const { draftId, title, description, copyByPlatform, selections, postState, clientNonce } = args;
+    const userId = args.actingUserId ?? (await requireAuthedUser(ctx));
+    const { draftId, title, description, copyByPlatform, selections, postState, clientNonce, mediaUrlByFormat } = args;
 
     // ── Validation: nothing selected ──────────────────────────────────────────
     if (selections.length === 0) {
@@ -389,7 +404,7 @@ export const approveDraft = mutation({
         channelLabel,
         state: "pending",
         postState,
-        mediaUrl: "", // TBD: U8 resolves this during fanout
+        mediaUrl: mediaUrlByFormat?.[format] ?? "",
         title: rowTitle,
         description: rowDescription,
         attempts: 0,
