@@ -1,12 +1,10 @@
 "use client";
 
-// S4.2: shared upsell prompt — fires when a user tries to connect a source,
-// pick a format, or enable video that exceeds their tier cap.
 import Link from "next/link";
 import type { Tier } from "@/lib/plan-tiers";
 import { TIER_CONFIG } from "@/lib/plan-tiers";
 
-type UpsellReason = "sources" | "format" | "video" | "platforms" | "goals";
+type UpsellReason = "format" | "video" | "platforms";
 
 const TIER_NAME: Record<Tier, string> = {
   free: "On the House",
@@ -23,11 +21,6 @@ function reasonCopy(reason: UpsellReason, currentTier: Tier, targetTier: Tier): 
   const cur = TIER_NAME[currentTier];
   const cap = TIER_CONFIG[currentTier];
   switch (reason) {
-    case "sources":
-      return {
-        title: `${cur} caps sources at ${cap.sources}`,
-        body: `Upgrade to ${tgt} to connect more analytics sources for goal tracking.`,
-      };
     case "format":
       return {
         title: `${cur} is square-only`,
@@ -42,11 +35,6 @@ function reasonCopy(reason: UpsellReason, currentTier: Tier, targetTier: Tier): 
       return {
         title: `${cur} caps platforms per post at ${cap.platforms}`,
         body: `Upgrade to ${tgt} to push to multiple destinations per approval.`,
-      };
-    case "goals":
-      return {
-        title: `${cur} caps active goals at ${cap.goals}`,
-        body: `Upgrade to ${tgt} for unlimited goal tracking.`,
       };
   }
 }

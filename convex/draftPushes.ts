@@ -20,8 +20,8 @@ import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
 import { insertTriggerEvent } from "./triggerEvents";
 import {
-  TIER_CONFIG,
   tierFor,
+  capsFor,
   nextTierFor,
   type Format,
 } from "./planTiers";
@@ -264,7 +264,7 @@ export const approveDraft = mutation({
     const tier = profile ? tierFor(profile.plan) : null;
 
     if (tier && profile) {
-      const caps = TIER_CONFIG[tier];
+      const caps = capsFor(tier);
 
       // Derive base formats + video flag from selections (format may be
       // "video-square" etc. — these are video formats).
@@ -313,36 +313,6 @@ export const approveDraft = mutation({
         };
       }
 
-      // Counter availability
-      const counter = profile[caps.counterField];
-      if (counter === undefined) {
-        // Free tier without seeded counter → block until backfill.
-        // Paid tier without counter → webhook hasn't fired yet; surface distinct error.
-        return {
-          ok: false as const,
-          error:
-            tier === "free"
-              ? ("posts_exhausted" as const)
-              : ("posts_pending" as const),
-          upgradeTier:
-            tier === "free" ? ("toast" as const) : undefined,
-        };
-      }
-      if (counter <= 0) {
-        const upgrade =
-          tier === "free"
-            ? "toast"
-            : tier === "toast"
-              ? "plate"
-              : tier === "plate"
-                ? "buffet"
-                : undefined;
-        return {
-          ok: false as const,
-          error: "posts_exhausted" as const,
-          upgradeTier: upgrade,
-        };
-      }
     }
 
     // ── Build provider extra maps for channel validation ──────────────────────
@@ -432,14 +402,6 @@ export const approveDraft = mutation({
 
     // ── Schedule fanout (noop stub in U7, real logic in U8) ───────────────────
     if (pushIds.length > 0) {
-      // S2.7: decrement post counter atomically with the inserts (same mutation tx).
-      // 1 approval = 1 post regardless of fanout selection count (R7).
-      if (tier && profile) {
-        const field = TIER_CONFIG[tier].counterField;
-        const current = profile[field] ?? 0;
-        await ctx.db.patch(profile._id, { [field]: current - 1 });
-      }
-
       await ctx.scheduler.runAfter(0, internal.pushFanout.run, {
         draftId,
         userId,
@@ -490,7 +452,6 @@ export const approveDraft = mutation({
 //
 // Approving via clipboard or X intent doesn't go through a posting provider, so
 // we skip draftPushes entirely. We still:
-//  - enforce the posts/month tier counter (clipboard is still a "post"),
 //  - mark the draft suppressed so it leaves the visible queue,
 //  - record a triggerEvent decision="approved" so history reflects it.
 export const approveDraftClipboard = mutation({
@@ -506,43 +467,6 @@ export const approveDraftClipboard = mutation({
       .first();
     if (!draftRow || draftRow.userId !== userId) {
       return { ok: false as const, error: "not_found" as const };
-    }
-
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .first();
-    const tier = profile ? tierFor(profile.plan) : null;
-
-    if (tier && profile) {
-      const caps = TIER_CONFIG[tier];
-      const counter = profile[caps.counterField];
-      if (counter === undefined) {
-        return {
-          ok: false as const,
-          error:
-            tier === "free"
-              ? ("posts_exhausted" as const)
-              : ("posts_pending" as const),
-          upgradeTier: tier === "free" ? ("toast" as const) : undefined,
-        };
-      }
-      if (counter <= 0) {
-        const upgrade =
-          tier === "free"
-            ? "toast"
-            : tier === "toast"
-              ? "plate"
-              : tier === "plate"
-                ? "buffet"
-                : undefined;
-        return {
-          ok: false as const,
-          error: "posts_exhausted" as const,
-          upgradeTier: upgrade,
-        };
-      }
-      await ctx.db.patch(profile._id, { [caps.counterField]: counter - 1 });
     }
 
     await ctx.db.patch(draftRow._id, { suppressed: true });

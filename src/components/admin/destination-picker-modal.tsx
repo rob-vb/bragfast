@@ -63,13 +63,7 @@ export function DestinationPickerModal({
     try {
       const res = await approveClipboard({ draftId, destination });
       if (!res.ok) {
-        const msg =
-          res.error === "posts_exhausted"
-            ? "Posts/month limit reached. Upgrade to keep posting."
-            : res.error === "posts_pending"
-              ? "Plan refresh in flight — try again in a moment."
-              : "Approval failed. Try again.";
-        setError(msg);
+        setError("Approval failed. Try again.");
         return false;
       }
       return true;

@@ -44,27 +44,9 @@ export const FEATURES: {
   buffet: string | boolean;
 }[] = [
   { name: "Credits / month", toast: "200", plate: "800", buffet: "2,500" },
-  {
-    name: "Sources",
-    toast: "1 (GitHub)",
-    plate: "3 (GitHub + Stripe + PostHog/GA)",
-    buffet: "Unlimited",
-  },
-  {
-    name: "Platforms per post",
-    toast: "1 (X or LinkedIn)",
-    plate: "2 (X + LinkedIn)",
-    buffet: "2 (X + LinkedIn)",
-  },
-  {
-    name: "Formats per post",
-    toast: "All formats",
-    plate: "All formats",
-    buffet: "All formats",
-  },
-  { name: "Video posts", toast: true, plate: true, buffet: true },
-  { name: "Active goals", toast: "1", plate: "5", buffet: "Unlimited" },
-  { name: "Voice calibration", toast: true, plate: true, buffet: true },
+  { name: "Sous-Chef (agent)", toast: true, plate: true, buffet: true },
+  { name: "Video", toast: false, plate: true, buffet: true },
+  { name: "Goals", toast: "Unlimited", plate: "Unlimited", buffet: "Unlimited" },
   {
     name: "History feed",
     toast: "30 days",
@@ -73,11 +55,18 @@ export const FEATURES: {
   },
 ];
 
-export function FeatureValue({ value }: { value: string | boolean }) {
+export function FeatureValue({
+  value,
+  align = "center",
+}: {
+  value: string | boolean;
+  align?: "center" | "right";
+}) {
+  const iconAlign = align === "center" ? "mx-auto" : "ml-auto";
   if (value === true)
-    return <Check className="mx-auto h-4 w-4 text-brand" />;
+    return <Check className={`${iconAlign} h-4 w-4 text-brand`} />;
   if (value === false)
-    return <X className="mx-auto h-4 w-4 text-brand/30" />;
+    return <X className={`${iconAlign} h-4 w-4 text-brand/30`} />;
   return (
     <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand">
       {value}

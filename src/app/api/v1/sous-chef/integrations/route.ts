@@ -2,7 +2,6 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { authenticate } from "@/lib/auth/authenticate";
 import { seal } from "@/lib/crypto/secret-box";
-import { tierFor, capsFor } from "@/lib/plan-tiers";
 import { ALLOWED_POSTHOG_HOST_SET } from "@/lib/integrations/posthog-hosts";
 import {
   listIntegrations,
@@ -154,55 +153,6 @@ export async function POST(request: Request) {
   }
 
   const { userId } = auth;
-
-  // S4.2: source-cap enforcement — analytics providers (stripe/posthog/ga4)
-  // count toward the tier's `sources` quota along with GitHub installations.
-  // Posting providers (buffer/postiz) bypass.
-  if (
-    body.provider === "stripe" ||
-    body.provider === "posthog" ||
-    body.provider === "ga4"
-  ) {
-    const profile = await convex.query(api.userProfiles.getByUserId, {
-      userId,
-    });
-    const tier = profile ? tierFor(profile.plan) : null;
-    if (tier) {
-      const caps = capsFor(tier);
-      if (caps.sources !== "unlimited") {
-        const [existing, ghInstalls] = await Promise.all([
-          convex.query(api.integrationSecrets.listByUser, { userId }),
-          convex.query(api.githubInstallations.listByUserId, { userId }),
-        ]);
-        const isReconnect = existing.some(
-          (r) => r.provider === body.provider && r.enabled,
-        );
-        if (!isReconnect) {
-          const connectedAnalytics = (
-            ["stripe", "posthog", "ga4"] as const
-          ).filter((p) =>
-            existing.some((r) => r.provider === p && r.enabled),
-          ).length;
-          const githubConnected = ghInstalls.some(
-            (i) => i.status === "active" && i.enabled,
-          );
-          const connectedSourceCount =
-            connectedAnalytics + (githubConnected ? 1 : 0);
-          if (connectedSourceCount >= caps.sources) {
-            return Response.json(
-              {
-                error: "source_cap_reached",
-                tier,
-                cap: caps.sources,
-                current: connectedSourceCount,
-              },
-              { status: 403 },
-            );
-          }
-        }
-      }
-    }
-  }
 
   // -------------------------------------------------------------------------
   // Buffer: probe API key, then store. Same shape as Postiz — paste-key BYO.

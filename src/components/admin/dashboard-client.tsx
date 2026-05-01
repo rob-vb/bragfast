@@ -34,15 +34,12 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
     );
   }
 
-  // S2.7: branch on accounting model — new tiers render posts meter, legacy renders credits.
+  // New tiers use creditsRemaining with credits cap from TIER_CONFIG; legacy plans use PLANS map.
   const tier = tierFor(stats.plan as never);
   const newTierMeter = tier
     ? {
-        remaining:
-          (tier === "free"
-            ? stats.postsLifetime
-            : stats.postsRemainingThisMonth) ?? 0,
-        total: TIER_CONFIG[tier].posts,
+        remaining: stats.creditsRemaining,
+        total: TIER_CONFIG[tier].credits,
         name:
           tier === "free"
             ? "On the House"

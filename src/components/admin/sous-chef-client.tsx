@@ -7,8 +7,7 @@ import { PixelButton } from "./pixel-button";
 import { PixelCard } from "./pixel-card";
 import { GitHubSection } from "./github-section";
 import { OrgPendingBanner } from "./org-pending-banner";
-import { tierFor, capsFor, type Plan, type Tier } from "@/lib/plan-tiers";
-import { UpsellModal } from "./upsell-modal";
+import type { Plan } from "@/lib/plan-tiers";
 import {
   ConnectDialog,
   PROVIDER_LABELS,
@@ -314,17 +313,13 @@ function PostingProvidersSection({
 
 export function SousChefClient({
   github,
-  plan,
+  plan: _plan,
 }: {
   github: GitHubPropShape;
   plan: Plan;
 }) {
   const [rows, setRows] = useState<IntegrationRow[] | null>(null);
   const [activeForm, setActiveForm] = useState<Provider | null>(null);
-  const [upsell, setUpsell] = useState<{ tier: Tier; target: Tier } | null>(
-    null,
-  );
-  const tier = tierFor(plan);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -375,40 +370,9 @@ export function SousChefClient({
     }
   }, [searchParams, router]);
 
-  const githubConnected = github.installations.some(
-    (i) => i.status === "active" && i.enabled,
-  );
-
   const byProvider = new Map<Provider, IntegrationRow>(
     (rows ?? []).map((r) => [r.provider, r]),
   );
-
-  // S4.2: count connected analytics sources (stripe/posthog/ga4 + GitHub).
-  // Buffer/Postiz are posting destinations and don't count toward the source cap.
-  const connectedSourceCount =
-    (["stripe", "posthog", "ga4"] as const).filter(
-      (p) => byProvider.get(p)?.enabled === true,
-    ).length + (githubConnected ? 1 : 0);
-
-  function requestConnect(
-    provider: Provider,
-    isAlreadyConnected: boolean,
-  ): boolean {
-    // Always allow reconnect / posting providers / no-cap (legacy plans).
-    if (isAlreadyConnected || !tier) return true;
-    if (provider === "buffer" || provider === "postiz") return true;
-    const caps = capsFor(tier);
-    if (caps.sources === "unlimited") return true;
-    if (connectedSourceCount < caps.sources) return true;
-    const target = (["plate", "buffet"] as Tier[]).find((t) => {
-      const tc = capsFor(t);
-      if (tc.sources === "unlimited") return true;
-      if (caps.sources === "unlimited") return false;
-      return tc.sources > caps.sources;
-    });
-    setUpsell({ tier, target: target ?? "plate" });
-    return false;
-  }
 
   return (
     <div className="space-y-6">
@@ -445,11 +409,7 @@ export function SousChefClient({
       {/* Posting providers: Buffer + Postiz */}
       <PostingProvidersSection
         rows={rows ?? []}
-        onConnect={(p) => {
-          if (requestConnect(p, byProvider.get(p)?.enabled ?? false)) {
-            setActiveForm(p);
-          }
-        }}
+        onConnect={(p) => setActiveForm(p)}
         onReload={reload}
       />
 
@@ -459,13 +419,7 @@ export function SousChefClient({
           key={provider}
           provider={provider}
           row={byProvider.get(provider) ?? null}
-          onConnect={() => {
-            if (
-              requestConnect(provider, byProvider.get(provider)?.enabled ?? false)
-            ) {
-              setActiveForm(provider);
-            }
-          }}
+          onConnect={() => setActiveForm(provider)}
           onReload={reload}
         />
       ))}
@@ -478,16 +432,6 @@ export function SousChefClient({
             setActiveForm(null);
             await reload();
           }}
-        />
-      )}
-
-      {upsell && (
-        <UpsellModal
-          open
-          onClose={() => setUpsell(null)}
-          reason="sources"
-          currentTier={upsell.tier}
-          targetTier={upsell.target}
         />
       )}
 

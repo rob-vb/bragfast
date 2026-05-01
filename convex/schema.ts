@@ -17,10 +17,6 @@ export default defineSchema({
       v.literal("plate"),
       v.literal("buffet")
     ),
-    // S2.7: posts/month for paid tiers (toast/plate/buffet); resets on invoice.paid.
-    postsRemainingThisMonth: v.optional(v.number()),
-    // S2.7: lifetime post budget for free tier; never resets.
-    postsLifetime: v.optional(v.number()),
     lastDraftsVisitAt: v.optional(v.number()),
     // Sous-Chef draft generation skips composeCopy for these platforms.
     // Values: "x" | "linkedin". Empty/missing = both enabled.

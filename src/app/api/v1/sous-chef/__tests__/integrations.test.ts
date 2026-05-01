@@ -55,11 +55,7 @@ describe("/api/v1/sous-chef/integrations", () => {
       iv: "iv",
       tag: "tag",
     });
-    // Default: legacy plan (no tier cap), empty source list. Override per-test.
     queryMock.mockImplementation((name: string) => {
-      if (name === "api.userProfiles.getByUserId") {
-        return Promise.resolve({ plan: "trial" });
-      }
       if (name === "api.integrationSecrets.listByUser") {
         return Promise.resolve([]);
       }
@@ -142,76 +138,6 @@ describe("/api/v1/sous-chef/integrations", () => {
       "api.integrationSecrets.disconnectAction",
       { userId: "user_123", provider: "stripe" },
     );
-  });
-
-  it("rejects connect when user is at source cap (S4.2)", async () => {
-    queryMock.mockImplementation((name: string) => {
-      if (name === "api.userProfiles.getByUserId") {
-        return Promise.resolve({ plan: "toast" }); // cap = 1 source
-      }
-      if (name === "api.integrationSecrets.listByUser") {
-        return Promise.resolve([
-          { provider: "stripe", enabled: true, extra: null },
-        ]);
-      }
-      if (name === "api.githubInstallations.listByUserId") {
-        return Promise.resolve([]);
-      }
-      return Promise.resolve(null);
-    });
-
-    const { POST } = await import("../integrations/route");
-    const response = await POST(
-      new Request("http://localhost/api/v1/sous-chef/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: "posthog",
-          apiKey: "phc_test_123456789",
-          projectId: "123",
-          host: "https://us.posthog.com",
-        }),
-      }),
-    );
-
-    expect(response.status).toBe(403);
-    const data = (await response.json()) as { error: string; tier: string };
-    expect(data.error).toBe("source_cap_reached");
-    expect(data.tier).toBe("toast");
-    expect(actionMock).not.toHaveBeenCalled();
-  });
-
-  it("allows reconnect even when at source cap (S4.2)", async () => {
-    queryMock.mockImplementation((name: string) => {
-      if (name === "api.userProfiles.getByUserId") {
-        return Promise.resolve({ plan: "toast" });
-      }
-      if (name === "api.integrationSecrets.listByUser") {
-        return Promise.resolve([
-          { provider: "posthog", enabled: true, extra: null },
-        ]);
-      }
-      if (name === "api.githubInstallations.listByUserId") {
-        return Promise.resolve([]);
-      }
-      return Promise.resolve(null);
-    });
-    actionMock.mockResolvedValue({ seeded: [] });
-
-    const { POST } = await import("../integrations/route");
-    const response = await POST(
-      new Request("http://localhost/api/v1/sous-chef/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider: "posthog",
-          apiKey: "phc_test_123456789",
-          projectId: "123",
-          host: "https://us.posthog.com",
-        }),
-      }),
-    );
-    expect(response.status).toBe(200);
   });
 
   it("stores the secret and seeds successfully for an allowlisted PostHog host", async () => {

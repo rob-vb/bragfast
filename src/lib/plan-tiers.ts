@@ -1,4 +1,4 @@
-// S2.7: client mirror of convex/plan-tiers.ts. Keep numeric values + format arrays in sync.
+// Client mirror of convex/planTiers.ts. Keep numeric values + format arrays in sync.
 // Convex types are server-only; client copy duplicates the table verbatim. Parity covered by tests.
 
 export type Tier = "free" | "toast" | "plate" | "buffet";
@@ -12,54 +12,43 @@ export type Plan =
   | "plate"
   | "buffet";
 export type Format = "square" | "landscape" | "portrait";
-export type CounterField = "postsRemainingThisMonth" | "postsLifetime";
 
 export type TierSpec = {
-  posts: number;
-  counterField: CounterField;
+  credits: number;
   formats: Format[];
   platforms: number;
   video: boolean;
-  sources: number | "unlimited";
-  goals: number | "unlimited";
+  historyDays: number | "forever";
 };
 
 export const TIER_CONFIG: Record<Tier, TierSpec> = {
   free: {
-    posts: 30,
-    counterField: "postsLifetime",
-    formats: ["square"],
+    credits: 30,
+    formats: ["square", "landscape", "portrait"],
     platforms: 1,
-    video: false,
-    sources: 1,
-    goals: 1,
+    video: true,
+    historyDays: 30,
   },
   toast: {
-    posts: 30,
-    counterField: "postsRemainingThisMonth",
-    formats: ["square"],
+    credits: 200,
+    formats: ["square", "landscape", "portrait"],
     platforms: 1,
-    video: false,
-    sources: 1,
-    goals: 1,
+    video: true,
+    historyDays: 30,
   },
   plate: {
-    posts: 100,
-    counterField: "postsRemainingThisMonth",
-    formats: ["square", "landscape", "portrait"],
-    platforms: 2,
-    video: false,
-    sources: 3,
-    goals: 5,
-  },
-  buffet: {
-    posts: 500,
-    counterField: "postsRemainingThisMonth",
+    credits: 800,
     formats: ["square", "landscape", "portrait"],
     platforms: 2,
     video: true,
-    sources: "unlimited",
-    goals: "unlimited",
+    historyDays: 365,
+  },
+  buffet: {
+    credits: 2_500,
+    formats: ["square", "landscape", "portrait"],
+    platforms: 2,
+    video: true,
+    historyDays: "forever",
   },
 };
 

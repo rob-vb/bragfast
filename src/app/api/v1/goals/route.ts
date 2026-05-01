@@ -157,18 +157,6 @@ export async function POST(request: Request) {
     return Response.json(goal, { status: 201 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    // S5.4: tier goal cap surfaced as a 403 with structured payload.
-    const capMatch = msg.match(/goal_cap_reached:(\w+):(\d+)/);
-    if (capMatch) {
-      return Response.json(
-        {
-          error: "goal_cap_reached",
-          tier: capMatch[1],
-          cap: Number(capMatch[2]),
-        },
-        { status: 403 },
-      );
-    }
     if (msg.includes("requires") || msg.includes("must")) {
       return Response.json({ error: msg }, { status: 400 });
     }

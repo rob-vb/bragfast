@@ -1,6 +1,5 @@
-// S2.7: tier-config — single source of truth for posts/month, format/platform/video caps.
+// Tier-config — single source of truth for credits/month, format/platform/video caps, history.
 // Mirrored in src/lib/plan-tiers.ts for client display. Numbers must stay in sync (parity test).
-// Source: PRD.md §4.
 
 export type Tier = "free" | "toast" | "plate" | "buffet";
 export type Plan =
@@ -13,54 +12,43 @@ export type Plan =
   | "plate"
   | "buffet";
 export type Format = "square" | "landscape" | "portrait";
-export type CounterField = "postsRemainingThisMonth" | "postsLifetime";
 
 export type TierSpec = {
-  posts: number;
-  counterField: CounterField;
+  credits: number;
   formats: Format[];
   platforms: number; // max destinations per post
   video: boolean;
-  sources: number | "unlimited";
-  goals: number | "unlimited";
+  historyDays: number | "forever";
 };
 
 export const TIER_CONFIG: Record<Tier, TierSpec> = {
   free: {
-    posts: 30,
-    counterField: "postsLifetime",
-    formats: ["square"],
+    credits: 30,
+    formats: ["square", "landscape", "portrait"],
     platforms: 1,
-    video: false,
-    sources: 1,
-    goals: 1,
+    video: true,
+    historyDays: 30,
   },
   toast: {
-    posts: 30,
-    counterField: "postsRemainingThisMonth",
-    formats: ["square"],
+    credits: 200,
+    formats: ["square", "landscape", "portrait"],
     platforms: 1,
-    video: false,
-    sources: 1,
-    goals: 1,
+    video: true,
+    historyDays: 30,
   },
   plate: {
-    posts: 100,
-    counterField: "postsRemainingThisMonth",
-    formats: ["square", "landscape", "portrait"],
-    platforms: 2,
-    video: false,
-    sources: 3,
-    goals: 5,
-  },
-  buffet: {
-    posts: 500,
-    counterField: "postsRemainingThisMonth",
+    credits: 800,
     formats: ["square", "landscape", "portrait"],
     platforms: 2,
     video: true,
-    sources: "unlimited",
-    goals: "unlimited",
+    historyDays: 365,
+  },
+  buffet: {
+    credits: 2_500,
+    formats: ["square", "landscape", "portrait"],
+    platforms: 2,
+    video: true,
+    historyDays: "forever",
   },
 };
 
@@ -76,10 +64,6 @@ export function tierFor(plan: Plan): Tier | null {
     default:
       return null;
   }
-}
-
-export function counterFieldFor(tier: Tier): CounterField {
-  return TIER_CONFIG[tier].counterField;
 }
 
 export function capsFor(tier: Tier): TierSpec {

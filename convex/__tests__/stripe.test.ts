@@ -34,7 +34,7 @@ async function readProfile(t: ReturnType<typeof convexTest>) {
 }
 
 describe("handleInvoicePaid — new tiers", () => {
-  it("Toast → plan=toast, postsRemainingThisMonth=30", async () => {
+  it("Toast → plan=toast, creditsRemaining=200", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleInvoicePaid, {
@@ -43,10 +43,10 @@ describe("handleInvoicePaid — new tiers", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("toast");
-    expect(p?.postsRemainingThisMonth).toBe(30);
+    expect(p?.creditsRemaining).toBe(200);
   });
 
-  it("Plate → 100 posts", async () => {
+  it("Plate → creditsRemaining=800", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleInvoicePaid, {
@@ -55,10 +55,10 @@ describe("handleInvoicePaid — new tiers", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("plate");
-    expect(p?.postsRemainingThisMonth).toBe(100);
+    expect(p?.creditsRemaining).toBe(800);
   });
 
-  it("Buffet → 500 posts", async () => {
+  it("Buffet → creditsRemaining=2500", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleInvoicePaid, {
@@ -67,10 +67,10 @@ describe("handleInvoicePaid — new tiers", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("buffet");
-    expect(p?.postsRemainingThisMonth).toBe(500);
+    expect(p?.creditsRemaining).toBe(2500);
   });
 
-  it("downgrade Buffet→Toast resets to 30, no rollover", async () => {
+  it("downgrade Buffet→Toast resets to 200, no rollover", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleInvoicePaid, {
@@ -83,12 +83,12 @@ describe("handleInvoicePaid — new tiers", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("toast");
-    expect(p?.postsRemainingThisMonth).toBe(30);
+    expect(p?.creditsRemaining).toBe(200);
   });
 });
 
 describe("handleInvoicePaid — legacy tiers (R4)", () => {
-  it("Starter → creditsRemaining=200, posts untouched", async () => {
+  it("Starter → creditsRemaining=200", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleInvoicePaid, {
@@ -98,7 +98,6 @@ describe("handleInvoicePaid — legacy tiers (R4)", () => {
     const p = await readProfile(t);
     expect(p?.plan).toBe("starter");
     expect(p?.creditsRemaining).toBe(200);
-    expect(p?.postsRemainingThisMonth).toBeUndefined();
   });
 
   it("unknown price → no patch", async () => {
@@ -115,7 +114,7 @@ describe("handleInvoicePaid — legacy tiers (R4)", () => {
 });
 
 describe("handleSubscriptionChange", () => {
-  it("Toast active → plan=toast, posts=30", async () => {
+  it("Toast active → plan=toast, creditsRemaining=200", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleSubscriptionChange, {
@@ -125,7 +124,7 @@ describe("handleSubscriptionChange", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("toast");
-    expect(p?.postsRemainingThisMonth).toBe(30);
+    expect(p?.creditsRemaining).toBe(200);
   });
 
   it("non-active status is ignored", async () => {
@@ -142,15 +141,14 @@ describe("handleSubscriptionChange", () => {
 });
 
 describe("handleSubscriptionDeleted", () => {
-  it("new-tier subscriber → free + posts=0", async () => {
+  it("new-tier subscriber → free + creditsRemaining=0", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {
       await ctx.db.insert("userProfiles", {
         userId: USER_ID,
         email: "u@example.com",
-        creditsRemaining: 0,
+        creditsRemaining: 500,
         plan: "buffet",
-        postsRemainingThisMonth: 250,
       });
     });
     await t.mutation(internal.stripe.handleSubscriptionDeleted, {
@@ -158,7 +156,7 @@ describe("handleSubscriptionDeleted", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("free");
-    expect(p?.postsRemainingThisMonth).toBe(0);
+    expect(p?.creditsRemaining).toBe(0);
   });
 
   it("legacy subscriber → trial + credits=0", async () => {

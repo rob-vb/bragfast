@@ -6,7 +6,6 @@ import {
   DEFAULT_GOALS_BY_PROVIDER,
   DEFAULT_STAR_THRESHOLDS,
 } from "../src/lib/goals/defaults";
-import { TIER_CONFIG, tierFor } from "./planTiers";
 
 const providerV = v.union(
   v.literal("stripe"),
@@ -132,30 +131,6 @@ export const create = mutation({
   },
   handler: async (ctx, { userId, provider, metric, target, scope, label, enabled, recurring }) => {
     validateGoal(metric as GoalMetric, provider as GoalProvider | undefined, target, scope, label);
-
-    // S5.4: enforce active-goal cap per tier. Legacy plans (tierFor=null) bypass.
-    if (enabled) {
-      const profile = await ctx.db
-        .query("userProfiles")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .first();
-      const tier = profile ? tierFor(profile.plan) : null;
-      if (tier) {
-        const cap = TIER_CONFIG[tier].goals;
-        if (cap !== "unlimited") {
-          const existing = await ctx.db
-            .query("goals")
-            .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .collect();
-          const activeCount = existing.filter((g) => g.enabled).length;
-          if (activeCount >= cap) {
-            throw new Error(
-              `goal_cap_reached:${tier}:${cap}`,
-            );
-          }
-        }
-      }
-    }
 
     const externalId = makeExternalId();
     const now = new Date().toISOString();

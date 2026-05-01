@@ -36,7 +36,7 @@ const FAQ = [
   },
   {
     q: "How does Sous-Chef (agent) know what to post?",
-    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef scans them on a schedule, drafts a post when it spots a win, and waits for you to cook it. You approve every post. Disconnect any integration any time.",
+    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef both reacts in real time (a PR merges, a milestone hits) and sweeps on a schedule, drafting a post the moment it spots a win and leaving it for you to cook. You approve every post. Disconnect any integration any time.",
   },
 ];
 
@@ -59,10 +59,10 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Automate your build in public posts
+              You ship features, but no one sees them.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Turn any win into branded images and video: a release, an MRR record, a stars milestone. You can do it yourself, or Sous-Chef (agent) drafts it for you.
+              Automate your build in public posts. Your own Sous-Chef (agent) keeps track of your milestones: features your ship, an MRR record, or a stars count for your repo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -99,7 +99,7 @@ export default function Home() {
                 Your Sous-Chef (agent) spots your wins so you can focus on building.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to add a screenshot and cook.
+                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to approve and cook.
               </p>
               <CtaLink
                 signedOutHref="/signup"

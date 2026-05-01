@@ -34,11 +34,11 @@ const FAQS = [
   },
   {
     q: "How does the free tier work?",
-    a: "On the House gives you 30 lifetime credits — no credit card needed. Same format restrictions as Toast (square, one channel). Designed for trial, not for ongoing use.",
+    a: "30 lifetime credits — no credit card needed. Designed for trial, not for ongoing use.",
   },
   {
     q: "What sources can I connect?",
-    a: "Toast: GitHub. Full Plate: GitHub + Stripe + one of PostHog/GA. Buffet: every source we support, no cap. Source count drives what brag.fast can detect on your behalf.",
+    a: "Every source we support — GitHub, Stripe, PostHog, GA, and more — on every paid tier. No source caps.",
   },
   {
     q: "Why credits instead of per-post pricing?",
@@ -59,8 +59,8 @@ export default function PricingPage() {
     <div className="min-h-screen bg-surface text-brand">
       <LandingNav />
 
-      {/* Hero */}
-      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 bg-white border-b-2 border-brand overflow-hidden">
+      {/* Hero + tiers */}
+      <section className="relative pt-16 pb-20 md:pt-24 md:pb-24 bg-white border-b-2 border-brand overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -70,43 +70,18 @@ export default function PricingPage() {
             backgroundSize: "24px 24px",
           }}
         />
-        <div className="relative mx-auto max-w-6xl px-4 md:px-10 text-center">
-          <div className="flex items-center justify-center gap-2.5 mb-6">
-            <div className="w-6 h-[3px] bg-gold" />
-            <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-              Pricing
-            </span>
-          </div>
-          <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-            Priced per credit.
-            <br className="hidden md:block" /> Same for everyone.
-          </h1>
-          <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto mb-3">
-            1 image = 1 credit. 1 video = 5 credits. Whether you approve in-app
-            or call the API.
-          </p>
-          <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-            Try it on the house —{" "}
-            <strong className="text-brand">30 free credits, lifetime</strong>.
-            No credit card needed.
-          </p>
-        </div>
-      </section>
-
-      {/* Pricing cards */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
-        <div className="mx-auto max-w-6xl px-4 md:px-10">
+        <div className="relative mx-auto max-w-6xl px-4 md:px-10">
           <div className="mb-12 md:mb-16 text-center">
-            <div className="flex items-center justify-center gap-2.5 mb-5">
+            <div className="flex items-center justify-center gap-2.5 mb-6">
               <div className="w-6 h-[3px] bg-gold" />
               <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                Tiers
+                Pricing
               </span>
             </div>
-            <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4] mb-3">
+            <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-5">
               What are you having?
-            </h2>
-            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
+            </h1>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-xl mx-auto">
               1 image = 1 credit · 1 video = 5 credits. Tier bounds the rest.
             </p>
           </div>
@@ -175,7 +150,7 @@ export default function PricingPage() {
       </section>
 
       {/* Feature comparison */}
-      <section className="py-16 md:py-20 bg-white border-b-2 border-brand">
+      <section className="py-16 md:py-20 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2.5 mb-5">
@@ -264,7 +239,7 @@ export default function PricingPage() {
                         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70">
                           {feature.name}
                         </span>
-                        <FeatureValue value={value} />
+                        <FeatureValue value={value} align="right" />
                       </li>
                     );
                   })}
@@ -273,22 +248,11 @@ export default function PricingPage() {
             ))}
           </div>
 
-          {/* Free tier callout */}
-          <div className="mt-10 border-2 border-brand bg-gold/20 p-6 max-w-3xl mx-auto">
-            <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand mb-2">
-              &#9656; On the House
-            </p>
-            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-relaxed">
-              30 lifetime credits, no card required. Same format restrictions as
-              Toast (one channel). Built for trying it out — not for ongoing
-              use.
-            </p>
-          </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2.5 mb-5">

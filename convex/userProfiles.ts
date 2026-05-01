@@ -1,6 +1,5 @@
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { TIER_CONFIG } from "./planTiers";
 
 export const getByUserId = query({
   args: { userId: v.string() },
@@ -127,9 +126,6 @@ export const getStats = query({
     return {
       creditsRemaining: profile?.creditsRemaining ?? 0,
       plan: profile?.plan ?? "trial",
-      // S2.7: surface posts/month + lifetime so dashboards on new accounting can render.
-      postsRemainingThisMonth: profile?.postsRemainingThisMonth,
-      postsLifetime: profile?.postsLifetime,
       creditsUsedThisMonth,
       totalReleases: releases.length,
       totalImages,
@@ -195,81 +191,6 @@ export const setVoicePreset = mutation({
     if (!profile) throw new Error("User profile not found");
     await ctx.db.patch(profile._id, { voicePreset: preset });
     return preset;
-  },
-});
-
-// S2.7: idempotent one-shot backfill. Map legacy plans → new tiers + seed counter.
-// Run manually from Convex dashboard at launch (after flag flip).
-// Skip rows already on new accounting (postsRemainingThisMonth or postsLifetime set).
-// Does NOT touch creditsRemaining — legacy field stays for /api/v1/cook routes (R8).
-export const backfillToNewAccounting = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const profiles = await ctx.db.query("userProfiles").collect();
-    let migrated = 0;
-    let skipped = 0;
-    const errors: string[] = [];
-
-    for (const p of profiles) {
-      // Already migrated?
-      if (
-        p.postsRemainingThisMonth !== undefined ||
-        p.postsLifetime !== undefined
-      ) {
-        skipped++;
-        continue;
-      }
-      // Already on new plan literal but no counter — seed it.
-      if (
-        p.plan === "free" ||
-        p.plan === "toast" ||
-        p.plan === "plate" ||
-        p.plan === "buffet"
-      ) {
-        const tier = p.plan;
-        const field = TIER_CONFIG[tier].counterField;
-        await ctx.db.patch(p._id, {
-          [field]: TIER_CONFIG[tier].posts,
-        });
-        migrated++;
-        continue;
-      }
-      // Map legacy → new tier with seeded counter.
-      switch (p.plan) {
-        case "trial":
-          await ctx.db.patch(p._id, {
-            plan: "free",
-            postsLifetime: TIER_CONFIG.free.posts,
-          });
-          migrated++;
-          break;
-        case "starter":
-          await ctx.db.patch(p._id, {
-            plan: "toast",
-            postsRemainingThisMonth: TIER_CONFIG.toast.posts,
-          });
-          migrated++;
-          break;
-        case "pro":
-          await ctx.db.patch(p._id, {
-            plan: "plate",
-            postsRemainingThisMonth: TIER_CONFIG.plate.posts,
-          });
-          migrated++;
-          break;
-        case "scale":
-          await ctx.db.patch(p._id, {
-            plan: "buffet",
-            postsRemainingThisMonth: TIER_CONFIG.buffet.posts,
-          });
-          migrated++;
-          break;
-        default:
-          errors.push(`unknown plan literal '${p.plan}' on userId=${p.userId}`);
-      }
-    }
-
-    return { migrated, skipped, errors };
   },
 });
 

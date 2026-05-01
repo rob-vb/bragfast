@@ -16,7 +16,7 @@ function priceToPlan(priceId: string): "starter" | "pro" | "scale" | null {
   return map[priceId] ?? null;
 }
 
-// S2.7: new family of price IDs → posts/month tier (Toast/Plate/Buffet).
+// New tier price IDs → Toast/Plate/Buffet.
 function priceToTier(priceId: string): Tier | null {
   const map: Record<string, Tier> = {
     [process.env.STRIPE_TOAST_PRICE_ID!]: "toast",
@@ -122,12 +122,12 @@ export const handleSubscriptionChange = internalMutation({
       .first();
     if (!profile) return;
 
-    // S2.7: new tier price IDs route to posts/month accounting.
+    // New tier price IDs: set plan + reset creditsRemaining.
     const tier = priceToTier(priceId);
     if (tier) {
       await ctx.db.patch(profile._id, {
         plan: tier,
-        postsRemainingThisMonth: TIER_CONFIG[tier].posts,
+        creditsRemaining: TIER_CONFIG[tier].credits,
       });
       return;
     }
@@ -156,12 +156,12 @@ export const handleInvoicePaid = internalMutation({
       .first();
     if (!profile) return;
 
-    // S2.7: new tier price IDs reset posts/month, no rollover.
+    // New tier price IDs: reset creditsRemaining on renewal, no rollover.
     const tier = priceToTier(priceId);
     if (tier) {
       await ctx.db.patch(profile._id, {
         plan: tier,
-        postsRemainingThisMonth: TIER_CONFIG[tier].posts,
+        creditsRemaining: TIER_CONFIG[tier].credits,
       });
       return;
     }
@@ -186,7 +186,7 @@ export const handleSubscriptionDeleted = internalMutation({
       .first();
     if (!profile) return;
 
-    // S2.7: drop new-tier subscribers to free; legacy stays on trial+0 credits.
+    // New-tier subscribers drop to free (0 credits); legacy stays on trial+0 credits.
     const isNewTier =
       profile.plan === "toast" ||
       profile.plan === "plate" ||
@@ -194,7 +194,7 @@ export const handleSubscriptionDeleted = internalMutation({
     if (isNewTier) {
       await ctx.db.patch(profile._id, {
         plan: "free",
-        postsRemainingThisMonth: 0,
+        creditsRemaining: 0,
       });
       return;
     }

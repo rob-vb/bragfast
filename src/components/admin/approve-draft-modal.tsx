@@ -329,8 +329,6 @@ export function ApproveDraftModal({
           format_blocked: "Your plan doesn't include this format.",
           video_blocked: "Video posts require Buffet.",
           platform_blocked: "Your plan limits the number of destinations per post.",
-          posts_exhausted: "You're out of posts. Upgrade to keep going.",
-          posts_pending: "New posts arrive when your subscription syncs (try again in a moment).",
         };
         const upgrade =
           "upgradeTier" in result && result.upgradeTier

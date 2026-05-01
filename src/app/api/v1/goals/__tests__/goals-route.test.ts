@@ -110,20 +110,6 @@ describe("POST /api/v1/goals", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 403 with structured payload when goal cap reached (S5.4)", async () => {
-    fetchMutationMock.mockRejectedValue(new Error("goal_cap_reached:toast:1"));
-    const { POST } = await import("../route");
-    const res = await POST(new Request("http://localhost/api/v1/goals", {
-      method: "POST",
-      body: JSON.stringify({ provider: "stripe", metric: "mrr", target: 1000 }),
-    }));
-    expect(res.status).toBe(403);
-    const data = await res.json() as { error: string; tier: string; cap: number };
-    expect(data.error).toBe("goal_cap_reached");
-    expect(data.tier).toBe("toast");
-    expect(data.cap).toBe(1);
-  });
-
   it("returns 400 for invalid provider", async () => {
     const { POST } = await import("../route");
     const res = await POST(new Request("http://localhost/api/v1/goals", {

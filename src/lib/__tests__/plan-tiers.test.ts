@@ -8,43 +8,47 @@ import {
 import { TIER_CONFIG as CONVEX_TIER_CONFIG } from "../../../convex/planTiers";
 
 describe("plan-tiers TIER_CONFIG", () => {
-  it("has expected post caps per tier", () => {
-    expect(TIER_CONFIG.free.posts).toBe(30);
-    expect(TIER_CONFIG.toast.posts).toBe(30);
-    expect(TIER_CONFIG.plate.posts).toBe(100);
-    expect(TIER_CONFIG.buffet.posts).toBe(500);
+  it("has expected credit caps per tier", () => {
+    expect(TIER_CONFIG.free.credits).toBe(30);
+    expect(TIER_CONFIG.toast.credits).toBe(200);
+    expect(TIER_CONFIG.plate.credits).toBe(800);
+    expect(TIER_CONFIG.buffet.credits).toBe(2_500);
   });
 
-  it("counterField maps free→lifetime, paid→monthly", () => {
-    expect(TIER_CONFIG.free.counterField).toBe("postsLifetime");
-    expect(TIER_CONFIG.toast.counterField).toBe("postsRemainingThisMonth");
-    expect(TIER_CONFIG.plate.counterField).toBe("postsRemainingThisMonth");
-    expect(TIER_CONFIG.buffet.counterField).toBe("postsRemainingThisMonth");
+  it("historyDays: free/toast=30, plate=365, buffet=forever", () => {
+    expect(TIER_CONFIG.free.historyDays).toBe(30);
+    expect(TIER_CONFIG.toast.historyDays).toBe(30);
+    expect(TIER_CONFIG.plate.historyDays).toBe(365);
+    expect(TIER_CONFIG.buffet.historyDays).toBe("forever");
   });
 
-  it("video gating: only buffet", () => {
-    expect(TIER_CONFIG.free.video).toBe(false);
-    expect(TIER_CONFIG.toast.video).toBe(false);
-    expect(TIER_CONFIG.plate.video).toBe(false);
+  it("video enabled on all tiers", () => {
+    expect(TIER_CONFIG.free.video).toBe(true);
+    expect(TIER_CONFIG.toast.video).toBe(true);
+    expect(TIER_CONFIG.plate.video).toBe(true);
     expect(TIER_CONFIG.buffet.video).toBe(true);
   });
 
-  it("formats: free/toast square-only, plate+ all formats", () => {
-    expect(TIER_CONFIG.free.formats).toEqual(["square"]);
-    expect(TIER_CONFIG.toast.formats).toEqual(["square"]);
-    expect(TIER_CONFIG.plate.formats.sort()).toEqual(
-      ["landscape", "portrait", "square"],
-    );
-    expect(TIER_CONFIG.buffet.formats.sort()).toEqual(
-      ["landscape", "portrait", "square"],
-    );
+  it("all tiers support all 3 formats", () => {
+    for (const t of ["free", "toast", "plate", "buffet"] as const) {
+      expect(TIER_CONFIG[t].formats.sort()).toEqual(
+        ["landscape", "portrait", "square"],
+      );
+    }
+  });
+
+  it("platforms: free/toast=1, plate/buffet=2", () => {
+    expect(TIER_CONFIG.free.platforms).toBe(1);
+    expect(TIER_CONFIG.toast.platforms).toBe(1);
+    expect(TIER_CONFIG.plate.platforms).toBe(2);
+    expect(TIER_CONFIG.buffet.platforms).toBe(2);
   });
 
   it("every tier has sane invariants", () => {
     for (const t of ["free", "toast", "plate", "buffet"] as const) {
       expect(TIER_CONFIG[t].formats.length).toBeGreaterThanOrEqual(1);
       expect(TIER_CONFIG[t].platforms).toBeGreaterThanOrEqual(1);
-      expect(TIER_CONFIG[t].posts).toBeGreaterThan(0);
+      expect(TIER_CONFIG[t].credits).toBeGreaterThan(0);
     }
   });
 });
@@ -67,25 +71,27 @@ describe("tierFor", () => {
 
 describe("capsFor", () => {
   it("returns the tier spec", () => {
-    expect(capsFor("toast").posts).toBe(30);
+    expect(capsFor("toast").credits).toBe(200);
     expect(capsFor("buffet").video).toBe(true);
   });
 });
 
 describe("nextTierFor", () => {
-  it("video → buffet", () => {
-    expect(nextTierFor({ needsVideo: true })).toBe("buffet");
+  it("video → toast (all tiers support video now)", () => {
+    // All tiers support video, so the cheapest is toast.
+    expect(nextTierFor({ needsVideo: true })).toBe("toast");
   });
 
-  it("portrait format → plate (cheapest with portrait)", () => {
-    expect(nextTierFor({ needsFormat: "portrait" })).toBe("plate");
+  it("portrait format → toast (all tiers support all formats now)", () => {
+    // All tiers support all formats, so cheapest is toast.
+    expect(nextTierFor({ needsFormat: "portrait" })).toBe("toast");
   });
 
   it("2 platforms → plate (cheapest with multi-platform)", () => {
     expect(nextTierFor({ needsPlatforms: 2 })).toBe("plate");
   });
 
-  it("3 platforms → null (no tier supports it; max 2 per PRD §4)", () => {
+  it("3 platforms → null (no tier supports it; max 2)", () => {
     expect(nextTierFor({ needsPlatforms: 3 })).toBeNull();
   });
 
@@ -101,10 +107,10 @@ describe("client/convex parity", () => {
     for (const t of ["free", "toast", "plate", "buffet"] as const) {
       const c = TIER_CONFIG[t];
       const s = CONVEX_TIER_CONFIG[t];
-      expect(c.posts).toBe(s.posts);
+      expect(c.credits).toBe(s.credits);
       expect(c.platforms).toBe(s.platforms);
       expect(c.video).toBe(s.video);
-      expect(c.counterField).toBe(s.counterField);
+      expect(c.historyDays).toBe(s.historyDays);
       expect([...c.formats].sort()).toEqual([...s.formats].sort());
     }
   });
