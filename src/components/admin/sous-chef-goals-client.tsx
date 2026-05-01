@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { PixelCard } from "./pixel-card";
 import { GoalsSection, type Goal } from "./goals-section";
 import { GoalCreateModal } from "./goal-create-modal";
-import { PROVIDER_LABELS } from "./integration-forms";
 
 type IntegrationRow = {
   provider: string;
@@ -14,6 +13,13 @@ type IntegrationRow = {
 type GoalProvider = "stripe" | "posthog" | "ga4" | "github";
 
 const PROVIDERS: GoalProvider[] = ["github", "stripe", "posthog", "ga4"];
+
+const GOAL_PROVIDER_LABELS: Record<GoalProvider, string> = {
+  github: "GitHub",
+  stripe: "Stripe",
+  posthog: "PostHog",
+  ga4: "Google Analytics",
+};
 
 export function SousChefGoalsClient({ hasGithub }: { hasGithub: boolean }) {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -71,7 +77,7 @@ export function SousChefGoalsClient({ hasGithub }: { hasGithub: boolean }) {
         <PixelCard key={p}>
           <div className="space-y-3">
             <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-              {PROVIDER_LABELS[p as keyof typeof PROVIDER_LABELS] ?? p}
+              {GOAL_PROVIDER_LABELS[p]}
             </h2>
             <GoalsSection
               provider={p}
@@ -95,6 +101,7 @@ export function SousChefGoalsClient({ hasGithub }: { hasGithub: boolean }) {
           stripe: byProvider.get("stripe")?.enabled ?? false,
           posthog: byProvider.get("posthog")?.enabled ?? false,
           ga4: byProvider.get("ga4")?.enabled ?? false,
+          github: hasGithub,
         }}
       />
     </div>

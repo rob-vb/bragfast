@@ -8,6 +8,7 @@ type ConnectedFlags = {
   stripe: boolean;
   posthog: boolean;
   ga4: boolean;
+  github: boolean;
 };
 
 export function GoalStepClient() {
@@ -17,6 +18,7 @@ export function GoalStepClient() {
     stripe: false,
     posthog: false,
     ga4: false,
+    github: false,
   });
   const [isFirstGoal, setIsFirstGoal] = useState(true);
 
@@ -24,25 +26,34 @@ export function GoalStepClient() {
     let cancelled = false;
     (async () => {
       try {
-        const [secRes, goalsRes] = await Promise.all([
+        const [secRes, goalsRes, ghRes] = await Promise.all([
           fetch("/api/v1/sous-chef/integrations").catch(() => null),
           fetch("/api/v1/goals").catch(() => null),
+          fetch("/api/github/repos").catch(() => null),
         ]);
         if (cancelled) return;
+        const flags: ConnectedFlags = {
+          stripe: false,
+          posthog: false,
+          ga4: false,
+          github: false,
+        };
         if (secRes?.ok) {
           const json = (await secRes.json()) as {
             integrations?: Array<{ provider: string; enabled?: boolean }>;
           };
-          const rows = json.integrations ?? [];
-          const flags: ConnectedFlags = { stripe: false, posthog: false, ga4: false };
-          for (const row of rows) {
+          for (const row of json.integrations ?? []) {
             const enabled = row.enabled ?? true;
             if (row.provider === "stripe") flags.stripe = enabled;
             if (row.provider === "posthog") flags.posthog = enabled;
             if (row.provider === "ga4") flags.ga4 = enabled;
           }
-          setConnected(flags);
         }
+        if (ghRes?.ok) {
+          const json = (await ghRes.json()) as { repos?: Array<unknown> };
+          flags.github = (json.repos ?? []).length > 0;
+        }
+        setConnected(flags);
         if (goalsRes?.ok) {
           const json = (await goalsRes.json()) as { goals?: Array<unknown> };
           setIsFirstGoal((json.goals ?? []).length === 0);

@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import posthog from "posthog-js";
 import { capsFor, type Tier } from "@/lib/plan-tiers";
 import { UpsellModal } from "./upsell-modal";
 
-export type GoalCategory = "revenue" | "users" | "traffic" | "custom";
+export type GoalCategory = "revenue" | "users" | "traffic" | "github";
 
 type ConnectedProviders = {
   stripe: boolean;
   posthog: boolean;
   ga4: boolean;
+  github: boolean;
 };
+
+type GithubRepo = { full_name: string; name: string };
 
 type Props = {
   open: boolean;
@@ -43,8 +46,25 @@ export function GoalCreateModal({
   const [trafficProvider, setTrafficProvider] = useState<"posthog" | "ga4">(
     connected.posthog ? "posthog" : "ga4",
   );
-  const [customLabel, setCustomLabel] = useState<string>("");
-  const [customTarget, setCustomTarget] = useState<string>("");
+  const [githubRepos, setGithubRepos] = useState<GithubRepo[]>([]);
+  const [githubScope, setGithubScope] = useState<string>("");
+
+  useEffect(() => {
+    if (!open || !connected.github) return;
+    let cancelled = false;
+    fetch("/api/github/repos")
+      .then((r) => r.json())
+      .then((d: { repos?: GithubRepo[] }) => {
+        if (cancelled) return;
+        const repos = d.repos ?? [];
+        setGithubRepos(repos);
+        setGithubScope((prev) => prev || repos[0]?.full_name || "");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, connected.github]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +77,7 @@ export function GoalCreateModal({
     setCategory(null);
     setRevMetric("mrr");
     setTarget("");
-    setCustomLabel("");
-    setCustomTarget("");
+    setGithubScope(githubRepos[0]?.full_name ?? "");
     setError(null);
   }
 
@@ -97,9 +116,7 @@ export function GoalCreateModal({
         goal_category: goalCategory,
         is_first_goal: isFirstGoal,
         has_connected_source:
-          goalCategory === "custom"
-            ? false
-            : connected.stripe || connected.posthog || connected.ga4,
+          connected.stripe || connected.posthog || connected.ga4 || connected.github,
       });
       reset();
       onCreated(goalCategory);
@@ -152,16 +169,17 @@ export function GoalCreateModal({
       return;
     }
 
-    if (category === "custom") {
-      const body: Record<string, unknown> = {
-        provider: null,
-        metric: "custom",
-        label: customLabel.trim(),
-        enabled: true,
-      };
-      const t = parseFloat(customTarget);
-      if (!Number.isNaN(t) && t > 0) body.target = t;
-      await submit(body, "custom");
+    if (category === "github") {
+      await submit(
+        {
+          provider: "github",
+          metric: "stars",
+          scope: githubScope,
+          target: parseFloat(target),
+          enabled: true,
+        },
+        "github",
+      );
       return;
     }
   }
@@ -218,9 +236,11 @@ export function GoalCreateModal({
                 onClick={() => pickCategory("traffic")}
               />
               <CategoryButton
-                label="Custom"
-                hint="Anything else — track and post by hand"
-                onClick={() => pickCategory("custom")}
+                label="GitHub stars"
+                hint="Star count on a connected repo"
+                disabled={!connected.github}
+                disabledHint="Connect GitHub first"
+                onClick={() => pickCategory("github")}
               />
             </div>
           </div>
@@ -325,31 +345,35 @@ export function GoalCreateModal({
           </form>
         )}
 
-        {step === "form" && category === "custom" && (
+        {step === "form" && category === "github" && (
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
             <FormHeader
               onBack={() => setStep("category")}
-              title="Custom goal"
+              title="GitHub stars goal"
             />
-            <p className="text-sm text-brand/70 leading-relaxed">
-              No integration needed. You track it; brag.fast drafts a post when
-              you mark it hit.
-            </p>
-            <Field label="Label">
-              <input
-                type="text"
-                value={customLabel}
-                onChange={(e) => setCustomLabel(e.target.value)}
+            <Field label="Repository">
+              <select
+                value={githubScope}
+                onChange={(e) => setGithubScope(e.target.value)}
                 required
-                placeholder="100 mailing-list subs"
                 className="w-full border-2 border-brand bg-white px-3 py-2 font-mono text-sm"
-              />
+              >
+                {githubRepos.length === 0 && (
+                  <option value="">Loading repositories…</option>
+                )}
+                {githubRepos.map((r) => (
+                  <option key={r.full_name} value={r.full_name}>
+                    {r.full_name}
+                  </option>
+                ))}
+              </select>
             </Field>
-            <Field label="Target (optional)">
+            <Field label="Target stars">
               <input
                 type="number"
-                value={customTarget}
-                onChange={(e) => setCustomTarget(e.target.value)}
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                required
                 min="1"
                 step="1"
                 placeholder="100"
@@ -358,7 +382,7 @@ export function GoalCreateModal({
             </Field>
             <SubmitRow
               submitting={submitting}
-              disabled={submitting || !customLabel.trim()}
+              disabled={submitting || !target || !githubScope}
               onCancel={close}
             />
             {error && <p className="text-sm text-red-600">{error}</p>}
