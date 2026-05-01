@@ -201,16 +201,7 @@ export const approveDraft = mutation({
     ),
     postState: v.union(v.literal("queue"), v.literal("draft")),
     clientNonce: v.string(),
-    mediaUrlByFormat: v.optional(
-      v.object({
-        square: v.optional(v.string()),
-        landscape: v.optional(v.string()),
-        portrait: v.optional(v.string()),
-        "video-square": v.optional(v.string()),
-        "video-landscape": v.optional(v.string()),
-        "video-portrait": v.optional(v.string()),
-      }),
-    ),
+    mediaUrlByFormat: v.optional(v.record(v.string(), v.string())),
     // Trusted server override: the cook-and-approve endpoint already
     // authenticated the request, then needs to act as that user. Same trust
     // pattern as `api.drafts.remove`. Browser clients omit this and the
