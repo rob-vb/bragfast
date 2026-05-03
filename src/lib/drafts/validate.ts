@@ -34,11 +34,13 @@ function validateColors(v: unknown): Check<DraftColors> {
 function validateObjectContent(v: unknown): Check<Record<string, DraftObjectContent>> {
   if (!isPlainObject(v)) return fail("objectContent must be object");
   const out: Record<string, DraftObjectContent> = {};
-  const allowed = ["text", "image_url", "video_url"] as const;
+  const stringFields = ["text", "image_url", "video_url", "font_family"] as const;
+  const numberFields = ["font_weight"] as const;
+  const allowed = [...stringFields, ...numberFields] as readonly string[];
   for (const [key, raw] of Object.entries(v)) {
     if (!isPlainObject(raw)) return fail(`objectContent.${key} must be object`);
     const entry: DraftObjectContent = {};
-    for (const field of allowed) {
+    for (const field of stringFields) {
       if (raw[field] !== undefined) {
         if (typeof raw[field] !== "string") {
           return fail(`objectContent.${key}.${field} must be string`);
@@ -46,9 +48,15 @@ function validateObjectContent(v: unknown): Check<Record<string, DraftObjectCont
         entry[field] = raw[field] as string;
       }
     }
-    const extraKeys = Object.keys(raw).filter(
-      (k) => !allowed.includes(k as typeof allowed[number])
-    );
+    for (const field of numberFields) {
+      if (raw[field] !== undefined) {
+        if (typeof raw[field] !== "number") {
+          return fail(`objectContent.${key}.${field} must be number`);
+        }
+        entry[field] = raw[field] as number;
+      }
+    }
+    const extraKeys = Object.keys(raw).filter((k) => !allowed.includes(k));
     if (extraKeys.length > 0) {
       return fail(`objectContent.${key} has unknown keys: ${extraKeys.join(",")}`);
     }

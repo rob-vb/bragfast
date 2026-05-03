@@ -22,7 +22,7 @@ export interface BrandColorPickerProps {
 }
 
 export function BrandColorPicker({
-  label = "Colors",
+  label,
   brandId,
   colors,
   onBrandChange,
@@ -61,14 +61,16 @@ export function BrandColorPicker({
 
   return (
     <div className="space-y-3">
-      <Label className="text-xs font-medium text-zinc-500 uppercase">{label}</Label>
+      {label && (
+        <Label className="text-xs font-medium text-zinc-500 uppercase">{label}</Label>
+      )}
 
       <Select value={brandId || "none"} onValueChange={handleBrandChange}>
         <SelectTrigger className="h-8 text-sm">
           <SelectValue placeholder="Select brand..." />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">Manual colors</SelectItem>
+          <SelectItem value="none">Manual</SelectItem>
           {brands.map((b) => (
             <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
           ))}
