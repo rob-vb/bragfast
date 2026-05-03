@@ -4,7 +4,7 @@
 // MRR threshold, star threshold + repo). See the plan under
 // docs/plans/2026-04-22-001-feat-sous-chef-milestone-agent-plan.md — "Key Technical Decisions".
 
-export type SourceSystem = "github" | "stripe" | "posthog" | "ga4";
+export type SourceSystem = "github" | "stripe" | "posthog" | "ga4" | "cron";
 
 export function buildIdempotencyKey(
   userId: string,
@@ -45,4 +45,10 @@ export function starMilestoneKey(repoFullName: string, threshold: number): strin
 // Shape: `goal:<goalExternalId>` — stable across target edits (delete+add gets new externalId).
 export function goalMilestoneKey(goalExternalId: string): string {
   return `goal:${goalExternalId}`;
+}
+
+// Weekly summary draft milestone key, e.g. "weekly:2026-W18".
+// Combined with sourceSystem="cron" → idempotencyKey "${userId}:cron:weekly:2026-W18".
+export function weeklySummaryMilestoneKey(isoWeek: string): string {
+  return `weekly:${isoWeek}`;
 }

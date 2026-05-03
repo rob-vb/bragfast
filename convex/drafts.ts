@@ -172,6 +172,37 @@ export const getByExternalId = query({
       config: row.config,
       confidence: row.confidence ?? null,
       suppressed: row.suppressed ?? false,
+      generationError: row.generationError ?? null,
+      created_at: row.created_at,
+    };
+  },
+});
+
+// Session-scoped variant: looks up by the caller's identity instead of an arg.
+// Returns null when unauthenticated so cards inside LazyMount don't throw
+// during the brief auth-resolution flicker on first paint.
+export const getByExternalIdAuthed = query({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const userId = identity.subject;
+    const row = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row || row.userId !== userId) return null;
+    return {
+      id: row.externalId,
+      name: row.name ?? null,
+      source: row.source,
+      sourceSystem: row.sourceSystem ?? null,
+      milestoneKey: row.milestoneKey ?? null,
+      eventReference: row.eventReference ?? null,
+      config: row.config,
+      confidence: row.confidence ?? null,
+      suppressed: row.suppressed ?? false,
+      generationError: row.generationError ?? null,
       created_at: row.created_at,
     };
   },

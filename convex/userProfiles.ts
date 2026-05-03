@@ -1,4 +1,4 @@
-import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getByUserId = query({
@@ -30,6 +30,15 @@ export const listAllWithEmailInternal = internalQuery({
     return rows
       .filter((r) => typeof r.email === "string" && r.email.length > 0)
       .map((r) => ({ userId: r.userId, email: r.email as string }));
+  },
+});
+
+// Fan-out for the weekly-report cron — every userProfile, regardless of email.
+export const listAllInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("userProfiles").collect();
+    return rows.map((r) => ({ userId: r.userId }));
   },
 });
 

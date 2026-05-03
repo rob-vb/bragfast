@@ -18,6 +18,7 @@ export default defineSchema({
       v.literal("buffet")
     ),
     lastDraftsVisitAt: v.optional(v.number()),
+    lastBriefingVisitAt: v.optional(v.number()),
     // Sous-Chef draft generation skips composeCopy for these platforms.
     // Values: "x" | "linkedin". Empty/missing = both enabled.
     disabledPlatforms: v.optional(v.array(v.string())),
@@ -178,7 +179,8 @@ export default defineSchema({
         v.literal("github"),
         v.literal("stripe"),
         v.literal("posthog"),
-        v.literal("ga4")
+        v.literal("ga4"),
+        v.literal("cron")
       )
     ),
     milestoneKey: v.optional(v.string()),      // e.g. "mrr:1000", "pr_merged:owner/repo#42"
@@ -189,6 +191,7 @@ export default defineSchema({
     // don't surface by default. Override via `unsuppressDraft`.
     confidence: v.optional(v.number()),
     suppressed: v.optional(v.boolean()),
+    generationError: v.optional(v.string()),
     created_at: v.string(),
   })
     .index("by_userId", ["userId"])
@@ -372,6 +375,7 @@ export default defineSchema({
       v.literal("posthog"),
       v.literal("ga4"),
       v.literal("manual"),
+      v.literal("cron"),                     // weekly-summary drafts approved through report page
     ),
     triggerType: v.string(),                 // "pr_merged", "mrr", "first_sale", ...
     decision: v.union(
@@ -389,6 +393,7 @@ export default defineSchema({
     created_at: v.string(),
   })
     .index("by_userId", ["userId"])
+    .index("by_userId_created_at", ["userId", "created_at"])
     .index("by_draftExternalId", ["draftExternalId"]),
 
   uploads: defineTable({

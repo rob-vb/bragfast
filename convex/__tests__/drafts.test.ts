@@ -104,5 +104,50 @@ describe("listByUser exposes confidence + suppressed", () => {
   });
 });
 
+describe("getByExternalIdAuthed", () => {
+  it("returns null unauthenticated", async () => {
+    const t = await seedSuppressedDraft("drf_authed1");
+    const row = await t.query(api.drafts.getByExternalIdAuthed, {
+      externalId: "drf_authed1",
+    });
+    expect(row).toBeNull();
+  });
+
+  it("returns the draft for the owner", async () => {
+    const t = await seedSuppressedDraft("drf_authed2");
+    const row = await t
+      .withIdentity({ subject: USER_ID })
+      .query(api.drafts.getByExternalIdAuthed, { externalId: "drf_authed2" });
+    expect(row).not.toBeNull();
+    expect(row?.id).toBe("drf_authed2");
+  });
+
+  it("returns null when another user is authed", async () => {
+    const t = await seedSuppressedDraft("drf_authed3");
+    const row = await t
+      .withIdentity({ subject: OTHER_USER })
+      .query(api.drafts.getByExternalIdAuthed, { externalId: "drf_authed3" });
+    expect(row).toBeNull();
+  });
+
+  it("surfaces generationError when present", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("drafts", {
+        userId: USER_ID,
+        externalId: "drf_err",
+        source: "agent",
+        config: JSON.stringify({ output: "image" }),
+        generationError: "haiku timeout",
+        created_at: new Date().toISOString(),
+      });
+    });
+    const row = await t
+      .withIdentity({ subject: USER_ID })
+      .query(api.drafts.getByExternalIdAuthed, { externalId: "drf_err" });
+    expect(row?.generationError).toBe("haiku timeout");
+  });
+});
+
 // silence unused-import lint for setupT (kept for symmetry with other test files)
 void setupT;
