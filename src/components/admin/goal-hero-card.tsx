@@ -72,6 +72,7 @@ export function GoalHeroCard({ userId }: { userId: string }) {
           (g.metric === "stars" && g.scope
             ? `${g.scope} stars`
             : METRIC_NOUN[g.metric]);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Reacting to live Convex data: trigger celebration when a goal flips from unhit to hit.
         setCelebration({ externalId: g.externalId, label });
       }
       prev.set(g.externalId, g.firstHitAt ?? null);

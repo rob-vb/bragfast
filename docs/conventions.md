@@ -42,6 +42,10 @@ describes; do not capture from inside libs. List with property contracts:
 | `source_connected` | integration save | `source_type`, `is_first_non_github_source`, `total_sources_connected`, `was_prompted_by_goal` |
 | `goal_set` | goal create | `goal_category`, `is_first_goal`, `has_connected_source` |
 | `goal_hit` | goal threshold trip | `goal_category`, `days_from_goal_set` |
+| `briefing_page_viewed` | `/admin/briefing` mount per ymd | `day` (YYYY-MM-DD), `event_count`, `drafted_count`, `skipped_count` |
+| `weekly_report_page_viewed` | `/admin/report` mount per iso_week | `iso_week` (YYYY-Www), `event_count`, `has_draft` |
+
+`post_approved` carries `approval_surface ∈ {"kitchen", "briefing", "weekly_report"}` so briefing/report sends are distinguishable without separate events.
 
 ## North Star dashboard
 

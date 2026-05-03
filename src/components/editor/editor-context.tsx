@@ -425,7 +425,9 @@ export function EditorProvider({ templateId, initialName, initialConfig, childre
 
   // Keyboard shortcuts — use ref to avoid re-registering on every state change
   const stateRef = useRef(undoState.current);
-  stateRef.current = undoState.current;
+  useEffect(() => {
+    stateRef.current = undoState.current;
+  });
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

@@ -21,7 +21,7 @@ export function EditorCanvas() {
   // Camera: zoom level and pan offset (in screen pixels)
   const [zoom, setZoom] = useState<number | null>(null); // null = not initialized
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const isPanning = useRef(false);
+  const [isPanning, setIsPanning] = useState(false);
   const spaceHeld = useRef(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
@@ -98,24 +98,24 @@ export function EditorCanvas() {
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button === 1 || (e.button === 0 && spaceHeld.current)) {
       e.preventDefault();
-      isPanning.current = true;
+      setIsPanning(true);
       panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     }
   }, [pan]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (isPanning.current) {
+    if (isPanning) {
       const newPan = {
         x: panStart.current.panX + (e.clientX - panStart.current.x),
         y: panStart.current.panY + (e.clientY - panStart.current.y),
       };
       setPan(clampPan(newPan, zoom ?? 0.5));
     }
-  }, [clampPan, zoom]);
+  }, [clampPan, zoom, isPanning]);
 
   const handlePointerUp = useCallback(() => {
-    isPanning.current = false;
+    setIsPanning(false);
   }, []);
 
   const currentZoom = zoom ?? 0.5;
@@ -184,7 +184,7 @@ export function EditorCanvas() {
     <div
       ref={containerRef}
       className="flex-1 bg-zinc-100 overflow-hidden relative"
-      style={{ cursor: isPanning.current ? "grabbing" : spaceActive ? "grab" : "default" }}
+      style={{ cursor: isPanning ? "grabbing" : spaceActive ? "grab" : "default" }}
       onClick={() => dispatch({ type: "SELECT_OBJECT", objectId: null })}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}

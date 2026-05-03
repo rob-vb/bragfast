@@ -40,11 +40,14 @@ crons.daily(
   internal.refreshChannelsAction.refreshAllChannels,
 );
 
-// S9.1: weekly digest. Sunday 16:00 UTC ≈ Sunday morning US, Sunday evening EU.
+// Weekly summary draft generation. Monday 07:00 UTC — early enough that the
+// summary is waiting when the user starts their week, late enough that
+// Sunday's signal is captured. Fans out per-user; silent weeks generate
+// nothing.
 crons.weekly(
-  "weekly-digest",
-  { dayOfWeek: "sunday", hourUTC: 16, minuteUTC: 0 },
-  internal.digestEmails.sendAllWeeklyDigests,
+  "weekly-report-generate",
+  { dayOfWeek: "monday", hourUTC: 7, minuteUTC: 0 },
+  internal.briefingsActions.generateWeeklySummaryDraftsForAll,
 );
 
 export default crons;

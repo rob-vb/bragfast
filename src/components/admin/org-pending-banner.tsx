@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { PixelCard } from "./pixel-card";
 import { PixelButton } from "./pixel-button";
 
@@ -8,12 +8,16 @@ type Props = {
   appSlug: string;
 };
 
+const subscribe = () => () => {};
+
 export function OrgPendingBanner({ appSlug }: Props) {
-  const [pending, setPending] = useState(false);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setPending(params.get("install_state") === "pending");
-  }, []);
+  const pending = useSyncExternalStore(
+    subscribe,
+    () =>
+      new URLSearchParams(window.location.search).get("install_state") ===
+      "pending",
+    () => false,
+  );
   if (!pending) return null;
 
   const installUrl = `https://github.com/apps/${appSlug}/installations/new`;

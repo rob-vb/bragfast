@@ -186,7 +186,7 @@ export default function Home() {
                 Cook it yourself.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Add content, upload a screenshot or screen recording, pick a template, and you've got landscape, square, and portrait versions ready to post. Takes about a minute.
+                Add content, upload a screenshot or screen recording, pick a template, and you&apos;ve got landscape, square, and portrait versions ready to post. Takes about a minute.
               </p>
               {/* <div className="flex flex-wrap gap-2 pt-1">
                 {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(

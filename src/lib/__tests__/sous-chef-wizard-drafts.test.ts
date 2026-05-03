@@ -115,7 +115,7 @@ describe("getPreviewDuration", () => {
   });
 
   it("returns 8 for a generic preset not in the override map", () => {
-    expect(getPreviewDuration("slide-up" as any)).toBe(8);
+    expect(getPreviewDuration("slide-up" as unknown as Parameters<typeof getPreviewDuration>[0])).toBe(8);
   });
 
   it("returns 12 for 3d-tilt-angles preset", () => {

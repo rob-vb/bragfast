@@ -51,7 +51,7 @@ describe("collectUploadKeys", () => {
 
   it("handles empty slides and missing objects", () => {
     const formats: FormatEntry[] = [
-      { name: "landscape", slides: [{ objects: undefined as any }] },
+      { name: "landscape", slides: [{ objects: undefined as unknown as never }] },
       { name: "square", slides: [] },
     ];
     const keys = collectUploadKeys(formats);

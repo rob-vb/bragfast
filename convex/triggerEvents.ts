@@ -29,6 +29,7 @@ export const sourceSystemValidator = v.union(
   v.literal("posthog"),
   v.literal("ga4"),
   v.literal("manual"),
+  v.literal("cron"),
 );
 
 export const decisionValidator = v.union(
@@ -53,7 +54,7 @@ const recordArgs = {
 
 type RecordArgs = {
   userId: string;
-  sourceSystem: "github" | "stripe" | "posthog" | "ga4" | "manual";
+  sourceSystem: "github" | "stripe" | "posthog" | "ga4" | "manual" | "cron";
   triggerType: string;
   decision:
     | "drafted"
@@ -266,6 +267,159 @@ export const aggregateForUserBetween = internalQuery({
       approvedBySource,
       topReferences,
     };
+  },
+});
+
+type TriggerEventRow = {
+  id: string;
+  sourceSystem: "github" | "stripe" | "posthog" | "ga4" | "manual" | "cron";
+  triggerType: string;
+  decision: "drafted" | "auto_skipped" | "user_skipped" | "approved" | "ignored_48h";
+  reason: string | null;
+  confidence: number | null;
+  sourceReference: string | null;
+  draftExternalId: string | null;
+  metadata: string | null;
+  created_at: string;
+};
+
+/**
+ * Daily briefing: trigger events for the current user inside [startISO, endISO).
+ * Bounded by the by_userId_created_at compound index so we never hit the 8192
+ * collect() ceiling for heavy users. Newest first.
+ */
+export const listByUserForDay = query({
+  args: { startISO: v.string(), endISO: v.string() },
+  handler: async (ctx, { startISO, endISO }): Promise<TriggerEventRow[]> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
+    const rows = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId_created_at", (q) =>
+        q.eq("userId", userId).gte("created_at", startISO).lt("created_at", endISO),
+      )
+      .order("desc")
+      .collect();
+    return rows.map((r) => ({
+      id: r.externalId,
+      sourceSystem: r.sourceSystem,
+      triggerType: r.triggerType,
+      decision: r.decision,
+      reason: r.reason ?? null,
+      confidence: r.confidence ?? null,
+      sourceReference: r.sourceReference ?? null,
+      draftExternalId: r.draftExternalId ?? null,
+      metadata: r.metadata ?? null,
+      created_at: r.created_at,
+    }));
+  },
+});
+
+/**
+ * Weekly report: same shape as listByUserForDay but for a 7-day window.
+ */
+export const listByUserForWeek = query({
+  args: { startISO: v.string(), endISO: v.string() },
+  handler: async (ctx, { startISO, endISO }): Promise<TriggerEventRow[]> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const userId = identity.subject;
+    const rows = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId_created_at", (q) =>
+        q.eq("userId", userId).gte("created_at", startISO).lt("created_at", endISO),
+      )
+      .order("desc")
+      .collect();
+    return rows.map((r) => ({
+      id: r.externalId,
+      sourceSystem: r.sourceSystem,
+      triggerType: r.triggerType,
+      decision: r.decision,
+      reason: r.reason ?? null,
+      confidence: r.confidence ?? null,
+      sourceReference: r.sourceReference ?? null,
+      draftExternalId: r.draftExternalId ?? null,
+      metadata: r.metadata ?? null,
+      created_at: r.created_at,
+    }));
+  },
+});
+
+/**
+ * Internal variant of listByUserForDay — used by briefings cron + tests.
+ * No identity check; caller must supply userId.
+ */
+export const listByUserForDayInternal = internalQuery({
+  args: { userId: v.string(), startISO: v.string(), endISO: v.string() },
+  handler: async (ctx, { userId, startISO, endISO }) => {
+    return await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId_created_at", (q) =>
+        q.eq("userId", userId).gte("created_at", startISO).lt("created_at", endISO),
+      )
+      .order("desc")
+      .collect();
+  },
+});
+
+/**
+ * Internal variant of listByUserForWeek — used by the weekly summary cron.
+ */
+export const listByUserForWeekInternal = internalQuery({
+  args: { userId: v.string(), startISO: v.string(), endISO: v.string() },
+  handler: async (ctx, { userId, startISO, endISO }) => {
+    return await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId_created_at", (q) =>
+        q.eq("userId", userId).gte("created_at", startISO).lt("created_at", endISO),
+      )
+      .order("desc")
+      .collect();
+  },
+});
+
+/**
+ * Briefing-page badge: count of `decision=drafted` trigger events created
+ * after the user's last visit to /admin/briefing. Returns 0 unauthenticated
+ * so the sidebar badge silently hides during the auth-resolution flicker.
+ */
+export const countUnseenBriefingDrafts = query({
+  args: {},
+  handler: async (ctx): Promise<number> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return 0;
+    const userId = identity.subject;
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    const lastVisitMs = profile?.lastBriefingVisitAt ?? 0;
+    const lastVisitISO = new Date(lastVisitMs).toISOString();
+    const rows = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId_created_at", (q) =>
+        q.eq("userId", userId).gte("created_at", lastVisitISO),
+      )
+      .collect();
+    return rows.filter((r) => r.decision === "drafted").length;
+  },
+});
+
+/**
+ * Stamp the user's last-visit time on the briefing page. Idempotent.
+ */
+export const markBriefingSeen = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthedUser(ctx);
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) return;
+    await ctx.db.patch(profile._id, { lastBriefingVisitAt: Date.now() });
   },
 });
 

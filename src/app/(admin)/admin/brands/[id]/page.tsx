@@ -1,4 +1,5 @@
 import { fetchQuery } from "convex/nextjs";
+import Link from "next/link";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect, notFound } from "next/navigation";
@@ -20,9 +21,9 @@ export default async function EditBrandPage({
     <div className="space-y-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 font-[family-name:var(--font-press-start)] text-[10px] text-brand/50">
-        <a href="/admin/brands" className="hover:text-brand transition-colors">
+        <Link href="/admin/brands" className="hover:text-brand transition-colors">
           Brands
-        </a>
+        </Link>
         <span aria-hidden="true">&rsaquo;</span>
         <span className="text-brand truncate max-w-[200px]">{brand.name}</span>
       </nav>

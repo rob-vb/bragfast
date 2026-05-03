@@ -88,6 +88,8 @@ export interface ApproveDraftModalProps {
   integrations: IntegrationRow[];
   /** User's current plan; drives tier-based pre-disable. Optional — when absent, no UI gating (server still enforces). */
   plan?: string;
+  /** Surface the approval is happening from. Used in `post_approved` analytics. Defaults to "kitchen". */
+  approvalSurface?: "kitchen" | "briefing" | "weekly_report";
   onClose: () => void;
 }
 
@@ -178,6 +180,7 @@ export function ApproveDraftModal({
   routingRows,
   integrations,
   plan,
+  approvalSurface = "kitchen",
   onClose,
 }: ApproveDraftModalProps) {
   // S7.3: tier-driven pre-disable. Legacy plans (tierFor → null) skip gating;
@@ -394,7 +397,7 @@ export function ApproveDraftModal({
         time_from_draft_seconds: timeFromDraftSeconds,
         confidence_score: meta?.confidence ?? null,
         is_first_post_for_user: meta?.isFirstPostForUser ?? false,
-        approval_surface: "kitchen",
+        approval_surface: approvalSurface,
         destination: destinations.length === 1 ? destinations[0] : "multiple",
         formats_rendered: formatsTouched,
         video_rendered: videoRendered,

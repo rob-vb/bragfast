@@ -18,6 +18,8 @@ import {
   UserCircle,
   Settings,
   Target,
+  Bell,
+  CalendarRange,
 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { toast } from "sonner";
@@ -59,13 +61,15 @@ type NavItem = {
 // to Developers group — kept reachable but off the primary path.
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Briefing", href: "/admin/briefing", icon: Bell },
   { label: "Kitchen", href: "/admin/kitchen", icon: ChefHat },
   { label: "Drafts", href: "/admin/drafts", icon: FileText },
 ];
 
 const sousChefNav: NavItem[] = [
-  { label: "History", href: "/admin/sous-chef/history", icon: History },
+  { label: "Weekly report", href: "/admin/report", icon: CalendarRange },
   { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
+  { label: "Activity log", href: "/admin/sous-chef/history", icon: History },
   { label: "Settings", href: "/admin/sous-chef", icon: Settings },
 ];
 
@@ -97,7 +101,8 @@ export function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const planConfig = PLANS[plan];
-  const unseenDrafts = useQuery(api.drafts.unseenCount, {}) ?? 0;
+  const unseenBriefing =
+    useQuery(api.triggerEvents.countUnseenBriefingDrafts, {}) ?? 0;
   const [portalPending, setPortalPending] = useState(false);
 
   function handleLogout() {
@@ -166,7 +171,7 @@ export function AdminSidebar({
               {mainNav.map((item) => {
                 const active = isItemActive(pathname, item.href);
                 const showBadge =
-                  item.href === "/admin/drafts" && unseenDrafts > 0;
+                  item.href === "/admin/briefing" && unseenBriefing > 0;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
@@ -174,7 +179,7 @@ export function AdminSidebar({
                       isActive={active}
                       tooltip={
                         showBadge
-                          ? `${item.label} (${unseenDrafts} new)`
+                          ? `${item.label} (${unseenBriefing} new)`
                           : item.label
                       }
                     >
@@ -183,10 +188,10 @@ export function AdminSidebar({
                         <span>{item.label}</span>
                         {showBadge ? (
                           <span
-                            aria-label={`${unseenDrafts} new drafts`}
+                            aria-label={`${unseenBriefing} new briefing items`}
                             className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-medium leading-none text-white group-data-[collapsible=icon]:hidden"
                           >
-                            {unseenDrafts > 99 ? "99+" : unseenDrafts}
+                            {unseenBriefing > 99 ? "99+" : unseenBriefing}
                           </span>
                         ) : null}
                       </Link>
