@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useEditor } from "./editor-context";
 import { ArrowLeft, Undo2, Redo2 } from "lucide-react";
@@ -22,12 +22,12 @@ export function EditorToolbar({ onSave }: EditorToolbarProps) {
   const router = useRouter();
   const { state, dispatch, canUndo, canRedo } = useEditor();
   const [saving, setSaving] = useState(false);
-  const [isMac, setIsMac] = useState(false);
+  const isMac = useSyncExternalStore(
+    () => () => {},
+    () => /Mac|iPhone|iPad/.test(navigator.userAgent),
+    () => false,
+  );
   const nameRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setIsMac(/Mac|iPhone|iPad/.test(navigator.userAgent));
-  }, []);
 
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 

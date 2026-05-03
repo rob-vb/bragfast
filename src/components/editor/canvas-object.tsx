@@ -59,6 +59,7 @@ function useAutoFitFontSize(
           hi = mid - 1;
         }
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement loop; size is derived from layout, can't be computed during render.
       setFittedSize(lo);
     } else {
       // Off: only shrink if it overflows
@@ -68,6 +69,7 @@ function useAutoFitFontSize(
         size -= 1;
         applyStyle(size);
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement loop; size is derived from layout, can't be computed during render.
       setFittedSize(size);
     }
   }, [deps]);
@@ -97,7 +99,8 @@ function snapEdges(
     yLines.push(o.y, o.y + o.height);
   }
 
-  let sx = x, sy = y, sw = w, sh = h;
+  let sx = x, sy = y;
+  const sw = w, sh = h;
 
   // Snap left edge
   for (const line of xLines) {

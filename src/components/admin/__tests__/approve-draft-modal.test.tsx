@@ -151,7 +151,7 @@ describe("ApproveDraftModal — confirmation", () => {
     const titleInput = screen.getByDisplayValue("Test Title");
     fireEvent.change(titleInput, { target: { value: "Updated Title" } });
 
-    const confirmBtn = screen.getByRole("button", { name: /Push to queue/i });
+    const confirmBtn = screen.getByRole("button", { name: /^Send to /i });
     await userEvent.click(confirmBtn);
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalledOnce());
@@ -169,7 +169,7 @@ describe("ApproveDraftModal — confirmation", () => {
     mockFetchOk({ ok: true, pushIds: ["id1"], skipped: [] });
 
     render(<ApproveDraftModal {...BASE_PROPS} onClose={onClose} />);
-    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
 
     await waitFor(() => expect(mockToastSuccess).toHaveBeenCalledOnce());
     expect(onClose).toHaveBeenCalledOnce();
@@ -180,7 +180,7 @@ describe("ApproveDraftModal — confirmation", () => {
     mockFetchOk({ ok: false, error: "nothing_selected" });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Select at least one channel/i)).toBeTruthy();
@@ -191,7 +191,7 @@ describe("ApproveDraftModal — confirmation", () => {
     mockFetchOk({ ok: false, error: "no_providers_connected" });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Connect Buffer or Postiz/i)).toBeTruthy();
@@ -202,7 +202,7 @@ describe("ApproveDraftModal — confirmation", () => {
     mockFetchOk({ ok: false, error: "duplicate_approval" });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
 
     await waitFor(() => {
       expect(screen.getByText(/already approved/i)).toBeTruthy();
@@ -213,7 +213,7 @@ describe("ApproveDraftModal — confirmation", () => {
     mockFetchErr(500, { error: "Render failed." });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Render failed/i)).toBeTruthy();
@@ -235,7 +235,7 @@ describe("ApproveDraftModal — confirmation", () => {
     });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByRole("button", { name: /Push to queue/i }));
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Some channels were skipped/i)).toBeTruthy();

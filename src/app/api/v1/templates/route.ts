@@ -96,12 +96,12 @@ export async function POST(request: Request) {
   const externalId = `tmpl_${crypto.randomBytes(12).toString("hex")}`;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const template = await fetchMutation(api.templates.create, {
       userId: auth.userId,
       externalId,
       name: body.name,
-      config: config as any,
+      config: config as Record<string, unknown>,
     });
 
     return Response.json(
