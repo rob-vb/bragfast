@@ -91,6 +91,14 @@ const CopySchema = z.object({
     .default(0),
 });
 
+// Image text on the canvas has to fit a card layout, not a 220-char tweet.
+// Apply much tighter caps than CopySchema and skip the confidence rubric
+// (we read confidence off the platform-copy primary instead).
+const ImageCopySchema = z.object({
+  title: z.string().transform((s) => s.slice(0, 50)),
+  description: z.string().transform((s) => s.slice(0, 110)),
+});
+
 function brandLine(input: {
   brandName?: string;
   brandVoice?: string;
@@ -153,28 +161,41 @@ export function examplesBlock(
 }
 
 /**
- * Compose copy for multiple platforms in parallel. Returns one Copy per
- * requested platform. Confidence is assumed equal across platforms — the
- * first platform's score is used as the canonical signal.
+ * Compose copy for multiple platforms in parallel, plus a separate tight
+ * variant for the canvas image text. The image variant is the canonical
+ * `primary` (used as the card's title/description); per-platform copies
+ * power the actual social posts. Confidence comes from the first platform
+ * call (or a base call when no platforms are enabled).
  */
 export async function composeCopyByPlatform(
   base: ComposeCopyInput,
   platforms: Platform[],
 ): Promise<{ copies: CopyByPlatform; primary: Copy; primaryPlatform: Platform | null }> {
   if (platforms.length === 0) {
-    const primary = await composeCopy(base);
-    return { copies: {}, primary, primaryPlatform: null };
+    const [platformCopy, image] = await Promise.all([
+      composeCopy(base),
+      composeImageCopy(base),
+    ]);
+    return {
+      copies: {},
+      primary: { ...image, confidence: platformCopy.confidence },
+      primaryPlatform: null,
+    };
   }
-  const results = await Promise.all(
-    platforms.map((p) => composeCopy({ ...base, platform: p })),
-  );
+  const [platformResults, image] = await Promise.all([
+    Promise.all(platforms.map((p) => composeCopy({ ...base, platform: p }))),
+    composeImageCopy(base),
+  ]);
   const copies: CopyByPlatform = {};
   platforms.forEach((p, i) => {
-    copies[p] = { title: results[i].title, description: results[i].description };
+    copies[p] = {
+      title: platformResults[i].title,
+      description: platformResults[i].description,
+    };
   });
   return {
     copies,
-    primary: results[0],
+    primary: { ...image, confidence: platformResults[0].confidence },
     primaryPlatform: platforms[0],
   };
 }
@@ -407,5 +428,83 @@ Write the brag post JSON.`;
       confidence: 0,
     },
     maxTokens: 200,
+  });
+}
+
+// Image text rendered onto the canvas card. Hard caps because the layout
+// can't grow — long titles wrap into ugly two-liners and long descriptions
+// overflow the card. Output a single-clause headline + single-sentence body.
+const IMAGE_SYSTEM = `You write the title and description rendered ON a social media card image (not the post copy).
+Output JSON only: {"title": "...", "description": "..."}. No markdown.
+
+Hard length constraints — these are visual, not stylistic:
+- Title: 3-5 words. Max 50 characters. One clause. No colons stacking two phrases. No subtitle.
+- Description: ONE short sentence. Max 110 characters. Never two sentences. No follow-up beats, no "much less friction" tail clauses.
+
+Pick the single user-facing benefit. Drop implementation notes, internal mechanics, lists, and adjective stacks.
+No emojis. No hashtags. No hype phrases.`;
+
+function imageHintFor(input: ComposeCopyInput): string {
+  switch (input.type) {
+    case "pr_merged":
+      return `Repo: ${input.repoFullName}
+PR title: ${input.title}
+PR body:
+---
+${input.body.slice(0, 1200) || "(empty)"}
+---`;
+    case "mrr":
+      return `Milestone: ${formatThresholdUsd(input.threshold)} MRR`;
+    case "first_sale":
+      return `Milestone: first paying customer`;
+    case "visitors":
+      return `Milestone: ${formatThresholdCount(input.threshold)} visitors (rolling 30 days, via ${input.source})`;
+    case "star":
+      return `Milestone: ${formatThresholdCount(input.threshold)} GitHub stars on ${input.repoFullName}`;
+    case "total_revenue":
+      return `Milestone: ${formatThresholdUsd(input.threshold)} in total revenue`;
+    case "subscribers":
+      return `Milestone: ${formatThresholdCount(input.threshold)} paying subscribers`;
+  }
+}
+
+function imageFallback(input: ComposeCopyInput): { title: string; description: string } {
+  switch (input.type) {
+    case "pr_merged":
+      return { title: input.title.slice(0, 50), description: "" };
+    case "mrr":
+      return { title: `${formatThresholdUsd(input.threshold)} MRR`, description: "" };
+    case "first_sale":
+      return { title: "First paying customer", description: "" };
+    case "visitors":
+      return { title: `${formatThresholdCount(input.threshold)} visitors`, description: "" };
+    case "star":
+      return {
+        title: `${formatThresholdCount(input.threshold)} stars on ${input.repoFullName}`.slice(0, 50),
+        description: "",
+      };
+    case "total_revenue":
+      return { title: `${formatThresholdUsd(input.threshold)} in revenue`, description: "" };
+    case "subscribers":
+      return { title: `${formatThresholdCount(input.threshold)} subscribers`, description: "" };
+  }
+}
+
+export async function composeImageCopy(
+  input: ComposeCopyInput,
+): Promise<{ title: string; description: string }> {
+  const system = `${IMAGE_SYSTEM}
+${brandLine(input)}`;
+  const user = `${imageHintFor(input)}
+${examplesBlock(input.examples)}
+
+Write the card text JSON.`;
+
+  return callHaikuJson({
+    system,
+    user,
+    schema: ImageCopySchema,
+    fallback: imageFallback(input),
+    maxTokens: 120,
   });
 }

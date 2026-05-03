@@ -257,7 +257,13 @@ async function createPrMergeDraft(
         confidence: primary.confidence,
         sourceReference: input.eventReference,
         draftExternalId: inserted.id,
-        metadata: JSON.stringify({ milestoneKey: input.milestoneKey }),
+        metadata: JSON.stringify({
+          milestoneKey: input.milestoneKey,
+          templateId: pick.templateId,
+          templatePickReason: pick.reason,
+          templatePickRule: pick.debug?.rule,
+          templatePickKeyword: pick.debug?.matchedKeyword,
+        }),
       })
       .catch((err) =>
         console.error(

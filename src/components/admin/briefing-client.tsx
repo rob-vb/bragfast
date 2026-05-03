@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import posthog from "posthog-js";
@@ -8,10 +9,10 @@ import { useUserId } from "@/hooks/use-user-id";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
+import { PixelTable } from "@/components/admin/pixel-table";
 import { LazyMount } from "./lazy-mount";
 import { DraftPreview } from "./draft-preview";
 import { DraftPreviewBoundary } from "./draft-preview-boundary";
-import { ApproveDraftModal } from "./approve-draft-modal";
 import type { DraftConfig } from "@/lib/drafts/types";
 import type { FormatKey } from "@/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "@/lib/templates/canvas-types";
@@ -36,13 +37,15 @@ type TriggerEventRow = {
   created_at: string;
 };
 
-type Format =
-  | "square"
-  | "landscape"
-  | "portrait"
-  | "video-square"
-  | "video-landscape"
-  | "video-portrait";
+type TriggerMetadata = {
+  milestoneKey?: string;
+  templateId?: string;
+  templatePickReason?: "rule" | "haiku" | "haiku-fallback";
+  templatePickRule?: string;
+  templatePickKeyword?: string;
+  categories?: string[];
+  reason?: string;
+};
 
 const VALID_FORMATS: FormatKey[] = ["landscape", "square", "portrait"];
 
@@ -63,7 +66,6 @@ function primaryFormat(config: DraftConfig): FormatKey {
   return first ?? "landscape";
 }
 
-// Format YYYY-MM-DD → human "May 3, 2026" in user's locale.
 function formatHumanDate(ymd: string): string {
   const [y, m, d] = ymd.split("-").map(Number);
   const date = new Date(y, (m ?? 1) - 1, d ?? 1);
@@ -75,10 +77,6 @@ function formatHumanDate(ymd: string): string {
   });
 }
 
-// User's local-day window in UTC ISO strings. Day boundary is the user's
-// local midnight, converted to UTC — so a user in PT viewing "May 3" sees
-// trigger events from PT midnight to PT midnight even though the underlying
-// data is timestamped in UTC.
 function localDayToUtcWindow(ymd: string): { startISO: string; endISO: string } {
   const [y, m, d] = ymd.split("-").map(Number);
   const start = new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
@@ -103,16 +101,21 @@ function shiftYmd(ymd: string, deltaDays: number): string {
   return `${ny}-${nm}-${nd}`;
 }
 
-function parseMetadataReason(raw: string | null): string | null {
-  if (!raw) return null;
+function parseMetadata(raw: string | null): TriggerMetadata {
+  if (!raw) return {};
   try {
-    const parsed = JSON.parse(raw) as { reason?: unknown };
-    if (typeof parsed.reason === "string") return parsed.reason;
+    const parsed = JSON.parse(raw) as TriggerMetadata;
+    return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
-    // metadata is sometimes plain text
-    return raw;
+    return {};
   }
-  return null;
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 const SOURCE_LABEL: Record<TriggerEventRow["sourceSystem"], string> = {
@@ -124,10 +127,71 @@ const SOURCE_LABEL: Record<TriggerEventRow["sourceSystem"], string> = {
   cron: "Cron",
 };
 
+// Humanized reason for the Skipped table. The webhook stores short codes
+// (content_filter / rate_cap / low_confidence) plus optional metadata.
+function skipReasonText(event: TriggerEventRow): string {
+  const meta = parseMetadata(event.metadata);
+  switch (event.reason) {
+    case "content_filter": {
+      const cats = meta.categories ?? [];
+      return cats.length > 0
+        ? `Content filter (${cats.join(", ")})`
+        : "Content filter";
+    }
+    case "rate_cap":
+      return "Rate cap (too many drafts for this repo today)";
+    case "low_confidence": {
+      const pct =
+        typeof event.confidence === "number"
+          ? ` (${Math.round(event.confidence * 100)}%)`
+          : "";
+      return `Low confidence${pct}`;
+    }
+    default:
+      return event.reason ?? "Skipped";
+  }
+}
+
+// Why this draft exists. Distinct from the template-pick reason.
+function draftReasonText(event: TriggerEventRow): string {
+  switch (event.reason) {
+    case "rollup":
+      return "Rolled into recent draft";
+    case "user_override":
+      return "Override (low-confidence)";
+    default: {
+      const pct =
+        typeof event.confidence === "number"
+          ? ` (${Math.round(event.confidence * 100)}%)`
+          : "";
+      return `Fresh draft${pct}`;
+    }
+  }
+}
+
+// Human-friendly explanation of which template was chosen and why.
+function templatePickText(meta: TriggerMetadata): { id?: string; why?: string } {
+  if (!meta.templateId) return {};
+  if (meta.templatePickReason === "rule") {
+    const kw = meta.templatePickKeyword ? ` · keyword: ${meta.templatePickKeyword}` : "";
+    return {
+      id: meta.templateId,
+      why: `rule${meta.templatePickRule ? ` (${meta.templatePickRule})` : ""}${kw}`,
+    };
+  }
+  if (meta.templatePickReason === "haiku") {
+    return { id: meta.templateId, why: "Haiku pick" };
+  }
+  if (meta.templatePickReason === "haiku-fallback") {
+    return { id: meta.templateId, why: "Haiku fallback" };
+  }
+  return { id: meta.templateId };
+}
+
 export function BriefingClient() {
   const userId = useUserId();
   const [ymd, setYmd] = useState<string>(() => todayLocalYmd());
-  const [approveDraftId, setApproveDraftId] = useState<string | null>(null);
+  const [previewDraftId, setPreviewDraftId] = useState<string | null>(null);
 
   const { startISO, endISO } = useMemo(() => localDayToUtcWindow(ymd), [ymd]);
 
@@ -135,9 +199,6 @@ export function BriefingClient() {
     startISO,
     endISO,
   });
-  const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
-  const routingRows = useQuery(api.routingDefaults.listByUser, { userId });
-  const userStats = useQuery(api.userProfiles.getStats, { userId });
   const markBriefingSeen = useMutation(api.triggerEvents.markBriefingSeen);
 
   const todayYmd = todayLocalYmd();
@@ -145,16 +206,12 @@ export function BriefingClient() {
 
   const eventsLen = events?.length;
 
-  // Stamp last-visit time once events have arrived. Covers the cleared-badge
-  // requirement without thrashing the mutation on every render.
   useEffect(() => {
     if (!userId || events === undefined) return;
     void markBriefingSeen({});
-    // eventsLen pin is intentional — we re-stamp when the event count changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, eventsLen, markBriefingSeen]);
 
-  // Fire briefing_page_viewed once per (user, ymd) pair.
   useEffect(() => {
     if (events === undefined) return;
     posthog.capture("briefing_page_viewed", {
@@ -213,13 +270,9 @@ export function BriefingClient() {
       </div>
 
       {events === undefined ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-72 border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"
-            />
-          ))}
+        <div className="space-y-3">
+          <div className="h-40 border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton" />
+          <div className="h-24 border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton" />
         </div>
       ) : events.length === 0 ? (
         <PixelEmptyState
@@ -235,15 +288,25 @@ export function BriefingClient() {
               <h2 className="font-[family-name:var(--font-press-start)] text-xs uppercase text-brand/70 tracking-wider">
                 Drafted ({draftedEvents.length})
               </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <PixelTable
+                headers={[
+                  "Source",
+                  "Trigger",
+                  "Title",
+                  "Why drafted",
+                  "Template",
+                  "Time",
+                  "Actions",
+                ]}
+              >
                 {draftedEvents.map((event) => (
-                  <BriefingCard
+                  <DraftedRow
                     key={event.id}
                     event={event as TriggerEventRow}
-                    onSend={(draftId) => setApproveDraftId(draftId)}
+                    onPreview={(id) => setPreviewDraftId(id)}
                   />
                 ))}
-              </div>
+              </PixelTable>
             </section>
           )}
           {skippedEvents.length > 0 && (
@@ -251,203 +314,217 @@ export function BriefingClient() {
               <h2 className="font-[family-name:var(--font-press-start)] text-xs uppercase text-brand/70 tracking-wider">
                 Skipped ({skippedEvents.length})
               </h2>
-              <ul className="space-y-2">
+              <PixelTable
+                headers={["Source", "Trigger", "Why skipped", "Reference", "Time"]}
+              >
                 {skippedEvents.map((event) => (
                   <SkippedRow key={event.id} event={event as TriggerEventRow} />
                 ))}
-              </ul>
+              </PixelTable>
             </section>
           )}
         </div>
       )}
 
-      {approveDraftId && (
-        <ApproveDraftModalLoader
-          draftId={approveDraftId}
-          routingRows={routingRows ?? []}
-          integrations={integrations ?? []}
-          plan={userStats?.plan}
-          onClose={() => setApproveDraftId(null)}
+      {previewDraftId && (
+        <DraftPreviewModal
+          draftId={previewDraftId}
+          onClose={() => setPreviewDraftId(null)}
         />
       )}
     </div>
   );
 }
 
-function BriefingCard({
+function DraftedRow({
   event,
-  onSend,
+  onPreview,
 }: {
   event: TriggerEventRow;
-  onSend: (draftId: string) => void;
+  onPreview: (draftId: string) => void;
 }) {
   const draft = useQuery(
     api.drafts.getByExternalIdAuthed,
     event.draftExternalId ? { externalId: event.draftExternalId } : "skip",
   );
-
-  const config = useMemo(
-    () => (draft ? parseConfig(draft.config) : null),
-    [draft],
-  );
-  const fmt = config ? primaryFormat(config) : "landscape";
-  const dims = FORMAT_DIMENSIONS[fmt];
-  const aspectStyle: React.CSSProperties = {
-    aspectRatio: `${dims.width} / ${dims.height}`,
-  };
-  const reason = parseMetadataReason(event.metadata);
+  const meta = parseMetadata(event.metadata);
+  const pick = templatePickText(meta);
+  const title = draft?.name ?? "—";
+  const kitchenHref = event.draftExternalId
+    ? `/admin/kitchen?draft=${encodeURIComponent(event.draftExternalId)}`
+    : "#";
 
   return (
-    <article className="border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)] space-y-3">
-      <div className="flex items-center justify-between gap-2">
+    <tr className="align-top">
+      <td className="px-4 py-3">
         <PixelBadge variant="completed" label={SOURCE_LABEL[event.sourceSystem]} />
-        <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60">
-          {new Date(event.created_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
-      </div>
-
-      {config ? (
-        <DraftPreviewBoundary
-          fallback={
-            <div
-              className="border-2 border-dashed border-brand/30 bg-surface"
-              style={aspectStyle}
-            />
-          }
-        >
-          <LazyMount
-            rootMargin="200px"
-            placeholder={
-              <div
-                className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"
-                style={aspectStyle}
-              />
-            }
-          >
-            <DraftPreview config={config} />
-          </LazyMount>
-        </DraftPreviewBoundary>
-      ) : (
-        <div
-          className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"
-          style={aspectStyle}
-        />
-      )}
-
-      {draft?.name && (
-        <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed line-clamp-2">
-          {draft.name}
-        </h3>
-      )}
-
-      {reason && (
-        <div className="border-l-4 border-gold bg-surface/50 px-3 py-2">
-          <div className="font-[family-name:var(--font-press-start)] text-[10px] uppercase text-brand/60 mb-1">
-            Why this matters
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+        {event.triggerType}
+      </td>
+      <td className="px-4 py-3 max-w-[280px]">
+        <div className="font-[family-name:var(--font-geist-sans)] text-sm text-brand line-clamp-2">
+          {title}
+        </div>
+        {event.sourceReference && (
+          <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/50 truncate mt-1">
+            {event.sourceReference}
           </div>
-          <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
-            {reason}
-          </p>
+        )}
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/80">
+        {draftReasonText(event)}
+      </td>
+      <td className="px-4 py-3">
+        {pick.id ? (
+          <div className="space-y-0.5">
+            <div className="font-[family-name:var(--font-geist-mono)] text-[12px] text-brand">
+              {pick.id}
+            </div>
+            {pick.why && (
+              <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55">
+                {pick.why}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
+            —
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
+        {formatTime(event.created_at)}
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex flex-wrap gap-2">
+          <PixelButton
+            variant="ghost"
+            onClick={() => {
+              if (!event.draftExternalId) return;
+              onPreview(event.draftExternalId);
+            }}
+            disabled={!event.draftExternalId || !draft}
+          >
+            See preview
+          </PixelButton>
+          {event.draftExternalId ? (
+            <Link href={kitchenHref}>
+              <PixelButton>Open in Kitchen</PixelButton>
+            </Link>
+          ) : (
+            <PixelButton disabled>Open in Kitchen</PixelButton>
+          )}
         </div>
-      )}
-
-      {event.sourceReference && (
-        <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/50 truncate">
-          {event.sourceReference}
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <PixelButton
-          onClick={() => {
-            if (!event.draftExternalId) return;
-            onSend(event.draftExternalId);
-          }}
-          disabled={!event.draftExternalId || !draft}
-        >
-          Send…
-        </PixelButton>
-      </div>
-    </article>
+      </td>
+    </tr>
   );
 }
 
 function SkippedRow({ event }: { event: TriggerEventRow }) {
   return (
-    <li className="border-2 border-brand/30 bg-surface px-4 py-3 flex items-start justify-between gap-3">
-      <div className="space-y-1 flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <PixelBadge variant="suspended" label={SOURCE_LABEL[event.sourceSystem]} />
-          <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
-            {event.triggerType}
-          </span>
-          {event.reason && (
-            <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60">
-              · {event.reason}
-            </span>
-          )}
-        </div>
-        {event.sourceReference && (
-          <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/50 truncate">
-            {event.sourceReference}
-          </div>
-        )}
-      </div>
-      <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/50 shrink-0">
-        {new Date(event.created_at).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
-    </li>
+    <tr className="align-top">
+      <td className="px-4 py-3">
+        <PixelBadge variant="suspended" label={SOURCE_LABEL[event.sourceSystem]} />
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+        {event.triggerType}
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[13px] text-brand">
+        {skipReasonText(event)}
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55 max-w-[320px] truncate">
+        {event.sourceReference ?? "—"}
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
+        {formatTime(event.created_at)}
+      </td>
+    </tr>
   );
 }
 
-// Wrapper that loads the draft + builds ApproveDraftModal props from a
-// draftExternalId. Lives inside the briefing page so we don't have to
-// hard-route to /admin/kitchen for sending.
-function ApproveDraftModalLoader({
+function DraftPreviewModal({
   draftId,
-  routingRows,
-  integrations,
-  plan,
   onClose,
 }: {
   draftId: string;
-  routingRows: Array<{ format: string; channels: Array<{ provider: "buffer" | "postiz"; channelId: string }> }>;
-  integrations: Array<{ provider: string; enabled: boolean; extra: string | null }>;
-  plan: string | undefined;
   onClose: () => void;
 }) {
   const draft = useQuery(api.drafts.getByExternalIdAuthed, { externalId: draftId });
-  if (!draft) return null;
-  const config = parseConfig(draft.config);
-  const objectContent = config.objectContent ?? {};
-  const title = objectContent.title?.text ?? draft.name ?? "Untitled";
-  const description = objectContent.description?.text ?? "";
-  const formats = (config.formats ?? ["landscape"]).filter(
-    (f): f is FormatKey => VALID_FORMATS.includes(f as FormatKey),
-  );
-  const draftFormats: Format[] =
-    config.output === "video"
-      ? formats.map((f) => `video-${f}` as Format)
-      : (formats as Format[]);
+  const config = draft ? parseConfig(draft.config) : null;
+  const fmt = config ? primaryFormat(config) : "landscape";
+  const dims = FORMAT_DIMENSIONS[fmt];
+  const aspectStyle: React.CSSProperties = {
+    aspectRatio: `${dims.width} / ${dims.height}`,
+  };
+  const kitchenHref = `/admin/kitchen?draft=${encodeURIComponent(draftId)}`;
 
   return (
-    <ApproveDraftModal
-      draftId={draftId}
-      initialTitle={title.slice(0, 80)}
-      initialDescription={description.slice(0, 220)}
-      initialCopyByPlatform={config.copyByPlatform}
-      draftFormats={draftFormats}
-      routingRows={routingRows}
-      integrations={integrations}
-      plan={plan}
-      approvalSurface="briefing"
-      onClose={onClose}
-    />
+    <div
+      className="fixed inset-0 z-50 bg-brand/30 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white border-2 border-brand shadow-[8px_8px_0_var(--color-brand)] p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed">
+            Draft preview
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="font-[family-name:var(--font-press-start)] text-xs text-brand/60 hover:text-brand shrink-0"
+            aria-label="Close preview"
+          >
+            ✕
+          </button>
+        </div>
+
+        {config ? (
+          <DraftPreviewBoundary
+            fallback={
+              <div
+                className="border-2 border-dashed border-brand/30 bg-surface"
+                style={aspectStyle}
+              />
+            }
+          >
+            <LazyMount
+              rootMargin="200px"
+              placeholder={
+                <div
+                  className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"
+                  style={aspectStyle}
+                />
+              }
+            >
+              <DraftPreview config={config} />
+            </LazyMount>
+          </DraftPreviewBoundary>
+        ) : (
+          <div
+            className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton"
+            style={aspectStyle}
+          />
+        )}
+
+        {draft?.name && (
+          <h3 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed">
+            {draft.name}
+          </h3>
+        )}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <PixelButton variant="ghost" onClick={onClose}>
+            Close
+          </PixelButton>
+          <Link href={kitchenHref}>
+            <PixelButton>Open in Kitchen</PixelButton>
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
