@@ -8,12 +8,5 @@ interface KitchenClientProps {
 }
 
 export function KitchenClient({ cookTemplates }: KitchenClientProps) {
-  return (
-    <div className="space-y-6">
-      <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
-        Kitchen
-      </h1>
-      <CookPage templates={cookTemplates} />
-    </div>
-  );
+  return <CookPage templates={cookTemplates} />;
 }

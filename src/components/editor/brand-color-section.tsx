@@ -18,6 +18,7 @@ export function BrandColorSection() {
 
   return (
     <BrandColorPicker
+      label="Colors"
       brandId={state.config.brandId}
       colors={state.config.colors}
       onBrandChange={handleBrandChange}

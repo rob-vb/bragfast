@@ -18,6 +18,7 @@ interface CookState {
   cookId?: string;
   results?: ReleaseResult;
   error?: string;
+  draftName: string;
 }
 
 type CookAction =
@@ -28,7 +29,7 @@ type CookAction =
   | { type: "TOGGLE_FORMAT"; format: FormatKey }
   | { type: "SET_OUTPUT_TYPE"; outputType: "image" | "video" }
   | { type: "SET_ANIMATION_PRESET"; preset: AnimationPreset | undefined }
-  | { type: "START_COOK"; cookId: string }
+  | { type: "START_COOK" }
   | { type: "COOK_DONE"; results: ReleaseResult }
   | { type: "COOK_ERROR"; error: string }
   | { type: "RESET" };
@@ -43,7 +44,12 @@ const INITIAL_STATE: CookState = {
   formats: ["landscape", "square", "portrait"],
   outputType: "image",
   status: "idle",
+  draftName: "",
 };
+
+function resumeFromDone(status: CookState["status"]): CookState["status"] {
+  return status === "done" ? "idle" : status;
+}
 
 function cookReducer(state: CookState, action: CookAction): CookState {
   switch (action.type) {
@@ -56,6 +62,7 @@ function cookReducer(state: CookState, action: CookAction): CookState {
           ? state.colors
           : { ...DEFAULT_COLORS, ...action.config.colors },
         objectContent: {},
+        status: resumeFromDone(state.status),
       };
 
     case "SET_BRAND":
@@ -63,15 +70,17 @@ function cookReducer(state: CookState, action: CookAction): CookState {
         ...state,
         brandId: action.brandId,
         colors: action.colors,
+        status: resumeFromDone(state.status),
       };
 
     case "SET_COLORS":
-      return { ...state, colors: action.colors };
+      return { ...state, colors: action.colors, status: resumeFromDone(state.status) };
 
     case "SET_CONTENT":
       return {
         ...state,
         objectContent: { ...state.objectContent, [action.id]: action.mod },
+        status: resumeFromDone(state.status),
       };
 
     case "TOGGLE_FORMAT": {
@@ -82,6 +91,7 @@ function cookReducer(state: CookState, action: CookAction): CookState {
         formats: has
           ? state.formats.filter((f) => f !== action.format)
           : [...state.formats, action.format],
+        status: resumeFromDone(state.status),
       };
     }
 
@@ -90,13 +100,14 @@ function cookReducer(state: CookState, action: CookAction): CookState {
         ...state,
         outputType: action.outputType,
         animationPreset: action.outputType === "image" ? undefined : state.animationPreset,
+        status: resumeFromDone(state.status),
       };
 
     case "SET_ANIMATION_PRESET":
-      return { ...state, animationPreset: action.preset };
+      return { ...state, animationPreset: action.preset, status: resumeFromDone(state.status) };
 
     case "START_COOK":
-      return { ...state, status: "cooking", cookId: action.cookId, results: undefined, error: undefined };
+      return { ...state, status: "cooking", cookId: undefined, results: undefined, error: undefined };
 
     case "COOK_DONE":
       return { ...state, status: "done", results: action.results };
@@ -355,6 +366,7 @@ describe("RESET", () => {
       animationPreset: "showcase",
       status: "done",
       cookId: "cook_xyz",
+      draftName: "My Draft",
     };
     const state = cookReducer(modified, { type: "RESET" });
     expect(state.templateId).toBeNull();
@@ -367,5 +379,88 @@ describe("RESET", () => {
     expect(state.animationPreset).toBeUndefined();
     expect(state.status).toBe("idle");
     expect(state.cookId).toBeUndefined();
+    expect(state.draftName).toBe("");
+  });
+});
+
+// ─── done → idle transitions ─────────────────────────────────────────────────
+//
+// Any user-edit action while results are showing must collapse the result panel
+// and resume the live preview. Verified per action below.
+
+describe("done → idle transitions", () => {
+  const doneState: CookState = {
+    ...INITIAL_STATE,
+    status: "done",
+    results: {
+      cook_id: "cook_x",
+      output: "image",
+      status: "completed",
+      images: { landscape: { slides: ["url"], dimensions: "1200x675" } },
+      credits_used: 1,
+      credits_remaining: 99,
+      created_at: "2026-05-03T00:00:00Z",
+    },
+  };
+
+  it("SELECT_TEMPLATE returns to idle", () => {
+    const next = cookReducer(doneState, {
+      type: "SELECT_TEMPLATE",
+      templateId: "tmpl_abc",
+      config: baseConfig,
+    });
+    expect(next.status).toBe("idle");
+  });
+
+  it("SET_BRAND returns to idle", () => {
+    const next = cookReducer(doneState, {
+      type: "SET_BRAND",
+      brandId: "brand_1",
+      colors: DEFAULT_COLORS,
+    });
+    expect(next.status).toBe("idle");
+  });
+
+  it("SET_COLORS returns to idle", () => {
+    const next = cookReducer(doneState, {
+      type: "SET_COLORS",
+      colors: { background: "#000", text: "#fff", primary: "#f00" },
+    });
+    expect(next.status).toBe("idle");
+  });
+
+  it("SET_CONTENT returns to idle", () => {
+    const next = cookReducer(doneState, {
+      type: "SET_CONTENT",
+      id: "title",
+      mod: { id: "title", text: "Hello" },
+    });
+    expect(next.status).toBe("idle");
+  });
+
+  it("TOGGLE_FORMAT returns to idle", () => {
+    const next = cookReducer(doneState, { type: "TOGGLE_FORMAT", format: "square" });
+    expect(next.status).toBe("idle");
+  });
+
+  it("SET_OUTPUT_TYPE returns to idle", () => {
+    const next = cookReducer(doneState, { type: "SET_OUTPUT_TYPE", outputType: "video" });
+    expect(next.status).toBe("idle");
+  });
+
+  it("SET_ANIMATION_PRESET returns to idle", () => {
+    const videoDone: CookState = { ...doneState, outputType: "video" };
+    const next = cookReducer(videoDone, { type: "SET_ANIMATION_PRESET", preset: "simple-fade" });
+    expect(next.status).toBe("idle");
+  });
+
+  it("does not affect cooking state — fields edited mid-cook do not interrupt", () => {
+    const cookingState: CookState = { ...INITIAL_STATE, status: "cooking" };
+    const next = cookReducer(cookingState, {
+      type: "SET_CONTENT",
+      id: "title",
+      mod: { id: "title", text: "edit" },
+    });
+    expect(next.status).toBe("cooking");
   });
 });

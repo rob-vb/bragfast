@@ -77,4 +77,25 @@ describe("buildDraftObjectData", () => {
     expect(result.title).toEqual({ text: "Text goes here" });
     expect(result.image).toBeUndefined();
   });
+
+  it("placeholderForEmpty falls back to 'Sample text' when previewText is missing", () => {
+    const result = buildDraftObjectData(baseConfig, undefined, "landscape", {
+      placeholderForEmpty: true,
+    });
+    // title still uses its own previewText
+    expect(result.title).toEqual({ text: "Text goes here" });
+    // description has no previewText → "Sample text" instead of ""
+    expect(result.description).toEqual({ text: "Sample text" });
+  });
+
+  it("placeholderForEmpty treats user-emptied text the same as missing", () => {
+    const result = buildDraftObjectData(
+      baseConfig,
+      { title: { text: "" }, description: { text: "" } },
+      "landscape",
+      { placeholderForEmpty: true },
+    );
+    expect(result.title).toEqual({ text: "Text goes here" });
+    expect(result.description).toEqual({ text: "Sample text" });
+  });
 });

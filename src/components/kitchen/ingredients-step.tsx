@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import type { ObjectModification } from "@/lib/types";
 import { uploadFile } from "@/lib/upload/client";
+import { FontPicker } from "@/components/kitchen/font-picker";
 
 interface IngredientsStepProps {
   templateConfig: CanvasTemplateConfig;
@@ -39,9 +40,23 @@ export function IngredientsStep({
           const isLong = obj.height > 80 || obj.name.toLowerCase().includes("desc");
           return (
             <div key={obj.id} className="space-y-1">
-              <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand capitalize block">
-                {obj.name}
-              </label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand capitalize block">
+                  {obj.name}
+                </label>
+                <FontPicker
+                  value={mod.font_family}
+                  weightValue={mod.font_weight}
+                  templateDefault={obj.fontFamily}
+                  templateDefaultWeight={obj.fontWeight}
+                  onChange={(family) =>
+                    onContentChange(obj.id, { ...mod, id: obj.id, font_family: family })
+                  }
+                  onWeightChange={(weight) =>
+                    onContentChange(obj.id, { ...mod, id: obj.id, font_weight: weight })
+                  }
+                />
+              </div>
               {isLong ? (
                 <textarea
                   className="w-full border-2 border-brand px-3 py-2 text-sm font-[family-name:var(--font-geist-sans)] text-brand bg-white resize-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"

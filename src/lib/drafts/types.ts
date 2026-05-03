@@ -14,6 +14,8 @@ export interface DraftObjectContent {
   text?: string;
   image_url?: string;
   video_url?: string;
+  font_family?: string;
+  font_weight?: number;
 }
 
 export interface DraftVideo {

@@ -42,18 +42,37 @@ export function buildSampleBrand(config: CanvasTemplateConfig): Brand {
 }
 
 /** Populate an ObjectDataMap from a draft's object content, falling back to template previewText
- *  when content is missing. Used by DraftPreview to render actual draft text inline. */
+ *  when content is missing. Used by DraftPreview to render actual draft text inline.
+ *
+ *  `placeholderForEmpty`: when true, an unfilled text object with no previewText falls back to
+ *  "Sample text" (matches buildSampleSlide). Use for the live editor so all fields show a
+ *  placeholder; leave false for DraftPreview so saved drafts render exactly as cooked. */
 export function buildDraftObjectData(
   config: CanvasTemplateConfig,
   objectContent: Record<string, DraftObjectContent> | undefined,
   format: FormatKey,
+  options?: { placeholderForEmpty?: boolean },
 ): ObjectDataMap {
   const layout = config.formats[format] ?? config.formats.landscape;
   const slide: ObjectDataMap = {};
+  const placeholderForEmpty = options?.placeholderForEmpty ?? false;
   for (const obj of layout.objects) {
     const content = objectContent?.[obj.id];
     if (obj.type === "text") {
-      slide[obj.id] = { text: content?.text ?? obj.previewText ?? "" };
+      const userText = content?.text;
+      let entry: ObjectDataMap[string] | undefined;
+      if (userText) {
+        entry = { text: userText };
+      } else if (obj.previewText !== "") {
+        const fallback =
+          obj.previewText ?? (placeholderForEmpty ? "Sample text" : "");
+        entry = { text: fallback };
+      }
+      if (entry) {
+        if (content?.font_family) entry.fontFamily = content.font_family;
+        if (content?.font_weight) entry.fontWeight = content.font_weight;
+        slide[obj.id] = entry;
+      }
     } else if (content?.image_url) {
       // CanvasRenderer accepts URLs in imageBase64 (client render path uses <img src>).
       slide[obj.id] = { imageBase64: content.image_url };

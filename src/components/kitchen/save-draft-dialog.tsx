@@ -6,22 +6,23 @@ interface SaveDraftDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (name: string) => Promise<void>;
+  defaultName?: string;
 }
 
-export function SaveDraftDialog({ open, onClose, onSave }: SaveDraftDialogProps) {
-  const [name, setName] = useState("");
+export function SaveDraftDialog({ open, onClose, onSave, defaultName }: SaveDraftDialogProps) {
+  const [name, setName] = useState(defaultName ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
-      setName("");
+      setName(defaultName ?? "");
       setError(null);
       setBusy(false);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
-  }, [open]);
+  }, [open, defaultName]);
 
   useEffect(() => {
     if (!open) return;

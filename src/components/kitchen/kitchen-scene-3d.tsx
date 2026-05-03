@@ -60,6 +60,7 @@ export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
     <>
       <style>{`
         .ks3-wrap {
+          display: inline-block;
           overflow: hidden;
           border: 2px solid var(--color-brand, #4A3326);
           background: ${P.wall};
@@ -67,7 +68,8 @@ export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
         }
         .ks3-viewport {
           position: relative;
-          width: 100%;
+          /* Render at natural ${w}px when container is wider; scale down on mobile. */
+          width: min(${w}px, 100cqw);
           aspect-ratio: ${w} / ${h};
         }
         .ks3-scene {
@@ -80,9 +82,10 @@ export function KitchenScene3D({ activeStep, status }: KitchenScene3DProps) {
         }
         .ks3-container {
           container-type: inline-size;
+          text-align: center;
         }
         @container (min-width: 0px) {
-          .ks3-scene { transform: scale(calc(100cqw / ${w})); }
+          .ks3-scene { transform: scale(calc(min(${w}px, 100cqw) / ${w})); }
         }
 
         /* ── Flame animation (2-frame alternating) ── */
