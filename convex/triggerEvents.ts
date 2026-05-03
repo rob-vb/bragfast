@@ -409,11 +409,15 @@ export const countUnseenBriefingDrafts = query({
 
 /**
  * Stamp the user's last-visit time on the briefing page. Idempotent.
+ * No-ops (instead of throwing) when called before auth resolves, since the
+ * client fires this from a useEffect that races session establishment.
  */
 export const markBriefingSeen = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuthedUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return;
+    const userId = identity.subject;
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))

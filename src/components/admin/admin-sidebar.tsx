@@ -61,12 +61,12 @@ type NavItem = {
 // to Developers group — kept reachable but off the primary path.
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Briefing", href: "/admin/briefing", icon: Bell },
   { label: "Kitchen", href: "/admin/kitchen", icon: ChefHat },
   { label: "Drafts", href: "/admin/drafts", icon: FileText },
 ];
 
 const sousChefNav: NavItem[] = [
+  { label: "Briefing", href: "/admin/briefing", icon: Bell },
   { label: "Weekly report", href: "/admin/report", icon: CalendarRange },
   { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
   { label: "Activity log", href: "/admin/sous-chef/history", icon: History },
@@ -170,6 +170,31 @@ export function AdminSidebar({
             <SidebarMenu>
               {mainNav.map((item) => {
                 const active = isItemActive(pathname, item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.label}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Sous-Chef</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sousChefNav.map((item) => {
+                const active = isItemActive(pathname, item.href);
                 const showBadge =
                   item.href === "/admin/briefing" && unseenBriefing > 0;
                 return (
@@ -194,31 +219,6 @@ export function AdminSidebar({
                             {unseenBriefing > 99 ? "99+" : unseenBriefing}
                           </span>
                         ) : null}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Sous-Chef</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {sousChefNav.map((item) => {
-                const active = isItemActive(pathname, item.href);
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
