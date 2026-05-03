@@ -285,8 +285,11 @@ export const insertDraftIfNewAction = action({
     confidence: v.optional(v.number()),
     suppressed: v.optional(v.boolean()),
   },
-  handler: async (ctx, args): Promise<void> => {
-    await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ created: boolean; id: string; created_at: string }> => {
+    return await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
   },
 });
 

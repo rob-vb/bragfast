@@ -234,7 +234,7 @@ async function createPrMergeDraft(
 
     const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
 
-    await convex.action(api.drafts.insertDraftIfNewAction, {
+    const inserted = await convex.action(api.drafts.insertDraftIfNewAction, {
       userId,
       idempotencyKey: input.idempotencyKey,
       sourceSystem: "github",
@@ -256,9 +256,7 @@ async function createPrMergeDraft(
         reason: suppressed ? "low_confidence" : undefined,
         confidence: primary.confidence,
         sourceReference: input.eventReference,
-        // We don't have the draft's externalId after the idempotent insert
-        // (action returns void). Carry the milestoneKey instead so the feed
-        // row is still tied back to the draft via drafts.milestoneKey.
+        draftExternalId: inserted.id,
         metadata: JSON.stringify({ milestoneKey: input.milestoneKey }),
       })
       .catch((err) =>

@@ -284,6 +284,29 @@ type TriggerEventRow = {
 };
 
 /**
+ * Resolve a missing draftExternalId from `metadata.milestoneKey`. Older
+ * pr_merged events were inserted before the webhook had access to the
+ * draft's externalId — they carry milestoneKey in metadata instead. Maps
+ * back to the draft table by scanning the user's drafts (founder-scale).
+ */
+function resolveMissingDraftId(
+  metadata: string | undefined,
+  drafts: Array<{ externalId: string; milestoneKey?: string }>,
+): string | null {
+  if (!metadata) return null;
+  let parsed: { milestoneKey?: unknown };
+  try {
+    parsed = JSON.parse(metadata) as { milestoneKey?: unknown };
+  } catch {
+    return null;
+  }
+  const key = parsed.milestoneKey;
+  if (typeof key !== "string") return null;
+  const match = drafts.find((d) => d.milestoneKey === key);
+  return match?.externalId ?? null;
+}
+
+/**
  * Daily briefing: trigger events for the current user inside [startISO, endISO).
  * Bounded by the by_userId_created_at compound index so we never hit the 8192
  * collect() ceiling for heavy users. Newest first.
@@ -301,6 +324,15 @@ export const listByUserForDay = query({
       )
       .order("desc")
       .collect();
+    const needsBackfill = rows.some(
+      (r) => !r.draftExternalId && r.metadata,
+    );
+    const drafts = needsBackfill
+      ? await ctx.db
+          .query("drafts")
+          .withIndex("by_userId", (q) => q.eq("userId", userId))
+          .collect()
+      : [];
     return rows.map((r) => ({
       id: r.externalId,
       sourceSystem: r.sourceSystem,
@@ -309,7 +341,8 @@ export const listByUserForDay = query({
       reason: r.reason ?? null,
       confidence: r.confidence ?? null,
       sourceReference: r.sourceReference ?? null,
-      draftExternalId: r.draftExternalId ?? null,
+      draftExternalId:
+        r.draftExternalId ?? resolveMissingDraftId(r.metadata, drafts),
       metadata: r.metadata ?? null,
       created_at: r.created_at,
     }));
