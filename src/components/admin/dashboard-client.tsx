@@ -11,12 +11,11 @@ import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
-import { RetroDraftHero } from "@/components/admin/retro-draft-hero";
 import { SousChefHistoryFeed } from "@/components/admin/sous-chef-history-feed";
 import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import Link from "next/link";
 
-export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boolean }) {
+export function DashboardClient() {
   const userId = useUserId();
 
   const stats = useQuery(api.userProfiles.getStats, { userId });
@@ -60,8 +59,6 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
         <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
           Dashboard
         </h1>
-
-        {showRetroHero && <RetroDraftHero />}
 
         {/* Posts/credits meter */}
         {newTierMeter ? (
@@ -110,8 +107,6 @@ export function DashboardClient({ showRetroHero = false }: { showRetroHero?: boo
       <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
         Dashboard
       </h1>
-
-      {showRetroHero && <RetroDraftHero />}
 
       {newTierMeter ? (
         <CreditMeter

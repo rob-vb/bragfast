@@ -23,3 +23,11 @@ Recent history uses short imperative subjects, often with prefixes like `feat(..
 
 ## Security & Configuration Tips
 Secrets must never be stored plaintext in Convex; use the existing sealed-secret path in `src/lib/crypto/secret-box.ts`. Validate external hosts with explicit allowlists. Test cron-driven integrations via manual `convex run` commands before relying on schedule timing.
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->

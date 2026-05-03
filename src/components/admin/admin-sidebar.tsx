@@ -64,9 +64,9 @@ const mainNav: NavItem[] = [
 ];
 
 const sousChefNav: NavItem[] = [
-  { label: "Settings", href: "/admin/sous-chef", icon: Settings },
   { label: "History", href: "/admin/sous-chef/history", icon: History },
   { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
+  { label: "Settings", href: "/admin/sous-chef", icon: Settings },
 ];
 
 const configureNav: NavItem[] = [
