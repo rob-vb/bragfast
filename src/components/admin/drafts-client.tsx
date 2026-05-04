@@ -258,6 +258,11 @@ function DraftCard({
       tabIndex={0}
       onClick={open}
       onKeyDown={(e) => {
+        // The card is role="button", so Enter/Space activates it — but the
+        // delete-confirmation dialog renders inside the card and its textarea
+        // bubbles every keypress here. Only activate when the card itself is
+        // focused, not a nested input/textarea/button.
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           open();
