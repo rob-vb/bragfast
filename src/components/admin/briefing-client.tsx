@@ -446,7 +446,7 @@ function DraftedRow({
       </td>
       <td className="px-4 py-3 max-w-[320px]">
         {summary ? (
-          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 line-clamp-3">
+          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 whitespace-normal break-words">
             {summary}
           </div>
         ) : (
@@ -535,7 +535,7 @@ function SkippedRow({
       </td>
       <td className="px-4 py-3 max-w-[320px]">
         {summary ? (
-          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 line-clamp-3">
+          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 whitespace-normal break-words">
             {summary}
           </div>
         ) : (
