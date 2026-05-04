@@ -24,9 +24,14 @@ export default async function SousChefPage() {
         }}
         plan={profile?.plan ?? "trial"}
       />
-      <PixelCard>
-        <VoicePresetPicker userId={user._id} />
-      </PixelCard>
+      <div className="space-y-4">
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+          Voice
+        </h2>
+        <PixelCard>
+          <VoicePresetPicker userId={user._id} />
+        </PixelCard>
+      </div>
     </div>
   );
 }

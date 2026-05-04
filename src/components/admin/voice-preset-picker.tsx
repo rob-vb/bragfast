@@ -62,14 +62,9 @@ export function VoicePresetPicker({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-3">
-      <div>
-        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-          Voice
-        </h2>
-        <p className="mt-1 text-xs text-brand/60">
-          Shapes how Haiku writes your draft titles and descriptions.
-        </p>
-      </div>
+      <p className="text-xs text-brand/60">
+        Shapes how Haiku writes your draft titles and descriptions.
+      </p>
       <div className="grid gap-2 sm:grid-cols-2">
         {PRESETS.map((p) => {
           const active = selected === p.id;
