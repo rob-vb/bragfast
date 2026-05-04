@@ -111,7 +111,6 @@ export function RecipeStep({
         templates={templates}
         selectedId={selectedId}
         onSelect={onSelect}
-        userBrand={userBrand}
       />
     </div>
   );
