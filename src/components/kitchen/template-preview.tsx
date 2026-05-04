@@ -33,21 +33,31 @@ export const TemplatePreview = memo(function TemplatePreview({
 }: TemplatePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
+  // Bumped each time a newly-injected font finishes loading so the canvas
+  // repaints with the real face instead of the fallback.
+  const [fontTick, setFontTick] = useState(0);
   const { width: previewWidth, height: previewHeight } = FORMAT_DIMENSIONS[format];
 
   useEffect(() => {
-    injectGoogleFont("Plus Jakarta Sans");
-    if (brand.font_family) injectGoogleFont(brand.font_family);
+    let cancelled = false;
+    const families = new Set<string>(["Plus Jakarta Sans"]);
+    if (brand.font_family) families.add(brand.font_family);
     for (const fmt of Object.values(config.formats)) {
       for (const obj of fmt.objects) {
-        if (obj.fontFamily) injectGoogleFont(obj.fontFamily);
+        if (obj.fontFamily) families.add(obj.fontFamily);
       }
     }
     if (objectData) {
       for (const data of Object.values(objectData)) {
-        if (data.fontFamily) injectGoogleFont(data.fontFamily);
+        if (data.fontFamily) families.add(data.fontFamily);
       }
     }
+    Promise.all([...families].map((f) => injectGoogleFont(f))).then(() => {
+      if (!cancelled) setFontTick((t) => t + 1);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [config, brand.font_family, objectData]);
 
   useLayoutEffect(() => {
@@ -71,6 +81,7 @@ export const TemplatePreview = memo(function TemplatePreview({
     <div ref={containerRef} style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
       {scale > 0 && (
         <div
+          key={fontTick}
           style={{
             width: previewWidth,
             height: previewHeight,
