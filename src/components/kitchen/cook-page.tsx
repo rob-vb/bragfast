@@ -262,17 +262,8 @@ export function CookPage({ templates }: CookPageProps) {
     (integrations?.some((r) => r.provider === "buffer" && r.enabled) ?? false) ||
     (integrations?.some((r) => r.provider === "postiz" && r.enabled) ?? false);
 
-  // ── User brands (for both template thumbnails and live preview) ─────────
+  // ── User brands (for live preview) ──────────────────────────────────────
   const userBrandsRaw = useQuery(api.brands.listByUser, { userId });
-  const primaryBrand: Brand | undefined = userBrandsRaw?.[0]
-    ? {
-        name: userBrandsRaw[0].name,
-        logoBase64: userBrandsRaw[0].logo_url ?? "",
-        website: userBrandsRaw[0].website ?? "",
-        colors: userBrandsRaw[0].colors,
-        font_family: userBrandsRaw[0].font_family,
-      }
-    : undefined;
 
   // Brand used for the live right-panel preview — reflects the picked brand
   // (or current colors when no brand) so the canvas matches what will cook.
@@ -708,7 +699,6 @@ export function CookPage({ templates }: CookPageProps) {
               onSelect={(id, config) =>
                 dispatch({ type: "SELECT_TEMPLATE", templateId: id, config })
               }
-              userBrand={primaryBrand}
             />
           </section>
 

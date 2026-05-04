@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
-import type { Brand } from "@/lib/types";
-import { buildBragfastSampleBrand } from "@/lib/preview-sample";
+import { buildBragfastSampleBrand, buildSampleBrand } from "@/lib/preview-sample";
 import { TemplatePreview } from "@/components/kitchen/template-preview";
 import { TemplatePickerDialog } from "@/components/kitchen/template-picker-dialog";
 
@@ -23,16 +22,12 @@ interface RecipeStepProps {
   templates: TemplateItem[];
   selectedId: string | null;
   onSelect: (id: string, config: CanvasTemplateConfig) => void;
-  /** User's primary brand — used for custom template previews.
-   *  Defaults to brag.fast sample brand when absent (e.g. new accounts). */
-  userBrand?: Brand;
 }
 
 export function RecipeStep({
   templates,
   selectedId,
   onSelect,
-  userBrand,
 }: RecipeStepProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -50,7 +45,7 @@ export function RecipeStep({
   const previewBrand = selected
     ? selected.isDefault
       ? BRAGFAST_BRAND
-      : userBrand ?? BRAGFAST_BRAND
+      : buildSampleBrand(selected.config)
     : BRAGFAST_BRAND;
 
   return (
