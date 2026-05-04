@@ -532,8 +532,12 @@ export function CookPage({ templates }: CookPageProps) {
       payload.video = { preset: state.animationPreset };
     }
 
-    const res = await fetch("/api/v1/drafts", {
-      method: "POST",
+    const isUpdate = Boolean(draftId);
+    const url = isUpdate
+      ? `/api/v1/drafts/${encodeURIComponent(draftId!)}`
+      : "/api/v1/drafts";
+    const res = await fetch(url, {
+      method: isUpdate ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -541,6 +545,16 @@ export function CookPage({ templates }: CookPageProps) {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error ?? "Failed to save draft");
+    }
+
+    if (!isUpdate) {
+      const data: { draft_id?: string } = await res.json().catch(() => ({}));
+      if (data.draft_id) {
+        setDraftId(data.draft_id);
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set("draft", data.draft_id);
+        window.history.replaceState({}, "", nextUrl.toString());
+      }
     }
 
     setSaveSuccess(true);

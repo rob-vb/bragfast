@@ -88,7 +88,7 @@ export function DashboardClient() {
               Full history →
             </Link>
           </div>
-          <SousChefHistoryFeed limit={10} />
+          <SousChefHistoryFeed limit={3} excludeDismissed />
         </div>
       </div>
     );

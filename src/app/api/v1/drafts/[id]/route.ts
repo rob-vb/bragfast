@@ -2,6 +2,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { getSessionUser } from "@/lib/auth/get-session-user";
+import { validateDraftPayload } from "@/lib/drafts/validate";
 import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
 
 type AuthResolved = { userId: string; source: DraftSource };
@@ -39,6 +40,32 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     created_at: row.created_at,
     config,
   });
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await resolveAuth(request);
+  if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const result = validateDraftPayload(body);
+  if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
+
+  const updated = await fetchMutation(api.drafts.update, {
+    externalId: id,
+    userId: auth.userId,
+    name: result.name ?? undefined,
+    config: JSON.stringify(result.config),
+  });
+  if (!updated) return Response.json({ error: "Not found" }, { status: 404 });
+
+  return Response.json({ draft_id: updated.id, created_at: updated.created_at });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
