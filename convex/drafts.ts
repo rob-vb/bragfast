@@ -138,8 +138,13 @@ export const listByUser = query({
       .query("drafts")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
-    rows.sort((a, b) => (a.created_at > b.created_at ? -1 : 1));
-    return rows.map((r) => ({
+    // Suppressed (low-confidence agent) drafts only surface via Briefing /
+    // Sous-Chef History, where "Draft anyway" promotes them. They aren't
+    // user-facing drafts until then, so omit from the Drafts page, dashboard
+    // widget, and public GET /api/v1/drafts.
+    const visible = rows.filter((r) => !r.suppressed);
+    visible.sort((a, b) => (a.created_at > b.created_at ? -1 : 1));
+    return visible.map((r) => ({
       id: r.externalId,
       name: r.name ?? null,
       source: r.source,
