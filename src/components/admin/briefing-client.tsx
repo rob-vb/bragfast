@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import posthog from "posthog-js";
+import { toast } from "sonner";
 import { useUserId } from "@/hooks/use-user-id";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelButton } from "@/components/admin/pixel-button";
@@ -56,6 +57,23 @@ function parseConfig(raw: string): DraftConfig {
     return { output: "image" };
   }
 }
+
+// AI-generated brag-post description, the short summary Haiku wrote about the
+// PR. Stored on the draft config so this works for both drafted and
+// (suppressed → low-confidence) skipped events.
+function extractAiSummary(rawConfig: string | undefined): string | null {
+  if (!rawConfig) return null;
+  const cfg = parseConfig(rawConfig);
+  const text = cfg.objectContent?.description?.text;
+  return text && text.trim().length > 0 ? text.trim() : null;
+}
+
+const OVERRIDE_ERROR_COPY: Record<string, string> = {
+  not_found: "Trigger event not found",
+  not_skipped: "Already drafted",
+  no_reference: "No source reference on this event",
+  no_draft: "No suppressed draft exists for this trigger",
+};
 
 function primaryFormat(config: DraftConfig): FormatKey {
   const formats = config.formats ?? [];
@@ -192,6 +210,9 @@ export function BriefingClient() {
   const userId = useUserId();
   const [ymd, setYmd] = useState<string>(() => todayLocalYmd());
   const [previewDraftId, setPreviewDraftId] = useState<string | null>(null);
+  const [overridePending, setOverridePending] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const { startISO, endISO } = useMemo(() => localDayToUtcWindow(ymd), [ymd]);
 
@@ -200,6 +221,40 @@ export function BriefingClient() {
     endISO,
   });
   const markBriefingSeen = useMutation(api.triggerEvents.markBriefingSeen);
+  const overrideEvent = useMutation(
+    api.triggerEvents.overrideAutoSkippedEvent,
+  );
+
+  async function handleOverride(eventId: string, reason: string | null) {
+    setOverridePending((prev) => new Set(prev).add(eventId));
+    try {
+      const result = await overrideEvent({ externalId: eventId });
+      if (result.ok) {
+        posthog.capture("trigger_event_overridden", {
+          event_id: eventId,
+          reason: reason ?? "unknown",
+          draft_id: result.draftExternalId,
+          surface: "briefing",
+        });
+        toast.success("Draft restored — opening it.");
+        setPreviewDraftId(result.draftExternalId);
+      } else {
+        toast.error(
+          OVERRIDE_ERROR_COPY[result.error] ??
+            `Override failed: ${result.error}`,
+        );
+      }
+    } catch (err) {
+      console.error("[briefing] override failed", err);
+      toast.error("Override failed");
+    } finally {
+      setOverridePending((prev) => {
+        const next = new Set(prev);
+        next.delete(eventId);
+        return next;
+      });
+    }
+  }
 
   const todayYmd = todayLocalYmd();
   const isToday = ymd === todayYmd;
@@ -293,6 +348,7 @@ export function BriefingClient() {
                   "Source",
                   "Trigger",
                   "Title",
+                  "Summary",
                   "Why drafted",
                   "Template",
                   "Time",
@@ -315,10 +371,25 @@ export function BriefingClient() {
                 Skipped ({skippedEvents.length})
               </h2>
               <PixelTable
-                headers={["Source", "Trigger", "Why skipped", "Reference", "Time"]}
+                headers={[
+                  "Source",
+                  "Trigger",
+                  "Why skipped",
+                  "Summary",
+                  "Reference",
+                  "Time",
+                  "Actions",
+                ]}
               >
                 {skippedEvents.map((event) => (
-                  <SkippedRow key={event.id} event={event as TriggerEventRow} />
+                  <SkippedRow
+                    key={event.id}
+                    event={event as TriggerEventRow}
+                    pending={overridePending.has(event.id)}
+                    onOverride={() =>
+                      handleOverride(event.id, event.reason ?? null)
+                    }
+                  />
                 ))}
               </PixelTable>
             </section>
@@ -350,6 +421,7 @@ function DraftedRow({
   const meta = parseMetadata(event.metadata);
   const pick = templatePickText(meta);
   const title = draft?.name ?? "—";
+  const summary = extractAiSummary(draft?.config);
   const kitchenHref = event.draftExternalId
     ? `/admin/kitchen?draft=${encodeURIComponent(event.draftExternalId)}`
     : "#";
@@ -362,7 +434,7 @@ function DraftedRow({
       <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
         {event.triggerType}
       </td>
-      <td className="px-4 py-3 max-w-[280px]">
+      <td className="px-4 py-3 max-w-[260px]">
         <div className="font-[family-name:var(--font-geist-sans)] text-sm text-brand line-clamp-2">
           {title}
         </div>
@@ -370,6 +442,17 @@ function DraftedRow({
           <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/50 truncate mt-1">
             {event.sourceReference}
           </div>
+        )}
+      </td>
+      <td className="px-4 py-3 max-w-[320px]">
+        {summary ? (
+          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 line-clamp-3">
+            {summary}
+          </div>
+        ) : (
+          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
+            —
+          </span>
         )}
       </td>
       <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/80">
@@ -421,7 +504,24 @@ function DraftedRow({
   );
 }
 
-function SkippedRow({ event }: { event: TriggerEventRow }) {
+function SkippedRow({
+  event,
+  pending,
+  onOverride,
+}: {
+  event: TriggerEventRow;
+  pending: boolean;
+  onOverride: () => void;
+}) {
+  // Suppressed drafts only exist for low_confidence; content_filter and
+  // rate_cap paths produce no draft so there's no AI summary to show.
+  const draft = useQuery(
+    api.drafts.getByExternalIdAuthed,
+    event.draftExternalId ? { externalId: event.draftExternalId } : "skip",
+  );
+  const summary = extractAiSummary(draft?.config);
+  const canOverride = event.reason === "low_confidence" && !!event.draftExternalId;
+
   return (
     <tr className="align-top">
       <td className="px-4 py-3">
@@ -433,11 +533,37 @@ function SkippedRow({ event }: { event: TriggerEventRow }) {
       <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[13px] text-brand">
         {skipReasonText(event)}
       </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55 max-w-[320px] truncate">
+      <td className="px-4 py-3 max-w-[320px]">
+        {summary ? (
+          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 line-clamp-3">
+            {summary}
+          </div>
+        ) : (
+          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
+            —
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55 max-w-[280px] truncate">
         {event.sourceReference ?? "—"}
       </td>
       <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
         {formatTime(event.created_at)}
+      </td>
+      <td className="px-4 py-3">
+        {canOverride ? (
+          <PixelButton
+            onClick={onOverride}
+            disabled={pending}
+            data-testid={`briefing-override-${event.id}`}
+          >
+            {pending ? "..." : "Draft anyway"}
+          </PixelButton>
+        ) : (
+          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/30">
+            —
+          </span>
+        )}
       </td>
     </tr>
   );

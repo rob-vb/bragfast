@@ -218,10 +218,10 @@ function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen
     <>
       <tr
         ref={rowRef}
-        className="hover:bg-gold/5 cursor-pointer"
+        className="align-top hover:bg-gold/5 cursor-pointer"
         onClick={() => setOpen(!open)}
       >
-        <td className="px-4 py-3 font-mono text-xs">
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand">
           <span className="inline-block w-4 text-brand/40 mr-1">
             {open ? "▼" : "▶"}
           </span>
@@ -232,12 +232,16 @@ function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen
             </span>
           )}
         </td>
-        <td className="px-4 py-3 text-xs">{release.template}</td>
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+          {release.template}
+        </td>
         <td className="px-4 py-3">
           <PixelBadge status={release.status} />
         </td>
-        <td className="px-4 py-3 text-xs">{release.credits_used}</td>
-        <td className="px-4 py-3 text-xs">
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+          {release.credits_used}
+        </td>
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
           {new Date(release.created_at).toLocaleDateString()}
         </td>
         <td className="px-4 py-3">
