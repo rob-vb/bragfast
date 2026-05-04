@@ -83,9 +83,7 @@ export function DraftsClient() {
   const router = useRouter();
   const drafts = useQuery(api.drafts.listByUser, { userId });
   const markSeen = useMutation(api.drafts.markSeen);
-  const unsuppress = useMutation(api.drafts.unsuppressDraft);
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
-  const [overriding, setOverriding] = useState<Set<string>>(new Set());
 
   // Stamp last-visit time so the sidebar "new drafts" badge clears.
   // Re-fires when drafts arrive while the page is open.
@@ -172,20 +170,8 @@ export function DraftsClient() {
               key={row.id}
               row={row as Row}
               userId={userId}
-              busy={deleting.has(row.id) || overriding.has(row.id)}
+              busy={deleting.has(row.id)}
               onDelete={(reason) => handleDelete(row.id, reason)}
-              onOverride={async () => {
-                setOverriding((prev) => new Set(prev).add(row.id));
-                try {
-                  await unsuppress({ externalId: row.id });
-                } finally {
-                  setOverriding((prev) => {
-                    const next = new Set(prev);
-                    next.delete(row.id);
-                    return next;
-                  });
-                }
-              }}
             />
           ))}
         </Masonry>
@@ -199,13 +185,11 @@ function DraftCard({
   userId,
   busy,
   onDelete,
-  onOverride,
 }: {
   row: Row;
   userId: string;
   busy: boolean;
   onDelete: (reason?: string) => void;
-  onOverride: () => void;
 }) {
   const router = useRouter();
   const config = useMemo(() => parseConfig(row.config), [row.config]);
@@ -275,7 +259,6 @@ function DraftCard({
         transition-shadow cursor-pointer
         focus:outline-2 focus:outline-offset-2 focus:outline-gold
         ${busy ? "opacity-50 pointer-events-none" : ""}
-        ${row.suppressed ? "opacity-70 bg-surface" : ""}
       `}
       aria-label={`Open draft: ${title}`}
     >
@@ -363,17 +346,6 @@ function DraftCard({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        {row.suppressed ? (
-          <PixelButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onOverride();
-            }}
-            disabled={busy}
-          >
-            Draft anyway
-          </PixelButton>
-        ) : null}
       </div>
     </div>
   );

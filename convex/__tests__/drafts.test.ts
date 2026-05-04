@@ -74,18 +74,16 @@ describe("unsuppressDraft", () => {
   });
 });
 
-describe("listByUser exposes confidence + suppressed", () => {
-  it("returns confidence and suppressed on each row", async () => {
+describe("listByUser hides suppressed drafts", () => {
+  it("filters suppressed rows out of the listing", async () => {
     const t = await seedSuppressedDraft("drf_list1");
     const asUser = t.withIdentity({ subject: USER_ID });
 
     const rows = await asUser.query(api.drafts.listByUser, { userId: USER_ID });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].confidence).toBe(0.2);
-    expect(rows[0].suppressed).toBe(true);
+    expect(rows).toHaveLength(0);
   });
 
-  it("defaults suppressed to false when missing", async () => {
+  it("returns confidence and suppressed=false for visible rows", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {
       await ctx.db.insert("drafts", {
@@ -99,6 +97,7 @@ describe("listByUser exposes confidence + suppressed", () => {
     const rows = await t
       .withIdentity({ subject: USER_ID })
       .query(api.drafts.listByUser, { userId: USER_ID });
+    expect(rows).toHaveLength(1);
     expect(rows[0].suppressed).toBe(false);
     expect(rows[0].confidence).toBe(null);
   });
