@@ -10,7 +10,10 @@ import { useUserId } from "@/hooks/use-user-id";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
-import { PixelTable } from "@/components/admin/pixel-table";
+import {
+  PixelEventCard,
+  PixelEventList,
+} from "@/components/admin/pixel-event-card";
 import { LazyMount } from "./lazy-mount";
 import { DraftPreview } from "./draft-preview";
 import { DraftPreviewBoundary } from "./draft-preview-boundary";
@@ -343,26 +346,15 @@ export function BriefingClient() {
               <h2 className="font-[family-name:var(--font-press-start)] text-xs uppercase text-brand/70 tracking-wider">
                 Drafted ({draftedEvents.length})
               </h2>
-              <PixelTable
-                headers={[
-                  "Source",
-                  "Trigger",
-                  "Title",
-                  "Summary",
-                  "Why drafted",
-                  "Template",
-                  "Time",
-                  "Actions",
-                ]}
-              >
+              <PixelEventList>
                 {draftedEvents.map((event) => (
-                  <DraftedRow
+                  <DraftedCard
                     key={event.id}
                     event={event as TriggerEventRow}
                     onPreview={(id) => setPreviewDraftId(id)}
                   />
                 ))}
-              </PixelTable>
+              </PixelEventList>
             </section>
           )}
           {skippedEvents.length > 0 && (
@@ -370,19 +362,9 @@ export function BriefingClient() {
               <h2 className="font-[family-name:var(--font-press-start)] text-xs uppercase text-brand/70 tracking-wider">
                 Skipped ({skippedEvents.length})
               </h2>
-              <PixelTable
-                headers={[
-                  "Source",
-                  "Trigger",
-                  "Why skipped",
-                  "Summary",
-                  "Reference",
-                  "Time",
-                  "Actions",
-                ]}
-              >
+              <PixelEventList>
                 {skippedEvents.map((event) => (
-                  <SkippedRow
+                  <SkippedCard
                     key={event.id}
                     event={event as TriggerEventRow}
                     pending={overridePending.has(event.id)}
@@ -391,7 +373,7 @@ export function BriefingClient() {
                     }
                   />
                 ))}
-              </PixelTable>
+              </PixelEventList>
             </section>
           )}
         </div>
@@ -407,7 +389,7 @@ export function BriefingClient() {
   );
 }
 
-function DraftedRow({
+function DraftedCard({
   event,
   onPreview,
 }: {
@@ -420,67 +402,60 @@ function DraftedRow({
   );
   const meta = parseMetadata(event.metadata);
   const pick = templatePickText(meta);
-  const title = draft?.name ?? "—";
+  const title = draft?.name;
   const summary = extractAiSummary(draft?.config);
   const kitchenHref = event.draftExternalId
     ? `/admin/kitchen?draft=${encodeURIComponent(event.draftExternalId)}`
     : "#";
 
+  const refIsUrl =
+    event.sourceReference != null && /^https?:\/\//.test(event.sourceReference);
+
   return (
-    <tr className="align-top">
-      <td className="px-4 py-3">
-        <PixelBadge variant="completed" label={SOURCE_LABEL[event.sourceSystem]} />
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
-        {event.triggerType}
-      </td>
-      <td className="px-4 py-3 max-w-[260px]">
-        <div className="font-[family-name:var(--font-geist-sans)] text-sm text-brand line-clamp-2">
-          {title}
-        </div>
-        {event.sourceReference && (
-          <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/50 truncate mt-1">
-            {event.sourceReference}
-          </div>
-        )}
-      </td>
-      <td className="px-4 py-3 max-w-[320px]">
-        {summary ? (
-          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 whitespace-normal break-words">
-            {summary}
-          </div>
-        ) : (
-          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
-            —
+    <PixelEventCard
+      header={
+        <>
+          <PixelBadge
+            variant="completed"
+            label={SOURCE_LABEL[event.sourceSystem]}
+          />
+          <span className="font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+            {event.triggerType}
           </span>
-        )}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/80">
-        {draftReasonText(event)}
-      </td>
-      <td className="px-4 py-3">
-        {pick.id ? (
-          <div className="space-y-0.5">
-            <div className="font-[family-name:var(--font-geist-mono)] text-[12px] text-brand">
-              {pick.id}
-            </div>
-            {pick.why && (
-              <div className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55">
-                {pick.why}
-              </div>
-            )}
-          </div>
-        ) : (
-          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
-            —
+          <span className="ml-auto font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
+            {formatTime(event.created_at)}
           </span>
-        )}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
-        {formatTime(event.created_at)}
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex flex-wrap gap-2">
+        </>
+      }
+      meta={
+        <>
+          <span>{draftReasonText(event)}</span>
+          {pick.id && (
+            <span>
+              · template: <span className="text-brand/80">{pick.id}</span>
+              {pick.why && <span className="text-brand/45"> ({pick.why})</span>}
+            </span>
+          )}
+          {event.sourceReference && (
+            refIsUrl ? (
+              <a
+                href={event.sourceReference}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-auto truncate max-w-[60%] hover:text-brand underline underline-offset-2"
+              >
+                {event.sourceReference}
+              </a>
+            ) : (
+              <span className="ml-auto truncate max-w-[60%] text-brand/55">
+                {event.sourceReference}
+              </span>
+            )
+          )}
+        </>
+      }
+      actions={
+        <>
           <PixelButton
             variant="ghost"
             onClick={() => {
@@ -498,13 +473,28 @@ function DraftedRow({
           ) : (
             <PixelButton disabled>Open in Kitchen</PixelButton>
           )}
-        </div>
-      </td>
-    </tr>
+        </>
+      }
+    >
+      {title && (
+        <h3 className="font-[family-name:var(--font-geist-sans)] text-base font-semibold text-brand">
+          {title}
+        </h3>
+      )}
+      {summary ? (
+        <p className="font-[family-name:var(--font-geist-sans)] text-sm leading-relaxed text-brand/85 max-w-prose">
+          {summary}
+        </p>
+      ) : (
+        <p className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
+          No summary
+        </p>
+      )}
+    </PixelEventCard>
   );
 }
 
-function SkippedRow({
+function SkippedCard({
   event,
   pending,
   onOverride,
@@ -513,45 +503,52 @@ function SkippedRow({
   pending: boolean;
   onOverride: () => void;
 }) {
-  // Suppressed drafts only exist for low_confidence; content_filter and
-  // rate_cap paths produce no draft so there's no AI summary to show.
   const draft = useQuery(
     api.drafts.getByExternalIdAuthed,
     event.draftExternalId ? { externalId: event.draftExternalId } : "skip",
   );
   const summary = extractAiSummary(draft?.config);
   const canOverride = event.reason === "low_confidence" && !!event.draftExternalId;
+  const refIsUrl =
+    event.sourceReference != null && /^https?:\/\//.test(event.sourceReference);
 
   return (
-    <tr className="align-top">
-      <td className="px-4 py-3">
-        <PixelBadge variant="suspended" label={SOURCE_LABEL[event.sourceSystem]} />
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
-        {event.triggerType}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[13px] text-brand">
-        {skipReasonText(event)}
-      </td>
-      <td className="px-4 py-3 max-w-[320px]">
-        {summary ? (
-          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 whitespace-normal break-words">
-            {summary}
-          </div>
-        ) : (
-          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
-            —
+    <PixelEventCard
+      header={
+        <>
+          <PixelBadge
+            variant="suspended"
+            label={SOURCE_LABEL[event.sourceSystem]}
+          />
+          <span className="font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+            {event.triggerType}
           </span>
-        )}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55 max-w-[280px] truncate">
-        {event.sourceReference ?? "—"}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
-        {formatTime(event.created_at)}
-      </td>
-      <td className="px-4 py-3">
-        {canOverride ? (
+          <span className="font-[family-name:var(--font-geist-sans)] text-[13px] text-brand/80">
+            {skipReasonText(event)}
+          </span>
+          <span className="ml-auto font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
+            {formatTime(event.created_at)}
+          </span>
+        </>
+      }
+      meta={
+        event.sourceReference ? (
+          refIsUrl ? (
+            <a
+              href={event.sourceReference}
+              target="_blank"
+              rel="noreferrer"
+              className="truncate max-w-full hover:text-brand underline underline-offset-2"
+            >
+              {event.sourceReference}
+            </a>
+          ) : (
+            <span className="truncate max-w-full">{event.sourceReference}</span>
+          )
+        ) : undefined
+      }
+      actions={
+        canOverride ? (
           <PixelButton
             onClick={onOverride}
             disabled={pending}
@@ -559,13 +556,19 @@ function SkippedRow({
           >
             {pending ? "..." : "Draft anyway"}
           </PixelButton>
-        ) : (
-          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/30">
-            —
-          </span>
-        )}
-      </td>
-    </tr>
+        ) : undefined
+      }
+    >
+      {summary ? (
+        <p className="font-[family-name:var(--font-geist-sans)] text-sm leading-relaxed text-brand/85 max-w-prose">
+          {summary}
+        </p>
+      ) : (
+        <p className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
+          No summary
+        </p>
+      )}
+    </PixelEventCard>
   );
 }
 

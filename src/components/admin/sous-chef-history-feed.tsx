@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
-import { PixelTable } from "@/components/admin/pixel-table";
+import { PixelEventCard, PixelEventList } from "@/components/admin/pixel-event-card";
 import type { DraftConfig } from "@/lib/drafts/types";
 
 type Decision =
@@ -55,9 +55,6 @@ const SOURCE_LABEL: Record<EventRow["sourceSystem"], string> = {
   cron: "Cron",
 };
 
-// S6.3: only auto-skip reasons where a suppressed draft exists can be overridden
-// in-place. Content-filter / rate-cap paths produce no draft, so override would
-// require re-running the picker — out of scope for this iteration.
 const OVERRIDABLE_REASONS = new Set(["low_confidence"]);
 
 const OVERRIDE_ERROR_COPY: Record<string, string> = {
@@ -140,33 +137,21 @@ export function SousChefHistoryFeed({ limit = 200 }: { limit?: number } = {}) {
 
   return (
     <div data-testid="trigger-event-feed">
-      <PixelTable
-        headers={[
-          "Source",
-          "Trigger",
-          "Decision",
-          "Reason",
-          "Summary",
-          "Confidence",
-          "Reference",
-          "When",
-          "Action",
-        ]}
-      >
+      <PixelEventList>
         {events.map((e) => (
-          <FeedRow
+          <FeedCard
             key={e.id}
             event={e as EventRow}
             pending={pending.has(e.id)}
             onOverride={() => handleOverride(e.id, e.reason)}
           />
         ))}
-      </PixelTable>
+      </PixelEventList>
     </div>
   );
 }
 
-function FeedRow({
+function FeedCard({
   event,
   pending,
   onOverride,
@@ -186,69 +171,61 @@ function FeedRow({
     event.reason != null &&
     OVERRIDABLE_REASONS.has(event.reason);
 
+  const refIsUrl =
+    event.sourceReference != null && /^https?:\/\//.test(event.sourceReference);
+
   return (
-    <tr
-      data-testid={`trigger-event-row-${event.id}`}
-      data-decision={decision}
-      className="align-top"
-    >
-      <td className="px-4 py-3">
-        <PixelBadge
-          variant={DECISION_VARIANT[decision]}
-          label={SOURCE_LABEL[event.sourceSystem]}
-        />
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
-        {event.triggerType}
-      </td>
-      <td className="px-4 py-3">
-        <PixelBadge
-          label={DECISION_LABEL[decision]}
-          variant={DECISION_VARIANT[decision]}
-        />
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/80">
-        {event.reason ?? "—"}
-      </td>
-      <td className="px-4 py-3 max-w-[320px]">
-        {summary ? (
-          <div className="font-[family-name:var(--font-geist-sans)] text-[12px] text-brand/75 whitespace-normal break-words">
-            {summary}
-          </div>
-        ) : (
-          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
-            —
+    <PixelEventCard
+      testId={`trigger-event-row-${event.id}`}
+      dataAttrs={{ "data-decision": decision }}
+      header={
+        <>
+          <PixelBadge
+            variant={DECISION_VARIANT[decision]}
+            label={SOURCE_LABEL[event.sourceSystem]}
+          />
+          <span className="font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+            {event.triggerType}
           </span>
-        )}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70 whitespace-nowrap">
-        {event.confidence !== null ? event.confidence.toFixed(2) : "—"}
-      </td>
-      <td className="px-4 py-3 max-w-[260px]">
-        {event.sourceReference ? (
-          /^https?:\/\//.test(event.sourceReference) ? (
-            <a
-              href={event.sourceReference}
-              target="_blank"
-              rel="noreferrer"
-              className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 hover:text-brand underline truncate block"
-            >
-              {event.sourceReference}
-            </a>
+          <PixelBadge
+            label={DECISION_LABEL[decision]}
+            variant={DECISION_VARIANT[decision]}
+          />
+          <span className="ml-auto font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
+            {formatTimestamp(event.created_at)}
+          </span>
+        </>
+      }
+      meta={
+        <>
+          {event.reason ? (
+            <span>{event.reason}</span>
           ) : (
-            <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/55 truncate block">
-              {event.sourceReference}
-            </span>
-          )
-        ) : (
-          <span className="text-brand/30">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
-        {formatTimestamp(event.created_at)}
-      </td>
-      <td className="px-4 py-3">
-        {canOverride ? (
+            <span className="text-brand/30">no reason</span>
+          )}
+          {event.confidence !== null && (
+            <span>· {(event.confidence * 100).toFixed(0)}% conf</span>
+          )}
+          {event.sourceReference ? (
+            refIsUrl ? (
+              <a
+                href={event.sourceReference}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-auto truncate max-w-[60%] hover:text-brand underline underline-offset-2"
+              >
+                {event.sourceReference}
+              </a>
+            ) : (
+              <span className="ml-auto truncate max-w-[60%] text-brand/55">
+                {event.sourceReference}
+              </span>
+            )
+          ) : null}
+        </>
+      }
+      actions={
+        canOverride ? (
           <PixelButton
             onClick={onOverride}
             disabled={pending}
@@ -256,12 +233,18 @@ function FeedRow({
           >
             {pending ? "..." : "Draft anyway"}
           </PixelButton>
-        ) : (
-          <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/30">
-            —
-          </span>
-        )}
-      </td>
-    </tr>
+        ) : undefined
+      }
+    >
+      {summary ? (
+        <p className="font-[family-name:var(--font-geist-sans)] text-sm leading-relaxed text-brand/85 max-w-prose">
+          {summary}
+        </p>
+      ) : (
+        <p className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/40">
+          No summary
+        </p>
+      )}
+    </PixelEventCard>
   );
 }
