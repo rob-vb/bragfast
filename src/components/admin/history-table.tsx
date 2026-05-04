@@ -2,11 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { PixelBadge } from "@/components/admin/pixel-badge";
+import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelButton } from "@/components/admin/pixel-button";
-import {
-  PixelEventCard,
-  PixelEventList,
-} from "@/components/admin/pixel-event-card";
 
 type Release = {
   _id: string;
@@ -67,14 +64,15 @@ function DownloadButton({ releaseId, status }: { releaseId: string; status: stri
   }
 
   return (
-    <PixelButton
+    <button
       onClick={handleDownload}
       disabled={isDisabled || downloading}
       aria-busy={downloading}
       title={isDisabled ? "No images to download" : undefined}
+      className="font-[family-name:var(--font-press-start)] text-[8px] px-3 py-1.5 border border-brand bg-gold text-brand shadow-[2px_2px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none transition-all"
     >
       {downloading ? "..." : "Download"}
-    </PixelButton>
+    </button>
   );
 }
 
@@ -126,7 +124,7 @@ function SocialCopySection({ release }: { release: Release }) {
   }
 
   return (
-    <div className="border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)]">
+    <div className="mt-3 border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)]">
       <div className="flex items-center justify-between mb-3">
         <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand">
           Social Copy
@@ -205,67 +203,59 @@ function SocialCopySection({ release }: { release: Release }) {
   );
 }
 
-function ReleaseCard({ release, defaultOpen }: { release: Release; defaultOpen?: boolean }) {
+function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
-  const ref = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLTableRowElement>(null);
   const response = buildResponseBody(release);
 
   useEffect(() => {
-    if (defaultOpen && ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (defaultOpen && rowRef.current) {
+      rowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [defaultOpen]);
 
   return (
-    <div ref={ref}>
-      <PixelEventCard
-        header={
-          <>
-            <button
-              type="button"
-              onClick={() => setOpen(!open)}
-              className="flex items-center gap-2 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand hover:text-gold transition-colors"
-              aria-expanded={open}
-              aria-label={open ? "Collapse details" : "Expand details"}
-            >
-              <span className="inline-block w-3 text-brand/60">
-                {open ? "▼" : "▶"}
-              </span>
-              {release.externalId}
-            </button>
-            {release.source === "github" && (
-              <PixelBadge label="GitHub" variant="github" />
-            )}
-            <PixelBadge status={release.status} />
-            <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60">
-              {release.template}
-            </span>
-            <span className="ml-auto font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
-              {new Date(release.created_at).toLocaleDateString()}
-            </span>
-          </>
-        }
-        meta={
-          <>
-            <span>credits: {release.credits_used}</span>
-            <span>·</span>
-            <span>{release.output ?? "image"}</span>
-            {release.completed_at && (
-              <>
-                <span>·</span>
-                <span>completed {new Date(release.completed_at).toLocaleString()}</span>
-              </>
-            )}
-          </>
-        }
-        actions={
-          <DownloadButton releaseId={release.externalId} status={release.status} />
-        }
+    <>
+      <tr
+        ref={rowRef}
+        className="align-top hover:bg-gold/5 cursor-pointer"
+        onClick={() => setOpen(!open)}
       >
-        {open && (
-          <div className="space-y-3">
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand">
+          <span className="inline-block w-4 text-brand/40 mr-1">
+            {open ? "▼" : "▶"}
+          </span>
+          {release.externalId}
+          {release.source === "github" && (
+            <span className="ml-2">
+              <PixelBadge label="GitHub" variant="github" />
+            </span>
+          )}
+        </td>
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+          {release.template}
+        </td>
+        <td className="px-4 py-3">
+          <PixelBadge status={release.status} />
+        </td>
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
+          {release.credits_used}
+        </td>
+        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
+          {new Date(release.created_at).toLocaleDateString()}
+        </td>
+        <td className="px-4 py-3">
+          <DownloadButton releaseId={release.externalId} status={release.status} />
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={6} className="px-4 py-0">
+            {/* Social copy */}
             <SocialCopySection release={release} />
-            <div className="border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
+
+            {/* Response JSON */}
+            <div className="mb-4 mt-3 border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
               <div className="flex items-center justify-between border-b border-brand/10 px-3 py-2">
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold">
                   Response
@@ -286,28 +276,19 @@ function ReleaseCard({ release, defaultOpen }: { release: Release; defaultOpen?:
                 {JSON.stringify(response, null, 2)}
               </pre>
             </div>
-          </div>
-        )}
-        {!open && (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/45 hover:text-brand transition-colors"
-          >
-            Show response →
-          </button>
-        )}
-      </PixelEventCard>
-    </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
 export function HistoryTable({ releases, highlightId }: { releases: Release[]; highlightId?: string }) {
   return (
-    <PixelEventList>
+    <PixelTable headers={["ID", "Template", "Status", "Credits", "Date", ""]}>
       {releases.map((r) => (
-        <ReleaseCard key={r._id} release={r} defaultOpen={r.externalId === highlightId} />
+        <ExpandableRow key={r._id} release={r} defaultOpen={r.externalId === highlightId} />
       ))}
-    </PixelEventList>
+    </PixelTable>
   );
 }

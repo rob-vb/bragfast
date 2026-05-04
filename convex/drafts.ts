@@ -66,6 +66,26 @@ export const createUserDraft = mutation({
   },
 });
 
+// Patch an existing draft owned by `userId`. Used by the Kitchen Save flow
+// when re-saving a draft that was loaded via ?draft=<id>.
+export const update = mutation({
+  args: {
+    externalId: v.string(),
+    userId: v.string(),
+    name: v.optional(v.string()),
+    config: v.string(),
+  },
+  handler: async (ctx, { externalId, userId, name, config }) => {
+    const row = await ctx.db
+      .query("drafts")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!row || row.userId !== userId) return null;
+    await ctx.db.patch(row._id, { name, config });
+    return { id: row.externalId, created_at: row.created_at };
+  },
+});
+
 // S8.3: few-shot. Returns recent (original → edited) pairs for a user, drawn
 // from approved drafts whose user-edited title or description differs from the
 // frozen `originalConfig`. Used by composeCopy to bias Haiku toward this

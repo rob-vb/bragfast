@@ -83,10 +83,21 @@ function formatTimestamp(iso: string): string {
   return new Date(iso).toLocaleString();
 }
 
-export function SousChefHistoryFeed({ limit = 200 }: { limit?: number } = {}) {
-  const events = useQuery(api.triggerEvents.listByUser, { limit });
+export function SousChefHistoryFeed({
+  limit = 200,
+  excludeDismissed = false,
+}: { limit?: number; excludeDismissed?: boolean } = {}) {
+  // Over-fetch when filtering so the post-filter list still hits `limit`.
+  const fetchLimit = excludeDismissed ? limit * 4 : limit;
+  const raw = useQuery(api.triggerEvents.listByUser, { limit: fetchLimit });
   const overrideEvent = useMutation(api.triggerEvents.overrideAutoSkippedEvent);
   const [pending, setPending] = useState<Set<string>>(new Set());
+
+  const events = raw
+    ? excludeDismissed
+      ? raw.filter((e) => e.decision !== "user_skipped").slice(0, limit)
+      : raw
+    : raw;
 
   if (!events) {
     return (
