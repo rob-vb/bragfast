@@ -393,36 +393,50 @@ export function SousChefClient({
 
       <OrgPendingBanner appSlug={github.appSlug} />
 
-      {/* GitHub */}
-      <PixelCard>
-        <div className="space-y-4">
-          <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-            GitHub
-          </h2>
+      <div className="space-y-4">
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+          GitHub
+        </h2>
+        <PixelCard>
           <GitHubSection
             installations={github.installations}
             appSlug={github.appSlug}
           />
-        </div>
-      </PixelCard>
+        </PixelCard>
+      </div>
 
-      {/* Posting providers: Buffer + Postiz */}
       <PostingProvidersSection
         rows={rows ?? []}
         onConnect={(p) => setActiveForm(p)}
         onReload={reload}
       />
 
-      {/* Stripe, PostHog, GA4 */}
-      {(["stripe", "posthog", "ga4"] as SousChefProvider[]).map((provider) => (
+      <div className="space-y-4">
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+          Billing
+        </h2>
         <IntegrationBlock
-          key={provider}
-          provider={provider}
-          row={byProvider.get(provider) ?? null}
-          onConnect={() => setActiveForm(provider)}
+          provider="stripe"
+          row={byProvider.get("stripe") ?? null}
+          onConnect={() => setActiveForm("stripe")}
           onReload={reload}
         />
-      ))}
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
+          Analytics
+        </h2>
+        {(["posthog", "ga4"] as SousChefProvider[]).map((provider) => (
+          <IntegrationBlock
+            key={provider}
+            provider={provider}
+            row={byProvider.get(provider) ?? null}
+            onConnect={() => setActiveForm(provider)}
+            onReload={reload}
+          />
+        ))}
+      </div>
 
       {activeForm && (
         <ConnectDialog
