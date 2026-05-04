@@ -40,14 +40,4 @@ crons.daily(
   internal.refreshChannelsAction.refreshAllChannels,
 );
 
-// Weekly summary draft generation. Monday 07:00 UTC — early enough that the
-// summary is waiting when the user starts their week, late enough that
-// Sunday's signal is captured. Fans out per-user; silent weeks generate
-// nothing.
-crons.weekly(
-  "weekly-report-generate",
-  { dayOfWeek: "monday", hourUTC: 7, minuteUTC: 0 },
-  internal.briefingsActions.generateWeeklySummaryDraftsForAll,
-);
-
 export default crons;

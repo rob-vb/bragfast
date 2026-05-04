@@ -19,7 +19,6 @@ import {
   Settings,
   Target,
   Bell,
-  CalendarRange,
 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { toast } from "sonner";
@@ -67,7 +66,6 @@ const mainNav: NavItem[] = [
 
 const sousChefNav: NavItem[] = [
   { label: "Briefing", href: "/admin/briefing", icon: Bell },
-  { label: "Weekly report", href: "/admin/report", icon: CalendarRange },
   { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
   { label: "Activity log", href: "/admin/sous-chef/history", icon: History },
   { label: "Settings", href: "/admin/sous-chef", icon: Settings },

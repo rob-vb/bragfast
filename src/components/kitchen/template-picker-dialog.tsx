@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
-import type { Brand } from "@/lib/types";
-import { buildBragfastSampleBrand } from "@/lib/preview-sample";
+import { buildBragfastSampleBrand, buildSampleBrand } from "@/lib/preview-sample";
 import { TemplatePreview } from "@/components/kitchen/template-preview";
 import type { TemplateItem } from "@/components/kitchen/recipe-step";
 
@@ -17,7 +16,6 @@ interface TemplatePickerDialogProps {
   templates: TemplateItem[];
   selectedId: string | null;
   onSelect: (id: string, config: CanvasTemplateConfig) => void;
-  userBrand?: Brand;
 }
 
 export function TemplatePickerDialog(props: TemplatePickerDialogProps) {
@@ -31,7 +29,6 @@ function DialogBody({
   templates,
   selectedId,
   onSelect,
-  userBrand,
 }: TemplatePickerDialogProps) {
   const defaults = useMemo(() => templates.filter((t) => t.isDefault), [templates]);
   const customs = useMemo(() => templates.filter((t) => !t.isDefault), [templates]);
@@ -152,7 +149,7 @@ function DialogBody({
                 const isSelected = selectedId === t.id;
                 const previewBrand = t.isDefault
                   ? BRAGFAST_BRAND
-                  : userBrand ?? BRAGFAST_BRAND;
+                  : buildSampleBrand(t.config);
                 return (
                   <button
                     key={t.id}
