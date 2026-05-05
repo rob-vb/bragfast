@@ -2,7 +2,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { getSessionUser } from "@/lib/auth/get-session-user";
-import { validateDraftPayload } from "@/lib/drafts/validate";
+import { validateDraftPatchPayload } from "@/lib/drafts/validate";
 import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
 
 type AuthResolved = { userId: string; source: DraftSource };
@@ -54,14 +54,32 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const result = validateDraftPayload(body);
+  const result = validateDraftPatchPayload(body);
   if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
+
+  const hasConfigPatch = Object.keys(result.patch).length > 0;
+  let configString: string | undefined;
+  if (hasConfigPatch) {
+    const existing = await fetchQuery(api.drafts.getByExternalId, {
+      externalId: id,
+      userId: auth.userId,
+    });
+    if (!existing) return Response.json({ error: "Not found" }, { status: 404 });
+    let existingConfig: DraftConfig;
+    try {
+      existingConfig = JSON.parse(existing.config) as DraftConfig;
+    } catch {
+      return Response.json({ error: "Corrupt draft config" }, { status: 500 });
+    }
+    const merged: DraftConfig = { ...existingConfig, ...result.patch };
+    configString = JSON.stringify(merged);
+  }
 
   const updated = await fetchMutation(api.drafts.update, {
     externalId: id,
     userId: auth.userId,
-    name: result.name ?? undefined,
-    config: JSON.stringify(result.config),
+    name: result.name === null ? "" : result.name,
+    config: configString,
   });
   if (!updated) return Response.json({ error: "Not found" }, { status: 404 });
 

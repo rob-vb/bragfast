@@ -14,6 +14,13 @@ export type ValidationError = { ok: false; error: string };
 export type ValidationSuccess = { ok: true; config: DraftConfig; name: string | null };
 export type ValidationResult = ValidationSuccess | ValidationError;
 
+export type PatchValidationSuccess = {
+  ok: true;
+  patch: Partial<DraftConfig>;
+  name: string | null | undefined;
+};
+export type PatchValidationResult = PatchValidationSuccess | ValidationError;
+
 type Check<T> = { ok: true; value: T } | ValidationError;
 
 const fail = (error: string): ValidationError => ({ ok: false, error });
@@ -153,4 +160,83 @@ export function validateDraftPayload(body: unknown): ValidationResult {
   }
 
   return { ok: true, config, name };
+}
+
+// PATCH variant: every field optional. `name: undefined` means caller did not
+// touch the name; `name: null` means clear it. `patch` only includes config
+// fields the caller sent — merge into the existing config server-side.
+export function validateDraftPatchPayload(body: unknown): PatchValidationResult {
+  if (!isPlainObject(body)) return fail("body must be object");
+
+  const allowedTop = new Set([
+    "name",
+    "output",
+    "templateId",
+    "brandId",
+    "colors",
+    "formats",
+    "objectContent",
+    "video",
+    "notes",
+  ]);
+  const unknown = Object.keys(body).filter((k) => !allowedTop.has(k));
+  if (unknown.length > 0) return fail(`unknown keys: ${unknown.join(",")}`);
+
+  let name: string | null | undefined = undefined;
+  if (body.name !== undefined) {
+    if (body.name === null) {
+      name = null;
+    } else if (typeof body.name !== "string") {
+      return fail("name must be string");
+    } else {
+      name = body.name;
+    }
+  }
+
+  const patch: Partial<DraftConfig> = {};
+
+  if (body.output !== undefined) {
+    if (typeof body.output !== "string" || !VALID_OUTPUTS.includes(body.output as DraftOutput)) {
+      return fail("output must be 'image' or 'video'");
+    }
+    patch.output = body.output as DraftOutput;
+  }
+  if (body.templateId !== undefined) {
+    if (typeof body.templateId !== "string") return fail("templateId must be string");
+    patch.templateId = body.templateId;
+  }
+  if (body.brandId !== undefined) {
+    if (typeof body.brandId !== "string") return fail("brandId must be string");
+    patch.brandId = body.brandId;
+  }
+  if (body.colors !== undefined) {
+    const c = validateColors(body.colors);
+    if (!c.ok) return c;
+    patch.colors = c.value;
+  }
+  if (body.formats !== undefined) {
+    if (!Array.isArray(body.formats)) return fail("formats must be array");
+    for (const f of body.formats) {
+      if (typeof f !== "string" || !VALID_FORMATS.includes(f as typeof VALID_FORMATS[number])) {
+        return fail(`formats must be subset of ${VALID_FORMATS.join(",")}`);
+      }
+    }
+    patch.formats = body.formats as DraftConfig["formats"];
+  }
+  if (body.objectContent !== undefined) {
+    const oc = validateObjectContent(body.objectContent);
+    if (!oc.ok) return oc;
+    patch.objectContent = oc.value;
+  }
+  if (body.video !== undefined) {
+    const vid = validateVideo(body.video);
+    if (!vid.ok) return vid;
+    patch.video = vid.value;
+  }
+  if (body.notes !== undefined) {
+    if (typeof body.notes !== "string") return fail("notes must be string");
+    patch.notes = body.notes;
+  }
+
+  return { ok: true, patch, name };
 }
