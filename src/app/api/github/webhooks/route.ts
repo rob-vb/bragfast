@@ -94,6 +94,10 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
   );
   if (filter.blocked) {
     const categories = [...new Set(filter.matches.map((m) => m.category))];
+    const terms = filter.matches.map((m) => ({
+      category: m.category,
+      term: m.term,
+    }));
     console.log(
       "[sous-chef] PR draft skipped by content filter",
       JSON.stringify({
@@ -101,6 +105,7 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
         repoFullName,
         prNumber: payload.pull_request.number,
         categories,
+        terms,
       }),
     );
     await convex
@@ -111,7 +116,7 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
         decision: "auto_skipped",
         reason: "content_filter",
         sourceReference: payload.pull_request.html_url,
-        metadata: JSON.stringify({ categories }),
+        metadata: JSON.stringify({ categories, terms }),
       })
       .catch((err) =>
         console.error("[sous-chef] recordAction (content_filter) failed", err),

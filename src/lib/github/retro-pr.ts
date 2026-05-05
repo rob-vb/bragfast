@@ -98,6 +98,10 @@ export async function runRetroPrMergeDraft(
     const filter = scanContent(pr.title, pr.body);
     if (filter.blocked) {
       const categories = [...new Set(filter.matches.map((m) => m.category))];
+      const terms = filter.matches.map((m) => ({
+        category: m.category,
+        term: m.term,
+      }));
       await convex
         .action(api.triggerEvents.recordAction, {
           userId,
@@ -106,7 +110,7 @@ export async function runRetroPrMergeDraft(
           decision: "auto_skipped",
           reason: "content_filter",
           sourceReference: pr.html_url,
-          metadata: JSON.stringify({ categories, retro: true }),
+          metadata: JSON.stringify({ categories, terms, retro: true }),
         })
         .catch(() => undefined);
       return { ok: true, mode: "skipped" };
