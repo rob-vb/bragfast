@@ -40,6 +40,29 @@ const FAQ = [
   },
 ];
 
+const SOUS_CHEF_FLOW = [
+  {
+    title: "Connect",
+    copy: "Link GitHub and your tools in read-only mode.",
+  },
+  {
+    title: "Watch",
+    copy: "Sous-Chef tracks merges, releases, and milestones.",
+  },
+  {
+    title: "Draft",
+    copy: "It creates a branded draft with title + visual.",
+  },
+  {
+    title: "Review",
+    copy: "You polish the message and approve the final post.",
+  },
+  {
+    title: "Share",
+    copy: "Publish or schedule everywhere from one workflow.",
+  },
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-surface text-brand" data-launch-mode={getLaunchMode()}>
@@ -169,6 +192,49 @@ export default function Home() {
       </section>
 
       {/* Cook it yourself section */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="flex flex-col gap-5 mb-8 md:mb-10">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-[3px] bg-gold" />
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                How it works
+              </span>
+            </div>
+            <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+              From merged PR to ready-to-share post.
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-3xl">
+              A simple workflow: connect your sources, let Sous-Chef detect wins, then review and publish. The pulse below shows how each win moves through your pipeline.
+            </p>
+          </div>
+
+          <div className="relative border-2 border-brand bg-surface p-4 md:p-6 shadow-[6px_6px_0_var(--color-brand)]">
+            <div aria-hidden className="absolute left-[6%] right-[6%] md:left-[9%] md:right-[9%] top-10 md:top-12 h-[3px] bg-brand/25" />
+            <div
+              aria-hidden
+              className="absolute top-8 md:top-10 h-5 w-5 rounded-full border-2 border-brand bg-gold shadow-[2px_2px_0_var(--color-brand)] how-it-works-dot"
+            />
+
+            <ol className="relative grid gap-4 md:grid-cols-5 md:gap-3">
+              {SOUS_CHEF_FLOW.map((step, index) => (
+                <li key={step.title} className="border-2 border-brand bg-white px-3 py-4 md:px-2">
+                  <div className="mb-2 inline-flex items-center justify-center w-6 h-6 border-2 border-brand bg-gold font-[family-name:var(--font-press-start)] text-[9px] leading-none">
+                    {index + 1}
+                  </div>
+                  <h3 className="font-[family-name:var(--font-press-start)] text-[10px] uppercase leading-[1.5] mb-1.5">
+                    {step.title}
+                  </h3>
+                  <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/80 leading-snug">
+                    {step.copy}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
       <section
         id="kitchen"
         className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
