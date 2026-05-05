@@ -239,7 +239,6 @@ export function CookPage({ templates }: CookPageProps) {
   const [draftMissingTemplate, setDraftMissingTemplate] = useState<string | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [createNewDialogOpen, setCreateNewDialogOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -572,27 +571,8 @@ export function CookPage({ templates }: CookPageProps) {
     setTimeout(() => setSaveSuccess(false), 2500);
   }
 
-  async function handleCreateNewDraft(name: string) {
-    const payload = buildDraftPayload(name);
-    const res = await fetch("/api/v1/drafts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error ?? "Failed to create draft");
-    }
-    const data: { draft_id?: string } = await res.json().catch(() => ({}));
-    if (data.draft_id) {
-      setDraftId(data.draft_id);
-      const nextUrl = new URL(window.location.href);
-      nextUrl.searchParams.set("draft", data.draft_id);
-      window.history.replaceState({}, "", nextUrl.toString());
-    }
-    if (name) dispatch({ type: "HYDRATE", patch: { draftName: name } });
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+  function handleCreateNewDraft() {
+    window.location.href = "/admin/kitchen";
   }
 
   async function handleRenameDraft(name: string) {
@@ -710,9 +690,8 @@ export function CookPage({ templates }: CookPageProps) {
           {draftId && (
             <button
               type="button"
-              onClick={() => setCreateNewDialogOpen(true)}
-              disabled={!hasTemplate}
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-white text-brand hover:bg-gold/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              onClick={handleCreateNewDraft}
+              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-white text-brand hover:bg-gold/20 transition-colors"
             >
               Create New
             </button>
@@ -1016,15 +995,6 @@ export function CookPage({ templates }: CookPageProps) {
         onClose={() => setSaveDialogOpen(false)}
         onSave={handleSaveDraft}
         defaultName={state.draftName}
-      />
-
-      <SaveDraftDialog
-        open={createNewDialogOpen}
-        onClose={() => setCreateNewDialogOpen(false)}
-        onSave={handleCreateNewDraft}
-        defaultName=""
-        title="Create New Draft"
-        submitLabel="Create"
       />
 
       <SaveDraftDialog
