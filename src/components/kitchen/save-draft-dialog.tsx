@@ -7,9 +7,18 @@ interface SaveDraftDialogProps {
   onClose: () => void;
   onSave: (name: string) => Promise<void>;
   defaultName?: string;
+  title?: string;
+  submitLabel?: string;
 }
 
-export function SaveDraftDialog({ open, onClose, onSave, defaultName }: SaveDraftDialogProps) {
+export function SaveDraftDialog({
+  open,
+  onClose,
+  onSave,
+  defaultName,
+  title = "Save as Draft",
+  submitLabel = "Save",
+}: SaveDraftDialogProps) {
   const [name, setName] = useState(defaultName ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +73,7 @@ export function SaveDraftDialog({ open, onClose, onSave, defaultName }: SaveDraf
         {/* Header bar */}
         <div className="bg-brand text-gold px-4 py-3 flex items-center justify-between">
           <h2 id="save-draft-title" className="font-[family-name:var(--font-press-start)] text-xs">
-            ▸ Save as Draft
+            ▸ {title}
           </h2>
           <button
             type="button"
@@ -120,7 +129,7 @@ export function SaveDraftDialog({ open, onClose, onSave, defaultName }: SaveDraf
               disabled={busy}
               className="font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
             >
-              {busy ? "Saving…" : "Save"}
+              {busy ? "Saving…" : submitLabel}
             </button>
           </div>
         </form>

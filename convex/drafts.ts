@@ -73,7 +73,7 @@ export const update = mutation({
     externalId: v.string(),
     userId: v.string(),
     name: v.optional(v.string()),
-    config: v.string(),
+    config: v.optional(v.string()),
   },
   handler: async (ctx, { externalId, userId, name, config }) => {
     const row = await ctx.db
@@ -81,7 +81,10 @@ export const update = mutation({
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .first();
     if (!row || row.userId !== userId) return null;
-    await ctx.db.patch(row._id, { name, config });
+    const patch: { name?: string; config?: string } = {};
+    if (name !== undefined) patch.name = name;
+    if (config !== undefined) patch.config = config;
+    if (Object.keys(patch).length > 0) await ctx.db.patch(row._id, patch);
     return { id: row.externalId, created_at: row.created_at };
   },
 });
