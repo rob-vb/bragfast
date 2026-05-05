@@ -48,6 +48,7 @@ type TriggerMetadata = {
   templatePickRule?: string;
   templatePickKeyword?: string;
   categories?: string[];
+  terms?: Array<{ category: string; term: string }>;
   reason?: string;
 };
 
@@ -154,6 +155,12 @@ function skipReasonText(event: TriggerEventRow): string {
   const meta = parseMetadata(event.metadata);
   switch (event.reason) {
     case "content_filter": {
+      const terms = meta.terms ?? [];
+      if (terms.length > 0) {
+        const quoted = terms.map((t) => `"${t.term}"`).join(", ");
+        const cats = [...new Set(terms.map((t) => t.category))];
+        return `Content filter — matched ${quoted} (${cats.join(", ")})`;
+      }
       const cats = meta.categories ?? [];
       return cats.length > 0
         ? `Content filter (${cats.join(", ")})`
