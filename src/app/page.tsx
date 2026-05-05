@@ -7,6 +7,7 @@ import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { CtaLink } from "@/components/landing/cta-link";
+import { HowSousChefWorks } from "@/components/landing/how-sous-chef-works";
 import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
 import { getLaunchMode } from "@/lib/launch-mode";
 
@@ -167,6 +168,8 @@ export default function Home() {
 
         </div>
       </section>
+
+      <HowSousChefWorks />
 
       {/* Cook it yourself section */}
       <section
