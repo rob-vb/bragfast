@@ -239,7 +239,9 @@ export function CookPage({ templates }: CookPageProps) {
   const [draftMissingTemplate, setDraftMissingTemplate] = useState<string | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const hydratedDraftRef = useRef<string | null>(null);
   const initialTemplateRef = useRef(false);
@@ -557,8 +559,41 @@ export function CookPage({ templates }: CookPageProps) {
       }
     }
 
+    if (name && name !== state.draftName) {
+      dispatch({ type: "HYDRATE", patch: { draftName: name } });
+    }
+
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
+  }
+
+  async function handleRenameDraft(name: string) {
+    if (!draftId) return;
+    const res = await fetch(`/api/v1/drafts/${encodeURIComponent(draftId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "Failed to rename draft");
+    }
+    dispatch({ type: "HYDRATE", patch: { draftName: name } });
+  }
+
+  async function handleSaveDraftClick() {
+    if (draftId) {
+      setSaving(true);
+      try {
+        await handleSaveDraft(state.draftName);
+      } catch {
+        setSaveDialogOpen(true);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+    setSaveDialogOpen(true);
   }
 
   // ── Live preview wiring ─────────────────────────────────────────────────
@@ -620,6 +655,23 @@ export function CookPage({ templates }: CookPageProps) {
         <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60 truncate min-w-0">
           {draftName}
         </span>
+        {draftId && (
+          <button
+            type="button"
+            onClick={() => setRenameDialogOpen(true)}
+            aria-label="Rename draft"
+            title="Rename draft"
+            className="shrink-0 p-1 text-brand/40 hover:text-brand transition-colors"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              className="h-3.5 w-3.5 fill-current"
+            >
+              <path d="M11.5 1.5 L14.5 4.5 L5 14 L1 14 L1 10 Z M10 3 L13 6 M2.5 11.5 L4.5 13.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            </svg>
+          </button>
+        )}
 
         <div className="ml-auto flex items-center gap-3 shrink-0">
           {creditBalance !== undefined && (
@@ -629,11 +681,11 @@ export function CookPage({ templates }: CookPageProps) {
           )}
           <button
             type="button"
-            onClick={() => setSaveDialogOpen(true)}
-            disabled={!hasTemplate}
+            onClick={handleSaveDraftClick}
+            disabled={!hasTemplate || saving}
             className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-white text-brand hover:bg-gold/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Save Draft
+            {saving ? "Saving…" : saveSuccess ? "Saved ✓" : "Save Draft"}
           </button>
           {state.status === "done" && (
             <button
@@ -926,6 +978,15 @@ export function CookPage({ templates }: CookPageProps) {
         onClose={() => setSaveDialogOpen(false)}
         onSave={handleSaveDraft}
         defaultName={state.draftName}
+      />
+
+      <SaveDraftDialog
+        open={renameDialogOpen}
+        onClose={() => setRenameDialogOpen(false)}
+        onSave={handleRenameDraft}
+        defaultName={state.draftName}
+        title="Rename Draft"
+        submitLabel="Rename"
       />
 
       {approveOpen && draftId && (() => {
