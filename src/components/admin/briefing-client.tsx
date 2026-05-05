@@ -466,7 +466,7 @@ function DraftedCard({
           >
             See preview
           </PixelButton>
-          {event.draftExternalId ? (
+          {event.draftExternalId && draft !== null ? (
             <Link href={kitchenHref}>
               <PixelButton>Open in Kitchen</PixelButton>
             </Link>
