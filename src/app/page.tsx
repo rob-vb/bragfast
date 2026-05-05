@@ -62,7 +62,7 @@ export default function Home() {
               You build apps. Nobody notices.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Automate your build in public posts. Your own Sous-Chef (agent) keeps track of your milestones: features your ship, an MRR record, or a stars count for your repo.
+              Your work deserves an audience. Your sous-chef agent turns every commit, release, and milestone into share-ready images and videos, automatically.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
