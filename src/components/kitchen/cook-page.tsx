@@ -312,6 +312,7 @@ export function CookPage({ templates }: CookPageProps) {
             const url = new URL(window.location.href);
             url.searchParams.delete("draft");
             window.history.replaceState({}, "", url.toString());
+            if (!cancelled) setDraftError("Draft not found — it may have been deleted.");
             return;
           }
           setDraftError("Failed to load draft.");
