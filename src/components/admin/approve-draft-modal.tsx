@@ -64,11 +64,23 @@ interface IntegrationRow {
 
 // ── ApproveDraftModal props ────────────────────────────────────────────────────
 
-type Platform = "x" | "linkedin";
+type Platform =
+  | "x"
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "facebook"
+  | "youtube";
 
 const PLATFORM_LABELS: Record<Platform, string> = {
   x: "X",
   linkedin: "LinkedIn",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  threads: "Threads",
+  facebook: "Facebook",
+  youtube: "YouTube",
 };
 
 export interface ApproveDraftModalProps {

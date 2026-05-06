@@ -45,32 +45,56 @@ interface PostizExtra {
   channels?: Array<{ id: string; identifier?: string; name?: string }>;
 }
 
-type Platform = "x" | "linkedin";
+type ChannelClass =
+  | "x"
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "facebook"
+  | "youtube";
+
+const BUFFER_SERVICE_TO_CLASS: Record<string, ChannelClass> = {
+  twitter: "x",
+  x: "x",
+  linkedin: "linkedin",
+  instagram: "instagram",
+  tiktok: "tiktok",
+  threads: "threads",
+  facebook: "facebook",
+  youtube: "youtube",
+};
+
+const POSTIZ_IDENTIFIER_TO_CLASS: Record<string, ChannelClass> = {
+  twitter: "x",
+  x: "x",
+  linkedin: "linkedin",
+  instagram: "instagram",
+  tiktok: "tiktok",
+  threads: "threads",
+  facebook: "facebook",
+  youtube: "youtube",
+};
 
 /**
- * Map a (provider, channelId) → platform copy bucket. Buffer's `service`
- * ("twitter" | "linkedin" | ...) and Postiz's `identifier` ("x" | "linkedin")
- * are the source of truth. Returns null if the channel isn't an X/LinkedIn
- * surface — caller falls back to top-level title/description.
+ * Map a (provider, channelId) → channel class for copy-variant routing.
+ * Returns null when the channel falls outside the named classes ("other"
+ * bucket) — caller falls back to top-level title/description.
  */
 function platformForChannel(
   provider: "buffer" | "postiz",
   channelId: string,
   bufferExtra: BufferExtra | null,
   postizExtra: PostizExtra | null,
-): Platform | null {
+): ChannelClass | null {
   if (provider === "buffer") {
     const ch = bufferExtra?.channels?.find((c) => c.id === channelId);
     const svc = ch?.service?.toLowerCase();
-    if (svc === "twitter" || svc === "x") return "x";
-    if (svc === "linkedin") return "linkedin";
-    return null;
+    return svc ? (BUFFER_SERVICE_TO_CLASS[svc] ?? null) : null;
   }
   const ch = postizExtra?.channels?.find((c) => c.id === channelId);
   const id = ch?.identifier?.toLowerCase();
-  if (id === "x" || id === "twitter") return "x";
-  if (id === "linkedin") return "linkedin";
-  return null;
+  return id ? (POSTIZ_IDENTIFIER_TO_CLASS[id] ?? null) : null;
 }
 
 function channelLabelFromBuffer(
@@ -103,10 +127,9 @@ function computeEditDelta(
   submitted: {
     title: string;
     description: string;
-    copyByPlatform: {
-      x?: { title: string; description: string };
-      linkedin?: { title: string; description: string };
-    } | null;
+    copyByPlatform: Partial<
+      Record<ChannelClass, { title: string; description: string }>
+    > | null;
   },
 ): EditDelta {
   if (!originalConfigJson) return { wasEdited: false, editType: null };
@@ -129,7 +152,16 @@ function computeEditDelta(
   const subByPlatform = submitted.copyByPlatform ?? null;
   let platformChanged = false;
   if (subByPlatform) {
-    for (const p of ["x", "linkedin"] as const) {
+    const allClasses: ChannelClass[] = [
+      "x",
+      "linkedin",
+      "instagram",
+      "tiktok",
+      "threads",
+      "facebook",
+      "youtube",
+    ];
+    for (const p of allClasses) {
       const sub = subByPlatform[p];
       const orig = origByPlatform?.[p];
       if (!sub) continue;
@@ -183,6 +215,21 @@ export const approveDraft = mutation({
           v.object({ title: v.string(), description: v.string() }),
         ),
         linkedin: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        instagram: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        tiktok: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        threads: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        facebook: v.optional(
+          v.object({ title: v.string(), description: v.string() }),
+        ),
+        youtube: v.optional(
           v.object({ title: v.string(), description: v.string() }),
         ),
       }),

@@ -7,7 +7,7 @@ import {
   type ObjectModification,
   type ReleaseRequest,
 } from "@/lib/types";
-import type { DraftConfig } from "@/lib/drafts/types";
+import type { DraftConfig, DraftPlatform } from "@/lib/drafts/types";
 
 type ApprovalFormat =
   | "square"
@@ -19,13 +19,12 @@ type ApprovalFormat =
 
 type Provider = "buffer" | "postiz";
 
+type CopyVariant = { title: string; description: string };
+
 export interface ApproveDraftPostBody {
   title: string;
   description: string;
-  copyByPlatform?: {
-    x?: { title: string; description: string };
-    linkedin?: { title: string; description: string };
-  };
+  copyByPlatform?: Partial<Record<DraftPlatform, CopyVariant>>;
   selections: Array<{ format: ApprovalFormat; provider: Provider; channelId: string }>;
   postState: "queue" | "draft";
   clientNonce: string;

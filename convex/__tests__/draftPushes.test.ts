@@ -394,6 +394,150 @@ describe("approveDraft — copyByPlatform routing", () => {
     expect(rows[0].description).toBe("Generic D");
   });
 
+  it("uses Instagram copy for a Buffer instagram channel", async () => {
+    const { t, asUser } = setupT();
+    const BUFFER_IG_EXTRA = JSON.stringify({
+      orgId: "org1",
+      orgName: "Acme",
+      channels: [
+        { id: "ch_buf_ig", service: "instagram", displayName: "Acme on IG" },
+      ],
+    });
+    await seedIntegration(t, "buffer", BUFFER_IG_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "FALLBACK T",
+      description: "FALLBACK D",
+      copyByPlatform: {
+        instagram: { title: "IG title", description: "IG desc" },
+      },
+      selections: [
+        { format: "portrait", provider: "buffer", channelId: "ch_buf_ig" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-ig-0001",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("IG title");
+    expect(rows[0].description).toBe("IG desc");
+  });
+
+  it("uses Instagram copy for a Postiz instagram channel (case-insensitive identifier)", async () => {
+    const { t, asUser } = setupT();
+    // POSTIZ_EXTRA already has identifier: "INSTAGRAM" (uppercase).
+    await seedIntegration(t, "postiz", POSTIZ_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "FALLBACK T",
+      description: "FALLBACK D",
+      copyByPlatform: {
+        instagram: { title: "IG title", description: "IG desc" },
+      },
+      selections: [
+        { format: "portrait", provider: "postiz", channelId: "ch_ptz_1" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-postiz-ig-0001",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("IG title");
+    expect(rows[0].description).toBe("IG desc");
+  });
+
+  it.each([
+    { svc: "twitter", className: "x" as const },
+    { svc: "x", className: "x" as const },
+    { svc: "linkedin", className: "linkedin" as const },
+    { svc: "instagram", className: "instagram" as const },
+    { svc: "tiktok", className: "tiktok" as const },
+    { svc: "threads", className: "threads" as const },
+    { svc: "facebook", className: "facebook" as const },
+    { svc: "youtube", className: "youtube" as const },
+  ])(
+    "routes Buffer service '$svc' to copyByPlatform.$className",
+    async ({ svc, className }) => {
+      const { t, asUser } = setupT();
+      const extra = JSON.stringify({
+        orgId: "org1",
+        channels: [{ id: "ch_x", service: svc, displayName: `Acme on ${svc}` }],
+      });
+      await seedIntegration(t, "buffer", extra);
+
+      await asUser.mutation(api.draftPushes.approveDraft, {
+        draftId: DRAFT_ID,
+        title: "FALLBACK T",
+        description: "FALLBACK D",
+        copyByPlatform: {
+          [className]: { title: `${className} title`, description: `${className} desc` },
+        },
+        selections: [{ format: "square", provider: "buffer", channelId: "ch_x" }],
+        postState: "queue",
+        clientNonce: `nonce-buf-${svc}`,
+      });
+
+      const rows = await t.run(async (ctx) =>
+        ctx.db
+          .query("draftPushes")
+          .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+          .collect(),
+      );
+      expect(rows[0].title).toBe(`${className} title`);
+      expect(rows[0].description).toBe(`${className} desc`);
+    },
+  );
+
+  it("falls back to top-level copy for an unmapped Buffer service (other bucket)", async () => {
+    const { t, asUser } = setupT();
+    const extra = JSON.stringify({
+      orgId: "org1",
+      channels: [
+        { id: "ch_pin", service: "pinterest", displayName: "Acme Pinterest" },
+      ],
+    });
+    await seedIntegration(t, "buffer", extra);
+
+    await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "Top T",
+      description: "Top D",
+      copyByPlatform: {
+        instagram: { title: "IG title", description: "IG desc" },
+      },
+      selections: [{ format: "square", provider: "buffer", channelId: "ch_pin" }],
+      postState: "queue",
+      clientNonce: "nonce-other-pin",
+    });
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("Top T");
+    expect(rows[0].description).toBe("Top D");
+  });
+
   it("uses top-level copy when copyByPlatform is omitted", async () => {
     const { t, asUser } = setupT();
     await seedIntegration(t, "buffer", BUFFER_EXTRA);

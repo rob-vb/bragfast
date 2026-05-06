@@ -12,7 +12,14 @@ export type Copy = { title: string; description: string; confidence: number };
 
 export const SUPPRESS_THRESHOLD = 0.5;
 
-export type Platform = "x" | "linkedin";
+export type Platform =
+  | "x"
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "facebook"
+  | "youtube";
 export const PLATFORMS: Platform[] = ["x", "linkedin"];
 export type CopyByPlatform = Partial<
   Record<Platform, { title: string; description: string }>
@@ -137,6 +144,11 @@ export function voicePresetLine(preset: VoicePreset | null | undefined): string 
 const PLATFORM_GUIDE: Record<Platform, string> = {
   x: `Target platform: X (Twitter). Description should read like a tweet — punchy, conversational, no hashtags, fits in ~220 chars. Title doubles as the post hook.`,
   linkedin: `Target platform: LinkedIn. Description should read like a short LinkedIn post — slightly more reflective, can mention the journey or thanks, but still concise (1–2 short sentences, no hashtags, no buzzwords).`,
+  instagram: `Target platform: Instagram. Description should read like an IG caption — warm, visual, can use a few line breaks; no hashtags in the draft (the user adds them). Title sets the scroll-stopper.`,
+  tiktok: `Target platform: TikTok. Description should read like a TikTok caption — short, casual, hook-y; no hashtags. Title can be a one-line hook.`,
+  threads: `Target platform: Threads. Description should read like a short Threads post — conversational, slightly longer than X, no hashtags.`,
+  facebook: `Target platform: Facebook. Description can be slightly longer and more narrative; no hashtags, no link-bait phrasing.`,
+  youtube: `Target platform: YouTube. Description should read like a Community-tab post or short caption — conversational, no hashtags.`,
 };
 
 function platformLine(input: { platform?: Platform }): string {
