@@ -293,31 +293,45 @@ describe("approveDraft — fanout scheduling", () => {
     vi.useRealTimers();
   });
 
-  it("does not schedule fanout when all selections are skipped", async () => {
+  it("throws all_selections_skipped ConvexError when every selection is stale", async () => {
     vi.useFakeTimers();
     const { t, asUser } = setupT();
 
     await seedIntegration(t, "buffer", BUFFER_EXTRA);
 
-    const result = await asUser.mutation(api.draftPushes.approveDraft, {
-      draftId: DRAFT_ID,
-      title: "T",
-      description: "D",
-      selections: [
-        // Both channels are stale
-        { format: "square", provider: "buffer", channelId: "ch_GONE_1" },
-        { format: "landscape", provider: "buffer", channelId: "ch_GONE_2" },
-      ],
-      postState: "queue",
-      clientNonce: "nonce-nofanout-0001",
-    });
+    let captured: unknown = null;
+    try {
+      await asUser.mutation(api.draftPushes.approveDraft, {
+        draftId: DRAFT_ID,
+        title: "T",
+        description: "D",
+        selections: [
+          { format: "square", provider: "buffer", channelId: "ch_GONE_1" },
+          { format: "landscape", provider: "buffer", channelId: "ch_GONE_2" },
+        ],
+        postState: "queue",
+        clientNonce: "nonce-nofanout-0001",
+      });
+    } catch (err) {
+      captured = err;
+    }
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.pushIds).toHaveLength(0);
-    expect(result.skipped).toHaveLength(2);
+    expect(captured).not.toBeNull();
+    const data = (captured as { data?: { code?: string; skipped?: unknown[] } })
+      .data;
+    expect(data?.code).toBe("all_selections_skipped");
+    expect(Array.isArray(data?.skipped)).toBe(true);
+    expect(data?.skipped).toHaveLength(2);
 
-    // No scheduled functions — finishAllScheduledFunctions should complete immediately.
+    // No rows should have been inserted.
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows).toHaveLength(0);
+
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     vi.useRealTimers();
   });
@@ -536,6 +550,106 @@ describe("approveDraft — copyByPlatform routing", () => {
     );
     expect(rows[0].title).toBe("Top T");
     expect(rows[0].description).toBe("Top D");
+  });
+
+  it("prefers copyByChannel over copyByPlatform when both are present", async () => {
+    const { t, asUser } = setupT();
+    await seedIntegration(t, "buffer", BUFFER_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "TOP T",
+      description: "TOP D",
+      copyByPlatform: {
+        x: { title: "X-class title", description: "X-class desc" },
+      },
+      copyByChannel: {
+        "buffer::ch_buf_1": {
+          title: "X-channel title",
+          description: "X-channel desc",
+        },
+      },
+      selections: [
+        { format: "square", provider: "buffer", channelId: "ch_buf_1" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-channel-precedence",
+    });
+
+    expect(result.ok).toBe(true);
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("X-channel title");
+    expect(rows[0].description).toBe("X-channel desc");
+  });
+
+  it("falls back to copyByPlatform when copyByChannel is missing for a channel", async () => {
+    const { t, asUser } = setupT();
+    await seedIntegration(t, "buffer", BUFFER_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "TOP T",
+      description: "TOP D",
+      copyByPlatform: {
+        linkedin: { title: "LI-class title", description: "LI-class desc" },
+      },
+      copyByChannel: {
+        // Only buf_1 has a per-channel entry; buf_2 falls through to platform.
+        "buffer::ch_buf_1": {
+          title: "X-channel title",
+          description: "X-channel desc",
+        },
+      },
+      selections: [
+        { format: "square", provider: "buffer", channelId: "ch_buf_2" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-channel-fallback-platform",
+    });
+
+    expect(result.ok).toBe(true);
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("LI-class title");
+    expect(rows[0].description).toBe("LI-class desc");
+  });
+
+  it("falls back to top-level copy when neither copyByChannel nor copyByPlatform matches", async () => {
+    const { t, asUser } = setupT();
+    await seedIntegration(t, "buffer", BUFFER_EXTRA);
+
+    const result = await asUser.mutation(api.draftPushes.approveDraft, {
+      draftId: DRAFT_ID,
+      title: "TOP T",
+      description: "TOP D",
+      copyByChannel: {
+        "buffer::ch_other": { title: "stale", description: "stale" },
+      },
+      selections: [
+        { format: "square", provider: "buffer", channelId: "ch_buf_1" },
+      ],
+      postState: "queue",
+      clientNonce: "nonce-channel-fallback-top",
+    });
+
+    expect(result.ok).toBe(true);
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("draftPushes")
+        .withIndex("by_draftId", (q) => q.eq("draftId", DRAFT_ID))
+        .collect(),
+    );
+    expect(rows[0].title).toBe("TOP T");
+    expect(rows[0].description).toBe("TOP D");
   });
 
   it("uses top-level copy when copyByPlatform is omitted", async () => {

@@ -16,7 +16,7 @@
  */
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requireAuthedUser } from "./auth";
 import { insertTriggerEvent } from "./triggerEvents";
 import { evaluatePostSelections } from "./planTiers";
@@ -234,6 +234,15 @@ export const approveDraft = mutation({
         ),
       }),
     ),
+    // Per-channel copy keyed by `${provider}::${channelId}`. Lookup precedence:
+    // copyByChannel[k] → copyByPlatform[class] → top-level title/description.
+    // Malformed keys are silently ignored (fall through to the next phase).
+    copyByChannel: v.optional(
+      v.record(
+        v.string(),
+        v.object({ title: v.string(), description: v.string() }),
+      ),
+    ),
     selections: v.array(
       v.object({
         format: formatValidator,
@@ -256,7 +265,7 @@ export const approveDraft = mutation({
   },
   handler: async (ctx, args) => {
     const userId = args.trustedActor?.userId ?? (await requireAuthedUser(ctx));
-    const { draftId, title, description, copyByPlatform, selections, postState, clientNonce, mediaUrlByFormat } = args;
+    const { draftId, title, description, copyByPlatform, copyByChannel, selections, postState, clientNonce, mediaUrlByFormat } = args;
 
     // ── Validation: nothing selected ──────────────────────────────────────────
     if (selections.length === 0) {
@@ -372,16 +381,20 @@ export const approveDraft = mutation({
         continue;
       }
 
-      // Route per-platform copy when available; fall back to top-level title/description.
+      // Three-phase lookup: copyByChannel[`${provider}::${channelId}`] →
+      // copyByPlatform[class] → top-level title/description.
+      const channelKey = `${provider}::${channelId}`;
       const platform = platformForChannel(
         provider,
         channelId,
         bufferExtra,
         postizExtra,
       );
-      const platformCopy = platform ? copyByPlatform?.[platform] : undefined;
-      const rowTitle = platformCopy?.title ?? title;
-      const rowDescription = platformCopy?.description ?? description;
+      const channelCopy =
+        copyByChannel?.[channelKey] ??
+        (platform ? copyByPlatform?.[platform] : undefined);
+      const rowTitle = channelCopy?.title ?? title;
+      const rowDescription = channelCopy?.description ?? description;
 
       const id = await ctx.db.insert("draftPushes", {
         draftId,
@@ -401,6 +414,18 @@ export const approveDraft = mutation({
         updated_at: now,
       });
       pushIds.push(id);
+    }
+
+    // ── Skip-all guard ─────────────────────────────────────────────────────────
+    // If every selection got skipped (channels deleted, mismatched, etc.) the
+    // caller would otherwise return ok with zero pushes — and the API caller
+    // would still remove the draft. Throw so the caller can refund credits and
+    // preserve the draft for retry.
+    if (pushIds.length === 0 && skipped.length > 0) {
+      throw new ConvexError({
+        code: "all_selections_skipped",
+        skipped,
+      });
     }
 
     // ── Schedule fanout (noop stub in U7, real logic in U8) ───────────────────

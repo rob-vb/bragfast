@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import posthog from "posthog-js";
 import { PixelButton } from "./pixel-button";
+import { ChannelComposerCard } from "./channel-composer-card";
 import {
   tierFor,
   capsFor,
@@ -18,10 +19,7 @@ import {
   channelClassFromPostizIdentifier,
   type ChannelClass,
 } from "@/lib/integrations/channel-classes";
-import {
-  availableClassesFromSelection,
-  type NamedChannelClass,
-} from "@/lib/drafts/available-classes";
+import { makeChannelKey } from "@/lib/posts/channel-key";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -83,30 +81,20 @@ type Platform =
   | "facebook"
   | "youtube";
 
-const PLATFORM_LABELS: Record<Platform, string> = {
-  x: "X",
-  linkedin: "LinkedIn",
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  threads: "Threads",
-  facebook: "Facebook",
-  youtube: "YouTube",
-};
+type Copy = { title: string; description: string };
 
 export interface ApproveDraftModalProps {
   draftId: string;
-  /** Pre-filled title from composed copy. User-editable. Shared across destinations unless a per-class variant is generated. */
+  /** Pre-filled title from composed copy. Used to seed every per-channel composer. */
   initialTitle: string;
-  /** Pre-filled description from composed copy. User-editable. Shared fallback. */
+  /** Pre-filled description from composed copy. Used to seed every per-channel composer. */
   initialDescription: string;
   /**
-   * Legacy per-class copy stored on the draft (from drafts created before
-   * on-demand rewrite was introduced). When present, each entry seeds a
-   * variant block for that ChannelClass and counts as one generation.
+   * Legacy per-class copy stored on the draft (drafts created before per-channel
+   * composers existed). When present, channels matching a class are seeded with
+   * that copy and start with generationCount = 1, preserving the rewrite cap.
    */
-  initialCopyByPlatform?: Partial<
-    Record<Platform, { title: string; description: string }>
-  >;
+  initialCopyByPlatform?: Partial<Record<Platform, Copy>>;
   /** Formats present on this draft (from config.formats). */
   draftFormats: Format[];
   /** Current routing defaults for this user. */
@@ -216,8 +204,6 @@ export function ApproveDraftModal({
   approvalSurface = "kitchen",
   onClose,
 }: ApproveDraftModalProps) {
-  // S7.3: tier-driven pre-disable. Legacy plans (tierFor → null) skip gating;
-  // server enforcement is still source of truth.
   const tier = plan ? tierFor(plan as Plan) : null;
   const caps = tier ? capsFor(tier) : null;
   function formatLockedReason(fmt: Format): { locked: boolean; upgrade: string | null } {
@@ -235,7 +221,6 @@ export function ApproveDraftModal({
   }
   const router = useRouter();
 
-  // Stable nonce generated once on modal mount.
   const clientNonce = useRef(crypto.randomUUID()).current;
 
   const bufferConnected = isProviderConnected(integrations, "buffer");
@@ -245,6 +230,17 @@ export function ApproveDraftModal({
     () => extractFlatChannels(integrations),
     [integrations],
   );
+
+  const channelByKey = useMemo(() => {
+    const map = new Map<string, FlatChannel>();
+    for (const ch of channelsByProvider.buffer) {
+      map.set(makeChannelKey(ch.provider, ch.channelId), ch);
+    }
+    for (const ch of channelsByProvider.postiz) {
+      map.set(makeChannelKey(ch.provider, ch.channelId), ch);
+    }
+    return map;
+  }, [channelsByProvider]);
 
   // Build the initial selection set: formats from draft × routing defaults × connected channels.
   const initialChecked = useMemo((): Set<string> => {
@@ -268,68 +264,112 @@ export function ApproveDraftModal({
   // Buffer ignores draft mode and Postiz-only drafting added confusion; the
   // modal always pushes to queue. Keep the value as a constant for telemetry.
   const postState = "queue" as const;
-  const [title, setTitle] = useState(initialTitle);
-  const [description, setDescription] = useState(initialDescription);
 
-  // Per-class variant state. Variants are generated on-demand via the
-  // rewrite-copy endpoint or seeded from initialCopyByPlatform on legacy
-  // drafts. generationCount lives in a separate map so the cap survives
-  // Remove → Customize cycles within the same modal session.
-  type Copy = { title: string; description: string };
-
-  const [variants, setVariants] = useState<Partial<Record<NamedChannelClass, Copy>>>(
-    () => {
-      const seed: Partial<Record<NamedChannelClass, Copy>> = {};
-      if (!initialCopyByPlatform) return seed;
-      for (const [k, v] of Object.entries(initialCopyByPlatform)) {
-        if (v) seed[k as NamedChannelClass] = { ...v };
-      }
-      return seed;
-    },
-  );
+  // Per-channel composer state. Keys are `${provider}::${channelId}`.
+  const [copyByChannel, setCopyByChannel] = useState<Record<string, Copy>>({});
   const [generationCounts, setGenerationCounts] = useState<
-    Partial<Record<NamedChannelClass, number>>
-  >(() => {
-    const seed: Partial<Record<NamedChannelClass, number>> = {};
-    if (!initialCopyByPlatform) return seed;
-    for (const [k, v] of Object.entries(initialCopyByPlatform)) {
-      if (v) seed[k as NamedChannelClass] = 1;
-    }
-    return seed;
-  });
-  const [loadingClass, setLoadingClass] = useState<NamedChannelClass | null>(
+    Record<string, number>
+  >({});
+  const [loadingChannelKey, setLoadingChannelKey] = useState<string | null>(
     null,
   );
-
-  const availableClasses = useMemo(
-    () => availableClassesFromSelection(checked, channelsByProvider),
-    [checked, channelsByProvider],
+  const [channelErrors, setChannelErrors] = useState<Record<string, string>>(
+    {},
   );
 
-  // Variants for classes the user has generated, plus any greyed-out ones
-  // for classes whose channels are no longer checked. Render in the union
-  // of (currently-active classes) ∪ (classes with an existing variant), in
-  // canonical order so the layout is stable.
-  const variantClassesToRender: NamedChannelClass[] = useMemo(() => {
-    const set = new Set<NamedChannelClass>();
-    for (const c of availableClasses) set.add(c);
-    for (const k of Object.keys(variants)) set.add(k as NamedChannelClass);
-    const order: NamedChannelClass[] = [
-      "x",
-      "linkedin",
-      "instagram",
-      "tiktok",
-      "threads",
-      "facebook",
-      "youtube",
-    ];
-    return order.filter((c) => set.has(c));
-  }, [availableClasses, variants]);
+  // Distinct channel keys present in the current selection, in stable display order.
+  const selectedChannelKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const sel of checked) {
+      const [, provider, channelId] = sel.split("::");
+      keys.add(makeChannelKey(provider as PostingProvider, channelId));
+    }
+    const ordered: string[] = [];
+    for (const ch of channelsByProvider.buffer) {
+      const k = makeChannelKey(ch.provider, ch.channelId);
+      if (keys.has(k)) ordered.push(k);
+    }
+    for (const ch of channelsByProvider.postiz) {
+      const k = makeChannelKey(ch.provider, ch.channelId);
+      if (keys.has(k)) ordered.push(k);
+    }
+    return ordered;
+  }, [checked, channelsByProvider]);
 
-  async function generateVariant(channelClass: NamedChannelClass) {
-    if ((generationCounts[channelClass] ?? 0) >= 3) return;
-    if (loadingClass) return;
-    setLoadingClass(channelClass);
+  // Eager-seed: when a channel is newly checked, seed its composer with the
+  // shared seed copy (or legacy per-class copy if available). Preserves
+  // existing edits across uncheck/recheck cycles.
+  useEffect(() => {
+    setCopyByChannel((prev) => {
+      let mutated = false;
+      const next = { ...prev };
+      const seedCounts: Record<string, number> = {};
+      for (const key of selectedChannelKeys) {
+        if (next[key]) continue;
+        const channel = channelByKey.get(key);
+        const legacy =
+          channel && channel.channelClass !== "other"
+            ? initialCopyByPlatform?.[channel.channelClass as Platform]
+            : undefined;
+        next[key] = legacy
+          ? { ...legacy }
+          : { title: initialTitle, description: initialDescription };
+        if (legacy) seedCounts[key] = 1;
+        mutated = true;
+      }
+      if (!mutated) return prev;
+      if (Object.keys(seedCounts).length > 0) {
+        setGenerationCounts((counts) => {
+          const merged = { ...counts };
+          for (const [k, v] of Object.entries(seedCounts)) {
+            if (merged[k] === undefined) merged[k] = v;
+          }
+          return merged;
+        });
+      }
+      return next;
+    });
+  }, [
+    selectedChannelKeys,
+    channelByKey,
+    initialCopyByPlatform,
+    initialTitle,
+    initialDescription,
+  ]);
+
+  function updateChannelTitle(channelKey: string, value: string) {
+    setCopyByChannel((prev) => {
+      const existing = prev[channelKey];
+      if (!existing) return prev;
+      return { ...prev, [channelKey]: { ...existing, title: value } };
+    });
+  }
+
+  function updateChannelDescription(channelKey: string, value: string) {
+    setCopyByChannel((prev) => {
+      const existing = prev[channelKey];
+      if (!existing) return prev;
+      return { ...prev, [channelKey]: { ...existing, description: value } };
+    });
+  }
+
+  async function regenerateChannel(channelKey: string) {
+    if (loadingChannelKey) return;
+    const channel = channelByKey.get(channelKey);
+    if (!channel) return;
+    if (channel.channelClass === "other") return;
+    if ((generationCounts[channelKey] ?? 0) >= 3) return;
+
+    const current = copyByChannel[channelKey];
+    if (!current) return;
+
+    setLoadingChannelKey(channelKey);
+    setChannelErrors((prev) => {
+      if (!prev[channelKey]) return prev;
+      const next = { ...prev };
+      delete next[channelKey];
+      return next;
+    });
     try {
       const res = await fetch(
         `/api/v1/drafts/${encodeURIComponent(draftId)}/rewrite-copy`,
@@ -337,71 +377,38 @@ export function ApproveDraftModal({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            class: channelClass,
-            title,
-            description,
+            class: channel.channelClass,
+            title: current.title,
+            description: current.description,
           }),
         },
       );
       if (!res.ok) {
-        setInlineError("Couldn't rewrite copy. Try again.");
+        setChannelErrors((prev) => ({
+          ...prev,
+          [channelKey]: "Couldn't rewrite copy. Try again.",
+        }));
         return;
       }
       const data = (await res.json()) as { title: string; description: string };
-      setVariants((prev) => ({
+      setCopyByChannel((prev) => ({
         ...prev,
-        [channelClass]: { title: data.title, description: data.description },
+        [channelKey]: { title: data.title, description: data.description },
       }));
       setGenerationCounts((prev) => ({
         ...prev,
-        [channelClass]: (prev[channelClass] ?? 0) + 1,
+        [channelKey]: (prev[channelKey] ?? 0) + 1,
       }));
     } catch {
-      setInlineError("Couldn't rewrite copy. Try again.");
-    } finally {
-      setLoadingClass(null);
-    }
-  }
-
-  function removeVariant(channelClass: NamedChannelClass) {
-    setVariants((prev) => {
-      const next = { ...prev };
-      delete next[channelClass];
-      return next;
-    });
-    // Intentionally does NOT reset generationCounts — the per-class rewrite
-    // cap is per-modal-session, not per-variant-lifetime.
-  }
-
-  function updateVariantField(
-    channelClass: NamedChannelClass,
-    field: "title" | "description",
-    value: string,
-  ) {
-    setVariants((prev) => {
-      const v = prev[channelClass];
-      if (!v) return prev;
-      return {
+      setChannelErrors((prev) => ({
         ...prev,
-        [channelClass]: { ...v, [field]: value },
-      };
-    });
+        [channelKey]: "Couldn't rewrite copy. Try again.",
+      }));
+    } finally {
+      setLoadingChannelKey(null);
+    }
   }
 
-  // Active variants (those whose class still has a checked channel) — sent
-  // on approve. Greyed variants are kept in state but excluded.
-  const activeCopyByPlatform = useMemo<
-    Partial<Record<NamedChannelClass, { title: string; description: string }>>
-  >(() => {
-    const out: Partial<
-      Record<NamedChannelClass, { title: string; description: string }>
-    > = {};
-    for (const c of availableClasses) {
-      const v = variants[c];
-      if (v) out[c] = v;
-    }
-    return out;
-  }, [availableClasses, variants]);
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [skippedWarnings, setSkippedWarnings] = useState<
@@ -421,10 +428,10 @@ export function ApproveDraftModal({
   }
 
   async function handleConfirm() {
+    if (submitting) return;
     setInlineError(null);
     setSkippedWarnings([]);
 
-    // Build selections from checked set.
     const selections: Array<{
       format: Format;
       provider: PostingProvider;
@@ -439,6 +446,14 @@ export function ApproveDraftModal({
       });
     }
 
+    // Send only entries for currently-selected channels. Stale entries
+    // (channels unchecked mid-session) don't ride along.
+    const submitCopyByChannel: Record<string, Copy> = {};
+    for (const key of selectedChannelKeys) {
+      const v = copyByChannel[key];
+      if (v) submitCopyByChannel[key] = v;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch(
@@ -447,11 +462,11 @@ export function ApproveDraftModal({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title,
-            description,
-            copyByPlatform:
-              Object.keys(activeCopyByPlatform).length > 0
-                ? activeCopyByPlatform
+            title: initialTitle,
+            description: initialDescription,
+            copyByChannel:
+              Object.keys(submitCopyByChannel).length > 0
+                ? submitCopyByChannel
                 : undefined,
             selections,
             postState,
@@ -459,6 +474,20 @@ export function ApproveDraftModal({
           }),
         },
       );
+
+      if (res.status === 409) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        if (data.error === "all_selections_skipped") {
+          toast.error(
+            "All selected channels are unavailable. Refresh providers and try again.",
+          );
+          return;
+        }
+        setInlineError(data.error ?? "Push failed. Try again.");
+        return;
+      }
 
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
@@ -507,7 +536,6 @@ export function ApproveDraftModal({
         setSkippedWarnings(result.skipped);
       }
 
-      // S8.1 + S10.1: post_approved telemetry with edit-delta from server.
       const meta = result.meta;
       const destinations = [
         ...new Set(selections.map((s) => s.provider)),
@@ -586,7 +614,6 @@ export function ApproveDraftModal({
   return (
     <div className="fixed inset-0 z-50 bg-brand/30 flex items-center justify-center p-4">
       <div className="bg-white border-2 border-brand shadow-[8px_8px_0_var(--color-brand)] p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-5">
-        {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <h2 className="font-[family-name:var(--font-press-start)] text-xs text-brand leading-relaxed">
             {(() => {
@@ -614,7 +641,6 @@ export function ApproveDraftModal({
           </p>
         )}
 
-        {/* Format × Channel grid */}
         {!noProviders && (
           <div className="space-y-3">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase">
@@ -681,133 +707,44 @@ export function ApproveDraftModal({
           </div>
         )}
 
-        {/* Shared title + description: applied to any destination without a per-class variant. */}
-        {!noProviders && (
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
-                Title
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                maxLength={80}
-                className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                maxLength={220}
-                rows={3}
-                className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Customize copy per-class — one button for each named ChannelClass
-            present in the current channel selection. */}
-        {!noProviders && availableClasses.length > 0 && (
-          <div
-            className="flex flex-wrap gap-2"
-            data-testid="customize-buttons"
-          >
-            {availableClasses.map((c) => {
-              const v = variants[c];
-              const capped = (generationCounts[c] ?? 0) >= 3;
-              const loading = loadingClass === c;
-              const label = v
-                ? capped
-                  ? `Edit ${PLATFORM_LABELS[c]} manually`
-                  : `Regenerate ${PLATFORM_LABELS[c]} copy`
-                : `Customize copy for ${PLATFORM_LABELS[c]}`;
+        {!noProviders && selectedChannelKeys.length > 0 && (
+          <div className="space-y-3" data-testid="channel-composers">
+            <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase">
+              Copy per channel
+            </span>
+            {selectedChannelKeys.map((key) => {
+              const channel = channelByKey.get(key);
+              if (!channel) return null;
+              const copy = copyByChannel[key];
+              if (!copy) return null;
+              const isOther = channel.channelClass === "other";
               return (
-                <button
-                  key={c}
-                  type="button"
-                  data-testid={`customize-button-${c}`}
-                  disabled={loading || capped}
-                  onClick={() => generateVariant(c)}
-                  className="font-[family-name:var(--font-press-start)] text-[9px] text-brand border-2 border-brand/50 px-2 py-1 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? "Rewriting…" : label}
-                </button>
+                <ChannelComposerCard
+                  key={key}
+                  provider={channel.provider}
+                  channelId={channel.channelId}
+                  displayName={channel.displayName}
+                  channelClass={channel.channelClass}
+                  title={copy.title}
+                  description={copy.description}
+                  generationCount={generationCounts[key] ?? 0}
+                  loading={loadingChannelKey === key}
+                  regenerateDisabled={isOther || loadingChannelKey !== null}
+                  regenerateDisabledReason={
+                    isOther
+                      ? "Rewrite isn't supported for this channel type yet."
+                      : undefined
+                  }
+                  error={channelErrors[key] ?? null}
+                  onTitleChange={(v) => updateChannelTitle(key, v)}
+                  onDescriptionChange={(v) => updateChannelDescription(key, v)}
+                  onRegenerate={() => regenerateChannel(key)}
+                />
               );
             })}
           </div>
         )}
 
-        {/* Variant blocks: one per generated class. Greyed when the class has
-            no currently-checked channel (variant retained but inactive). */}
-        {variantClassesToRender.length > 0 && (
-          <div className="space-y-4">
-            {variantClassesToRender.map((c) => {
-              const v = variants[c];
-              if (!v) return null;
-              const isActive = availableClasses.includes(c);
-              return (
-                <div
-                  key={c}
-                  className={`space-y-2 border-2 border-brand/30 p-3 ${
-                    isActive ? "" : "opacity-50"
-                  }`}
-                  data-testid={`variant-${c}`}
-                  aria-disabled={!isActive}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
-                      {PLATFORM_LABELS[c]} copy
-                    </div>
-                    <button
-                      type="button"
-                      data-testid={`variant-remove-${c}`}
-                      onClick={() => removeVariant(c)}
-                      className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/60 hover:text-brand"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      value={v.title}
-                      onChange={(e) =>
-                        updateVariantField(c, "title", e.target.value)
-                      }
-                      maxLength={80}
-                      className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
-                      Description
-                    </label>
-                    <textarea
-                      value={v.description}
-                      onChange={(e) =>
-                        updateVariantField(c, "description", e.target.value)
-                      }
-                      maxLength={220}
-                      rows={3}
-                      className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Platform cap warning */}
         {platformCapWarning && (
           <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand border-2 border-yellow-400 bg-yellow-50 p-2">
             Your plan allows {platformCapWarning.allowed} destination
@@ -818,14 +755,12 @@ export function ApproveDraftModal({
           </p>
         )}
 
-        {/* Inline error */}
         {inlineError && (
           <p className="font-[family-name:var(--font-geist-sans)] text-xs text-red-600 border-2 border-red-300 bg-red-50 p-2">
             {inlineError}
           </p>
         )}
 
-        {/* Skipped warnings */}
         {skippedWarnings.length > 0 && (
           <div className="border-2 border-yellow-400 bg-yellow-50 p-3 space-y-1">
             <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand">
@@ -842,7 +777,6 @@ export function ApproveDraftModal({
           </div>
         )}
 
-        {/* Footer actions */}
         <div className="flex gap-3 justify-end pt-2">
           <PixelButton variant="ghost" onClick={onClose} disabled={submitting}>
             Cancel
