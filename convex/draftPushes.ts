@@ -19,12 +19,7 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
 import { insertTriggerEvent } from "./triggerEvents";
-import {
-  tierFor,
-  capsFor,
-  nextTierFor,
-  type Format,
-} from "./planTiers";
+import { evaluatePostSelections } from "./planTiers";
 
 const formatValidator = v.union(
   v.literal("square"),
@@ -203,13 +198,17 @@ export const approveDraft = mutation({
     clientNonce: v.string(),
     mediaUrlByFormat: v.optional(v.record(v.string(), v.string())),
     // Trusted server override: the cook-and-approve endpoint already
-    // authenticated the request, then needs to act as that user. Same trust
-    // pattern as `api.drafts.remove`. Browser clients omit this and the
-    // authed identity is used.
-    actingUserId: v.optional(v.string()),
+    // authenticated the request, then needs to act as that user. Browser
+    // clients omit this and the authed identity is used.
+    trustedActor: v.optional(
+      v.object({
+        userId: v.string(),
+        source: v.union(v.literal("api_key"), v.literal("session")),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
-    const userId = args.actingUserId ?? (await requireAuthedUser(ctx));
+    const userId = args.trustedActor?.userId ?? (await requireAuthedUser(ctx));
     const { draftId, title, description, copyByPlatform, selections, postState, clientNonce, mediaUrlByFormat } = args;
 
     // ── Validation: nothing selected ──────────────────────────────────────────
@@ -260,65 +259,16 @@ export const approveDraft = mutation({
       }
     }
 
-    // ── S2.7: Tier-cap gating (new accounting model only) ─────────────────────
-    // Legacy plans (trial/starter/pro/scale) bypass — `tierFor` returns null,
-    // preserving R9 until U6 backfill runs.
+    // ── S2.7: allowance gating (new accounting model only) ─────────────────────
     const profile = await ctx.db
       .query("userProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
-    const tier = profile ? tierFor(profile.plan) : null;
-
-    if (tier && profile) {
-      const caps = capsFor(tier);
-
-      // Derive base formats + video flag from selections (format may be
-      // "video-square" etc. — these are video formats).
-      const baseFormats = new Set<Format>();
-      let includesVideo = false;
-      for (const s of selections) {
-        if (s.format.startsWith("video-")) {
-          includesVideo = true;
-          baseFormats.add(s.format.slice("video-".length) as Format);
-        } else {
-          baseFormats.add(s.format as Format);
-        }
+    if (profile) {
+      const allowance = evaluatePostSelections(profile.plan, selections);
+      if (!allowance.ok) {
+        return allowance;
       }
-
-      // Video gating
-      if (includesVideo && !caps.video) {
-        return {
-          ok: false as const,
-          error: "video_blocked" as const,
-          upgradeTier: nextTierFor({ needsVideo: true }) ?? undefined,
-        };
-      }
-
-      // Format gating
-      for (const f of baseFormats) {
-        if (!caps.formats.includes(f)) {
-          return {
-            ok: false as const,
-            error: "format_blocked" as const,
-            blockedFormat: f,
-            upgradeTier: nextTierFor({ needsFormat: f }) ?? undefined,
-          };
-        }
-      }
-
-      // Platform/destination gating (distinct channels per approval)
-      const distinctChannels = new Set(
-        selections.map((s) => `${s.provider}:${s.channelId}`),
-      );
-      if (distinctChannels.size > caps.platforms) {
-        return {
-          ok: false as const,
-          error: "platform_blocked" as const,
-          upgradeTier:
-            nextTierFor({ needsPlatforms: distinctChannels.size }) ?? undefined,
-        };
-      }
-
     }
 
     // ── Build provider extra maps for channel validation ──────────────────────

@@ -4,6 +4,8 @@ import {
   tierFor,
   capsFor,
   nextTierFor,
+  resolvePostAllowance,
+  evaluatePostSelections,
 } from "../plan-tiers";
 import { TIER_CONFIG as CONVEX_TIER_CONFIG } from "../../../convex/planTiers";
 
@@ -99,6 +101,60 @@ describe("nextTierFor", () => {
     expect(
       nextTierFor({ needsFormat: "square", needsPlatforms: 1 }),
     ).toBe("toast");
+  });
+});
+
+describe("resolvePostAllowance", () => {
+  it("returns post-mode allowance for new tiers", () => {
+    expect(resolvePostAllowance({ plan: "toast", creditsRemaining: 17 })).toEqual({
+      mode: "posts",
+      plan: "toast",
+      tier: "toast",
+      name: "Toast",
+      remaining: 17,
+      total: 200,
+      unitLabel: "posts",
+    });
+  });
+
+  it("returns credit-mode allowance for legacy plans", () => {
+    expect(resolvePostAllowance({ plan: "pro", creditsRemaining: 412 })).toEqual({
+      mode: "credits",
+      plan: "pro",
+      tier: null,
+      name: "Pro",
+      remaining: 412,
+      total: 800,
+      unitLabel: "credits",
+    });
+  });
+
+  it("keeps legacy Scale allowance aligned with billing credits", () => {
+    expect(resolvePostAllowance({ plan: "scale", creditsRemaining: 2_500 })).toMatchObject({
+      remaining: 2_500,
+      total: 2_500,
+    });
+  });
+});
+
+describe("evaluatePostSelections", () => {
+  it("allows legacy plans without applying new tier caps", () => {
+    expect(
+      evaluatePostSelections("starter", [
+        { format: "square", provider: "buffer", channelId: "x" },
+        { format: "square", provider: "postiz", channelId: "linkedin" },
+        { format: "square", provider: "postiz", channelId: "mastodon" },
+      ]),
+    ).toEqual({ ok: true });
+  });
+
+  it("blocks destination count above the tier cap", () => {
+    expect(
+      evaluatePostSelections("toast", [
+        { format: "square", provider: "buffer", channelId: "x" },
+        { format: "square", provider: "postiz", channelId: "linkedin" },
+      ]),
+    ).toEqual({ ok: false, error: "platform_blocked", upgradeTier: "plate" });
   });
 });
 

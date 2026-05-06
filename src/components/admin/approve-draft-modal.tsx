@@ -9,6 +9,7 @@ import {
   tierFor,
   capsFor,
   nextTierFor,
+  evaluatePostSelections,
   type Plan,
   type Format as TierFormat,
 } from "@/lib/plan-tiers";
@@ -433,12 +434,21 @@ export function ApproveDraftModal({
     return set.size;
   }, [checked]);
 
+  const selectedAllowance = useMemo(() => {
+    if (!plan) return { ok: true as const };
+    const selections = [...checked].map((key) => {
+      const [format, provider, channelId] = key.split("::");
+      return { format: format as Format, provider, channelId };
+    });
+    return evaluatePostSelections(plan as Plan, selections);
+  }, [checked, plan]);
+
   const platformCapWarning =
-    caps && distinctChannelCount > caps.platforms
+    caps && !selectedAllowance.ok && selectedAllowance.error === "platform_blocked"
       ? {
           allowed: caps.platforms,
           actual: distinctChannelCount,
-          upgrade: nextTierFor({ needsPlatforms: distinctChannelCount }),
+          upgrade: selectedAllowance.upgradeTier ?? nextTierFor({ needsPlatforms: distinctChannelCount }),
         }
       : null;
 

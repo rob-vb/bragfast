@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
+import { resolvePostAllowance, type Plan } from "@/lib/plan-tiers";
 import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
 
@@ -34,8 +35,12 @@ export default async function AccountPage() {
     userId: user._id,
   });
 
-  const plan = PLANS[stats.plan as keyof typeof PLANS];
-  const isTrial = stats.plan === "trial";
+  const allowance = resolvePostAllowance({
+    plan: stats.plan as Plan,
+    creditsRemaining: stats.creditsRemaining,
+  });
+  const legacyPlan = PLANS[stats.plan as keyof typeof PLANS];
+  const isFree = stats.plan === "trial" || stats.plan === "free";
 
   return (
     <div className="space-y-8">
@@ -49,26 +54,27 @@ export default async function AccountPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-                {plan.name} Plan
+                {allowance.name} Plan
               </h2>
-              {isTrial ? (
+              {isFree ? (
                 <p className="mt-1 text-xs text-brand/60">
-                  30 free credits to try it out
+                  {allowance.total} free {allowance.unitLabel} to try it out
                 </p>
               ) : (
                 <p className="mt-1 text-xs text-brand/60">
-                  ${plan.price}/mo &middot; {plan.credits.toLocaleString()}{" "}
-                  credits/mo
+                  {legacyPlan ? `$${legacyPlan.price}/mo ` : ""}
+                  {legacyPlan ? <>&middot; </> : null}
+                  {allowance.total.toLocaleString()} {allowance.unitLabel}/mo
                 </p>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {!isTrial && <ManageBillingButton />}
+              {!isFree && <ManageBillingButton />}
               <Link
                 href="/admin/account/upgrade"
                 className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                {isTrial ? "View Plans" : "Upgrade"}
+                {isFree ? "View Plans" : "Upgrade"}
               </Link>
             </div>
           </div>
@@ -77,13 +83,13 @@ export default async function AccountPage() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-brand/60">
-                Credits remaining
+                {allowance.unitLabel === "posts" ? "Posts remaining" : "Credits remaining"}
               </span>
               <span className="font-[family-name:var(--font-press-start)] text-xs text-brand">
-                {stats.creditsRemaining} / {plan.credits}
+                {allowance.remaining} / {allowance.total}
               </span>
             </div>
-            <CreditBar remaining={stats.creditsRemaining} total={plan.credits} />
+            <CreditBar remaining={allowance.remaining} total={allowance.total} />
           </div>
 
           {/* Stats */}
