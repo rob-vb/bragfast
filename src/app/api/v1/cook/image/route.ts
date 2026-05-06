@@ -1,6 +1,4 @@
 import { after } from "next/server";
-import { fetchMutation } from "convex/nextjs";
-import { api } from "@convex/_generated/api";
 
 export const maxDuration = 60;
 
@@ -45,13 +43,6 @@ export async function POST(request: Request) {
   try {
     const result = await createRelease(imageBody, userId, { source: "api" });
     result.credits_remaining = remaining;
-
-    const draftId = typeof body.draft_id === "string" ? body.draft_id : undefined;
-    if (draftId) {
-      await fetchMutation(api.drafts.remove, { externalId: draftId, userId }).catch((err) => {
-        console.error(`[cook/image] Failed to delete draft ${draftId}:`, err);
-      });
-    }
 
     after(() => renderReleaseAsync(result.cook_id, imageBody, userId));
     return Response.json(result, { status: 202 });

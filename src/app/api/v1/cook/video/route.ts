@@ -94,13 +94,6 @@ export async function POST(request: Request) {
       request: JSON.stringify(downstreamBody),
     });
 
-    const draftId = typeof body.draft_id === "string" ? body.draft_id : undefined;
-    if (draftId) {
-      await fetchMutation(api.drafts.remove, { externalId: draftId, userId }).catch((err) => {
-        console.error(`[cook/video] Failed to delete draft ${draftId}:`, err);
-      });
-    }
-
     return Response.json(result, { status: 202 });
   } catch (err) {
     console.error("Failed to create video release:", err);
