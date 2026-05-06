@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionUserMock = vi.fn();
 const rewriteCopyForClassMock = vi.fn();
+const fetchQueryMock = vi.fn();
 
 vi.mock("@/lib/auth/get-session-user", () => ({
   getSessionUser: getSessionUserMock,
@@ -9,6 +10,10 @@ vi.mock("@/lib/auth/get-session-user", () => ({
 
 vi.mock("@/lib/drafts/compose-copy", () => ({
   rewriteCopyForClass: rewriteCopyForClassMock,
+}));
+
+vi.mock("convex/nextjs", () => ({
+  fetchQuery: fetchQueryMock,
 }));
 
 function makeRequest(body: unknown): Request {
@@ -19,11 +24,15 @@ function makeRequest(body: unknown): Request {
   });
 }
 
+const draftRow = { id: "drf_1", config: "{}" };
+
 describe("POST /api/v1/drafts/[id]/rewrite-copy", () => {
   beforeEach(() => {
     vi.resetModules();
     getSessionUserMock.mockReset();
     rewriteCopyForClassMock.mockReset();
+    fetchQueryMock.mockReset();
+    fetchQueryMock.mockResolvedValue(draftRow);
   });
 
   it("returns rewritten copy for an authenticated session caller", async () => {
@@ -68,6 +77,28 @@ describe("POST /api/v1/drafts/[id]/rewrite-copy", () => {
     );
     expect(res.status).toBe(401);
     expect(rewriteCopyForClassMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when the draft does not belong to the caller", async () => {
+    getSessionUserMock.mockResolvedValue({ _id: "user_1" });
+    fetchQueryMock.mockResolvedValue(null);
+
+    const { POST } = await import("../route");
+    const res = await POST(
+      makeRequest({
+        class: "instagram",
+        title: "X",
+        description: "Y",
+      }),
+      { params: Promise.resolve({ id: "drf_other" }) },
+    );
+
+    expect(res.status).toBe(404);
+    expect(rewriteCopyForClassMock).not.toHaveBeenCalled();
+    expect(fetchQueryMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ externalId: "drf_other", userId: "user_1" }),
+    );
   });
 
   it("returns 400 for an invalid class value", async () => {

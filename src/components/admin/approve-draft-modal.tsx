@@ -273,19 +273,27 @@ export function ApproveDraftModal({
 
   // Per-class variant state. Variants are generated on-demand via the
   // rewrite-copy endpoint or seeded from initialCopyByPlatform on legacy
-  // drafts. generationCount caps endpoint calls per class per modal session.
-  type VariantState = {
-    copy: { title: string; description: string };
-    generationCount: number;
-  };
+  // drafts. generationCount lives in a separate map so the cap survives
+  // Remove → Customize cycles within the same modal session.
+  type Copy = { title: string; description: string };
 
-  const [variants, setVariants] = useState<
-    Partial<Record<NamedChannelClass, VariantState>>
+  const [variants, setVariants] = useState<Partial<Record<NamedChannelClass, Copy>>>(
+    () => {
+      const seed: Partial<Record<NamedChannelClass, Copy>> = {};
+      if (!initialCopyByPlatform) return seed;
+      for (const [k, v] of Object.entries(initialCopyByPlatform)) {
+        if (v) seed[k as NamedChannelClass] = { ...v };
+      }
+      return seed;
+    },
+  );
+  const [generationCounts, setGenerationCounts] = useState<
+    Partial<Record<NamedChannelClass, number>>
   >(() => {
-    const seed: Partial<Record<NamedChannelClass, VariantState>> = {};
+    const seed: Partial<Record<NamedChannelClass, number>> = {};
     if (!initialCopyByPlatform) return seed;
     for (const [k, v] of Object.entries(initialCopyByPlatform)) {
-      if (v) seed[k as NamedChannelClass] = { copy: { ...v }, generationCount: 1 };
+      if (v) seed[k as NamedChannelClass] = 1;
     }
     return seed;
   });
@@ -319,8 +327,7 @@ export function ApproveDraftModal({
   }, [availableClasses, variants]);
 
   async function generateVariant(channelClass: NamedChannelClass) {
-    const existing = variants[channelClass];
-    if (existing && existing.generationCount >= 3) return;
+    if ((generationCounts[channelClass] ?? 0) >= 3) return;
     if (loadingClass) return;
     setLoadingClass(channelClass);
     try {
@@ -343,10 +350,11 @@ export function ApproveDraftModal({
       const data = (await res.json()) as { title: string; description: string };
       setVariants((prev) => ({
         ...prev,
-        [channelClass]: {
-          copy: { title: data.title, description: data.description },
-          generationCount: (prev[channelClass]?.generationCount ?? 0) + 1,
-        },
+        [channelClass]: { title: data.title, description: data.description },
+      }));
+      setGenerationCounts((prev) => ({
+        ...prev,
+        [channelClass]: (prev[channelClass] ?? 0) + 1,
       }));
     } catch {
       setInlineError("Couldn't rewrite copy. Try again.");
@@ -361,6 +369,8 @@ export function ApproveDraftModal({
       delete next[channelClass];
       return next;
     });
+    // Intentionally does NOT reset generationCounts — the per-class rewrite
+    // cap is per-modal-session, not per-variant-lifetime.
   }
 
   function updateVariantField(
@@ -373,7 +383,7 @@ export function ApproveDraftModal({
       if (!v) return prev;
       return {
         ...prev,
-        [channelClass]: { ...v, copy: { ...v.copy, [field]: value } },
+        [channelClass]: { ...v, [field]: value },
       };
     });
   }
@@ -388,7 +398,7 @@ export function ApproveDraftModal({
     > = {};
     for (const c of availableClasses) {
       const v = variants[c];
-      if (v) out[c] = v.copy;
+      if (v) out[c] = v;
     }
     return out;
   }, [availableClasses, variants]);
@@ -710,7 +720,7 @@ export function ApproveDraftModal({
           >
             {availableClasses.map((c) => {
               const v = variants[c];
-              const capped = (v?.generationCount ?? 0) >= 3;
+              const capped = (generationCounts[c] ?? 0) >= 3;
               const loading = loadingClass === c;
               const label = v
                 ? capped
@@ -769,7 +779,7 @@ export function ApproveDraftModal({
                     </label>
                     <input
                       type="text"
-                      value={v.copy.title}
+                      value={v.title}
                       onChange={(e) =>
                         updateVariantField(c, "title", e.target.value)
                       }
@@ -782,7 +792,7 @@ export function ApproveDraftModal({
                       Description
                     </label>
                     <textarea
-                      value={v.copy.description}
+                      value={v.description}
                       onChange={(e) =>
                         updateVariantField(c, "description", e.target.value)
                       }

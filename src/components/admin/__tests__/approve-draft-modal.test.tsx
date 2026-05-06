@@ -228,6 +228,34 @@ describe("ApproveDraftModal — customize copy per class", () => {
     expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 
+  it("preserves the 3-generation cap across Remove → Customize cycles", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "v", description: "v" },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    const button = () =>
+      screen.getByTestId("customize-button-x") as HTMLButtonElement;
+
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(button());
+      await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+    }
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+
+    // Remove the variant — the cap must persist for this modal session.
+    await userEvent.click(screen.getByTestId("variant-remove-x"));
+    await waitFor(() => expect(screen.queryByTestId("variant-x")).toBeNull());
+
+    // Button is still disabled; no further calls allowed.
+    expect(button().disabled).toBe(true);
+    await userEvent.click(button());
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+
   it("removes a variant when the Remove button is clicked", async () => {
     mockFetchByUrl({
       "rewrite-copy": {

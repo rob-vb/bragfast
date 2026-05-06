@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { rewriteCopyForClass } from "@/lib/drafts/compose-copy";
 
@@ -20,10 +22,12 @@ const BodySchema = z.object({
 
 export async function POST(
   request: Request,
-  _ctx: { params: Promise<{ id: string }> }, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ctx: { params: Promise<{ id: string }> },
 ) {
   const user = await getSessionUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await ctx.params;
 
   let raw: unknown;
   try {
@@ -38,6 +42,17 @@ export async function POST(
       { error: "Invalid body", issues: parsed.error.issues },
       { status: 400 },
     );
+  }
+
+  // Ownership check: rewrite consumes Haiku tokens, so confirm the caller
+  // actually owns the Draft before invoking the helper. getByExternalId
+  // returns null when the row doesn't exist or belongs to a different user.
+  const draft = await fetchQuery(api.drafts.getByExternalId, {
+    externalId: id,
+    userId: user._id,
+  });
+  if (!draft) {
+    return Response.json({ error: "Draft not found" }, { status: 404 });
   }
 
   const result = await rewriteCopyForClass({
