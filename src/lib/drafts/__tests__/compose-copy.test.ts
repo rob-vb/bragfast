@@ -9,7 +9,7 @@ vi.mock("@anthropic-ai/sdk", () => {
   return { default: MockAnthropic };
 });
 
-import { composeCopy, composeCopyByPlatform } from "../compose-copy";
+import { composeCopy } from "../compose-copy";
 
 beforeEach(() => {
   mockCreate.mockReset();
@@ -255,73 +255,6 @@ describe("composeCopy — platform variants", () => {
     await composeCopy({ type: "mrr", threshold: 1000 });
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.messages[0].content).not.toContain("Target platform");
-  });
-});
-
-describe("composeCopyByPlatform", () => {
-  it("returns one Copy per platform plus a tight image-variant primary", async () => {
-    // Platform calls + image-variant call run in parallel; mock by url-match
-    // would be cleaner, but the existing call order is platforms-then-image.
-    mockCreate
-      .mockResolvedValueOnce(
-        textResponse('{"title":"X title","description":"X desc","confidence":0.8}'),
-      )
-      .mockResolvedValueOnce(
-        textResponse('{"title":"LI title","description":"LI desc","confidence":0.8}'),
-      )
-      .mockResolvedValueOnce(
-        textResponse('{"title":"Image title","description":"Image desc"}'),
-      );
-    const { copies, primary, primaryPlatform } = await composeCopyByPlatform(
-      { type: "mrr", threshold: 1000 },
-      ["x", "linkedin"],
-    );
-    expect(copies.x?.title).toBe("X title");
-    expect(copies.linkedin?.title).toBe("LI title");
-    // primary is now the tight image variant — confidence is borrowed from
-    // the first platform call so suppression thresholds still work.
-    expect(primary.title).toBe("Image title");
-    expect(primary.confidence).toBe(0.8);
-    expect(primaryPlatform).toBe("x");
-    expect(mockCreate).toHaveBeenCalledTimes(3);
-  });
-
-  it("calls Haiku twice (base + image) when no platforms are enabled", async () => {
-    mockCreate
-      .mockResolvedValueOnce(
-        textResponse('{"title":"base t","description":"base d","confidence":0.7}'),
-      )
-      .mockResolvedValueOnce(
-        textResponse('{"title":"image t","description":"image d"}'),
-      );
-    const { copies, primary, primaryPlatform } = await composeCopyByPlatform(
-      { type: "mrr", threshold: 1000 },
-      [],
-    );
-    expect(copies).toEqual({});
-    expect(primary.title).toBe("image t");
-    expect(primary.confidence).toBe(0.7);
-    expect(primaryPlatform).toBe(null);
-    expect(mockCreate).toHaveBeenCalledTimes(2);
-  });
-
-  it("single-platform request still produces an image-variant primary", async () => {
-    mockCreate
-      .mockResolvedValueOnce(
-        textResponse('{"title":"LI only","description":"d","confidence":0.6}'),
-      )
-      .mockResolvedValueOnce(
-        textResponse('{"title":"img","description":"d"}'),
-      );
-    const { copies, primary, primaryPlatform } = await composeCopyByPlatform(
-      { type: "mrr", threshold: 1000 },
-      ["linkedin"],
-    );
-    expect(copies.linkedin?.title).toBe("LI only");
-    expect(copies.x).toBeUndefined();
-    expect(primary.title).toBe("img");
-    expect(primary.confidence).toBe(0.6);
-    expect(primaryPlatform).toBe("linkedin");
   });
 });
 

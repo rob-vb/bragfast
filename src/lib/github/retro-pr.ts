@@ -10,12 +10,7 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { getInstallationToken } from "./auth";
-import {
-  composeCopyByPlatform,
-  PLATFORMS,
-  SUPPRESS_THRESHOLD,
-  type Platform,
-} from "@/lib/drafts/compose-copy";
+import { composeCopy, SUPPRESS_THRESHOLD } from "@/lib/drafts/compose-copy";
 import { pickTemplate } from "@/lib/drafts/pick-template";
 import { scanContent } from "@/lib/safety/content-filter";
 import {
@@ -119,15 +114,10 @@ export async function runRetroPrMergeDraft(
     const milestoneKey = prMergedMilestoneKey(repoFullName, pr.number);
     const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
 
-    // Skip generation if a draft for this milestone already exists.
-    const [disabled, voicePreset, examples] = await Promise.all([
-      convex.query(api.userProfiles.getDisabledPlatforms, { userId }),
+    const [voicePreset, examples] = await Promise.all([
       convex.query(api.userProfiles.getVoicePreset, { userId }),
       convex.query(api.drafts.getRecentApprovedEdits, { userId }),
     ]);
-    const enabledPlatforms: Platform[] = PLATFORMS.filter(
-      (p) => !disabled.includes(p),
-    );
     const preset = voicePreset as
       | "casual_builder"
       | "dry_technical"
@@ -135,24 +125,20 @@ export async function runRetroPrMergeDraft(
       | "deadpan"
       | null;
 
-    const [pick, composed] = await Promise.all([
+    const [pick, primary] = await Promise.all([
       pickTemplate({
         milestoneKey,
         prContext: { title: pr.title, body: pr.body ?? "" },
       }),
-      composeCopyByPlatform(
-        {
-          type: "pr_merged",
-          title: pr.title,
-          body: pr.body ?? "",
-          repoFullName,
-          voicePreset: preset,
-          examples,
-        },
-        enabledPlatforms,
-      ),
+      composeCopy({
+        type: "pr_merged",
+        title: pr.title,
+        body: pr.body ?? "",
+        repoFullName,
+        voicePreset: preset,
+        examples,
+      }),
     ]);
-    const { copies, primary } = composed;
     const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
 
     const draftConfig: DraftConfig = {
@@ -162,7 +148,6 @@ export async function runRetroPrMergeDraft(
         title: { text: primary.title },
         description: { text: primary.description },
       },
-      copyByPlatform: copies,
       notes: `Sous-Chef: retro PR #${pr.number} merged in ${repoFullName}`,
     };
 

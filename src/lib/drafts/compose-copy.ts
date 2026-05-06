@@ -172,46 +172,6 @@ export function examplesBlock(
   return `Past approvals from this user (the user's edits show their voice — match it, don't copy verbatim):\n${lines}`;
 }
 
-/**
- * Compose copy for multiple platforms in parallel, plus a separate tight
- * variant for the canvas image text. The image variant is the canonical
- * `primary` (used as the card's title/description); per-platform copies
- * power the actual social posts. Confidence comes from the first platform
- * call (or a base call when no platforms are enabled).
- */
-export async function composeCopyByPlatform(
-  base: ComposeCopyInput,
-  platforms: Platform[],
-): Promise<{ copies: CopyByPlatform; primary: Copy; primaryPlatform: Platform | null }> {
-  if (platforms.length === 0) {
-    const [platformCopy, image] = await Promise.all([
-      composeCopy(base),
-      composeImageCopy(base),
-    ]);
-    return {
-      copies: {},
-      primary: { ...image, confidence: platformCopy.confidence },
-      primaryPlatform: null,
-    };
-  }
-  const [platformResults, image] = await Promise.all([
-    Promise.all(platforms.map((p) => composeCopy({ ...base, platform: p }))),
-    composeImageCopy(base),
-  ]);
-  const copies: CopyByPlatform = {};
-  platforms.forEach((p, i) => {
-    copies[p] = {
-      title: platformResults[i].title,
-      description: platformResults[i].description,
-    };
-  });
-  return {
-    copies,
-    primary: { ...image, confidence: platformResults[0].confidence },
-    primaryPlatform: platforms[0],
-  };
-}
-
 const BASE_SYSTEM = `You write short, honest brag posts for indie makers.
 Output JSON only: {"title": "...", "description": "...", "confidence": 0.0-1.0}. No markdown.
 Keep titles punchy (one line, usually 3-6 words). Description is usually one short sentence, two only when needed.

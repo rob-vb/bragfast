@@ -7,12 +7,7 @@ import {
   buildPrMergeDraftInput,
   type GitHubPullRequestPayload,
 } from "@/lib/github/pr-merge";
-import {
-  composeCopyByPlatform,
-  SUPPRESS_THRESHOLD,
-  PLATFORMS,
-  type Platform,
-} from "@/lib/drafts/compose-copy";
+import { composeCopy, SUPPRESS_THRESHOLD } from "@/lib/drafts/compose-copy";
 import { pickTemplate } from "@/lib/drafts/pick-template";
 import type { DraftConfig } from "@/lib/drafts/types";
 import { scanContent } from "@/lib/safety/content-filter";
@@ -202,14 +197,10 @@ async function createPrMergeDraft(
 ) {
   try {
     const input = buildPrMergeDraftInput(payload, userId);
-    const [disabled, voicePreset, examples] = await Promise.all([
-      convex.query(api.userProfiles.getDisabledPlatforms, { userId }),
+    const [voicePreset, examples] = await Promise.all([
       convex.query(api.userProfiles.getVoicePreset, { userId }),
       convex.query(api.drafts.getRecentApprovedEdits, { userId }),
     ]);
-    const enabledPlatforms: Platform[] = PLATFORMS.filter(
-      (p) => !disabled.includes(p),
-    );
     const composeInput = {
       ...input.composeCopyInput,
       voicePreset: voicePreset as
@@ -220,11 +211,10 @@ async function createPrMergeDraft(
         | null,
       examples,
     };
-    const [pick, composed] = await Promise.all([
+    const [pick, primary] = await Promise.all([
       pickTemplate(input.pickTemplateInput),
-      composeCopyByPlatform(composeInput, enabledPlatforms),
+      composeCopy(composeInput),
     ]);
-    const { copies, primary } = composed;
 
     const draftConfig: DraftConfig = {
       output: "image",
@@ -233,7 +223,6 @@ async function createPrMergeDraft(
         title: { text: primary.title },
         description: { text: primary.description },
       },
-      copyByPlatform: copies,
       notes: `Sous-Chef: PR #${input.prNumber} merged to ${payload.repository.default_branch} in ${input.repoFullName}`,
     };
 
@@ -288,7 +277,7 @@ async function createPrMergeDraft(
         has_visual_asset: true,
         formats_to_render: ["landscape"],
         video_requested: false,
-        platforms_generated: Object.keys(copies),
+        platforms_generated: [],
       },
     });
   } catch (err) {
