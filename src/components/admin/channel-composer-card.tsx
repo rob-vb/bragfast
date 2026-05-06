@@ -28,22 +28,10 @@ const PROVIDER_LABELS: Record<PostingProvider, string> = {
   postiz: "Postiz",
 };
 
-const CLASS_LABELS: Record<ChannelClass, string> = {
-  x: "X",
-  linkedin: "LinkedIn",
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  threads: "Threads",
-  facebook: "Facebook",
-  youtube: "YouTube",
-  other: "Other",
-};
-
 export function ChannelComposerCard({
   provider,
   channelId,
   displayName,
-  channelClass,
   title,
   description,
   disabled = false,
@@ -60,12 +48,12 @@ export function ChannelComposerCard({
   const capped = generationCount >= cap;
   const buttonDisabled = disabled || regenerateDisabled || capped || loading;
   const buttonLabel = loading
-    ? "Rewriting…"
+    ? "Generating…"
     : generationCount === 0
-      ? `Customize for ${CLASS_LABELS[channelClass]}`
+      ? "Generate copy"
       : capped
         ? "Edit manually"
-        : `Regenerate for ${CLASS_LABELS[channelClass]}`;
+        : "Regenerate";
   const buttonTitle = capped
     ? "Per-channel rewrite cap reached for this session"
     : (regenerateDisabledReason ?? undefined);

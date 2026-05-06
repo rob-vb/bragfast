@@ -704,15 +704,6 @@ export function CookPage({ templates }: CookPageProps) {
           >
             {saving ? "Saving…" : saveSuccess ? "Saved ✓" : "Save Draft"}
           </button>
-          {state.status === "done" && (
-            <button
-              type="button"
-              onClick={() => dispatch({ type: "RESET" })}
-              className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-white text-brand hover:bg-gold/20 transition-colors"
-            >
-              Start Over
-            </button>
-          )}
           <button
             type="button"
             onClick={
