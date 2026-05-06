@@ -5,21 +5,9 @@ import type { ActionCtx } from "../_generated/server";
 import { internal, api } from "../_generated/api";
 import { v } from "convex/values";
 import { open } from "../../src/lib/crypto/secret-box";
-import {
-  buildIdempotencyKey,
-} from "../../src/lib/drafts/idempotency-key";
-import { typedMilestoneKey } from "../../src/lib/goals/types";
-import type { GoalMetric } from "../../src/lib/goals/types";
 import { goalMilestoneKey } from "../../src/lib/drafts/idempotency-key";
-import { composeCopy } from "../../src/lib/drafts/compose-copy";
-import { pickTemplate } from "../../src/lib/drafts/pick-template";
-import type { DraftConfig } from "../../src/lib/drafts/types";
-import {
-  captureFromConvex,
-  goalCategoryFromMetric,
-  daysBetween,
-} from "../posthogCapture";
-import { ALLOWED_POSTHOG_HOSTS } from "../../src/lib/integrations/posthog-hosts";
+import type { GoalMetric } from "../../src/lib/goals/types";
+import { createGoalHitDraft } from "../triggerDrafting";
 
 type PostHogExtra = {
   projectId: string;
@@ -217,80 +205,15 @@ async function fireDraft(
   goal: VisitorGoal,
   visitors: number,
 ): Promise<void> {
-  const milestoneKey = typedMilestoneKey({
-    metric: goal.metric,
-    target: goal.target ?? undefined,
-    scope: goal.scope ?? undefined,
-    provider: "posthog",
-  });
-  const idempotencyKey = buildIdempotencyKey(
+  await createGoalHitDraft(ctx, {
     userId,
-    "posthog",
-    goalMilestoneKey(goal.externalId),
-  );
-
-  const [profile, examples] = await Promise.all([
-    ctx.runQuery(internal.userProfiles.getByUserIdInternal, { userId }),
-    ctx.runQuery(api.drafts.getRecentApprovedEdits, { userId }),
-  ]);
-  const voicePreset = (profile?.voicePreset ?? null) as
-    | "casual_builder"
-    | "dry_technical"
-    | "earnest_milestone"
-    | "deadpan"
-    | null;
-  const [pick, copy] = await Promise.all([
-    pickTemplate({ milestoneKey }),
-    composeCopy({
+    sourceSystem: "posthog",
+    provider: "posthog",
+    goal,
+    composeInput: {
       type: "visitors",
       source: "posthog",
       threshold: goal.target ?? visitors,
-      voicePreset,
-      examples,
-    }),
-  ]);
-
-  const draftConfig: DraftConfig = {
-    output: "image",
-    templateId: pick.templateId,
-    objectContent: {
-      title: { text: copy.title },
-      description: { text: copy.description },
     },
-    notes: `Sous-Chef: ${milestoneKey}`,
-  };
-
-  await ctx.runMutation(internal.drafts.insertDraftIfNew, {
-    userId,
-    idempotencyKey,
-    sourceSystem: "posthog",
-    milestoneKey,
-    name: copy.title,
-    config: JSON.stringify(draftConfig),
-    createdBy: "sous-chef",
   });
-  const fireResult = await ctx.runMutation(internal.goals.markFired, {
-    externalId: goal.externalId,
-  });
-  // S5.5: schedule celebration email exactly once (first hit only).
-  if (fireResult.firstHit && fireResult.userId) {
-    await ctx.scheduler.runAfter(0, internal.goalEmails.sendCelebrationEmail, {
-      userId: fireResult.userId,
-      label: fireResult.label,
-      metric: fireResult.metric,
-      target: fireResult.target,
-      scope: fireResult.scope,
-    });
-    await captureFromConvex({
-      event: "goal_hit",
-      distinctId: fireResult.userId,
-      properties: {
-        goal_category: goalCategoryFromMetric(fireResult.metric),
-        days_from_goal_set: daysBetween(
-          fireResult.createdAt,
-          new Date().toISOString(),
-        ),
-      },
-    });
-  }
 }

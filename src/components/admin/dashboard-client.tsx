@@ -3,9 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
-import { PLANS } from "@/lib/plans";
-import type { PlanId } from "@/lib/plans";
-import { TIER_CONFIG, tierFor } from "@/lib/plan-tiers";
+import { resolvePostAllowance, type Plan } from "@/lib/plan-tiers";
 import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
@@ -33,23 +31,10 @@ export function DashboardClient() {
     );
   }
 
-  // New tiers use creditsRemaining with credits cap from TIER_CONFIG; legacy plans use PLANS map.
-  const tier = tierFor(stats.plan as never);
-  const newTierMeter = tier
-    ? {
-        remaining: stats.creditsRemaining,
-        total: TIER_CONFIG[tier].credits,
-        name:
-          tier === "free"
-            ? "On the House"
-            : tier === "toast"
-              ? "Toast"
-              : tier === "plate"
-                ? "Full Plate"
-                : "Buffet",
-      }
-    : null;
-  const plan = !newTierMeter ? PLANS[stats.plan as PlanId] : null;
+  const allowance = resolvePostAllowance({
+    plan: stats.plan as Plan,
+    creditsRemaining: stats.creditsRemaining,
+  });
   const repositioned = isLaunchModeRepositioned();
 
   // S6.1: launch-mode dashboard — Goal hero → History → Sources → Posts → Drafts.
@@ -61,19 +46,11 @@ export function DashboardClient() {
         </h1>
 
         {/* Posts/credits meter */}
-        {newTierMeter ? (
-          <CreditMeter
-            remaining={newTierMeter.remaining}
-            total={newTierMeter.total}
-            plan={newTierMeter.name}
-          />
-        ) : plan ? (
-          <CreditMeter
-            remaining={stats.creditsRemaining}
-            total={plan.credits}
-            plan={plan.name}
-          />
-        ) : null}
+        <CreditMeter
+          remaining={allowance.remaining}
+          total={allowance.total}
+          plan={allowance.name}
+        />
 
         {/* Recent activity */}
         <div>
@@ -108,19 +85,11 @@ export function DashboardClient() {
         Dashboard
       </h1>
 
-      {newTierMeter ? (
-        <CreditMeter
-          remaining={newTierMeter.remaining}
-          total={newTierMeter.total}
-          plan={newTierMeter.name}
-        />
-      ) : plan ? (
-        <CreditMeter
-          remaining={stats.creditsRemaining}
-          total={plan.credits}
-          plan={plan.name}
-        />
-      ) : null}
+      <CreditMeter
+        remaining={allowance.remaining}
+        total={allowance.total}
+        plan={allowance.name}
+      />
 
       <div className="grid grid-cols-3 gap-4">
         {statCards.map((s) => (
