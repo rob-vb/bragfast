@@ -9,7 +9,7 @@ vi.mock("@anthropic-ai/sdk", () => {
   return { default: MockAnthropic };
 });
 
-import { composeCopy } from "../compose-copy";
+import { composeCopy, rewriteCopyForClass } from "../compose-copy";
 
 beforeEach(() => {
   mockCreate.mockReset();
@@ -256,6 +256,106 @@ describe("composeCopy — platform variants", () => {
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.messages[0].content).not.toContain("Target platform");
   });
+});
+
+describe("rewriteCopyForClass", () => {
+  it("returns Instagram-toned copy from Haiku for class=instagram", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse(
+        '{"title":"Carousel slides ✨","description":"Tap through to see the new template in action."}',
+      ),
+    );
+    const out = await rewriteCopyForClass({
+      channelClass: "instagram",
+      seedTitle: "Carousel template",
+      seedDescription: "You can now ship carousel posts.",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.title).toBe("Carousel slides ✨");
+      expect(out.description).toBe(
+        "Tap through to see the new template in action.",
+      );
+    }
+  });
+
+  it("threads voicePreset into the prompt", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"t","description":"d"}'),
+    );
+    await rewriteCopyForClass({
+      channelClass: "linkedin",
+      seedTitle: "X",
+      seedDescription: "Y",
+      voicePreset: "deadpan",
+    });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).toContain("deadpan");
+  });
+
+  it("threads recent-approval examples into the prompt", async () => {
+    mockCreate.mockResolvedValue(
+      textResponse('{"title":"t","description":"d"}'),
+    );
+    await rewriteCopyForClass({
+      channelClass: "x",
+      seedTitle: "X",
+      seedDescription: "Y",
+      examples: [
+        {
+          original: { title: "Agent t", description: "Agent d" },
+          edited: { title: "User t", description: "User d" },
+        },
+      ],
+    });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).toContain("User t");
+    expect(callArgs.messages[0].content).toContain("Past approvals");
+  });
+
+  it("returns ok:false when Haiku throws", async () => {
+    mockCreate.mockRejectedValue(new Error("network down"));
+    const out = await rewriteCopyForClass({
+      channelClass: "x",
+      seedTitle: "X",
+      seedDescription: "Y",
+    });
+    expect(out).toEqual({ ok: false, error: "haiku_unavailable" });
+  });
+
+  it("returns ok:false when Haiku returns malformed JSON", async () => {
+    mockCreate.mockResolvedValue(textResponse("no json at all"));
+    const out = await rewriteCopyForClass({
+      channelClass: "x",
+      seedTitle: "X",
+      seedDescription: "Y",
+    });
+    expect(out).toEqual({ ok: false, error: "haiku_unavailable" });
+  });
+
+  it.each([
+    ["x", "X (Twitter)"],
+    ["linkedin", "LinkedIn"],
+    ["instagram", "Instagram"],
+    ["tiktok", "TikTok"],
+    ["threads", "Threads"],
+    ["facebook", "Facebook"],
+    ["youtube", "YouTube"],
+  ] as const)(
+    "puts the %s platform guide into the prompt",
+    async (channelClass, marker) => {
+      mockCreate.mockResolvedValue(
+        textResponse('{"title":"t","description":"d"}'),
+      );
+      await rewriteCopyForClass({
+        channelClass,
+        seedTitle: "X",
+        seedDescription: "Y",
+      });
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.messages[0].content).toContain(marker);
+    },
+  );
 });
 
 describe("composeCopy — brand voice", () => {

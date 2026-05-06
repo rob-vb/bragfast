@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callHaikuJson } from "../haiku-call";
+import { callHaikuJson, callHaikuText } from "../haiku-call";
 
 // Text-only draft copy for Sous-Chef. Keep this intentionally short:
 // drafts are starting points for social cards, not changelog summaries.
@@ -460,6 +460,59 @@ function imageFallback(input: ComposeCopyInput): { title: string; description: s
     case "subscribers":
       return { title: `${formatThresholdCount(input.threshold)} subscribers`, description: "" };
   }
+}
+
+// On-demand copy rewrite for a single channel class. The approve modal's
+// "Customize for {Instagram|LinkedIn|…}" buttons call this — Haiku only fires
+// when the user opts in, instead of pre-generating every variant at draft time.
+export type RewriteCopyResult =
+  | { ok: true; title: string; description: string }
+  | { ok: false; error: "haiku_unavailable" };
+
+const RewriteSchema = z.object({
+  title: z.string().transform((s) => s.slice(0, 80)),
+  description: z.string().transform((s) => s.slice(0, 220)),
+});
+
+export async function rewriteCopyForClass(input: {
+  channelClass: Platform;
+  seedTitle: string;
+  seedDescription: string;
+  voicePreset?: VoicePreset | null;
+  examples?: ApprovalExample[] | null;
+}): Promise<RewriteCopyResult> {
+  const system = `${BASE_SYSTEM}
+You rewrite an existing brag post for a specific social platform's tone. Keep the meaning and the announcement intact — change voice, length, and shape to match the platform.
+Output JSON only: {"title": "...", "description": "..."}. No markdown.`;
+
+  const user = `${PLATFORM_GUIDE[input.channelClass]}
+${voicePresetLine(input.voicePreset)}
+${examplesBlock(input.examples)}
+Current title: ${input.seedTitle}
+Current description: ${input.seedDescription}
+
+Rewrite the title and description for this platform.`;
+
+  let text: string;
+  try {
+    text = await callHaikuText({ system, user, maxTokens: 250 });
+  } catch {
+    return { ok: false, error: "haiku_unavailable" };
+  }
+
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return { ok: false, error: "haiku_unavailable" };
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(match[0]);
+  } catch {
+    return { ok: false, error: "haiku_unavailable" };
+  }
+
+  const parsed = RewriteSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "haiku_unavailable" };
+  return { ok: true, title: parsed.data.title, description: parsed.data.description };
 }
 
 export async function composeImageCopy(
