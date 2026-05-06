@@ -1,4 +1,5 @@
 import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { ConvexError } from "convex/values";
 import { api } from "@convex/_generated/api";
 import { createRelease, getRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import {
@@ -25,6 +26,7 @@ export interface ApproveDraftPostBody {
   title: string;
   description: string;
   copyByPlatform?: Partial<Record<DraftPlatform, CopyVariant>>;
+  copyByChannel?: Record<string, CopyVariant>;
   selections: Array<{ format: ApprovalFormat; provider: Provider; channelId: string }>;
   postState: "queue" | "draft";
   clientNonce: string;
@@ -160,22 +162,43 @@ export async function approveDraftPost(input: {
     mediaUrlByFormat[fmt] = url;
   }
 
+  let result;
+  try {
+    result = await fetchMutation(api.draftPushes.approveDraft, {
+      draftId,
+      title: body.title,
+      description: body.description,
+      copyByPlatform: body.copyByPlatform,
+      copyByChannel: body.copyByChannel,
+      selections: body.selections,
+      postState: body.postState,
+      clientNonce: body.clientNonce,
+      mediaUrlByFormat,
+      trustedActor: actor,
+    });
+  } catch (err) {
+    if (
+      err instanceof ConvexError &&
+      typeof err.data === "object" &&
+      err.data !== null &&
+      (err.data as { code?: unknown }).code === "all_selections_skipped"
+    ) {
+      await fetchMutation(api.userProfiles.refund, {
+        userId,
+        amount: creditsNeeded,
+      }).catch(() => {});
+      return json(409, {
+        error: "all_selections_skipped",
+        skipped: (err.data as { skipped?: unknown }).skipped,
+      });
+    }
+    throw err;
+  }
+
   await fetchMutation(api.drafts.remove, {
     externalId: draftId,
     userId,
   }).catch((err) => console.error("[drafts/approve] draft remove failed:", err));
-
-  const result = await fetchMutation(api.draftPushes.approveDraft, {
-    draftId,
-    title: body.title,
-    description: body.description,
-    copyByPlatform: body.copyByPlatform,
-    selections: body.selections,
-    postState: body.postState,
-    clientNonce: body.clientNonce,
-    mediaUrlByFormat,
-    trustedActor: actor,
-  });
 
   return json(200, { ...result, credits_remaining: creditsRemaining });
 }

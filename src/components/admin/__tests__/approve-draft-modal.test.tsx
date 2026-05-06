@@ -2,7 +2,7 @@
  * Component tests for ApproveDraftModal.
  *
  * Mocks:
- *  - global fetch (the cook-and-approve POST endpoint)
+ *  - global fetch (rewrite-copy + approve endpoints)
  *  - next/navigation: useRouter
  *  - sonner: toast
  */
@@ -19,8 +19,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 const mockToastSuccess = vi.fn();
+const mockToastError = vi.fn();
 vi.mock("sonner", () => ({
-  toast: { success: (...args: unknown[]) => mockToastSuccess(...args) },
+  toast: {
+    success: (...args: unknown[]) => mockToastSuccess(...args),
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
 }));
 
 vi.mock("posthog-js", () => ({
@@ -32,6 +36,7 @@ let mockFetch: ReturnType<typeof vi.fn>;
 function mockFetchOk(body: unknown) {
   mockFetch = vi.fn().mockResolvedValue({
     ok: true,
+    status: 200,
     json: async () => body,
   });
   global.fetch = mockFetch as unknown as typeof fetch;
@@ -44,6 +49,38 @@ function mockFetchErr(status: number, body: unknown) {
     json: async () => body,
   });
   global.fetch = mockFetch as unknown as typeof fetch;
+}
+
+type FetchResponse = { ok: boolean; status?: number; body: unknown };
+function mockFetchByUrl(routes: Record<string, FetchResponse>) {
+  mockFetch = vi.fn().mockImplementation((url: string) => {
+    for (const [pattern, resp] of Object.entries(routes)) {
+      if (url.includes(pattern)) {
+        return Promise.resolve({
+          ok: resp.ok,
+          status: resp.status ?? (resp.ok ? 200 : 500),
+          json: async () => resp.body,
+        });
+      }
+    }
+    throw new Error(`mockFetchByUrl: no match for ${url}`);
+  });
+  global.fetch = mockFetch as unknown as typeof fetch;
+}
+
+/** Find the channel-list checkbox for a channel by display name.
+ * The composer card heading also renders the display name, so we must scope
+ * the lookup to the `<label>` ancestor that wraps the checkbox row. */
+function findChannelCheckbox(displayName: string): HTMLInputElement {
+  const matches = screen.getAllByText(displayName);
+  for (const el of matches) {
+    const label = el.closest("label");
+    if (label) {
+      const cb = label.querySelector("input[type=checkbox]");
+      if (cb) return cb as HTMLInputElement;
+    }
+  }
+  throw new Error(`No channel checkbox found for "${displayName}"`);
 }
 
 // ── Shared props ───────────────────────────────────────────────────────────────
@@ -93,12 +130,6 @@ describe("ApproveDraftModal — rendering", () => {
     vi.clearAllMocks();
   });
 
-  it("renders title and description fields pre-filled", () => {
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    expect(screen.getByDisplayValue("Test Title")).toBeTruthy();
-    expect(screen.getByDisplayValue("Test description")).toBeTruthy();
-  });
-
   it("shows provider badges for connected providers", () => {
     render(<ApproveDraftModal {...BASE_PROPS} />);
     expect(screen.getAllByText("Buffer").length).toBeGreaterThan(0);
@@ -138,54 +169,76 @@ describe("ApproveDraftModal — rendering", () => {
   });
 });
 
-// Multi-endpoint fetch helper: maps URL pattern → response body, with the
-// approve endpoint as a default fallback.
-type FetchResponse = { ok: boolean; status?: number; body: unknown };
-function mockFetchByUrl(routes: Record<string, FetchResponse>) {
-  mockFetch = vi.fn().mockImplementation((url: string) => {
-    for (const [pattern, resp] of Object.entries(routes)) {
-      if (url.includes(pattern)) {
-        return Promise.resolve({
-          ok: resp.ok,
-          status: resp.status ?? (resp.ok ? 200 : 500),
-          json: async () => resp.body,
-        });
-      }
-    }
-    throw new Error(`mockFetchByUrl: no match for ${url}`);
-  });
-  global.fetch = mockFetch as unknown as typeof fetch;
-}
-
-describe("ApproveDraftModal — customize copy per class", () => {
+describe("ApproveDraftModal — per-channel composers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders one customize button per available named class", () => {
+  it("renders one composer card per selected channel, eager-seeded with initial copy", async () => {
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    // Default-checked: buffer ch1 (twitter→x) + postiz ch3 (instagram).
-    expect(screen.getByTestId("customize-button-x")).toBeTruthy();
-    expect(screen.getByTestId("customize-button-instagram")).toBeTruthy();
-    expect(screen.queryByTestId("customize-button-linkedin")).toBeNull();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("channel-card-buffer::ch1")).toBeTruthy();
+      expect(screen.getByTestId("channel-card-postiz::ch3")).toBeTruthy();
+    });
+
+    expect(
+      (
+        screen.getByTestId("channel-title-buffer::ch1") as HTMLInputElement
+      ).value,
+    ).toBe("Test Title");
+    expect(
+      (
+        screen.getByTestId(
+          "channel-description-postiz::ch3",
+        ) as HTMLTextAreaElement
+      ).value,
+    ).toBe("Test description");
   });
 
-  it("hides a class button when its only checked channel is unchecked", async () => {
+  it("does not render a composer card for unchecked channels", async () => {
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    expect(screen.getByTestId("customize-button-x")).toBeTruthy();
 
-    // Find and uncheck the buffer ch1 (X) checkbox.
-    const xLabel = screen.getByText("Acme X").closest("label")!;
-    const xCheckbox = xLabel.querySelector(
-      "input[type=checkbox]",
-    ) as HTMLInputElement;
+    await waitFor(() => {
+      expect(screen.getByTestId("channel-card-buffer::ch1")).toBeTruthy();
+    });
+
+    const xCheckbox = findChannelCheckbox("Acme X");
     await userEvent.click(xCheckbox);
 
-    expect(screen.queryByTestId("customize-button-x")).toBeNull();
-    expect(screen.getByTestId("customize-button-instagram")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByTestId("channel-card-buffer::ch1")).toBeNull();
+    });
+    expect(screen.getByTestId("channel-card-postiz::ch3")).toBeTruthy();
   });
 
-  it("renders a variant block after a successful rewrite-copy call", async () => {
+  it("preserves per-channel edits when channel is unchecked then re-checked", async () => {
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await waitFor(() => {
+      expect(screen.getByTestId("channel-title-buffer::ch1")).toBeTruthy();
+    });
+
+    const xTitle = screen.getByTestId(
+      "channel-title-buffer::ch1",
+    ) as HTMLInputElement;
+    fireEvent.change(xTitle, { target: { value: "Edited X title" } });
+
+    const xCheckbox = findChannelCheckbox("Acme X");
+    await userEvent.click(xCheckbox);
+    await waitFor(() =>
+      expect(screen.queryByTestId("channel-card-buffer::ch1")).toBeNull(),
+    );
+    await userEvent.click(xCheckbox);
+
+    await waitFor(() => {
+      const restored = screen.getByTestId(
+        "channel-title-buffer::ch1",
+      ) as HTMLInputElement;
+      expect(restored.value).toBe("Edited X title");
+    });
+  });
+
+  it("regenerate updates only the targeted channel's copy", async () => {
     mockFetchByUrl({
       "rewrite-copy": {
         ok: true,
@@ -194,88 +247,29 @@ describe("ApproveDraftModal — customize copy per class", () => {
     });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByTestId("customize-button-x"));
-
     await waitFor(() => {
-      expect(screen.getByTestId("variant-x")).toBeTruthy();
-    });
-    expect(screen.getByDisplayValue("X-toned title")).toBeTruthy();
-    expect(screen.getByDisplayValue("X-toned desc")).toBeTruthy();
-  });
-
-  it("disables the button after three generations for the same class", async () => {
-    mockFetchByUrl({
-      "rewrite-copy": {
-        ok: true,
-        body: { title: "v", description: "v" },
-      },
+      expect(screen.getByTestId("channel-card-buffer::ch1")).toBeTruthy();
     });
 
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    const button = () =>
-      screen.getByTestId("customize-button-x") as HTMLButtonElement;
-
-    for (let i = 0; i < 3; i++) {
-      await userEvent.click(button());
-      await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
-    }
-
-    expect(button().disabled).toBe(true);
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-
-    // A fourth click does nothing — no extra fetch.
-    await userEvent.click(button());
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-  });
-
-  it("preserves the 3-generation cap across Remove → Customize cycles", async () => {
-    mockFetchByUrl({
-      "rewrite-copy": {
-        ok: true,
-        body: { title: "v", description: "v" },
-      },
-    });
-
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    const button = () =>
-      screen.getByTestId("customize-button-x") as HTMLButtonElement;
-
-    for (let i = 0; i < 3; i++) {
-      await userEvent.click(button());
-      await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
-    }
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-
-    // Remove the variant — the cap must persist for this modal session.
-    await userEvent.click(screen.getByTestId("variant-remove-x"));
-    await waitFor(() => expect(screen.queryByTestId("variant-x")).toBeNull());
-
-    // Button is still disabled; no further calls allowed.
-    expect(button().disabled).toBe(true);
-    await userEvent.click(button());
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-  });
-
-  it("removes a variant when the Remove button is clicked", async () => {
-    mockFetchByUrl({
-      "rewrite-copy": {
-        ok: true,
-        body: { title: "v", description: "v" },
-      },
-    });
-
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByTestId("customize-button-x"));
-    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
-
-    await userEvent.click(screen.getByTestId("variant-remove-x"));
-
-    await waitFor(() =>
-      expect(screen.queryByTestId("variant-x")).toBeNull(),
+    await userEvent.click(
+      screen.getByTestId("channel-regenerate-buffer::ch1"),
     );
+
+    await waitFor(() => {
+      expect(
+        (
+          screen.getByTestId("channel-title-buffer::ch1") as HTMLInputElement
+        ).value,
+      ).toBe("X-toned title");
+    });
+    expect(
+      (
+        screen.getByTestId("channel-title-postiz::ch3") as HTMLInputElement
+      ).value,
+    ).toBe("Test Title");
   });
 
-  it("greys out a variant when its class has no checked channels but keeps it in state", async () => {
+  it("disables regenerate after three generations on the same channel", async () => {
     mockFetchByUrl({
       "rewrite-copy": {
         ok: true,
@@ -284,88 +278,169 @@ describe("ApproveDraftModal — customize copy per class", () => {
     });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByTestId("customize-button-x"));
-    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+    const button = () =>
+      screen.getByTestId(
+        "channel-regenerate-buffer::ch1",
+      ) as HTMLButtonElement;
 
-    // Uncheck the X channel.
-    const xLabel = screen.getByText("Acme X").closest("label")!;
-    const xCheckbox = xLabel.querySelector(
-      "input[type=checkbox]",
-    ) as HTMLInputElement;
-    await userEvent.click(xCheckbox);
+    await waitFor(() => expect(button()).toBeTruthy());
 
-    const block = screen.getByTestId("variant-x");
-    expect(block).toBeTruthy();
-    expect(block.getAttribute("aria-disabled")).toBe("true");
-  });
-
-  it("sends copyByPlatform on approve keyed by ChannelClass", async () => {
-    mockFetchByUrl({
-      "rewrite-copy": {
-        ok: true,
-        body: { title: "X-title", description: "X-desc" },
-      },
-      approve: {
-        ok: true,
-        body: { ok: true, pushIds: ["id1"], skipped: [] },
-      },
-    });
-
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByTestId("customize-button-x"));
-    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
-
-    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
-
-    await waitFor(() => {
-      const approveCall = mockFetch.mock.calls.find(([url]) =>
-        (url as string).includes("/approve"),
-      );
-      expect(approveCall).toBeTruthy();
-      const body = JSON.parse(
-        (approveCall![1] as RequestInit).body as string,
-      );
-      expect(body.copyByPlatform).toEqual({
-        x: { title: "X-title", description: "X-desc" },
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(button());
+      await waitFor(() => {
+        expect(
+          (
+            screen.getByTestId("channel-title-buffer::ch1") as HTMLInputElement
+          ).value,
+        ).toBe("v");
       });
-    });
+    }
+
+    expect(button().disabled).toBe(true);
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+
+    await userEvent.click(button());
+    expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 
-  it("excludes greyed variants from the approve body", async () => {
+  it("regenerate cap is per-channel, not per-class", async () => {
     mockFetchByUrl({
       "rewrite-copy": {
         ok: true,
-        body: { title: "X-title", description: "X-desc" },
-      },
-      approve: {
-        ok: true,
-        body: { ok: true, pushIds: ["id1"], skipped: [] },
+        body: { title: "v", description: "v" },
       },
     });
 
-    render(<ApproveDraftModal {...BASE_PROPS} />);
-    await userEvent.click(screen.getByTestId("customize-button-x"));
-    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+    // Two LinkedIn-class channels: Buffer ch2 + a Postiz LinkedIn channel.
+    const props = {
+      ...BASE_PROPS,
+      integrations: [
+        BUFFER_INTEGRATION,
+        {
+          provider: "postiz",
+          enabled: true,
+          extra: JSON.stringify({
+            channels: [
+              { id: "ch_li", identifier: "LINKEDIN", name: "Postiz LI" },
+            ],
+          }),
+        },
+      ],
+      routingRows: [
+        {
+          format: "square",
+          channels: [
+            { provider: "buffer" as const, channelId: "ch2" },
+            { provider: "postiz" as const, channelId: "ch_li" },
+          ],
+          updated_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+    };
 
-    // Uncheck the X channel — variant becomes greyed.
-    const xLabel = screen.getByText("Acme X").closest("label")!;
-    const xCheckbox = xLabel.querySelector(
-      "input[type=checkbox]",
-    ) as HTMLInputElement;
-    await userEvent.click(xCheckbox);
+    render(<ApproveDraftModal {...props} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
+    const bufferLi = () =>
+      screen.getByTestId(
+        "channel-regenerate-buffer::ch2",
+      ) as HTMLButtonElement;
+    const postizLi = () =>
+      screen.getByTestId(
+        "channel-regenerate-postiz::ch_li",
+      ) as HTMLButtonElement;
+
+    await waitFor(() => expect(bufferLi()).toBeTruthy());
+
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(bufferLi());
+      await waitFor(() =>
+        expect(
+          (
+            screen.getByTestId("channel-title-buffer::ch2") as HTMLInputElement
+          ).value,
+        ).toBe("v"),
+      );
+    }
+    expect(bufferLi().disabled).toBe(true);
+    // The other LinkedIn channel still has fresh budget.
+    expect(postizLi().disabled).toBe(false);
+  });
+
+  it("disables regenerate for 'other' channel class with explanatory tooltip", async () => {
+    const props = {
+      ...BASE_PROPS,
+      integrations: [
+        {
+          provider: "postiz",
+          enabled: true,
+          extra: JSON.stringify({
+            channels: [
+              { id: "ch_pin", identifier: "PINTEREST", name: "Pinterest A" },
+            ],
+          }),
+        },
+      ],
+      routingRows: [
+        {
+          format: "square",
+          channels: [{ provider: "postiz" as const, channelId: "ch_pin" }],
+          updated_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+    };
+
+    render(<ApproveDraftModal {...props} />);
 
     await waitFor(() => {
-      const approveCall = mockFetch.mock.calls.find(([url]) =>
-        (url as string).includes("/approve"),
-      );
-      expect(approveCall).toBeTruthy();
-      const body = JSON.parse(
-        (approveCall![1] as RequestInit).body as string,
-      );
-      expect(body.copyByPlatform).toBeUndefined();
+      const btn = screen.getByTestId(
+        "channel-regenerate-postiz::ch_pin",
+      ) as HTMLButtonElement;
+      expect(btn.disabled).toBe(true);
+      expect(btn.getAttribute("title")).toMatch(/isn't supported/i);
     });
+  });
+
+  it("seeds composer with legacy initialCopyByPlatform and starts cap at 1", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "v", description: "v" },
+      },
+    });
+
+    render(
+      <ApproveDraftModal
+        {...BASE_PROPS}
+        initialCopyByPlatform={{
+          x: { title: "Legacy X", description: "Legacy X desc" },
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        (
+          screen.getByTestId("channel-title-buffer::ch1") as HTMLInputElement
+        ).value,
+      ).toBe("Legacy X");
+    });
+
+    // Two more generations bring the cap to 3.
+    const button = () =>
+      screen.getByTestId(
+        "channel-regenerate-buffer::ch1",
+      ) as HTMLButtonElement;
+    for (let i = 0; i < 2; i++) {
+      await userEvent.click(button());
+      await waitFor(() =>
+        expect(
+          (
+            screen.getByTestId("channel-title-buffer::ch1") as HTMLInputElement
+          ).value,
+        ).toBe("v"),
+      );
+    }
+    expect(button().disabled).toBe(true);
   });
 });
 
@@ -374,25 +449,64 @@ describe("ApproveDraftModal — confirmation", () => {
     vi.clearAllMocks();
   });
 
-  it("POSTs to the approve endpoint with correct body", async () => {
-    mockFetchOk({ ok: true, pushIds: ["id1", "id2"], skipped: [] });
+  it("POSTs copyByChannel keyed by channelKey on approve", async () => {
+    mockFetchOk({ ok: true, pushIds: ["id1"], skipped: [] });
 
     render(<ApproveDraftModal {...BASE_PROPS} />);
 
-    const titleInput = screen.getByDisplayValue("Test Title");
-    fireEvent.change(titleInput, { target: { value: "Updated Title" } });
+    await waitFor(() =>
+      expect(screen.getByTestId("channel-title-buffer::ch1")).toBeTruthy(),
+    );
 
-    const confirmBtn = screen.getByRole("button", { name: /^Send to /i });
-    await userEvent.click(confirmBtn);
+    fireEvent.change(screen.getByTestId("channel-title-buffer::ch1"), {
+      target: { value: "Custom X title" },
+    });
 
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledOnce());
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toBe("/api/v1/drafts/drf_abc/approve");
-    const body = JSON.parse((init as RequestInit).body as string);
-    expect(body.title).toBe("Updated Title");
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    const approveCall = mockFetch.mock.calls.find(([url]) =>
+      (url as string).includes("/approve"),
+    );
+    expect(approveCall).toBeTruthy();
+    const body = JSON.parse((approveCall![1] as RequestInit).body as string);
+    expect(body.copyByChannel).toEqual({
+      "buffer::ch1": {
+        title: "Custom X title",
+        description: "Test description",
+      },
+      "postiz::ch3": { title: "Test Title", description: "Test description" },
+    });
+    expect(body.copyByPlatform).toBeUndefined();
+    expect(body.title).toBe("Test Title");
+    expect(body.description).toBe("Test description");
     expect(body.postState).toBe("queue");
     expect(typeof body.clientNonce).toBe("string");
-    expect(body.clientNonce.length).toBeGreaterThan(0);
+  });
+
+  it("excludes unchecked channels from copyByChannel", async () => {
+    mockFetchOk({ ok: true, pushIds: ["id1"], skipped: [] });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await waitFor(() =>
+      expect(screen.getByTestId("channel-title-buffer::ch1")).toBeTruthy(),
+    );
+
+    const xCheckbox = findChannelCheckbox("Acme X");
+    await userEvent.click(xCheckbox);
+
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
+
+    await waitFor(() => {
+      const approveCall = mockFetch.mock.calls.find(([url]) =>
+        (url as string).includes("/approve"),
+      );
+      expect(approveCall).toBeTruthy();
+      const body = JSON.parse(
+        (approveCall![1] as RequestInit).body as string,
+      );
+      expect(Object.keys(body.copyByChannel ?? {})).toEqual(["postiz::ch3"]);
+    });
   });
 
   it("shows toast and navigates to history on success", async () => {
@@ -405,6 +519,19 @@ describe("ApproveDraftModal — confirmation", () => {
     await waitFor(() => expect(mockToastSuccess).toHaveBeenCalledOnce());
     expect(onClose).toHaveBeenCalledOnce();
     expect(mockPush).toHaveBeenCalledWith("/admin/history");
+  });
+
+  it("shows error toast and keeps modal open on 409 all_selections_skipped", async () => {
+    const onClose = vi.fn();
+    mockFetchErr(409, { error: "all_selections_skipped" });
+
+    render(<ApproveDraftModal {...BASE_PROPS} onClose={onClose} />);
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
+
+    await waitFor(() => expect(mockToastError).toHaveBeenCalledOnce());
+    expect(mockToastError.mock.calls[0]![0]).toMatch(/All selected channels/i);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("shows inline error on nothing_selected response", async () => {
