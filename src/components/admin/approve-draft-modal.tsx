@@ -13,6 +13,15 @@ import {
   type Plan,
   type Format as TierFormat,
 } from "@/lib/plan-tiers";
+import {
+  channelClassFromBufferService,
+  channelClassFromPostizIdentifier,
+  type ChannelClass,
+} from "@/lib/integrations/channel-classes";
+import {
+  availableClassesFromSelection,
+  type NamedChannelClass,
+} from "@/lib/drafts/available-classes";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -54,6 +63,7 @@ interface FlatChannel {
   provider: PostingProvider;
   channelId: string;
   displayName: string;
+  channelClass: ChannelClass;
 }
 
 interface IntegrationRow {
@@ -64,20 +74,36 @@ interface IntegrationRow {
 
 // ── ApproveDraftModal props ────────────────────────────────────────────────────
 
-type Platform = "x" | "linkedin";
+type Platform =
+  | "x"
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "facebook"
+  | "youtube";
 
 const PLATFORM_LABELS: Record<Platform, string> = {
   x: "X",
   linkedin: "LinkedIn",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  threads: "Threads",
+  facebook: "Facebook",
+  youtube: "YouTube",
 };
 
 export interface ApproveDraftModalProps {
   draftId: string;
-  /** Pre-filled title from composed copy. User-editable. Used as fallback when no per-platform copy exists. */
+  /** Pre-filled title from composed copy. User-editable. Shared across destinations unless a per-class variant is generated. */
   initialTitle: string;
-  /** Pre-filled description from composed copy. User-editable. Used as fallback. */
+  /** Pre-filled description from composed copy. User-editable. Shared fallback. */
   initialDescription: string;
-  /** Per-platform copy from Sous-Chef (X + LinkedIn variants). When present, the modal renders one editable group per platform. */
+  /**
+   * Legacy per-class copy stored on the draft (from drafts created before
+   * on-demand rewrite was introduced). When present, each entry seeds a
+   * variant block for that ChannelClass and counts as one generation.
+   */
   initialCopyByPlatform?: Partial<
     Record<Platform, { title: string; description: string }>
   >;
@@ -138,6 +164,9 @@ function extractFlatChannels(
             provider: "buffer",
             channelId: ch.id,
             displayName: ch.displayName ?? ch.service ?? ch.id,
+            channelClass: ch.service
+              ? channelClassFromBufferService(ch.service)
+              : "other",
           });
         }
       }
@@ -149,6 +178,9 @@ function extractFlatChannels(
             provider: "postiz",
             channelId: ch.id,
             displayName: ch.name ?? ch.identifier ?? ch.id,
+            channelClass: ch.identifier
+              ? channelClassFromPostizIdentifier(ch.identifier)
+              : "other",
           });
         }
       }
@@ -239,40 +271,137 @@ export function ApproveDraftModal({
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
 
-  // Per-platform copy state. When the draft was created with platform variants,
-  // each platform has its own editable title+description; otherwise these stay
-  // empty and the top-level title/description applies to all channels.
-  const platformsPresent: Platform[] = useMemo(() => {
-    const out: Platform[] = [];
-    if (initialCopyByPlatform?.x) out.push("x");
-    if (initialCopyByPlatform?.linkedin) out.push("linkedin");
-    return out;
-  }, [initialCopyByPlatform]);
+  // Per-class variant state. Variants are generated on-demand via the
+  // rewrite-copy endpoint or seeded from initialCopyByPlatform on legacy
+  // drafts. generationCount lives in a separate map so the cap survives
+  // Remove → Customize cycles within the same modal session.
+  type Copy = { title: string; description: string };
 
-  const [copyByPlatform, setCopyByPlatform] = useState<
-    Partial<Record<Platform, { title: string; description: string }>>
+  const [variants, setVariants] = useState<Partial<Record<NamedChannelClass, Copy>>>(
+    () => {
+      const seed: Partial<Record<NamedChannelClass, Copy>> = {};
+      if (!initialCopyByPlatform) return seed;
+      for (const [k, v] of Object.entries(initialCopyByPlatform)) {
+        if (v) seed[k as NamedChannelClass] = { ...v };
+      }
+      return seed;
+    },
+  );
+  const [generationCounts, setGenerationCounts] = useState<
+    Partial<Record<NamedChannelClass, number>>
   >(() => {
-    const seed: Partial<Record<Platform, { title: string; description: string }>> = {};
-    if (initialCopyByPlatform?.x) seed.x = { ...initialCopyByPlatform.x };
-    if (initialCopyByPlatform?.linkedin)
-      seed.linkedin = { ...initialCopyByPlatform.linkedin };
+    const seed: Partial<Record<NamedChannelClass, number>> = {};
+    if (!initialCopyByPlatform) return seed;
+    for (const [k, v] of Object.entries(initialCopyByPlatform)) {
+      if (v) seed[k as NamedChannelClass] = 1;
+    }
     return seed;
   });
+  const [loadingClass, setLoadingClass] = useState<NamedChannelClass | null>(
+    null,
+  );
 
-  function updatePlatformCopy(
-    platform: Platform,
+  const availableClasses = useMemo(
+    () => availableClassesFromSelection(checked, channelsByProvider),
+    [checked, channelsByProvider],
+  );
+
+  // Variants for classes the user has generated, plus any greyed-out ones
+  // for classes whose channels are no longer checked. Render in the union
+  // of (currently-active classes) ∪ (classes with an existing variant), in
+  // canonical order so the layout is stable.
+  const variantClassesToRender: NamedChannelClass[] = useMemo(() => {
+    const set = new Set<NamedChannelClass>();
+    for (const c of availableClasses) set.add(c);
+    for (const k of Object.keys(variants)) set.add(k as NamedChannelClass);
+    const order: NamedChannelClass[] = [
+      "x",
+      "linkedin",
+      "instagram",
+      "tiktok",
+      "threads",
+      "facebook",
+      "youtube",
+    ];
+    return order.filter((c) => set.has(c));
+  }, [availableClasses, variants]);
+
+  async function generateVariant(channelClass: NamedChannelClass) {
+    if ((generationCounts[channelClass] ?? 0) >= 3) return;
+    if (loadingClass) return;
+    setLoadingClass(channelClass);
+    try {
+      const res = await fetch(
+        `/api/v1/drafts/${encodeURIComponent(draftId)}/rewrite-copy`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            class: channelClass,
+            title,
+            description,
+          }),
+        },
+      );
+      if (!res.ok) {
+        setInlineError("Couldn't rewrite copy. Try again.");
+        return;
+      }
+      const data = (await res.json()) as { title: string; description: string };
+      setVariants((prev) => ({
+        ...prev,
+        [channelClass]: { title: data.title, description: data.description },
+      }));
+      setGenerationCounts((prev) => ({
+        ...prev,
+        [channelClass]: (prev[channelClass] ?? 0) + 1,
+      }));
+    } catch {
+      setInlineError("Couldn't rewrite copy. Try again.");
+    } finally {
+      setLoadingClass(null);
+    }
+  }
+
+  function removeVariant(channelClass: NamedChannelClass) {
+    setVariants((prev) => {
+      const next = { ...prev };
+      delete next[channelClass];
+      return next;
+    });
+    // Intentionally does NOT reset generationCounts — the per-class rewrite
+    // cap is per-modal-session, not per-variant-lifetime.
+  }
+
+  function updateVariantField(
+    channelClass: NamedChannelClass,
     field: "title" | "description",
     value: string,
   ) {
-    setCopyByPlatform((prev) => ({
-      ...prev,
-      [platform]: {
-        title: prev[platform]?.title ?? "",
-        description: prev[platform]?.description ?? "",
-        [field]: value,
-      },
-    }));
+    setVariants((prev) => {
+      const v = prev[channelClass];
+      if (!v) return prev;
+      return {
+        ...prev,
+        [channelClass]: { ...v, [field]: value },
+      };
+    });
   }
+
+  // Active variants (those whose class still has a checked channel) — sent
+  // on approve. Greyed variants are kept in state but excluded.
+  const activeCopyByPlatform = useMemo<
+    Partial<Record<NamedChannelClass, { title: string; description: string }>>
+  >(() => {
+    const out: Partial<
+      Record<NamedChannelClass, { title: string; description: string }>
+    > = {};
+    for (const c of availableClasses) {
+      const v = variants[c];
+      if (v) out[c] = v;
+    }
+    return out;
+  }, [availableClasses, variants]);
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [skippedWarnings, setSkippedWarnings] = useState<
@@ -321,7 +450,9 @@ export function ApproveDraftModal({
             title,
             description,
             copyByPlatform:
-              platformsPresent.length > 0 ? copyByPlatform : undefined,
+              Object.keys(activeCopyByPlatform).length > 0
+                ? activeCopyByPlatform
+                : undefined,
             selections,
             postState,
             clientNonce,
@@ -550,8 +681,8 @@ export function ApproveDraftModal({
           </div>
         )}
 
-        {/* Title + description (per-platform when copyByPlatform was generated) */}
-        {!noProviders && platformsPresent.length === 0 && (
+        {/* Shared title + description: applied to any destination without a per-class variant. */}
+        {!noProviders && (
           <div className="space-y-3">
             <div className="space-y-1">
               <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
@@ -580,45 +711,99 @@ export function ApproveDraftModal({
           </div>
         )}
 
-        {!noProviders && platformsPresent.length > 0 && (
+        {/* Customize copy per-class — one button for each named ChannelClass
+            present in the current channel selection. */}
+        {!noProviders && availableClasses.length > 0 && (
+          <div
+            className="flex flex-wrap gap-2"
+            data-testid="customize-buttons"
+          >
+            {availableClasses.map((c) => {
+              const v = variants[c];
+              const capped = (generationCounts[c] ?? 0) >= 3;
+              const loading = loadingClass === c;
+              const label = v
+                ? capped
+                  ? `Edit ${PLATFORM_LABELS[c]} manually`
+                  : `Regenerate ${PLATFORM_LABELS[c]} copy`
+                : `Customize copy for ${PLATFORM_LABELS[c]}`;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  data-testid={`customize-button-${c}`}
+                  disabled={loading || capped}
+                  onClick={() => generateVariant(c)}
+                  className="font-[family-name:var(--font-press-start)] text-[9px] text-brand border-2 border-brand/50 px-2 py-1 hover:bg-brand/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Rewriting…" : label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Variant blocks: one per generated class. Greyed when the class has
+            no currently-checked channel (variant retained but inactive). */}
+        {variantClassesToRender.length > 0 && (
           <div className="space-y-4">
-            {platformsPresent.map((p) => (
-              <div
-                key={p}
-                className="space-y-2 border-2 border-brand/30 p-3"
-                data-testid={`platform-copy-${p}`}
-              >
-                <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
-                  {PLATFORM_LABELS[p]} copy
+            {variantClassesToRender.map((c) => {
+              const v = variants[c];
+              if (!v) return null;
+              const isActive = availableClasses.includes(c);
+              return (
+                <div
+                  key={c}
+                  className={`space-y-2 border-2 border-brand/30 p-3 ${
+                    isActive ? "" : "opacity-50"
+                  }`}
+                  data-testid={`variant-${c}`}
+                  aria-disabled={!isActive}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-[family-name:var(--font-press-start)] text-[10px] text-brand uppercase">
+                      {PLATFORM_LABELS[c]} copy
+                    </div>
+                    <button
+                      type="button"
+                      data-testid={`variant-remove-${c}`}
+                      onClick={() => removeVariant(c)}
+                      className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/60 hover:text-brand"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={v.title}
+                      onChange={(e) =>
+                        updateVariantField(c, "title", e.target.value)
+                      }
+                      maxLength={80}
+                      className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
+                      Description
+                    </label>
+                    <textarea
+                      value={v.description}
+                      onChange={(e) =>
+                        updateVariantField(c, "description", e.target.value)
+                      }
+                      maxLength={220}
+                      rows={3}
+                      className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={copyByPlatform[p]?.title ?? ""}
-                    onChange={(e) => updatePlatformCopy(p, "title", e.target.value)}
-                    maxLength={80}
-                    className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-[family-name:var(--font-press-start)] text-[10px] text-brand/70 uppercase block">
-                    Description
-                  </label>
-                  <textarea
-                    value={copyByPlatform[p]?.description ?? ""}
-                    onChange={(e) =>
-                      updatePlatformCopy(p, "description", e.target.value)
-                    }
-                    maxLength={220}
-                    rows={3}
-                    className="w-full border-2 border-brand/50 bg-surface font-[family-name:var(--font-geist-sans)] text-sm text-brand px-3 py-2 focus:outline-none focus:border-brand resize-none"
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

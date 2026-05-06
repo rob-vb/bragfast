@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callHaikuJson } from "../haiku-call";
+import { callHaikuJson, callHaikuText } from "../haiku-call";
 
 // Text-only draft copy for Sous-Chef. Keep this intentionally short:
 // drafts are starting points for social cards, not changelog summaries.
@@ -12,7 +12,14 @@ export type Copy = { title: string; description: string; confidence: number };
 
 export const SUPPRESS_THRESHOLD = 0.5;
 
-export type Platform = "x" | "linkedin";
+export type Platform =
+  | "x"
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "facebook"
+  | "youtube";
 export const PLATFORMS: Platform[] = ["x", "linkedin"];
 export type CopyByPlatform = Partial<
   Record<Platform, { title: string; description: string }>
@@ -137,6 +144,11 @@ export function voicePresetLine(preset: VoicePreset | null | undefined): string 
 const PLATFORM_GUIDE: Record<Platform, string> = {
   x: `Target platform: X (Twitter). Description should read like a tweet — punchy, conversational, no hashtags, fits in ~220 chars. Title doubles as the post hook.`,
   linkedin: `Target platform: LinkedIn. Description should read like a short LinkedIn post — slightly more reflective, can mention the journey or thanks, but still concise (1–2 short sentences, no hashtags, no buzzwords).`,
+  instagram: `Target platform: Instagram. Description should read like an IG caption — warm, visual, can use a few line breaks; no hashtags in the draft (the user adds them). Title sets the scroll-stopper.`,
+  tiktok: `Target platform: TikTok. Description should read like a TikTok caption — short, casual, hook-y; no hashtags. Title can be a one-line hook.`,
+  threads: `Target platform: Threads. Description should read like a short Threads post — conversational, slightly longer than X, no hashtags.`,
+  facebook: `Target platform: Facebook. Description can be slightly longer and more narrative; no hashtags, no link-bait phrasing.`,
+  youtube: `Target platform: YouTube. Description should read like a Community-tab post or short caption — conversational, no hashtags.`,
 };
 
 function platformLine(input: { platform?: Platform }): string {
@@ -158,46 +170,6 @@ export function examplesBlock(
     })
     .join("\n");
   return `Past approvals from this user (the user's edits show their voice — match it, don't copy verbatim):\n${lines}`;
-}
-
-/**
- * Compose copy for multiple platforms in parallel, plus a separate tight
- * variant for the canvas image text. The image variant is the canonical
- * `primary` (used as the card's title/description); per-platform copies
- * power the actual social posts. Confidence comes from the first platform
- * call (or a base call when no platforms are enabled).
- */
-export async function composeCopyByPlatform(
-  base: ComposeCopyInput,
-  platforms: Platform[],
-): Promise<{ copies: CopyByPlatform; primary: Copy; primaryPlatform: Platform | null }> {
-  if (platforms.length === 0) {
-    const [platformCopy, image] = await Promise.all([
-      composeCopy(base),
-      composeImageCopy(base),
-    ]);
-    return {
-      copies: {},
-      primary: { ...image, confidence: platformCopy.confidence },
-      primaryPlatform: null,
-    };
-  }
-  const [platformResults, image] = await Promise.all([
-    Promise.all(platforms.map((p) => composeCopy({ ...base, platform: p }))),
-    composeImageCopy(base),
-  ]);
-  const copies: CopyByPlatform = {};
-  platforms.forEach((p, i) => {
-    copies[p] = {
-      title: platformResults[i].title,
-      description: platformResults[i].description,
-    };
-  });
-  return {
-    copies,
-    primary: { ...image, confidence: platformResults[0].confidence },
-    primaryPlatform: platforms[0],
-  };
 }
 
 const BASE_SYSTEM = `You write short, honest brag posts for indie makers.
@@ -488,6 +460,59 @@ function imageFallback(input: ComposeCopyInput): { title: string; description: s
     case "subscribers":
       return { title: `${formatThresholdCount(input.threshold)} subscribers`, description: "" };
   }
+}
+
+// On-demand copy rewrite for a single channel class. The approve modal's
+// "Customize for {Instagram|LinkedIn|…}" buttons call this — Haiku only fires
+// when the user opts in, instead of pre-generating every variant at draft time.
+export type RewriteCopyResult =
+  | { ok: true; title: string; description: string }
+  | { ok: false; error: "haiku_unavailable" };
+
+const RewriteSchema = z.object({
+  title: z.string().transform((s) => s.slice(0, 80)),
+  description: z.string().transform((s) => s.slice(0, 220)),
+});
+
+export async function rewriteCopyForClass(input: {
+  channelClass: Platform;
+  seedTitle: string;
+  seedDescription: string;
+  voicePreset?: VoicePreset | null;
+  examples?: ApprovalExample[] | null;
+}): Promise<RewriteCopyResult> {
+  const system = `${BASE_SYSTEM}
+You rewrite an existing brag post for a specific social platform's tone. Keep the meaning and the announcement intact — change voice, length, and shape to match the platform.
+Output JSON only: {"title": "...", "description": "..."}. No markdown.`;
+
+  const user = `${PLATFORM_GUIDE[input.channelClass]}
+${voicePresetLine(input.voicePreset)}
+${examplesBlock(input.examples)}
+Current title: ${input.seedTitle}
+Current description: ${input.seedDescription}
+
+Rewrite the title and description for this platform.`;
+
+  let text: string;
+  try {
+    text = await callHaikuText({ system, user, maxTokens: 250 });
+  } catch {
+    return { ok: false, error: "haiku_unavailable" };
+  }
+
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return { ok: false, error: "haiku_unavailable" };
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(match[0]);
+  } catch {
+    return { ok: false, error: "haiku_unavailable" };
+  }
+
+  const parsed = RewriteSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "haiku_unavailable" };
+  return { ok: true, title: parsed.data.title, description: parsed.data.description };
 }
 
 export async function composeImageCopy(

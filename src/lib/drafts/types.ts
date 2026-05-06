@@ -23,7 +23,14 @@ export interface DraftVideo {
   preset?: AnimationPreset;
 }
 
-export type DraftPlatform = "x" | "linkedin";
+export type DraftPlatform =
+  | "x"
+  | "linkedin"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "facebook"
+  | "youtube";
 
 export interface DraftPlatformCopy {
   title: string;

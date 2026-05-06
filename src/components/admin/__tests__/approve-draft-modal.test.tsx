@@ -138,6 +138,237 @@ describe("ApproveDraftModal — rendering", () => {
   });
 });
 
+// Multi-endpoint fetch helper: maps URL pattern → response body, with the
+// approve endpoint as a default fallback.
+type FetchResponse = { ok: boolean; status?: number; body: unknown };
+function mockFetchByUrl(routes: Record<string, FetchResponse>) {
+  mockFetch = vi.fn().mockImplementation((url: string) => {
+    for (const [pattern, resp] of Object.entries(routes)) {
+      if (url.includes(pattern)) {
+        return Promise.resolve({
+          ok: resp.ok,
+          status: resp.status ?? (resp.ok ? 200 : 500),
+          json: async () => resp.body,
+        });
+      }
+    }
+    throw new Error(`mockFetchByUrl: no match for ${url}`);
+  });
+  global.fetch = mockFetch as unknown as typeof fetch;
+}
+
+describe("ApproveDraftModal — customize copy per class", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders one customize button per available named class", () => {
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    // Default-checked: buffer ch1 (twitter→x) + postiz ch3 (instagram).
+    expect(screen.getByTestId("customize-button-x")).toBeTruthy();
+    expect(screen.getByTestId("customize-button-instagram")).toBeTruthy();
+    expect(screen.queryByTestId("customize-button-linkedin")).toBeNull();
+  });
+
+  it("hides a class button when its only checked channel is unchecked", async () => {
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    expect(screen.getByTestId("customize-button-x")).toBeTruthy();
+
+    // Find and uncheck the buffer ch1 (X) checkbox.
+    const xLabel = screen.getByText("Acme X").closest("label")!;
+    const xCheckbox = xLabel.querySelector(
+      "input[type=checkbox]",
+    ) as HTMLInputElement;
+    await userEvent.click(xCheckbox);
+
+    expect(screen.queryByTestId("customize-button-x")).toBeNull();
+    expect(screen.getByTestId("customize-button-instagram")).toBeTruthy();
+  });
+
+  it("renders a variant block after a successful rewrite-copy call", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "X-toned title", description: "X-toned desc" },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await userEvent.click(screen.getByTestId("customize-button-x"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("variant-x")).toBeTruthy();
+    });
+    expect(screen.getByDisplayValue("X-toned title")).toBeTruthy();
+    expect(screen.getByDisplayValue("X-toned desc")).toBeTruthy();
+  });
+
+  it("disables the button after three generations for the same class", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "v", description: "v" },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    const button = () =>
+      screen.getByTestId("customize-button-x") as HTMLButtonElement;
+
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(button());
+      await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+    }
+
+    expect(button().disabled).toBe(true);
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+
+    // A fourth click does nothing — no extra fetch.
+    await userEvent.click(button());
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("preserves the 3-generation cap across Remove → Customize cycles", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "v", description: "v" },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    const button = () =>
+      screen.getByTestId("customize-button-x") as HTMLButtonElement;
+
+    for (let i = 0; i < 3; i++) {
+      await userEvent.click(button());
+      await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+    }
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+
+    // Remove the variant — the cap must persist for this modal session.
+    await userEvent.click(screen.getByTestId("variant-remove-x"));
+    await waitFor(() => expect(screen.queryByTestId("variant-x")).toBeNull());
+
+    // Button is still disabled; no further calls allowed.
+    expect(button().disabled).toBe(true);
+    await userEvent.click(button());
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("removes a variant when the Remove button is clicked", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "v", description: "v" },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await userEvent.click(screen.getByTestId("customize-button-x"));
+    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+
+    await userEvent.click(screen.getByTestId("variant-remove-x"));
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("variant-x")).toBeNull(),
+    );
+  });
+
+  it("greys out a variant when its class has no checked channels but keeps it in state", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "v", description: "v" },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await userEvent.click(screen.getByTestId("customize-button-x"));
+    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+
+    // Uncheck the X channel.
+    const xLabel = screen.getByText("Acme X").closest("label")!;
+    const xCheckbox = xLabel.querySelector(
+      "input[type=checkbox]",
+    ) as HTMLInputElement;
+    await userEvent.click(xCheckbox);
+
+    const block = screen.getByTestId("variant-x");
+    expect(block).toBeTruthy();
+    expect(block.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("sends copyByPlatform on approve keyed by ChannelClass", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "X-title", description: "X-desc" },
+      },
+      approve: {
+        ok: true,
+        body: { ok: true, pushIds: ["id1"], skipped: [] },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await userEvent.click(screen.getByTestId("customize-button-x"));
+    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
+
+    await waitFor(() => {
+      const approveCall = mockFetch.mock.calls.find(([url]) =>
+        (url as string).includes("/approve"),
+      );
+      expect(approveCall).toBeTruthy();
+      const body = JSON.parse(
+        (approveCall![1] as RequestInit).body as string,
+      );
+      expect(body.copyByPlatform).toEqual({
+        x: { title: "X-title", description: "X-desc" },
+      });
+    });
+  });
+
+  it("excludes greyed variants from the approve body", async () => {
+    mockFetchByUrl({
+      "rewrite-copy": {
+        ok: true,
+        body: { title: "X-title", description: "X-desc" },
+      },
+      approve: {
+        ok: true,
+        body: { ok: true, pushIds: ["id1"], skipped: [] },
+      },
+    });
+
+    render(<ApproveDraftModal {...BASE_PROPS} />);
+    await userEvent.click(screen.getByTestId("customize-button-x"));
+    await waitFor(() => expect(screen.getByTestId("variant-x")).toBeTruthy());
+
+    // Uncheck the X channel — variant becomes greyed.
+    const xLabel = screen.getByText("Acme X").closest("label")!;
+    const xCheckbox = xLabel.querySelector(
+      "input[type=checkbox]",
+    ) as HTMLInputElement;
+    await userEvent.click(xCheckbox);
+
+    await userEvent.click(screen.getByRole("button", { name: /^Send to /i }));
+
+    await waitFor(() => {
+      const approveCall = mockFetch.mock.calls.find(([url]) =>
+        (url as string).includes("/approve"),
+      );
+      expect(approveCall).toBeTruthy();
+      const body = JSON.parse(
+        (approveCall![1] as RequestInit).body as string,
+      );
+      expect(body.copyByPlatform).toBeUndefined();
+    });
+  });
+});
+
 describe("ApproveDraftModal — confirmation", () => {
   beforeEach(() => {
     vi.clearAllMocks();

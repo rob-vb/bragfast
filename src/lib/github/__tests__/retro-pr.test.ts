@@ -1,15 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
+
 vi.mock("../auth", () => ({
   getInstallationToken: vi.fn().mockResolvedValue("token-abc"),
 }));
 
-import { fetchLatestMergedPr } from "../retro-pr";
+vi.mock("@anthropic-ai/sdk", () => {
+  class MockAnthropic {
+    messages = { create: mockCreate };
+  }
+  return { default: MockAnthropic };
+});
+
+import { fetchLatestMergedPr, runRetroPrMergeDraft } from "../retro-pr";
 
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
   globalThis.fetch = vi.fn();
+  mockCreate.mockReset();
 });
 
 afterEach(() => {
@@ -98,6 +108,63 @@ describe("fetchLatestMergedPr", () => {
       .mockResolvedValueOnce(jsonRes([], false));
     const out = await fetchLatestMergedPr(1, "rob/test");
     expect(out).toBeNull();
+  });
+
+  it("Sous-Chef retro draft: one Haiku call, no copyByPlatform", async () => {
+    const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+    fetchMock
+      .mockResolvedValueOnce(jsonRes({ default_branch: "main" }))
+      .mockResolvedValueOnce(
+        jsonRes([
+          {
+            number: 200,
+            title: "Add carousel template",
+            body: "Carousel slides ship today.",
+            html_url: "https://github.com/rob/test/pull/200",
+            merged_at: "2026-04-30T10:00:00Z",
+            base: { ref: "main" },
+          },
+        ]),
+      );
+
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "text",
+          text: '{"title":"Carousel slides","description":"You can now ship carousel posts.","confidence":0.9}',
+        },
+      ],
+    });
+
+    const inserts: Array<Record<string, unknown>> = [];
+    const convex = {
+      query: vi
+        .fn()
+        // Returned in declaration order in retro-pr.ts:
+        // [getVoicePreset, getRecentApprovedEdits]
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce([]),
+      action: vi.fn().mockImplementation(async (_ref, args) => {
+        // The first action is insertDraftIfNewAction; subsequent recordAction
+        // calls are .catch()'d in the impl, so returning undefined is safe.
+        if (args && typeof args === "object" && "config" in args) {
+          inserts.push(args as Record<string, unknown>);
+          return { id: "drf_xyz", inserted: true };
+        }
+        return undefined;
+      }),
+    } as unknown as Parameters<typeof runRetroPrMergeDraft>[0];
+
+    const out = await runRetroPrMergeDraft(convex, "user_1", 1, "rob/test");
+    expect(out, JSON.stringify(out)).toEqual({ ok: true, mode: "drafted" });
+
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+
+    expect(inserts).toHaveLength(1);
+    const config = JSON.parse(inserts[0].config as string) as {
+      copyByPlatform?: unknown;
+    };
+    expect(config.copyByPlatform).toBeUndefined();
   });
 
   it("requests the default branch in the listing query", async () => {

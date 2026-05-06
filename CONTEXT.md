@@ -22,3 +22,16 @@ The user's current posting meter and entitlement shape. It hides whether the sto
 
 **TriggerDrafting**
 The Trigger-to-Draft workflow shared by Source scanners. It owns milestone keys, voice examples, template selection, Draft insertion, Goal fired state, celebration email scheduling, and `goal_hit` analytics.
+
+**Provider**
+A posting service the user has connected to push approved Posts. Currently Buffer or Postiz.
+
+**Channel**
+A single connected destination inside a Provider — for example, the user's Acme X account inside Buffer. A Provider holds many Channels.
+
+**Channel class**
+The social-network type of a Channel: `x`, `linkedin`, `instagram`, `tiktok`, `threads`, `facebook`, `youtube`, or `other`. Derived from a Buffer channel's `service` or a Postiz channel's `identifier`. Per-Channel-class copy variants are what the approve modal lets a user customise.
+
+## Flagged ambiguities
+
+- "Platform" was historically used to mean **Channel class** (the social network: x, linkedin, …). Retired in favour of **Channel class** so it can't be confused with the Provider or the broader brag.fast platform.
