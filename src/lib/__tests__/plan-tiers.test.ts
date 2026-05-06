@@ -128,6 +128,13 @@ describe("resolvePostAllowance", () => {
       unitLabel: "credits",
     });
   });
+
+  it("keeps legacy Scale allowance aligned with billing credits", () => {
+    expect(resolvePostAllowance({ plan: "scale", creditsRemaining: 2_500 })).toMatchObject({
+      remaining: 2_500,
+      total: 2_500,
+    });
+  });
 });
 
 describe("evaluatePostSelections", () => {

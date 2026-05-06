@@ -96,7 +96,7 @@ export const LEGACY_PLAN_CREDITS: Record<LegacyPlan, number> = {
   trial: 30,
   starter: 200,
   pro: 800,
-  scale: 5_000,
+  scale: 2_500,
 };
 
 export function tierFor(plan: Plan): Tier | null {
