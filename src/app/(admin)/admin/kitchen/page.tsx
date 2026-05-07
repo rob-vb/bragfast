@@ -4,7 +4,10 @@ import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { KitchenClient } from "./kitchen-client";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
-import type { TemplateMedium } from "@/lib/templates/canvas-defaults";
+import {
+  getDefaultMedium,
+  type TemplateMedium,
+} from "@/lib/templates/canvas-defaults";
 
 const defaultDisplayIds: Record<string, string> = {
   "standard-browser": "standard-browser",
@@ -68,7 +71,12 @@ export default async function KitchenPage({
     isDefault: t.isDefault,
     previewUrl: t.previewUrl,
     config: t.config as CanvasTemplateConfig,
-    medium: ((t as { medium?: TemplateMedium }).medium ?? "both") as TemplateMedium,
+    // For built-ins, the in-process TEMPLATE_MEDIUMS map is the source of
+    // truth — a stale DB row (pre-seedDefaults) must not unlock video for an
+    // image-only template like carousel-slide.
+    medium: (getDefaultMedium(t.externalId) ??
+      (t as { medium?: TemplateMedium }).medium ??
+      "both") as TemplateMedium,
   }));
 
   const importedBanner = importedTemplate

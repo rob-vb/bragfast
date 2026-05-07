@@ -45,7 +45,9 @@ function toPublicDTO(row: TemplateRow): PublicTemplateDTO {
     externalId: row.externalId,
     name: row.name,
     isDefault: row.isDefault,
-    medium: row.medium ?? "both",
+    // Built-ins anchor on the in-process map so a stale DB row (pre-seed)
+    // can't surface video for an image-only template like carousel-slide.
+    medium: TEMPLATE_MEDIUMS[row.externalId] ?? row.medium ?? "both",
     formats,
     previewUrls: row.previewUrls,
     palette: {

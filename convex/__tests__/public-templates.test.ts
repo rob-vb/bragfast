@@ -105,6 +105,30 @@ describe("listPublicTemplates DTO", () => {
       primary: "#F8AF3C",
     });
   });
+
+  it("anchors built-in medium to TEMPLATE_MEDIUMS even if DB row column is stale", async () => {
+    // Regression: carousel-slide pre-existed in some envs without `medium`.
+    // The DTO must report "image" from the in-process map, not "both" from the
+    // missing column, so the public Library and kitchen gate stay consistent.
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("templates", {
+        userId: "",
+        externalId: "carousel-slide",
+        name: "Carousel slide",
+        isDefault: true,
+        // medium intentionally omitted — simulates a stale pre-seed row
+        visibility: "public",
+        config: sampleConfig,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    });
+    const dto = await t.query(api.templates.getPublicTemplate, {
+      externalId: "carousel-slide",
+    });
+    expect(dto?.medium).toBe("image");
+  });
 });
 
 describe("getPublicTemplate DTO", () => {
