@@ -129,12 +129,12 @@ async function cook(template: string, format: Format): Promise<string> {
     if (poll.ok) {
       const data = (await poll.json()) as {
         status: string;
-        outputs?: { format: string; url: string }[];
+        images?: Record<string, { slides: string[]; dimensions: string }> | null;
       };
       if (data.status === "completed") {
-        const out = data.outputs?.find((o) => o.format === format);
-        if (!out?.url) throw new Error(`No url returned for ${template}/${format}`);
-        return out.url;
+        const url = data.images?.[format]?.slides?.[0];
+        if (!url) throw new Error(`No url returned for ${template}/${format}`);
+        return url;
       }
       if (data.status === "failed") {
         throw new Error(`cook ${template}/${format} failed`);

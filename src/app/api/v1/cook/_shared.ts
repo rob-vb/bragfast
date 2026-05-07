@@ -18,6 +18,7 @@ export const VALID_DEFAULT_TEMPLATES = [
   "split-browser",
   "split-mobile",
   "hero",
+  "carousel-slide",
 ] as const;
 
 export function isValidTemplateName(template: unknown): boolean {

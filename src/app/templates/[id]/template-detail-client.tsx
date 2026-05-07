@@ -42,6 +42,7 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
   useEffect(() => {
     if (autoFiredRef.current) return;
     if (searchParams?.get("action") !== "import") return;
+    if (template.isDefault) return;
     autoFiredRef.current = true;
     runImport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,7 +107,7 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
                 </span>
               </div>
               <div
-                className="relative"
+                className="relative w-full overflow-hidden"
                 style={{ aspectRatio: `${dims.w} / ${dims.h}` }}
               >
                 {previewUrl ? (
@@ -117,11 +118,13 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : template.config ? (
-                  <TemplatePreview
-                    config={template.config as CanvasTemplateConfig}
-                    brand={buildSampleBrand(template.config as CanvasTemplateConfig)}
-                    format={active}
-                  />
+                  <div className="absolute inset-0">
+                    <TemplatePreview
+                      config={template.config as CanvasTemplateConfig}
+                      brand={buildSampleBrand(template.config as CanvasTemplateConfig)}
+                      format={active}
+                    />
+                  </div>
                 ) : (
                   <div
                     className="absolute inset-0 flex items-center justify-center"
@@ -190,21 +193,32 @@ function ImportPanel({
   onImport: () => void;
   compact?: boolean;
 }) {
+  const ctaClass =
+    "flex-1 lg:w-full text-center border-2 border-brand bg-gold px-4 py-3 font-[family-name:var(--font-press-start)] text-[10px] text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed transition-all";
+
   return (
     <div className={compact ? "flex items-center justify-between gap-3" : "space-y-3"}>
       {!compact && (
         <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand">
-          Import this layout to your kitchen — one click, no card needed.
+          {template.isDefault
+            ? "This is a built-in layout — already in every kitchen."
+            : "Import this layout to your kitchen — one click, no card needed."}
         </p>
       )}
-      <button
-        type="button"
-        onClick={onImport}
-        disabled={importing}
-        className="flex-1 lg:w-full border-2 border-brand bg-gold px-4 py-3 font-[family-name:var(--font-press-start)] text-[10px] text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-      >
-        {importing ? "Importing…" : "Import to my kitchen"}
-      </button>
+      {template.isDefault ? (
+        <Link href="/admin/kitchen" className={ctaClass}>
+          Open kitchen
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={onImport}
+          disabled={importing}
+          className={ctaClass}
+        >
+          {importing ? "Importing…" : "Import to my kitchen"}
+        </button>
+      )}
       {!compact && (
         <p className="text-[10px] text-brand/50 font-[family-name:var(--font-geist-mono)]">
           ID: {template.externalId}
