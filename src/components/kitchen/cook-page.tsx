@@ -1010,6 +1010,7 @@ export function CookPage({ templates }: CookPageProps) {
         return (
           <ApproveDraftModal
             draftId={draftId}
+            cookId={state.cookId ?? undefined}
             initialTitle={title}
             initialDescription={description}
             initialCopyByPlatform={draftCopyByPlatform}

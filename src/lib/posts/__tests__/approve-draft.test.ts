@@ -18,6 +18,9 @@ vi.mock("@convex/_generated/api", () => ({
       getByExternalId: "api.drafts.getByExternalId",
       remove: "api.drafts.remove",
     },
+    releases: {
+      getOwnerId: "api.releases.getOwnerId",
+    },
     userProfiles: {
       reserve: "api.userProfiles.reserve",
       refund: "api.userProfiles.refund",
@@ -324,6 +327,184 @@ describe("approveDraftPost", () => {
     });
 
     expect(order).toEqual(["approveDraft", "remove"]);
+  });
+
+  describe("cookId path (kitchen flow)", () => {
+    it("uses the existing release without re-cooking or reserving credits", async () => {
+      fetchQueryMock.mockImplementation((ref: string) => {
+        if (ref === "api.releases.getOwnerId") return Promise.resolve("user_123");
+        return Promise.resolve(null);
+      });
+      fetchMutationMock.mockImplementation((ref: string) => {
+        if (ref === "api.draftPushes.approveDraft")
+          return Promise.resolve({ ok: true, pushIds: ["p"], skipped: [] });
+        if (ref === "api.drafts.remove")
+          return Promise.resolve({ removed: true });
+        return Promise.resolve(null);
+      });
+      getReleaseMock.mockResolvedValue({
+        cook_id: "cook_existing",
+        status: "completed",
+        images: { square: { slides: ["https://cdn.example.com/sq.jpg"] } },
+      });
+
+      const { approveDraftPost } = await import("../approve-draft");
+      const result = await approveDraftPost({
+        actor: { userId: "user_123", source: "session" },
+        draftId: "drf_123",
+        body: {
+          title: "T",
+          description: "D",
+          selections: [
+            { format: "square", provider: "buffer", channelId: "ch_1" },
+          ],
+          postState: "queue",
+          clientNonce: "nonce_1",
+          cookId: "cook_existing",
+        },
+      });
+
+      expect(result.status).toBe(200);
+      // No re-cook
+      expect(createReleaseMock).not.toHaveBeenCalled();
+      expect(renderReleaseAsyncMock).not.toHaveBeenCalled();
+      // No second reservation
+      expect(fetchMutationMock).not.toHaveBeenCalledWith(
+        "api.userProfiles.reserve",
+        expect.anything(),
+      );
+      // No draft fetch (cookId path doesn't depend on the draft existing)
+      expect(fetchQueryMock).not.toHaveBeenCalledWith(
+        "api.drafts.getByExternalId",
+        expect.anything(),
+      );
+      // Media URL pulled from existing release
+      expect(fetchMutationMock).toHaveBeenCalledWith(
+        "api.draftPushes.approveDraft",
+        expect.objectContaining({
+          mediaUrlByFormat: { square: "https://cdn.example.com/sq.jpg" },
+        }),
+      );
+      // No credits_remaining returned: nothing was reserved here
+      expect(result.body).not.toHaveProperty("credits_remaining");
+    });
+
+    it("404s when the cook id belongs to a different user", async () => {
+      fetchQueryMock.mockImplementation((ref: string) => {
+        if (ref === "api.releases.getOwnerId") return Promise.resolve("user_other");
+        return Promise.resolve(null);
+      });
+      getReleaseMock.mockResolvedValue({
+        cook_id: "cook_other",
+        status: "completed",
+        images: { square: { slides: ["https://cdn.example.com/sq.jpg"] } },
+      });
+
+      const { approveDraftPost } = await import("../approve-draft");
+      const result = await approveDraftPost({
+        actor: { userId: "user_123", source: "session" },
+        draftId: "drf_123",
+        body: {
+          title: "T",
+          description: "D",
+          selections: [
+            { format: "square", provider: "buffer", channelId: "ch_1" },
+          ],
+          postState: "queue",
+          clientNonce: "nonce_1",
+          cookId: "cook_other",
+        },
+      });
+
+      expect(result.status).toBe(404);
+      expect(fetchMutationMock).not.toHaveBeenCalledWith(
+        "api.draftPushes.approveDraft",
+        expect.anything(),
+      );
+    });
+
+    it("409s while the cook is still pending", async () => {
+      fetchQueryMock.mockImplementation((ref: string) => {
+        if (ref === "api.releases.getOwnerId") return Promise.resolve("user_123");
+        return Promise.resolve(null);
+      });
+      getReleaseMock.mockResolvedValue({
+        cook_id: "cook_pending",
+        status: "pending",
+        images: null,
+      });
+
+      const { approveDraftPost } = await import("../approve-draft");
+      const result = await approveDraftPost({
+        actor: { userId: "user_123", source: "session" },
+        draftId: "drf_123",
+        body: {
+          title: "T",
+          description: "D",
+          selections: [
+            { format: "square", provider: "buffer", channelId: "ch_1" },
+          ],
+          postState: "queue",
+          clientNonce: "nonce_1",
+          cookId: "cook_pending",
+        },
+      });
+
+      expect(result.status).toBe(409);
+      expect(fetchMutationMock).not.toHaveBeenCalledWith(
+        "api.draftPushes.approveDraft",
+        expect.anything(),
+      );
+    });
+
+    it("does not refund on all_selections_skipped (no credits were reserved)", async () => {
+      fetchQueryMock.mockImplementation((ref: string) => {
+        if (ref === "api.releases.getOwnerId") return Promise.resolve("user_123");
+        return Promise.resolve(null);
+      });
+      getReleaseMock.mockResolvedValue({
+        cook_id: "cook_existing",
+        status: "completed",
+        images: { square: { slides: ["https://cdn.example.com/sq.jpg"] } },
+      });
+      const refundCalls: unknown[] = [];
+      fetchMutationMock.mockImplementation((ref: string, args: unknown) => {
+        if (ref === "api.userProfiles.refund") {
+          refundCalls.push(args);
+          return Promise.resolve(30);
+        }
+        if (ref === "api.draftPushes.approveDraft") {
+          return Promise.reject(
+            new ConvexError({
+              code: "all_selections_skipped",
+              skipped: [
+                { format: "square", provider: "buffer", channelId: "ch_gone", reason: "channel_not_found" },
+              ],
+            }),
+          );
+        }
+        return Promise.resolve(null);
+      });
+
+      const { approveDraftPost } = await import("../approve-draft");
+      const result = await approveDraftPost({
+        actor: { userId: "user_123", source: "session" },
+        draftId: "drf_123",
+        body: {
+          title: "T",
+          description: "D",
+          selections: [
+            { format: "square", provider: "buffer", channelId: "ch_1" },
+          ],
+          postState: "queue",
+          clientNonce: "nonce_1",
+          cookId: "cook_existing",
+        },
+      });
+
+      expect(result.status).toBe(409);
+      expect(refundCalls).toEqual([]);
+    });
   });
 
   it("forwards copyByChannel to the approveDraft mutation", async () => {
