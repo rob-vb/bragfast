@@ -85,6 +85,14 @@ type Copy = { title: string; description: string };
 
 export interface ApproveDraftModalProps {
   draftId: string;
+  /**
+   * Cook id of the release the user just rendered. When set, approve reuses
+   * the existing release's images instead of re-cooking — no second credit
+   * charge, no dependency on the draft row still existing. Surfaces that
+   * never cook before opening the modal (weekly summary) leave this
+   * undefined and approve falls back to cooking from the draft.
+   */
+  cookId?: string;
   /** Pre-filled title from composed copy. Used to seed every per-channel composer. */
   initialTitle: string;
   /** Pre-filled description from composed copy. Used to seed every per-channel composer. */
@@ -194,6 +202,7 @@ function selKey(format: Format, provider: PostingProvider, channelId: string): s
 
 export function ApproveDraftModal({
   draftId,
+  cookId,
   initialTitle,
   initialDescription,
   initialCopyByPlatform,
@@ -471,6 +480,7 @@ export function ApproveDraftModal({
             selections,
             postState,
             clientNonce,
+            cookId,
           }),
         },
       );

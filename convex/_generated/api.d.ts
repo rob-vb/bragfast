@@ -41,6 +41,7 @@ import type * as routingDefaults from "../routingDefaults.js";
 import type * as sousChef from "../sousChef.js";
 import type * as stripe from "../stripe.js";
 import type * as templates from "../templates.js";
+import type * as triggerDrafting from "../triggerDrafting.js";
 import type * as triggerEvents from "../triggerEvents.js";
 import type * as uploadTokens from "../uploadTokens.js";
 import type * as uploads from "../uploads.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   sousChef: typeof sousChef;
   stripe: typeof stripe;
   templates: typeof templates;
+  triggerDrafting: typeof triggerDrafting;
   triggerEvents: typeof triggerEvents;
   uploadTokens: typeof uploadTokens;
   uploads: typeof uploads;

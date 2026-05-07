@@ -43,6 +43,20 @@ export const getByExternalId = query({
       .first(),
 });
 
+// Thin owner lookup for ownership checks. Avoids pulling the full release
+// (which includes large `images`/`videos` blobs) when the caller just needs
+// to verify the cook belongs to the authenticated user.
+export const getOwnerId = query({
+  args: { externalId: v.string() },
+  handler: async (ctx, { externalId }) => {
+    const r = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    return r ? r.userId : null;
+  },
+});
+
 export const markCompleted = mutation({
   args: {
     externalId: v.string(),
