@@ -79,6 +79,12 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
   return (
     <section className="py-8 md:py-12">
       <div className="mx-auto max-w-6xl px-4 md:px-8">
+        <Link
+          href="/templates"
+          className="inline-flex items-center gap-2 mb-6 font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 text-brand border-2 border-brand bg-white shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+        >
+          ← Library
+        </Link>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-8">
           {/* Preview column */}
           <div>
@@ -87,7 +93,6 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
             </h1>
             <div className="flex items-center gap-2 flex-wrap mb-6">
               <MediumPill medium={template.medium} />
-              <Palette palette={template.palette} />
             </div>
 
             <FormatTabStrip
@@ -110,14 +115,7 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
                 className="relative w-full overflow-hidden"
                 style={{ aspectRatio: `${dims.w} / ${dims.h}` }}
               >
-                {previewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={previewUrl}
-                    alt={`${template.name} ${active} preview`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                ) : template.config ? (
+                {template.config ? (
                   <div className="absolute inset-0">
                     <TemplatePreview
                       config={template.config as CanvasTemplateConfig}
@@ -125,6 +123,13 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
                       format={active}
                     />
                   </div>
+                ) : previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewUrl}
+                    alt={`${template.name} ${active} preview`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                 ) : (
                   <div
                     className="absolute inset-0 flex items-center justify-center"
@@ -236,22 +241,3 @@ function ImportPanel({
   );
 }
 
-function Palette({ palette }: { palette: PublicTemplate["palette"] }) {
-  return (
-    <span className="inline-flex items-center gap-1 border-2 border-brand bg-white px-2 py-0.5">
-      <Swatch color={palette.background} label="background" />
-      <Swatch color={palette.text} label="text" />
-      <Swatch color={palette.primary} label="primary" />
-    </span>
-  );
-}
-
-function Swatch({ color, label }: { color: string; label: string }) {
-  return (
-    <span
-      className="inline-block w-3 h-3 border border-brand"
-      style={{ background: color }}
-      title={`${label}: ${color}`}
-    />
-  );
-}

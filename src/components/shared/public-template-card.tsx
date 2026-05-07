@@ -26,19 +26,19 @@ export function PublicTemplateCard({
   config,
   className = "",
 }: PublicTemplateCardProps) {
-  const thumbnail = previewUrl ? (
+  const thumbnail = config ? (
+    <TemplatePreview
+      config={config}
+      brand={buildSampleBrand(config)}
+      format="landscape"
+    />
+  ) : previewUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={previewUrl}
       alt={`${name} preview`}
       className="absolute inset-0 w-full h-full object-cover"
       loading="lazy"
-    />
-  ) : config ? (
-    <TemplatePreview
-      config={config}
-      brand={buildSampleBrand(config)}
-      format="landscape"
     />
   ) : (
     <div
