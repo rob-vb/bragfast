@@ -856,26 +856,33 @@ export function CookPage({ templates, importedBanner }: CookPageProps) {
                 const unsupported =
                   selectedMedium !== "both" && selectedMedium !== type;
                 return (
-                  <button
+                  <span
                     key={type}
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_OUTPUT_TYPE", outputType: type })}
-                    disabled={unsupported}
-                    aria-disabled={unsupported}
-                    title={
-                      unsupported
-                        ? `This template only supports ${selectedMedium}.`
-                        : undefined
-                    }
-                    className={`
-                      font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
-                      transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
-                      disabled:cursor-not-allowed disabled:opacity-40
-                      ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
-                    `}
+                    className="group relative inline-flex"
                   >
-                    {type}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: "SET_OUTPUT_TYPE", outputType: type })}
+                      disabled={unsupported}
+                      aria-disabled={unsupported}
+                      className={`
+                        font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
+                        transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
+                        disabled:cursor-not-allowed disabled:opacity-40
+                        ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
+                      `}
+                    >
+                      {type}
+                    </button>
+                    {unsupported && (
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider px-2 py-1.5 border-2 border-brand bg-white text-brand shadow-[2px_2px_0_var(--color-brand)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                      >
+                        {selectedMedium === "image" ? "Image only" : "Video only"}
+                      </span>
+                    )}
+                  </span>
                 );
               })}
             </div>
