@@ -6,6 +6,7 @@ import {
   authenticateAndCheckRateLimit,
   parseJsonBody,
   validateCommonFields,
+  precheckTemplateMedium,
   reserveCreditsOrError,
   refundAndFail,
   toReleaseRequest,
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
 
   const commonError = await validateCommonFields(body, userId);
   if (commonError) return commonError;
+
+  const mediumError = await precheckTemplateMedium(body, userId, "image");
+  if (mediumError) return mediumError;
 
   const imageBody = toReleaseRequest(body);
 

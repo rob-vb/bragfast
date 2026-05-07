@@ -107,3 +107,30 @@ export const backfillGoalHits = internalMutation({
     return { processed: oldHits.length, backfilled };
   },
 });
+
+// One-time backfill: set medium="both" and visibility="private" on user-owned
+// template rows that predate the Template Library / medium-gating fields.
+// Default templates are handled by seedDefaults; this only touches isDefault=false rows.
+// Idempotent — only patches rows where the field is undefined.
+export const backfillTemplateMediumAndVisibility = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db
+      .query("templates")
+      .filter((q) => q.eq(q.field("isDefault"), false))
+      .collect();
+
+    let patched = 0;
+    for (const row of rows) {
+      const patch: Record<string, unknown> = {};
+      if (row.medium === undefined) patch.medium = "both";
+      if (row.visibility === undefined) patch.visibility = "private";
+      if (Object.keys(patch).length > 0) {
+        await ctx.db.patch(row._id, patch);
+        patched++;
+      }
+    }
+
+    return { scanned: rows.length, patched };
+  },
+});

@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { KitchenClient } from "./kitchen-client";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
+import type { TemplateMedium } from "@/lib/templates/canvas-defaults";
 
 const defaultDisplayIds: Record<string, string> = {
   "standard-browser": "standard-browser",
@@ -14,7 +15,11 @@ const defaultDisplayIds: Record<string, string> = {
   "carousel-slide": "carousel-slide",
 };
 
-export default async function KitchenPage() {
+export default async function KitchenPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
@@ -22,6 +27,15 @@ export default async function KitchenPage() {
     fetchQuery(api.templates.listByUser, { userId: user._id }),
     fetchQuery(api.templates.listDefaults, {}),
   ]);
+
+  // ?imported=<sourceExternalId> lands here after the public Library import
+  // flow. Look up the import by source so we can show the right banner.
+  const params = await searchParams;
+  const importedSource =
+    typeof params.imported === "string" ? params.imported : undefined;
+  const importedTemplate = importedSource
+    ? userTemplates.find((t) => t.importedFromTemplateId === importedSource)
+    : undefined;
 
   const defaultOrder = Object.keys(defaultDisplayIds);
   const v2Defaults = defaultTemplates
@@ -54,7 +68,20 @@ export default async function KitchenPage() {
     isDefault: t.isDefault,
     previewUrl: t.previewUrl,
     config: t.config as CanvasTemplateConfig,
+    medium: ((t as { medium?: TemplateMedium }).medium ?? "both") as TemplateMedium,
   }));
 
-  return <KitchenClient cookTemplates={cookTemplates} />;
+  const importedBanner = importedTemplate
+    ? {
+        externalId: importedTemplate.externalId,
+        name: importedTemplate.name,
+      }
+    : undefined;
+
+  return (
+    <KitchenClient
+      cookTemplates={cookTemplates}
+      importedBanner={importedBanner}
+    />
+  );
 }

@@ -54,10 +54,26 @@ export default defineSchema({
     isDefault: v.boolean(),
     config: v.any(),
     previewUrl: v.optional(v.string()),
+    previewUrls: v.optional(
+      v.object({
+        landscape: v.string(),
+        square: v.string(),
+        portrait: v.string(),
+      }),
+    ),
+    medium: v.optional(
+      v.union(v.literal("image"), v.literal("video"), v.literal("both")),
+    ),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
+    authorUserId: v.optional(v.string()),
+    importedFromTemplateId: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
-  }).index("by_userId", ["userId"])
-    .index("by_externalId", ["externalId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_externalId", ["externalId"])
+    .index("by_visibility", ["visibility"])
+    .index("by_user_import_source", ["userId", "importedFromTemplateId"]),
 
   apiKeys: defineTable({
     userId: v.string(),

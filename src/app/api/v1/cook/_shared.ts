@@ -7,6 +7,10 @@ import {
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import type { FormatEntry, ReleaseRequest } from "@/lib/types";
+import {
+  getDefaultMedium,
+  type TemplateMedium,
+} from "@/lib/templates/canvas-defaults";
 
 export const VALID_DEFAULT_TEMPLATES = [
   "standard-browser",
@@ -92,6 +96,50 @@ export async function validateCommonFields(
   }
 
   return null;
+}
+
+/**
+ * Synchronous medium precheck for the API edge. Looks up the requested template's
+ * declared medium (built-in: in-process map; custom: Convex query) and returns a
+ * structured 400 if it can't satisfy the requested output.
+ */
+export async function precheckTemplateMedium(
+  body: Record<string, unknown>,
+  userId: string,
+  requested: "image" | "video",
+): Promise<Response | null> {
+  const templateName =
+    typeof body.template === "string" && body.template.length > 0
+      ? body.template
+      : "standard-browser";
+
+  let supported: TemplateMedium | null | undefined = getDefaultMedium(templateName);
+
+  if (!supported && templateName.startsWith("tmpl_")) {
+    const tmpl = await fetchQuery(api.templates.getByExternalId, {
+      externalId: templateName,
+    });
+    if (!tmpl) {
+      return Response.json({ error: "Template not found" }, { status: 404 });
+    }
+    if (!tmpl.isDefault && tmpl.userId !== userId) {
+      return Response.json({ error: "Template not found" }, { status: 404 });
+    }
+    supported = (tmpl.medium as TemplateMedium | undefined) ?? "both";
+  }
+
+  if (!supported) return null;
+  if (supported === "both" || supported === requested) return null;
+
+  return Response.json(
+    {
+      error: "TEMPLATE_MEDIUM_MISMATCH",
+      message: `Template "${templateName}" supports ${supported}, not ${requested}.`,
+      requested,
+      supported,
+    },
+    { status: 400 },
+  );
 }
 
 /**

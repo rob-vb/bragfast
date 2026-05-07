@@ -3,17 +3,45 @@ import { api } from "@convex/_generated/api";
 import type { CanvasTemplateConfig, FormatKey, FormatLayout } from "../templates/canvas-types";
 import { migrateConfig } from "../templates/canvas-types";
 import { getDefaultConfig } from "../templates/default-configs";
+import { getDefaultMedium, type TemplateMedium } from "../templates/canvas-defaults";
 import type { ObjectDataMap } from "../templates/canvas-renderer";
 import { fetchImageAsBase64 } from "../images";
 import type { Brand, BrandColors, ObjectModification } from "../types";
 
+export class TemplateMediumMismatchError extends Error {
+  constructor(
+    public templateName: string,
+    public requested: "image" | "video",
+    public supported: TemplateMedium,
+  ) {
+    super(`Template "${templateName}" supports ${supported}, not ${requested}.`);
+    this.name = "TemplateMediumMismatchError";
+  }
+}
+
+function assertMediumAllowed(
+  templateName: string,
+  supported: TemplateMedium | null | undefined,
+  requested: "image" | "video" | undefined,
+) {
+  if (!requested || !supported) return;
+  if (supported === "both") return;
+  if (supported !== requested) {
+    throw new TemplateMediumMismatchError(templateName, requested, supported);
+  }
+}
+
 export async function resolveTemplate(
   templateName: string,
   userId: string,
-  convex: ConvexHttpClient
+  convex: ConvexHttpClient,
+  requestedMedium?: "image" | "video",
 ): Promise<CanvasTemplateConfig> {
   const defaultConfig = getDefaultConfig(templateName);
-  if (defaultConfig) return migrateConfig(defaultConfig);
+  if (defaultConfig) {
+    assertMediumAllowed(templateName, getDefaultMedium(templateName), requestedMedium);
+    return migrateConfig(defaultConfig);
+  }
 
   if (templateName.startsWith("tmpl_")) {
     const tmpl = await convex.query(api.templates.getByExternalId, { externalId: templateName });
@@ -21,6 +49,7 @@ export async function resolveTemplate(
     if (!tmpl.isDefault && tmpl.userId !== userId) {
       throw new Error(`Template not found: ${templateName}`);
     }
+    assertMediumAllowed(templateName, tmpl.medium as TemplateMedium | undefined, requestedMedium);
     return migrateConfig(tmpl.config as CanvasTemplateConfig);
   }
 
@@ -32,7 +61,8 @@ export async function resolveAllTemplates(
   baseTemplate: string,
   formats: Array<{ slides: Array<{ templateId?: string }> }>,
   userId: string,
-  convex: ConvexHttpClient
+  convex: ConvexHttpClient,
+  requestedMedium?: "image" | "video",
 ): Promise<Map<string, CanvasTemplateConfig>> {
   const names = new Set<string>([baseTemplate]);
   for (const f of formats) {
@@ -42,7 +72,7 @@ export async function resolveAllTemplates(
   }
   const map = new Map<string, CanvasTemplateConfig>();
   for (const name of names) {
-    map.set(name, await resolveTemplate(name, userId, convex));
+    map.set(name, await resolveTemplate(name, userId, convex, requestedMedium));
   }
   return map;
 }

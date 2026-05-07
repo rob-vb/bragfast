@@ -81,7 +81,7 @@ export async function renderReleaseAsync(
   try {
     const templateName = request.template || "standard-browser";
 
-    const templates = await resolveAllTemplates(templateName, request.formats, userId, convex);
+    const templates = await resolveAllTemplates(templateName, request.formats, userId, convex, "image");
     const baseConfig = templates.get(templateName)!;
     const resolveSlideConfig = (slide: { templateId?: string }) =>
       templates.get(slide.templateId ?? templateName) ?? baseConfig;

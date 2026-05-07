@@ -78,7 +78,7 @@ export async function renderVideoAsync(
   const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 10;
   try {
     const templateName = request.template || "standard-browser";
-    let templateConfig = await resolveTemplate(templateName, userId, convex);
+    let templateConfig = await resolveTemplate(templateName, userId, convex, "video");
     const brand = await resolveBrand(request, templateConfig.colors, convex);
 
     // Apply API-level animation preset override before resolving slide duration,

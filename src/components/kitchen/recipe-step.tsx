@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
+import type { TemplateMedium } from "@/lib/templates/canvas-defaults";
 import { buildBragfastSampleBrand, buildSampleBrand } from "@/lib/preview-sample";
 import { TemplatePreview } from "@/components/kitchen/template-preview";
 import { TemplatePickerDialog } from "@/components/kitchen/template-picker-dialog";
@@ -16,6 +17,7 @@ export interface TemplateItem {
   isDefault: boolean;
   previewUrl?: string;
   config: CanvasTemplateConfig;
+  medium?: TemplateMedium;
 }
 
 interface RecipeStepProps {

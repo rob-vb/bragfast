@@ -28,6 +28,7 @@ export default async function TemplatesPage() {
     name: string;
     isDefault: boolean;
     previewUrl?: string;
+    medium?: "image" | "video" | "both";
     config: unknown;
   }) => {
     const isV2 =
@@ -39,6 +40,7 @@ export default async function TemplatesPage() {
       displayId: defaultDisplayIds[t.externalId],
       name: t.name,
       isDefault: t.isDefault,
+      medium: t.medium ?? "both",
       previewUrl: t.previewUrl,
       isV2,
       config: isV2 ? (t.config as CanvasTemplateConfig) : undefined,

@@ -22,6 +22,7 @@ import { TemplatePreview } from "@/components/kitchen/template-preview";
 import { RightPanelResult } from "@/components/kitchen/right-panel-result";
 import { SaveDraftDialog } from "@/components/kitchen/save-draft-dialog";
 import { ApproveDraftModal } from "@/components/admin/approve-draft-modal";
+import { ImportedBanner } from "@/components/shared/imported-banner";
 import { useUserId } from "@/hooks/use-user-id";
 import { buildDraftObjectData } from "@/lib/preview-sample";
 import type { CanvasTemplateConfig, FormatKey } from "@/lib/templates/canvas-types";
@@ -224,9 +225,10 @@ function cookReducer(state: CookState, action: CookAction): CookState {
 
 interface CookPageProps {
   templates: TemplateItem[];
+  importedBanner?: { externalId: string; name: string };
 }
 
-export function CookPage({ templates }: CookPageProps) {
+export function CookPage({ templates, importedBanner }: CookPageProps) {
   const [state, dispatch] = useReducer(cookReducer, INITIAL_STATE);
   const userId = useUserId();
   const searchParams = useSearchParams();
@@ -250,7 +252,23 @@ export function CookPage({ templates }: CookPageProps) {
   const [activePreviewFormat, setActivePreviewFormat] = useState<FormatKey>("landscape");
 
   const hasTemplate = !!state.templateId;
-  const canCook = hasTemplate && state.formats.length > 0 && state.status !== "cooking";
+  const selectedTemplate = state.templateId
+    ? templates.find((t) => t.id === state.templateId)
+    : undefined;
+  const selectedMedium = selectedTemplate?.medium ?? "both";
+  const mediumMismatch =
+    selectedMedium !== "both" && selectedMedium !== state.outputType;
+  const canCook =
+    hasTemplate &&
+    state.formats.length > 0 &&
+    state.status !== "cooking" &&
+    !mediumMismatch;
+  const mediumGateMessage = mediumMismatch
+    ? selectedMedium === "image"
+      ? "This template only supports images."
+      : "This template only supports video."
+    : null;
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // ── Live credit balance ─────────────────────────────────────────────────
   const creditBalance = useQuery(api.userProfiles.getBalance, { userId });
@@ -263,6 +281,14 @@ export function CookPage({ templates }: CookPageProps) {
   const sendEnabled =
     (integrations?.some((r) => r.provider === "buffer" && r.enabled) ?? false) ||
     (integrations?.some((r) => r.provider === "postiz" && r.enabled) ?? false);
+
+  // ── Auto-flip output type when selected template forces a specific medium.
+  useEffect(() => {
+    if (!mediumMismatch) return;
+    if (selectedMedium === "image" || selectedMedium === "video") {
+      dispatch({ type: "SET_OUTPUT_TYPE", outputType: selectedMedium });
+    }
+  }, [mediumMismatch, selectedMedium]);
 
   // ── User brands (for live preview) ──────────────────────────────────────
   const userBrandsRaw = useQuery(api.brands.listByUser, { userId });
@@ -714,6 +740,7 @@ export function CookPage({ templates }: CookPageProps) {
             disabled={!canCook && state.status !== "error"}
             aria-disabled={state.status === "cooking"}
             aria-label={`Cook — ${creditCost} credits`}
+            title={mediumGateMessage ?? undefined}
             className="font-[family-name:var(--font-press-start)] text-xs px-4 py-2 border-2 border-brand bg-gold text-brand shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all"
           >
             {cookButtonContent}
@@ -725,6 +752,14 @@ export function CookPage({ templates }: CookPageProps) {
       <div className="lg:grid lg:grid-cols-[420px_1fr]">
         {/* Left panel */}
         <div className="px-4 md:px-8 py-6 space-y-8 border-r-2 border-brand/10">
+          {importedBanner && !bannerDismissed && (
+            <ImportedBanner
+              templateName={importedBanner.name}
+              templateExternalId={importedBanner.externalId}
+              onDismiss={() => setBannerDismissed(true)}
+              className="animate-gold-pulse"
+            />
+          )}
           {/* Draft banners */}
           {draftLoading && (
             <div className="border-2 border-dashed border-brand/30 bg-surface animate-pixel-skeleton px-4 py-3">
@@ -818,14 +853,24 @@ export function CookPage({ templates }: CookPageProps) {
             <div className="inline-flex border-2 border-brand">
               {(["image", "video"] as const).map((type) => {
                 const active = state.outputType === type;
+                const unsupported =
+                  selectedMedium !== "both" && selectedMedium !== type;
                 return (
                   <button
                     key={type}
                     type="button"
                     onClick={() => dispatch({ type: "SET_OUTPUT_TYPE", outputType: type })}
+                    disabled={unsupported}
+                    aria-disabled={unsupported}
+                    title={
+                      unsupported
+                        ? `This template only supports ${selectedMedium}.`
+                        : undefined
+                    }
                     className={`
                       font-[family-name:var(--font-press-start)] text-[10px] px-4 py-2 capitalize
                       transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold
+                      disabled:cursor-not-allowed disabled:opacity-40
                       ${active ? "bg-gold text-brand" : "bg-white text-brand/50 hover:text-brand hover:bg-gold/20"}
                     `}
                   >
@@ -834,6 +879,14 @@ export function CookPage({ templates }: CookPageProps) {
                 );
               })}
             </div>
+            {mediumGateMessage && (
+              <p
+                role="status"
+                className="text-[11px] font-[family-name:var(--font-geist-sans)] text-brand/70"
+              >
+                {mediumGateMessage}
+              </p>
+            )}
             <PlatingStep
               formats={state.formats}
               outputType={state.outputType}
