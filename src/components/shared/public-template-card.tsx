@@ -2,25 +2,28 @@
 
 import Link from "next/link";
 import { TemplateCardBase } from "@/components/shared/template-card-base";
+import { TemplatePreview } from "@/components/kitchen/template-preview";
+import { buildSampleBrand } from "@/lib/preview-sample";
 import type { TemplateMedium } from "@/lib/templates/canvas-defaults";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 export interface PublicTemplateCardProps {
   externalId: string;
   name: string;
-  isDefault: boolean;
   medium: TemplateMedium;
   previewUrl?: string;
   palette: { background: string; text: string; primary: string };
+  config?: CanvasTemplateConfig | null;
   className?: string;
 }
 
 export function PublicTemplateCard({
   externalId,
   name,
-  isDefault,
   medium,
   previewUrl,
   palette,
+  config,
   className = "",
 }: PublicTemplateCardProps) {
   const thumbnail = previewUrl ? (
@@ -30,6 +33,12 @@ export function PublicTemplateCard({
       alt={`${name} preview`}
       className="absolute inset-0 w-full h-full object-cover"
       loading="lazy"
+    />
+  ) : config ? (
+    <TemplatePreview
+      config={config}
+      brand={buildSampleBrand(config)}
+      format="landscape"
     />
   ) : (
     <div
@@ -45,23 +54,18 @@ export function PublicTemplateCard({
     </div>
   );
 
-  const actions = (
+  return (
     <Link
       href={`/templates/${externalId}`}
-      className="border-2 border-brand bg-gold px-3 py-1 font-[family-name:var(--font-press-start)] text-[10px] text-brand shadow-[2px_2px_0_var(--color-brand)] hover:translate-y-[1px] hover:shadow-[1px_1px_0_var(--color-brand)]"
+      aria-label={`View ${name} template`}
+      className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold transition-transform hover:-translate-y-0.5"
     >
-      View
+      <TemplateCardBase
+        name={name}
+        medium={medium}
+        thumbnail={thumbnail}
+        className={className}
+      />
     </Link>
-  );
-
-  return (
-    <TemplateCardBase
-      name={name}
-      medium={medium}
-      isDefault={isDefault}
-      thumbnail={thumbnail}
-      actions={actions}
-      className={className}
-    />
   );
 }

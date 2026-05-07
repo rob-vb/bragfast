@@ -70,17 +70,17 @@ describe("listPublicTemplates DTO", () => {
     expect(ids).toEqual(["default-row", "public-user-row"]);
   });
 
-  it("strips raw config and returns trimmed DTO fields only", async () => {
+  it("returns DTO fields including config (for live preview rendering)", async () => {
     const t = convexTest(schema, modules);
     await seed(t);
     const rows = await t.query(api.templates.listPublicTemplates, {});
     for (const row of rows) {
-      expect(row).not.toHaveProperty("config");
       expect(row).toHaveProperty("externalId");
       expect(row).toHaveProperty("name");
       expect(row).toHaveProperty("medium");
       expect(row).toHaveProperty("formats");
       expect(row).toHaveProperty("palette");
+      expect(row).toHaveProperty("config");
     }
   });
 
@@ -132,14 +132,14 @@ describe("listPublicTemplates DTO", () => {
 });
 
 describe("getPublicTemplate DTO", () => {
-  it("returns trimmed DTO without raw config for public row", async () => {
+  it("returns DTO with config for public row", async () => {
     const t = convexTest(schema, modules);
     await seed(t);
     const dto = await t.query(api.templates.getPublicTemplate, {
       externalId: "public-user-row",
     });
     expect(dto).not.toBeNull();
-    expect(dto).not.toHaveProperty("config");
+    expect(dto).toHaveProperty("config");
     expect(dto?.medium).toBe("image");
   });
 

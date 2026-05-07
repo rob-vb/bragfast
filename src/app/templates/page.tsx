@@ -4,6 +4,7 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { PublicTemplateCard } from "@/components/shared/public-template-card";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 export const metadata: Metadata = {
   title: "Template Library | brag.fast",
@@ -38,20 +39,16 @@ export default async function TemplatesGalleryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {templates.map((t, idx) => (
-                <div
+              {templates.map((t) => (
+                <PublicTemplateCard
                   key={t.externalId}
-                  className={idx === 0 ? "lg:col-span-2" : ""}
-                >
-                  <PublicTemplateCard
-                    externalId={t.externalId}
-                    name={t.name}
-                    isDefault={t.isDefault}
-                    medium={t.medium}
-                    previewUrl={t.previewUrls?.landscape}
-                    palette={t.palette}
-                  />
-                </div>
+                  externalId={t.externalId}
+                  name={t.name}
+                  medium={t.medium}
+                  previewUrl={t.previewUrls?.landscape}
+                  palette={t.palette}
+                  config={t.config as CanvasTemplateConfig | null}
+                />
               ))}
             </div>
           )}

@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FormatTabStrip, type FormatKey } from "@/components/shared/format-tab-strip";
 import { MediumPill } from "@/components/shared/medium-pill";
+import { TemplatePreview } from "@/components/kitchen/template-preview";
+import { buildSampleBrand } from "@/lib/preview-sample";
 import type { TemplateMedium } from "@/lib/templates/canvas-defaults";
+import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 
 type PublicTemplate = {
   externalId: string;
@@ -15,6 +18,7 @@ type PublicTemplate = {
   formats: FormatKey[];
   previewUrls?: { landscape: string; square: string; portrait: string };
   palette: { background: string; text: string; primary: string };
+  config?: unknown;
 };
 
 const FORMAT_DIMS: Record<FormatKey, { w: number; h: number; label: string }> = {
@@ -82,11 +86,6 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
             </h1>
             <div className="flex items-center gap-2 flex-wrap mb-6">
               <MediumPill medium={template.medium} />
-              {template.isDefault ? (
-                <span className="inline-block border-2 border-brand px-2 py-0.5 font-[family-name:var(--font-press-start)] text-[10px] bg-gold text-brand">
-                  System
-                </span>
-              ) : null}
               <Palette palette={template.palette} />
             </div>
 
@@ -116,6 +115,12 @@ export function TemplateDetailClient({ template }: { template: PublicTemplate })
                     src={previewUrl}
                     alt={`${template.name} ${active} preview`}
                     className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : template.config ? (
+                  <TemplatePreview
+                    config={template.config as CanvasTemplateConfig}
+                    brand={buildSampleBrand(template.config as CanvasTemplateConfig)}
+                    format={active}
                   />
                 ) : (
                   <div

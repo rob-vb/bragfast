@@ -18,8 +18,9 @@ type TemplateRow = {
   authorUserId?: string;
 };
 
-// Trimmed DTO for the public Template Library. Excludes raw `config` so the
-// editable layout stays private — gallery/detail UI only needs preview metadata.
+// DTO for the public Template Library. `config` is surfaced because public
+// templates are, by definition, viewable — and the gallery/detail pages need
+// it to render a live preview when previewUrls haven't been seeded yet.
 type PublicTemplateDTO = {
   externalId: string;
   name: string;
@@ -28,6 +29,7 @@ type PublicTemplateDTO = {
   formats: ("landscape" | "square" | "portrait")[];
   previewUrls?: { landscape: string; square: string; portrait: string };
   palette: { background: string; text: string; primary: string };
+  config: unknown;
   authorUserId?: string;
 };
 
@@ -55,6 +57,7 @@ function toPublicDTO(row: TemplateRow): PublicTemplateDTO {
       text: colors.text ?? "#000000",
       primary: colors.primary ?? "#000000",
     },
+    config: row.config,
     ...(row.authorUserId ? { authorUserId: row.authorUserId } : {}),
   };
 }
