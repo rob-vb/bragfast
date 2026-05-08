@@ -82,11 +82,13 @@ export interface ReleaseRequest {
   name?: string
   logo_url?: string
   font_family?: string
-  template?: TemplateName
+  template?: TemplateName | string
   formats: FormatEntry[]
   video?: VideoField
   metadata?: string
   webhook_url?: string
+  /** Hyperframes-only: variable values keyed by manifest variable id. */
+  variables?: Record<string, unknown>
 }
 
 export interface ReleaseResult {
