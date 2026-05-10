@@ -6,6 +6,8 @@ import { api } from "@convex/_generated/api";
 import { renderVideo } from "../video/lambda";
 import { uploadImage } from "../storage/r2";
 import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
+import { isHyperframesTemplate } from "../templates/hyperframes-templates";
+import { renderHyperframeRelease } from "./render-hyperframe-release";
 import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
 import type { ReleaseResult, FormatEntry, VideoField, AnimationPreset } from "../types";
@@ -74,11 +76,32 @@ export async function renderVideoAsync(
   userId: string,
   request: VideoRenderRequest
 ) {
+  const templateName = request.template || "standard-browser";
+
+  if (isHyperframesTemplate(templateName)) {
+    try {
+      await renderHyperframeRelease(cookId, userId, request);
+    } catch (error) {
+      console.error(`Hyperframes render failed for ${cookId}:`, error);
+      try {
+        await convex.mutation(api.releases.markFailed, { externalId: cookId });
+      } catch (markErr) {
+        console.error(`Failed to mark release as failed:`, markErr);
+      }
+      try {
+        const totalCredits = request.formats.length * 10;
+        await convex.mutation(api.userProfiles.refund, { userId, amount: totalCredits });
+      } catch (refundErr) {
+        console.error(`Failed to refund credits:`, refundErr);
+      }
+    }
+    return;
+  }
+
   let partialRefundCredits = 0; // credits already refunded (for partial failure)
   const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 10;
   try {
-    const templateName = request.template || "standard-browser";
-    let templateConfig = await resolveTemplate(templateName, userId, convex);
+    let templateConfig = await resolveTemplate(templateName, userId, convex, "video");
     const brand = await resolveBrand(request, templateConfig.colors, convex);
 
     // Apply API-level animation preset override before resolving slide duration,

@@ -7,6 +7,7 @@ import {
   authenticateAndCheckRateLimit,
   parseJsonBody,
   validateCommonFields,
+  precheckTemplateMedium,
   reserveCreditsOrError,
   refundAndFail,
 } from "../_shared";
@@ -24,6 +25,9 @@ export async function POST(request: Request) {
 
   const commonError = await validateCommonFields(body, userId);
   if (commonError) return commonError;
+
+  const mediumError = await precheckTemplateMedium(body, userId, "video");
+  if (mediumError) return mediumError;
 
   // Normalize body.video for validation + downstream consumption.
   // /cook/video treats absence, `true`, and {} as "use defaults".

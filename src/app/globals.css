@@ -158,6 +158,26 @@
   animation-fill-mode: forwards;
 }
 
+/* Template-imported banner: 2s ease-out gold pulse on first paint. */
+@keyframes gold-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-gold), 4px 4px 0 var(--color-brand);
+  }
+  100% {
+    box-shadow: 0 0 0 16px transparent, 4px 4px 0 var(--color-brand);
+  }
+}
+
+.animate-gold-pulse {
+  animation: gold-pulse 2s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gold-pulse {
+    animation: none;
+  }
+}
+
 .dark {
   --sidebar: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);

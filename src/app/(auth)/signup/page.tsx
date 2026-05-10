@@ -21,11 +21,23 @@ export default function SignupPage() {
   );
 }
 
+// Same-origin redirect guard: only allow path-style next values that don't
+// escape the origin. Rejects protocol-relative ("//evil"), absolute URLs,
+// and missing leading slash.
+function safeNextPath(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith("/")) return null;
+  if (raw.startsWith("//")) return null;
+  return raw;
+}
+
 function SignupPageInner() {
   const repositioned = isLaunchModeRepositioned();
   const searchParams = useSearchParams();
   const cameFromPreview = searchParams?.get("source") === "preview";
-  const callbackURL = repositioned ? POST_SIGNUP_REPOSITIONED : POST_SIGNUP_LEGACY;
+  const nextPath = safeNextPath(searchParams?.get("next"));
+  const defaultCallback = repositioned ? POST_SIGNUP_REPOSITIONED : POST_SIGNUP_LEGACY;
+  const callbackURL = nextPath ?? defaultCallback;
 
   if (repositioned) {
     return (

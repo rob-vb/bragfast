@@ -12,6 +12,7 @@ interface TemplateItem {
   displayId?: string;
   name: string;
   isDefault: boolean;
+  medium?: "image" | "video" | "both";
   previewUrl?: string;
   isV2?: boolean;
   config?: CanvasTemplateConfig;
@@ -120,6 +121,7 @@ export function TemplateListClient({
                 displayId={t.displayId}
                 name={t.name}
                 isDefault={t.isDefault}
+                medium={t.medium}
                 previewUrl={t.previewUrl}
                 config={t.config}
                 onClone={handleClone}
@@ -152,6 +154,7 @@ export function TemplateListClient({
                 displayId={t.displayId}
                 name={t.name}
                 isDefault={t.isDefault}
+                medium={t.medium}
                 previewUrl={t.previewUrl}
                 isV2={t.isV2}
                 config={t.config}

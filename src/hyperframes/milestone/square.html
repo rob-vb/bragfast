@@ -1,0 +1,293 @@
+<!doctype html>
+<html
+  lang="en"
+  data-composition-variables='[
+    {"id":"__bg","type":"string","label":"Background color","default":"#0b0d10"},
+    {"id":"__text","type":"string","label":"Text color","default":"#f4f4f5"},
+    {"id":"__primary","type":"string","label":"Primary color","default":"#7c5cff"},
+    {"id":"kicker","type":"string","label":"Kicker (above number)","default":"WE JUST HIT"},
+    {"id":"heroNumber","type":"string","label":"Hero number","default":"$10K"},
+    {"id":"heroLabel","type":"string","label":"Hero label","default":"MONTHLY RECURRING"},
+    {"id":"caption","type":"string","label":"Caption","default":"Thank you to every customer along the way.","required":false},
+    {"id":"brandName","type":"string","label":"Brand name","default":"Acme"}
+  ]'
+>
+  <head>
+    <meta charset="utf-8" />
+    <title>Milestone — Square</title>
+  </head>
+  <body>
+    <div id="root" data-composition-id="root" data-width="1080" data-height="1080" data-start="0" data-duration="8" data-track-index="0">
+      <div class="bg-base"></div>
+      <div class="slab" id="slab" data-layout-ignore data-decorative></div>
+      <div class="grain" data-layout-ignore data-decorative></div>
+      <div class="loop-flash" id="loopFlash" data-layout-ignore data-decorative></div>
+
+      <div class="scene">
+        <div class="kicker-row">
+          <span class="kicker-bar"></span>
+          <span class="kicker" id="kicker"></span>
+        </div>
+
+        <div class="hero-wrap">
+          <div class="hero-mask">
+            <div class="hero-number" id="heroNumber"></div>
+          </div>
+          <div class="hero-label" id="heroLabel"></div>
+        </div>
+
+        <div class="footer">
+          <div class="caption" id="caption"></div>
+          <div class="brand">
+            <span class="brand-dot"></span>
+            <span class="brand-name" id="brandName"></span>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        #root {
+          position: relative;
+          width: 1080px;
+          height: 1080px;
+          overflow: hidden;
+          font-family: "Inter", system-ui, sans-serif;
+          color: var(--text, #f4f4f5);
+          background: var(--bg, #0b0d10);
+        }
+        #root * { box-sizing: border-box; }
+
+        .bg-base { position: absolute; inset: 0; background: var(--bg, #0b0d10); z-index: 0; }
+
+        /* Diagonal slab in primary — hero geometric anchor */
+        .slab {
+          position: absolute;
+          top: -160px;
+          right: -260px;
+          width: 920px;
+          height: 920px;
+          background: var(--primary, #7c5cff);
+          transform: rotate(18deg);
+          transform-origin: center;
+          z-index: 1;
+          will-change: transform, opacity;
+        }
+
+        /* Subtle noise/grain via radial gradient pattern */
+        .grain {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          opacity: 0.10;
+          mix-blend-mode: overlay;
+          background-image:
+            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.6) 0, transparent 1px),
+            radial-gradient(circle at 70% 60%, rgba(255,255,255,0.6) 0, transparent 1px),
+            radial-gradient(circle at 40% 80%, rgba(255,255,255,0.6) 0, transparent 1px),
+            radial-gradient(circle at 85% 15%, rgba(255,255,255,0.6) 0, transparent 1px);
+          background-size: 6px 6px, 5px 5px, 7px 7px, 4px 4px;
+        }
+
+        .loop-flash {
+          position: absolute; inset: 0;
+          background: var(--primary, #7c5cff);
+          z-index: 80; opacity: 0; pointer-events: none;
+        }
+
+        .scene {
+          position: relative;
+          width: 100%; height: 100%;
+          padding: 96px 96px 88px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          z-index: 10;
+        }
+
+        /* Kicker */
+        .kicker-row {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          will-change: transform, opacity;
+        }
+        .kicker-bar {
+          display: inline-block;
+          width: 56px; height: 5px;
+          background: var(--primary, #7c5cff);
+          will-change: transform;
+        }
+        .kicker {
+          font-family: "Inter", system-ui, sans-serif;
+          font-weight: 700;
+          font-size: 24px;
+          letter-spacing: 6px;
+          text-transform: uppercase;
+          color: var(--text, #f4f4f5);
+        }
+
+        /* Hero stack */
+        .hero-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 28px;
+        }
+        .hero-mask {
+          overflow: hidden;
+          padding: 0 8px 16px 0; /* reserve descender space */
+        }
+        .hero-number {
+          font-family: "Inter", system-ui, sans-serif;
+          font-weight: 900;
+          font-size: 360px;
+          line-height: 0.92;
+          letter-spacing: -0.04em;
+          color: var(--text, #f4f4f5);
+          font-variant-numeric: tabular-nums;
+          will-change: transform, opacity;
+          white-space: nowrap;
+        }
+        .hero-label {
+          font-family: "Inter", system-ui, sans-serif;
+          font-weight: 700;
+          font-size: 36px;
+          letter-spacing: 4px;
+          text-transform: uppercase;
+          color: var(--text, #f4f4f5);
+          background: var(--primary, #7c5cff);
+          padding: 14px 22px;
+          will-change: transform, opacity;
+        }
+
+        /* Footer */
+        .footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          gap: 40px;
+        }
+        .caption {
+          font-family: "Inter", system-ui, sans-serif;
+          font-weight: 500;
+          font-size: 26px;
+          line-height: 1.3;
+          color: var(--text, #f4f4f5);
+          opacity: 0.9;
+          max-width: 600px;
+          will-change: transform, opacity;
+        }
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-family: "Inter", system-ui, sans-serif;
+          font-weight: 700;
+          font-size: 24px;
+          letter-spacing: 1px;
+          color: var(--text, #f4f4f5);
+          will-change: transform, opacity;
+        }
+        .brand-dot {
+          display: inline-block;
+          width: 14px; height: 14px;
+          background: var(--primary, #7c5cff);
+          border-radius: 50%;
+        }
+      </style>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        (function () {
+          const vars = window.__hyperframes.getVariables();
+          const root = document.getElementById("root");
+          if (vars.__bg) root.style.setProperty("--bg", vars.__bg);
+          if (vars.__text) root.style.setProperty("--text", vars.__text);
+          if (vars.__primary) root.style.setProperty("--primary", vars.__primary);
+
+          document.getElementById("kicker").textContent = vars.kicker || "";
+          document.getElementById("heroNumber").textContent = vars.heroNumber || "";
+          document.getElementById("heroLabel").textContent = vars.heroLabel || "";
+          document.getElementById("caption").textContent = vars.caption || "";
+          document.getElementById("brandName").textContent = vars.brandName || "";
+
+          window.__timelines = window.__timelines || {};
+          const tl = gsap.timeline({ paused: true });
+
+          // 0.0–0.7s: slab sweeps in
+          tl.fromTo("#slab",
+            { x: 1200, rotate: 30, opacity: 0 },
+            { x: 0, rotate: 18, opacity: 1, duration: 0.85, ease: "expo.out" },
+            0
+          );
+
+          // 0.3–0.9s: kicker bar grows + label fade
+          tl.fromTo(".kicker-bar",
+            { scaleX: 0, transformOrigin: "left center" },
+            { scaleX: 1, duration: 0.55, ease: "power3.out" },
+            0.35
+          );
+          tl.from(".kicker",
+            { x: -24, opacity: 0, duration: 0.55, ease: "power3.out" },
+            0.45
+          );
+
+          // 0.6–1.4s: hero number reveal — clip from below + slight rise
+          tl.fromTo("#heroNumber",
+            { y: 220, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.95, ease: "expo.out" },
+            0.6
+          );
+          // tiny scale snap
+          tl.fromTo("#heroNumber",
+            { scale: 0.94 },
+            { scale: 1, duration: 0.5, ease: "back.out(2)" },
+            1.0
+          );
+
+          // 1.3–1.9s: hero label slides from left
+          tl.fromTo("#heroLabel",
+            { x: -60, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.55, ease: "expo.out" },
+            1.3
+          );
+
+          // 1.6–2.2s: caption rises
+          tl.from("#caption",
+            { y: 24, opacity: 0, duration: 0.55, ease: "power3.out" },
+            1.7
+          );
+
+          // 1.8–2.4s: brand fades
+          tl.from(".brand",
+            { y: 18, opacity: 0, duration: 0.55, ease: "power3.out" },
+            1.9
+          );
+
+          // 2.6–6.8s: ambient — slab subtle drift, hero subtle pulse
+          tl.to("#slab",
+            { x: -28, duration: 4.0, ease: "sine.inOut", yoyo: true, repeat: 1 },
+            2.6
+          );
+          tl.to("#heroNumber",
+            { scale: 1.02, duration: 1.0, yoyo: true, repeat: 3, ease: "sine.inOut" },
+            3.0
+          );
+          tl.set("#heroNumber", { scale: 1 }, 7.0);
+
+          // 7.0–8.0s: loop primer — flash to primary
+          tl.to("#heroNumber",
+            { scale: 1.06, duration: 0.5, ease: "power2.in", overwrite: "auto" },
+            7.0
+          );
+          tl.to("#loopFlash",
+            { opacity: 1, duration: 0.55, ease: "power3.in" },
+            7.4
+          );
+
+          window.__timelines["root"] = tl;
+        })();
+      </script>
+    </div>
+  </body>
+</html>

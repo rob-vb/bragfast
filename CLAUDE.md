@@ -33,13 +33,25 @@ Use 'pdftotext', not the 'Read' tool. Use 'Read' only when the user directly ask
 ## Commands
 
 ```bash
-npm run dev              # Next.js dev server
-npm run build            # Convex codegen + Next.js build
-npm run lint             # ESLint
-npx vitest run           # Run tests once
+npm run dev                   # Next.js dev server
+npm run build                 # Convex codegen + Next.js build
+npm run lint                  # ESLint
+npx vitest run                # Run tests once
 npx vitest run src/lib/__tests__/credits.test.ts  # Single test file
-npm run remotion:studio  # Remotion preview
+npm run remotion:studio       # Remotion preview
+npm run hyperframes:deploy    # Build container, push to ECR, update Lambda
+npm run hyperframes:bootstrap # First-time only: create the IAM role + Lambda fn
 ```
+
+### Hyperframes deploy — when
+
+The Hyperframes Lambda is template-agnostic. **Adding/editing templates does NOT require a redeploy** — composition HTML lives in `src/hyperframes/` and is read by the Next.js server at request time, then shipped as the `html` field in the Lambda payload.
+
+Redeploy only when changing:
+- `infra/hyperframes-lambda/Dockerfile` (system deps, ffmpeg, hyperframes version, Chrome cache)
+- `infra/hyperframes-lambda/handler.mjs` (the Lambda entrypoint)
+
+Smoke test after deploy: `node_modules/.bin/tsx --env-file .env.local scripts/smoke-test-hyperframes.ts`
 
 ## Stack
 
@@ -56,6 +68,8 @@ Next.js 16 App Router · Convex (DB + auth + Stripe) · Satori + Sharp (image ge
 6. On failure: refund credits, mark `failed`, fire webhook
 
 **Video** (`src/lib/pipeline/render-video.ts` + `convex/videoRender.ts`): `POST /api/v1/cook/video` → Convex `internalAction` (`"use node"`) → Remotion Lambda. Composition: `src/remotion/VideoCanvasComposition.tsx`. Default 8s/slide, 0.5s transitions, 30fps. Optional body.video `{ duration, preset }` overrides defaults.
+
+**Hyperframes Video** (`src/lib/pipeline/render-hyperframe-release.ts` + `src/lib/video/hyperframes-lambda.ts`): for Hyperframes-template (HTML/GSAP) videos. Reads composition HTML from `src/hyperframes/<id>/<format>.html`, ships `{ html, variables, format, duration, presignedPutUrl }` to a single x86_64 Lambda (`bragfast-hyperframes`). Lambda runs the hyperframes CLI in `/tmp` and PUTs the MP4 directly to R2. Lambda is template-agnostic — every Hyperframes template goes through the same function.
 
 ## Template System (v2)
 

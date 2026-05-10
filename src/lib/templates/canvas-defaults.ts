@@ -230,3 +230,20 @@ export const CANVAS_DEFAULTS: Record<string, { name: string; config: CanvasTempl
 export function getCanvasDefaultConfig(name: string): CanvasTemplateConfig | null {
   return CANVAS_DEFAULTS[name]?.config ?? null;
 }
+
+export type TemplateMedium = "image" | "video" | "both";
+
+// Source of truth for which medium each built-in supports.
+// Convex seed asserts parity with the templates row's `medium` column.
+export const TEMPLATE_MEDIUMS: Record<string, TemplateMedium> = {
+  "standard-browser": "both",
+  "standard-mobile": "both",
+  "split-browser": "both",
+  "split-mobile": "both",
+  hero: "both",
+  "carousel-slide": "image",
+};
+
+export function getDefaultMedium(name: string): TemplateMedium | null {
+  return TEMPLATE_MEDIUMS[name] ?? null;
+}

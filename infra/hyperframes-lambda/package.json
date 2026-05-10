@@ -1,0 +1,7 @@
+{
+  "name": "hyperframes-lambda",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "description": "AWS Lambda container handler that renders Hyperframes compositions to MP4 and uploads via presigned R2 URL."
+}
