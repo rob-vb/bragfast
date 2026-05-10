@@ -1,0 +1,11 @@
+.git
+.next
+.turbo
+.vercel
+.worktrees
+node_modules
+npm-debug.log*
+.env*
+/.codex
+/hyperframes
+coverage

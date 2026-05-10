@@ -42,7 +42,8 @@ RUN mkdir -p /opt/hf \
 # Handler. HOME is overridden to /tmp at runtime in handler.mjs because
 # /var/task is read-only on Lambda but Hyperframes writes scratch files
 # under HOME during render.
-COPY handler.mjs ${LAMBDA_TASK_ROOT}/
-COPY package.json ${LAMBDA_TASK_ROOT}/
+COPY infra/hyperframes-lambda/handler.mjs ${LAMBDA_TASK_ROOT}/
+COPY infra/hyperframes-lambda/package.json ${LAMBDA_TASK_ROOT}/
+COPY src/hyperframes ${LAMBDA_TASK_ROOT}/hyperframes
 
 CMD [ "handler.handler" ]

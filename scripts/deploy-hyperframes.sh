@@ -31,9 +31,10 @@ echo "==> Building image (linux/amd64)"
 docker buildx build \
   --platform linux/amd64 \
   --provenance=false \
+  -f infra/hyperframes-lambda/Dockerfile \
   -t "$IMAGE_URI" \
   --push \
-  infra/hyperframes-lambda
+  .
 
 echo "==> Updating Lambda function code"
 aws lambda update-function-code \

@@ -46,7 +46,9 @@ export async function renderHyperframeRelease(
   }
 
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-  const creditsPerFormat = 10;
+  const creditsByFormat = Object.fromEntries(
+    request.formats.map((f) => [f.name, Math.max(1, f.slides.length) * 5]),
+  ) as Partial<Record<HyperframeFormat, number>>;
   const duration = (typeof request.video === "object" && request.video?.duration) || meta.defaultDurationSeconds;
 
   const compositionsRoot = path.join(process.cwd(), "src", "hyperframes");
@@ -76,7 +78,8 @@ export async function renderHyperframeRelease(
       brand: hyperBrand,
       manifest,
       duration,
-      creditsPerFormat,
+      creditsPerFormat: 5,
+      creditsByFormat,
     },
     {
       readComposition,

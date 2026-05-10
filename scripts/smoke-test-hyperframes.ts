@@ -1,8 +1,6 @@
 // Smoke-test the deployed hyperframes Lambda end-to-end.
 // Run: npx tsx --env-file .env.local scripts/smoke-test-hyperframes.ts
 // Renders milestone/square.html, uploads to R2, prints the public URL.
-import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { LambdaClient } from "@aws-sdk/client-lambda";
 import { makeInvokeHyperframesLambda } from "../src/lib/video/hyperframes-lambda";
 import { createPresignedUploadUrl } from "../src/lib/storage/r2";
@@ -14,9 +12,6 @@ async function main() {
   const region = process.env.AWS_REGION ?? "us-east-1";
   const lambda = new LambdaClient({ region });
   const invoke = makeInvokeHyperframesLambda({ functionName: fnName, send: (cmd) => lambda.send(cmd) });
-
-  const htmlPath = path.join(process.cwd(), "src/hyperframes/milestone/square.html");
-  const html = await readFile(htmlPath, "utf8");
 
   const key = `smoke-tests/hyperframes/${Date.now()}-milestone-square.mp4`;
   const { uploadUrl, publicUrl } = await createPresignedUploadUrl(key, "video/mp4", 600);
@@ -36,7 +31,7 @@ async function main() {
   console.log(`[smoke] target R2 key: ${key}`);
   const t0 = Date.now();
   const result = await invoke({
-    html,
+    templateId: "milestone",
     variables,
     format: "square",
     duration: 8,

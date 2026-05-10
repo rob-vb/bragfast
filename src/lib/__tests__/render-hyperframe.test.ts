@@ -52,6 +52,7 @@ describe('renderHyperframe', () => {
     expect(deps.mintPresignedPutUrl).toHaveBeenCalledWith('releases/rel_1/square.mp4')
     expect(deps.invokeLambda).toHaveBeenCalledWith({
       html: '<html></html>',
+      templateId: 'milestone',
       variables: { headline: 'Shipped' },
       format: 'square',
       duration: 10,
@@ -120,6 +121,35 @@ describe('renderHyperframe', () => {
       { format: 'portrait', url: 'https://r2.public/releases/rel_3/portrait.mp4' },
     ])
     expect(deps.markFailed).not.toHaveBeenCalled()
+  })
+
+  it('partial failure: uses per-format credit costs when supplied', async () => {
+    let call = 0
+    const deps = makeDeps({
+      invokeLambda: vi.fn(async () => {
+        call++
+        if (call === 2) return { ok: false as const, reason: 'square failed' }
+        return { ok: true as const, durationMs: 1000 }
+      }),
+    })
+
+    const result = await renderHyperframe(
+      {
+        releaseId: 'rel_weighted',
+        templateId: 'milestone',
+        formats: ['landscape', 'square', 'portrait'],
+        cookInput: { headline: 'Shipped' },
+        brand,
+        manifest,
+        duration: 10,
+        creditsPerFormat: 5,
+        creditsByFormat: { landscape: 5, square: 15, portrait: 10 },
+      },
+      deps,
+    )
+
+    expect(result).toEqual({ ok: true })
+    expect(deps.refundCredits).toHaveBeenCalledWith('rel_weighted', 15)
   })
 
   it('all formats fail across multi-format: refunds full total, marks failed', async () => {

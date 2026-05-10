@@ -11,6 +11,7 @@ import {
   getDefaultMedium,
   type TemplateMedium,
 } from "@/lib/templates/canvas-defaults";
+import { isHyperframesTemplate } from "@/lib/templates/hyperframes-templates";
 
 export const VALID_DEFAULT_TEMPLATES = [
   "standard-browser",
@@ -25,6 +26,7 @@ export function isValidTemplateName(template: unknown): boolean {
   if (typeof template !== "string") return false;
   // .includes() on a const tuple only accepts its union type as argument — widening to string[] is safe here.
   if ((VALID_DEFAULT_TEMPLATES as readonly string[]).includes(template)) return true;
+  if (isHyperframesTemplate(template)) return true;
   return template.startsWith("tmpl_");
 }
 

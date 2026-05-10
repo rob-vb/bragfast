@@ -4,7 +4,8 @@ import { resolveVariables, type Brand, type CookInput } from "../templates/hyper
 export type HyperframeFormat = "landscape" | "square" | "portrait";
 
 export type LambdaInput = {
-  html: string;
+  html?: string;
+  templateId?: string;
   variables: Record<string, unknown>;
   format: HyperframeFormat;
   duration: number;
@@ -33,7 +34,15 @@ export type RenderHyperframeInput = {
   manifest: VariableManifest;
   duration: number;
   creditsPerFormat: number;
+  creditsByFormat?: Partial<Record<HyperframeFormat, number>>;
 };
+
+function creditsForFormats(input: RenderHyperframeInput, formats: HyperframeFormat[]): number {
+  return formats.reduce(
+    (sum, format) => sum + (input.creditsByFormat?.[format] ?? input.creditsPerFormat),
+    0,
+  );
+}
 
 export async function renderHyperframe(
   input: RenderHyperframeInput,
@@ -50,6 +59,7 @@ export async function renderHyperframe(
       const { url, publicUrl } = await deps.mintPresignedPutUrl(key);
       const result = await deps.invokeLambda({
         html,
+        templateId: input.templateId,
         variables,
         format,
         duration: input.duration,
@@ -68,13 +78,16 @@ export async function renderHyperframe(
 
   if (outputs.length === 0) {
     const reason = failures[0]?.reason ?? "all formats failed";
-    await deps.refundCredits(input.releaseId, input.creditsPerFormat * input.formats.length);
+    await deps.refundCredits(input.releaseId, creditsForFormats(input, input.formats));
     await deps.markFailed(input.releaseId, reason);
     return { ok: false, reason };
   }
 
   if (failures.length > 0) {
-    await deps.refundCredits(input.releaseId, input.creditsPerFormat * failures.length);
+    await deps.refundCredits(
+      input.releaseId,
+      creditsForFormats(input, failures.map((f) => f.format)),
+    );
   }
   await deps.markCompleted(input.releaseId, outputs);
   return { ok: true };

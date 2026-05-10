@@ -3,8 +3,11 @@
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { LambdaClient } from "@aws-sdk/client-lambda";
 import { renderVideo, cleanupRender } from "../src/lib/video/lambda";
+import { makeInvokeHyperframesLambda } from "../src/lib/video/hyperframes-lambda";
 import { uploadImage } from "../src/lib/storage/r2";
+import { createPresignedUploadUrl } from "../src/lib/storage/r2";
 import { buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "../src/lib/pipeline/shared";
 import { collectUploadKeys, cleanupUploads } from "../src/lib/pipeline/cleanup";
 import { fetchImageAsBase64 } from "../src/lib/images";
@@ -13,8 +16,13 @@ import { migrateConfig } from "../src/lib/templates/canvas-types";
 import { FORMAT_DIMENSIONS } from "../src/lib/templates/canvas-types";
 import type { FormatKey } from "../src/lib/templates/canvas-types";
 import type { CanvasTemplateConfig } from "../src/lib/templates/canvas-types";
-import type { Brand, BrandColors, FormatEntry, VideoField } from "../src/lib/types";
+import { calculateCredits, type Brand, type BrandColors, type FormatEntry, type VideoField } from "../src/lib/types";
 import { probeMp4DurationSeconds } from "../src/lib/video/probe";
+import {
+  getHyperframesTemplate,
+  isHyperframesTemplate,
+} from "../src/lib/templates/hyperframes-templates";
+import type { HyperframeFormat } from "../src/lib/pipeline/render-hyperframe";
 
 const DEFAULT_SLIDE_DURATION = 8;
 const TRANSITION_DURATION = 0.5;
@@ -40,6 +48,13 @@ type VideoRenderRequest = {
   video: VideoField;
   webhook_url?: string;
   metadata?: string;
+  variables?: Record<string, unknown>;
+};
+
+const HYPERFRAME_DIMENSIONS: Record<HyperframeFormat, string> = {
+  landscape: "1200x676",
+  square: "1080x1080",
+  portrait: "1080x1350",
 };
 
 export const render = internalAction({
@@ -56,6 +71,139 @@ export const render = internalAction({
     try {
       // Resolve template (inline — replaces ConvexHttpClient call)
       const templateName = request.template || "standard-browser";
+
+      if (isHyperframesTemplate(templateName)) {
+        const meta = getHyperframesTemplate(templateName);
+        if (!meta) throw new Error(`Unknown hyperframes template: ${templateName}`);
+
+        const functionName = process.env.HYPERFRAMES_FUNCTION_NAME;
+        if (!functionName) throw new Error("HYPERFRAMES_FUNCTION_NAME is not set");
+
+        let brandName = request.name ?? "";
+        let logoUrl = request.logo_url;
+        let colors = request.colors ?? {
+          background: "#fff8f0",
+          text: "#4a3326",
+          primary: "#d97706",
+        };
+
+        if (request.brand_id) {
+          const record = await ctx.runQuery(internal.videoRenderHelpers.getBrand, {
+            externalId: request.brand_id,
+          });
+          if (record) {
+            if (record.userId !== userId) throw new Error("Brand not found");
+            brandName = record.name;
+            logoUrl = record.logo_url;
+            colors = record.colors;
+          }
+        }
+
+        const duration =
+          (typeof request.video === "object" && request.video?.duration) ||
+          meta.defaultDurationSeconds;
+        const variables = {
+          brandName,
+          ...(request.variables ?? {}),
+          __bg: colors.background,
+          __text: colors.text,
+          __primary: colors.primary,
+          ...(logoUrl ? { __logo: logoUrl } : {}),
+        };
+
+        const lambda = new LambdaClient({
+          region: process.env.AWS_REGION ?? "us-east-1",
+        });
+        const invokeLambda = makeInvokeHyperframesLambda({
+          functionName,
+          send: (cmd) => lambda.send(cmd),
+        });
+
+        const videos: Record<
+          string,
+          { url: string; duration: number; dimensions: string }
+        > = {};
+        const failures: Array<{ format: HyperframeFormat; reason: string; credits: number }> = [];
+
+        for (const formatEntry of request.formats) {
+          const format = formatEntry.name as HyperframeFormat;
+          const credits = Math.max(1, formatEntry.slides.length) * 5;
+          try {
+            if (!meta.formats.includes(format)) {
+              throw new Error(`Template "${meta.id}" does not support format "${format}"`);
+            }
+            const key = `releases/${cookId}/${format}.mp4`;
+            const { uploadUrl, publicUrl } = await createPresignedUploadUrl(
+              key,
+              "video/mp4",
+              600,
+            );
+            const result = await invokeLambda({
+              templateId: meta.id,
+              variables,
+              format,
+              duration,
+              presignedPutUrl: uploadUrl,
+            });
+            if (!result.ok) throw new Error(result.reason);
+            videos[format] = {
+              url: publicUrl,
+              duration,
+              dimensions: HYPERFRAME_DIMENSIONS[format],
+            };
+          } catch (err) {
+            failures.push({
+              format,
+              credits,
+              reason: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+
+        if (Object.keys(videos).length === 0) {
+          await ctx.runMutation(internal.videoRenderHelpers.markReleaseFailed, {
+            externalId: cookId,
+          });
+          await ctx.runMutation(internal.videoRenderHelpers.refundCredits, {
+            userId,
+            amount: calculateCredits({ video: request.video, formats: request.formats }),
+          });
+          console.error(
+            `Hyperframes render failed for ${cookId}: ${failures.map((f) => `${f.format}: ${f.reason}`).join("; ")}`,
+          );
+          return;
+        }
+
+        if (failures.length > 0) {
+          await ctx.runMutation(internal.videoRenderHelpers.refundCredits, {
+            userId,
+            amount: failures.reduce((sum, f) => sum + f.credits, 0),
+          });
+          console.warn(
+            `[VIDEO] ${failures.length} hyperframe format(s) failed for ${cookId}: ${failures.map((f) => `${f.format}: ${f.reason}`).join("; ")}`,
+          );
+        }
+
+        await ctx.runMutation(internal.videoRenderHelpers.markReleaseCompleted, {
+          externalId: cookId,
+          videos,
+        });
+
+        if (request.webhook_url) {
+          const result = await ctx.runQuery(internal.videoRenderHelpers.getRelease, {
+            externalId: cookId,
+          });
+          fetch(request.webhook_url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(result),
+          }).catch(console.error);
+        }
+
+        console.log(`[VIDEO] Hyperframes render complete for ${cookId}`);
+        return;
+      }
+
       let templateConfig: CanvasTemplateConfig;
 
       const defaultConfig = getDefaultConfig(templateName);
@@ -293,4 +441,3 @@ export const render = internalAction({
     }
   },
 });
-

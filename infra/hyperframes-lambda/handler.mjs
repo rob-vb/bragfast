@@ -67,9 +67,13 @@ const STUB_PACKAGE_JSON = { name: "render", private: true, type: "module" };
 
 export async function handler(event) {
   const start = Date.now();
-  const { html, variables, format, duration, presignedPutUrl } = event;
+  const { variables, format, duration, presignedPutUrl, templateId } = event;
+  let { html } = event;
+  if (!html && templateId && format) {
+    html = await readFile(join(process.env.LAMBDA_TASK_ROOT ?? "/var/task", "hyperframes", templateId, `${format}.html`), "utf8");
+  }
   if (!html || !presignedPutUrl) {
-    throw new Error("Missing required event fields: html, presignedPutUrl");
+    throw new Error("Missing required event fields: html or templateId+format, presignedPutUrl");
   }
 
   const projDir = await mkdtemp(join(tmpdir(), "hf-"));
