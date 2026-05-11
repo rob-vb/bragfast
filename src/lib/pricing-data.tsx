@@ -39,20 +39,36 @@ export const NEW_TIERS: NewTierConfig[] = [
 
 export const FEATURES: {
   name: string;
-  toast: string | boolean;
-  plate: string | boolean;
-  buffet: string | boolean;
+  toast?: string | boolean;
+  plate?: string | boolean;
+  buffet?: string | boolean;
+  section?: boolean;
 }[] = [
+  { name: "Core", section: true },
   { name: "Credits / month", toast: "200", plate: "800", buffet: "2,500" },
+  { name: "Image", toast: true, plate: true, buffet: true },
+  { name: "Video", toast: true, plate: true, buffet: true },
+  { name: "Landscape, square & portrait", toast: true, plate: true, buffet: true },
+  { name: "Custom brand", toast: true, plate: true, buffet: true },
+  { name: "Custom templates", toast: true, plate: true, buffet: true },
   { name: "Sous-Chef (agent)", toast: true, plate: true, buffet: true },
-  { name: "Video", toast: false, plate: true, buffet: true },
-  { name: "Goals", toast: "Unlimited", plate: "Unlimited", buffet: "Unlimited" },
   {
     name: "History feed",
     toast: "30 days",
     plate: "1 year",
     buffet: "Forever (annual recap)",
   },
+  { name: "Integrations", section: true },
+  { name: "REST API", toast: true, plate: true, buffet: true },
+  { name: "Webhooks", toast: true, plate: true, buffet: true },
+  { name: "GitHub", toast: true, plate: true, buffet: true },
+  { name: "Stripe", toast: true, plate: true, buffet: true },
+  { name: "PostHog", toast: true, plate: true, buffet: true },
+  { name: "Google Analytics", toast: true, plate: true, buffet: true },
+  { name: "Buffer", toast: true, plate: true, buffet: true },
+  { name: "Postiz", toast: true, plate: true, buffet: true },
+  { name: "Support", section: true },
+  { name: "Priority support", toast: false, plate: true, buffet: true },
 ];
 
 export function FeatureValue({

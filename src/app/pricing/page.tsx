@@ -187,28 +187,44 @@ export default function PricingPage() {
                 </tr>
               </thead>
               <tbody>
-                {FEATURES.map((feature, i) => (
-                  <tr
-                    key={feature.name}
-                    className={`border-b border-brand/10 ${
-                      i % 2 === 0 ? "bg-white" : "bg-surface/60"
-                    }`}
-                  >
-                    <td className="px-5 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
-                      {feature.name}
-                    </td>
-                    {(["toast", "plate", "buffet"] as const).map((tierId) => (
-                      <td
-                        key={tierId}
-                        className={`px-5 py-3 text-center ${
-                          tierId === "plate" ? "bg-gold/10" : ""
-                        }`}
-                      >
-                        <FeatureValue value={feature[tierId]} />
+                {FEATURES.map((feature, i) => {
+                  if (feature.section) {
+                    return (
+                      <tr key={feature.name}>
+                        <td
+                          colSpan={4}
+                          className="px-5 py-2 bg-brand/5 border-y border-brand/15"
+                        >
+                          <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/40 uppercase tracking-wider">
+                            {feature.name}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return (
+                    <tr
+                      key={feature.name}
+                      className={`border-b border-brand/10 ${
+                        i % 2 === 0 ? "bg-white" : "bg-surface/60"
+                      }`}
+                    >
+                      <td className="px-5 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
+                        {feature.name}
                       </td>
-                    ))}
-                  </tr>
-                ))}
+                      {(["toast", "plate", "buffet"] as const).map((tierId) => (
+                        <td
+                          key={tierId}
+                          className={`px-5 py-3 text-center ${
+                            tierId === "plate" ? "bg-gold/10" : ""
+                          }`}
+                        >
+                          <FeatureValue value={feature[tierId] ?? false} />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -230,7 +246,16 @@ export default function PricingPage() {
                 </div>
                 <ul className="bg-white divide-y divide-brand/10">
                   {FEATURES.map((feature) => {
-                    const value = feature[tier.id];
+                    if (feature.section) {
+                      return (
+                        <li key={feature.name} className="px-5 py-2 bg-brand/5">
+                          <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/40 uppercase tracking-wider">
+                            {feature.name}
+                          </span>
+                        </li>
+                      );
+                    }
+                    const value = feature[tier.id] ?? false;
                     return (
                       <li
                         key={feature.name}
