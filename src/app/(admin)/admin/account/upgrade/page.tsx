@@ -84,28 +84,44 @@ export default async function UpgradePage() {
               </tr>
             </thead>
             <tbody>
-              {FEATURES.map((feature, i) => (
-                <tr
-                  key={feature.name}
-                  className={`border-b border-brand/10 ${
-                    i % 2 === 0 ? "bg-white" : "bg-surface/50"
-                  }`}
-                >
-                  <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
-                    {feature.name}
-                  </td>
-                  {(["toast", "plate", "buffet"] as const).map((tierId) => (
-                    <td
-                      key={tierId}
-                      className={`px-4 py-3 text-center ${
-                        tierId === "plate" ? "bg-gold/10" : ""
-                      }`}
-                    >
-                      <FeatureValue value={feature[tierId]} />
+              {FEATURES.map((feature, i) => {
+                if (feature.section) {
+                  return (
+                    <tr key={feature.name}>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-2 bg-brand/5 border-y border-brand/15"
+                      >
+                        <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/40 uppercase tracking-wider">
+                          {feature.name}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                }
+                return (
+                  <tr
+                    key={feature.name}
+                    className={`border-b border-brand/10 ${
+                      i % 2 === 0 ? "bg-white" : "bg-surface/50"
+                    }`}
+                  >
+                    <td className="px-4 py-3 font-[family-name:var(--font-geist-sans)] text-sm text-brand/80">
+                      {feature.name}
                     </td>
-                  ))}
-                </tr>
-              ))}
+                    {(["toast", "plate", "buffet"] as const).map((tierId) => (
+                      <td
+                        key={tierId}
+                        className={`px-4 py-3 text-center ${
+                          tierId === "plate" ? "bg-gold/10" : ""
+                        }`}
+                      >
+                        <FeatureValue value={feature[tierId] ?? false} />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -128,17 +144,28 @@ export default async function UpgradePage() {
                 </span>
               </div>
               <ul className="divide-y divide-[var(--color-brand)]/10">
-                {FEATURES.map((feature) => (
-                  <li
-                    key={feature.name}
-                    className="flex items-center justify-between px-4 py-2.5"
-                  >
-                    <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
-                      {feature.name}
-                    </span>
-                    <FeatureValue value={feature[tier.id]} />
-                  </li>
-                ))}
+                {FEATURES.map((feature) => {
+                  if (feature.section) {
+                    return (
+                      <li key={feature.name} className="px-4 py-2 bg-brand/5">
+                        <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/40 uppercase tracking-wider">
+                          {feature.name}
+                        </span>
+                      </li>
+                    );
+                  }
+                  return (
+                    <li
+                      key={feature.name}
+                      className="flex items-center justify-between px-4 py-2.5"
+                    >
+                      <span className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/70">
+                        {feature.name}
+                      </span>
+                      <FeatureValue value={feature[tier.id] ?? false} />
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
