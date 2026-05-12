@@ -44,7 +44,7 @@ export const runReflectionForUser = internalAction({
     try {
       haikuResponse = await callHaikuText({
         system:
-          "You are distilling a user's writing style from their edit history. Output 5-10 specific, actionable bullets (e.g. '- Prefers active voice', '- Skips refactor announcements'). Be concrete, not generic. Don't invent rules not evidenced by the timeline.",
+          "You are distilling a user's writing style from their edit history. Output 5-10 specific, actionable bullets (e.g. '- Prefers active voice', '- Skips refactor announcements'). Be concrete, not generic. Don't invent rules not evidenced by the timeline. Use markdown list format with - dashes, not numbers.",
         user: userPrompt,
         maxTokens: 512,
       });
@@ -72,6 +72,7 @@ export const runReflectionForUser = internalAction({
     const updatedMd = serializeVoiceProfile({
       frontmatter: {
         ...parsed.frontmatter,
+        last_updated: new Date().toISOString(),
         last_reflected: new Date().toISOString(),
       },
       compiledTruth: newCompiledTruth,

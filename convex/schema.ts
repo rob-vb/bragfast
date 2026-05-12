@@ -29,8 +29,6 @@ export default defineSchema({
     voiceProfileMd: v.optional(v.string()),
     // GBrain: epoch ms of the last reflection run for this profile.
     voiceProfileReflectedAt: v.optional(v.number()),
-    // GBrain: cumulative count of approved drafts recorded to the profile.
-    voiceProfileApprovalCount: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),
