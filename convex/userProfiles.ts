@@ -1,5 +1,12 @@
-import { mutation, query, internalQuery } from "./_generated/server";
+import { mutation, query, internalQuery, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { requireAuthedUser } from "./auth";
+import {
+  DEFAULT_VOICE_PROFILE_MD,
+  appendTimelineEntry,
+  parseVoiceProfile,
+} from "../src/lib/drafts/voice-profile";
 
 export const getByUserId = query({
   args: { userId: v.string() },
@@ -215,5 +222,97 @@ export const refund = mutation({
     const remaining = profile.creditsRemaining + amount;
     await ctx.db.patch(profile._id, { creditsRemaining: remaining });
     return remaining;
+  },
+});
+
+// ---------------------------------------------------------------------------
+// GBrain: voice profile markdown
+// ---------------------------------------------------------------------------
+
+// Public query — used by dashboard / client components.
+export const getVoiceProfileMd = query({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    return profile?.voiceProfileMd ?? null;
+  },
+});
+
+// Internal counterpart — used by server-side actions (reflection, compose).
+export const getVoiceProfileMdInternal = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    return profile?.voiceProfileMd ?? null;
+  },
+});
+
+// Authenticated mutation — lets the user (or dashboard) overwrite the profile.
+export const setVoiceProfileMd = mutation({
+  args: { md: v.string() },
+  handler: async (ctx, { md }) => {
+    const userId = await requireAuthedUser(ctx);
+    // Hard cap: 32 KB
+    if (md.length > 32 * 1024) throw new Error("voice_profile_too_large");
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) throw new Error("User profile not found");
+    await ctx.db.patch(profile._id, { voiceProfileMd: md });
+  },
+});
+
+// Internal mutation — appends a timeline entry and conditionally schedules reflection.
+export const appendTimelineInternal = internalMutation({
+  args: {
+    userId: v.string(),
+    entry: v.object({
+      dateIso: v.string(),
+      triggerType: v.string(),
+      action: v.union(v.literal("approved"), v.literal("skipped")),
+      wasEdited: v.boolean(),
+      original: v.optional(v.string()),
+      final: v.optional(v.string()),
+      editType: v.optional(v.string()),
+      reason: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, { userId, entry }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) return; // silently skip if no profile
+
+    const currentMd = profile.voiceProfileMd ?? DEFAULT_VOICE_PROFILE_MD;
+    const updated = appendTimelineEntry(currentMd, entry);
+
+    // Parse to get updated counts for scheduling decision.
+    const parsed = parseVoiceProfile(updated);
+    const approvalCount = parsed.frontmatter.approval_count;
+    const skipCount = parsed.frontmatter.skip_count;
+
+    await ctx.db.patch(profile._id, { voiceProfileMd: updated });
+
+    // Schedule reflection every 10 approvals or 10 skips (only positive multiples).
+    if (
+      (approvalCount > 0 && approvalCount % 10 === 0) ||
+      (skipCount > 0 && skipCount % 10 === 0)
+    ) {
+      // TODO: voiceProfileReflection.runReflectionForUser will be added in Task 3.
+      await ctx.scheduler.runAfter(
+        0,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (internal as any).voiceProfileReflection.runReflectionForUser,
+        { userId },
+      );
+    }
   },
 });

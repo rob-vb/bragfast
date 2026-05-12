@@ -25,6 +25,12 @@ export default defineSchema({
     // S8.2: voice preset shapes Haiku draft tone.
     // Values: "casual_builder" | "dry_technical" | "earnest_milestone" | "deadpan".
     voicePreset: v.optional(v.string()),
+    // GBrain: learned voice profile markdown (frontmatter + compiled truth + timeline).
+    voiceProfileMd: v.optional(v.string()),
+    // GBrain: epoch ms of the last reflection run for this profile.
+    voiceProfileReflectedAt: v.optional(v.number()),
+    // GBrain: cumulative count of approved drafts recorded to the profile.
+    voiceProfileApprovalCount: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
     .index("by_email", ["email"]),
