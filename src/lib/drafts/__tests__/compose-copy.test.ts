@@ -358,6 +358,21 @@ describe("rewriteCopyForClass", () => {
   );
 });
 
+describe("composeCopy — voiceProfileMd", () => {
+  it("pr_merged includes voiceProfileMd compiled truth in prompt", async () => {
+    mockCreate.mockResolvedValue(textResponse('{"title":"T","description":"D"}'));
+    await composeCopy({
+      type: "pr_merged",
+      title: "fix: something",
+      body: "small fix",
+      repoFullName: "rob/brag.fast",
+      voiceProfileMd: `---\nlast_updated: 2026-01-01T00:00:00Z\nlast_reflected: 2026-01-01T00:00:00Z\napproval_count: 10\nskip_count: 0\n---\n\n## Compiled Truth\n\n- Prefers active voice\n- Skips refactor announcements\n\n## Timeline\n\n`,
+    });
+    const callArgs = mockCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).toContain("Prefers active voice");
+  });
+});
+
 describe("composeCopy — brand voice", () => {
   it("passes brandName and brandVoice into the prompt", async () => {
     mockCreate.mockResolvedValue(
