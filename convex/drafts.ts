@@ -518,7 +518,7 @@ export const remove = mutation({
           action: "skipped" as const,
           wasEdited: false,
           original: removeOriginalTitle,
-          reason: trimmedReason,
+          reason: trimmedReason || undefined,
         },
       });
     }
