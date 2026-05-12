@@ -53,6 +53,9 @@ export interface TimelineEntry {
 // Default / empty profile
 // ---------------------------------------------------------------------------
 
+// NOTE: The date here is intentionally static — this is a template string, not
+// a snapshot of "now". The actual last_updated/last_reflected values are set
+// when the profile is first written to the database.
 export const DEFAULT_VOICE_PROFILE_MD = `---
 last_updated: 2026-05-04T12:00:00Z
 last_reflected: 2026-05-01T09:00:00Z
@@ -140,6 +143,11 @@ function splitH2Sections(body: string): Record<string, string> {
 
 /**
  * Reassemble the full markdown from its constituent parts.
+ *
+ * Invariant: `compiledTruth` and `timeline` each begin with `\n` so that the
+ * template literal below produces a blank line between the heading and the
+ * section body (e.g. "## Compiled Truth\n\n- bullet…"). This is preserved by
+ * the round-trip parse → serialize cycle.
  */
 export function serializeVoiceProfile(parts: VoiceProfileParts): string {
   const { frontmatter, compiledTruth, timeline } = parts;
@@ -189,8 +197,9 @@ export function voiceProfileBlock(md: string | null | undefined): string {
 
   if (!meaningful) return "";
 
-  // truth includes leading/trailing newlines from the section split; trim them
-  return `## Your Writing Voice\n\n${truth.trim()}\n`;
+  // Use `meaningful` (placeholder-filtered lines) rather than the raw `truth`
+  // so the placeholder line is never included in the returned block.
+  return `## Your Writing Voice\n\n${meaningful}\n`;
 }
 
 // ---------------------------------------------------------------------------
@@ -244,6 +253,9 @@ const DEFAULT_MAX_ENTRIES = 50;
  * Timeline entries are delimited by "### " at the start of a line.
  */
 export function trimTimeline(md: string, maxEntries: number = DEFAULT_MAX_ENTRIES): string {
+  // Guard against 0 (or negative) caps — treat them as 1 to avoid silently
+  // dropping every entry.
+  maxEntries = Math.max(1, maxEntries);
   const parsed = parseVoiceProfile(md);
   const timeline = parsed.timeline;
 

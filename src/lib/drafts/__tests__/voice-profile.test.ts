@@ -300,6 +300,30 @@ skip_count: 1
     expect(block).toBe("## Your Writing Voice\n\n- Prefers dry wit\n- Short punchy headlines\n");
   });
 
+  it("strips the placeholder line when real bullets are also present", () => {
+    // Simulates a profile that somehow has the placeholder AND a real bullet
+    // (e.g. a migration artifact). The placeholder must not appear in output.
+    const md = `---
+last_updated: 2026-05-04T12:00:00Z
+last_reflected: 2026-05-01T09:00:00Z
+approval_count: 1
+skip_count: 0
+---
+
+## Compiled Truth
+
+- (empty until first reflection — composer ignores empty section)
+- Prefers punchy one-liners
+
+## Timeline
+
+`;
+    const block = voiceProfileBlock(md);
+    expect(block).not.toContain("empty until first reflection");
+    expect(block).toContain("Prefers punchy one-liners");
+    expect(block).toBe("## Your Writing Voice\n\n- Prefers punchy one-liners\n");
+  });
+
   it("returns '' when Compiled Truth has only whitespace characters", () => {
     const md = `---
 last_updated: 2026-05-04T12:00:00Z
