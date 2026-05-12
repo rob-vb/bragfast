@@ -71,16 +71,6 @@ export function HowSousChefWorks() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes flow-x {
-          from {
-            transform: translateX(0%);
-          }
-          to {
-            transform: translateX(calc(100% - 72px));
-          }
-        }
-      `}</style>
     </section>
   );
 }

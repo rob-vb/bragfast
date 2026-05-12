@@ -136,6 +136,15 @@
   animation: pixel-skeleton 1.5s ease-in-out infinite;
 }
 
+@keyframes flow-x {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(calc(100% - 72px));
+  }
+}
+
 /* S5.5: confetti drop for goal celebration. */
 @keyframes confetti {
   0% {
