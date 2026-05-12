@@ -11,9 +11,9 @@ import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
 import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Build-in-public posts on autopilot",
+  title: "brag.fast | Automate your build in public posts",
   description:
-    "brag.fast turns your wins into branded posts. Ship a feature, hit an MRR milestone, gain GitHub stars — your Sous-Chef drafts the post, you approve it, it goes out.",
+    "brag.fast turns your wins into branded posts. Ship a feature, hit an MRR milestone, gain GitHub stars — your Sous-Chef agent drafts the post for you to approve and post.",
   alternates: { canonical: "/" },
 };
 
@@ -62,7 +62,7 @@ export default function Home() {
               You build apps. Nobody notices.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Your work deserves an audience. Your sous-chef agent turns every commit, release, and milestone into share-ready images and videos, automatically.
+              Let your sous-chef agent turn every commit, release, and milestone into share-ready images and videos, automatically, so you can focus on building.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -99,7 +99,7 @@ export default function Home() {
                 Your Sous-Chef (agent) spots your wins so you can focus on building.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to approve and cook.
+                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to approve and cook. You can even schedule your posts immediately with <strong>Buffer</strong> or <strong>Postiz</strong>.
               </p>
               <div className="flex flex-col gap-3 mt-2">
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60 uppercase tracking-wider">
