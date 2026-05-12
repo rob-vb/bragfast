@@ -59,7 +59,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              You build apps. Nobody notices.
+              Automate your build in public posts
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
               Let your sous-chef agent turn every commit, release, and milestone into share-ready images and videos, automatically, so you can focus on building.
