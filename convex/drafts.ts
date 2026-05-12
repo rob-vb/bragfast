@@ -506,6 +506,21 @@ export const remove = mutation({
         sourceReference: row.eventReference ?? undefined,
         draftExternalId: externalId,
       });
+      const removeOriginalConfig = row.originalConfig
+        ? (() => { try { return JSON.parse(row.originalConfig!); } catch { return null; } })()
+        : null;
+      const removeOriginalTitle: string | undefined = removeOriginalConfig?.objectContent?.title?.text || undefined;
+      await ctx.scheduler.runAfter(0, internal.userProfiles.appendTimelineInternal, {
+        userId,
+        entry: {
+          dateIso: new Date().toISOString(),
+          triggerType,
+          action: "skipped" as const,
+          wasEdited: false,
+          original: removeOriginalTitle,
+          reason: trimmedReason,
+        },
+      });
     }
     await ctx.db.delete(row._id);
     return true;
