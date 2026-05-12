@@ -39,7 +39,7 @@ type PlatformOpt = {
   platform?: Platform;
   voicePreset?: VoicePreset | null;
   examples?: ApprovalExample[] | null;
-  voiceProfileMd?: string | null;  // ADD THIS
+  voiceProfileMd?: string | null;
 };
 
 export type ComposeCopyInput =
