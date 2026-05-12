@@ -114,9 +114,7 @@ export async function runRetroPrMergeDraft(
     const milestoneKey = prMergedMilestoneKey(repoFullName, pr.number);
     const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
 
-    // Skip generation if a draft for this milestone already exists.
-    const [disabled, voicePreset, examples, voiceProfileMd] = await Promise.all([
-      convex.query(api.userProfiles.getDisabledPlatforms, { userId }),
+    const [voicePreset, examples, voiceProfileMd] = await Promise.all([
       convex.query(api.userProfiles.getVoicePreset, { userId }),
       convex.query(api.drafts.getRecentApprovedEdits, { userId }),
       convex.query(api.userProfiles.getVoiceProfileMd, { userId }),
@@ -133,18 +131,15 @@ export async function runRetroPrMergeDraft(
         milestoneKey,
         prContext: { title: pr.title, body: pr.body ?? "" },
       }),
-      composeCopyByPlatform(
-        {
-          type: "pr_merged",
-          title: pr.title,
-          body: pr.body ?? "",
-          repoFullName,
-          voicePreset: preset,
-          examples,
-          voiceProfileMd,
-        },
-        enabledPlatforms,
-      ),
+      composeCopy({
+        type: "pr_merged",
+        title: pr.title,
+        body: pr.body ?? "",
+        repoFullName,
+        voicePreset: preset,
+        examples,
+        voiceProfileMd,
+      }),
     ]);
     const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
 
