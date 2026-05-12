@@ -98,10 +98,10 @@ export function VoiceProfileEditor({
     <div className="space-y-4">
       {/* Badges */}
       <div className="flex flex-wrap gap-3">
-        <span className="border-2 border-brand bg-surface px-3 py-1 font-[family-name:var(--font-press-start)] text-[9px] text-brand">
+        <span className="border-2 border-brand bg-surface px-3 py-1 font-[family-name:var(--font-press-start)] text-[10px] text-brand">
           Last reflected: {formatDate(badge.lastReflected)}
         </span>
-        <span className="border-2 border-brand bg-surface px-3 py-1 font-[family-name:var(--font-press-start)] text-[9px] text-brand">
+        <span className="border-2 border-brand bg-surface px-3 py-1 font-[family-name:var(--font-press-start)] text-[10px] text-brand">
           Approvals: {badge.approvalCount} · Skips: {badge.skipCount}
         </span>
       </div>
