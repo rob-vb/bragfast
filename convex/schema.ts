@@ -54,6 +54,11 @@ export default defineSchema({
     isDefault: v.boolean(),
     config: v.any(),
     previewUrl: v.optional(v.string()),
+    previewUrls: v.optional(v.object({
+      landscape: v.string(),
+      square: v.string(),
+      portrait: v.string(),
+    })),
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_userId", ["userId"])
