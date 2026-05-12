@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Brain,
   ChefHat,
   FileText,
   History,
@@ -69,6 +70,7 @@ const sousChefNav: NavItem[] = [
   { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
   { label: "Activity log", href: "/admin/sous-chef/history", icon: History },
   { label: "Settings", href: "/admin/sous-chef", icon: Settings },
+  { label: "Voice Profile", href: "/admin/voice", icon: Brain },
 ];
 
 const configureNav: NavItem[] = [

@@ -3,8 +3,9 @@
 // Voice profile reflection — periodically distills the timeline into compiled truth bullets.
 // Scheduled by appendTimelineInternal every 10 approvals/skips.
 
-import { internalAction } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { requireAuthedUser } from "./auth";
 import { v } from "convex/values";
 import { callHaikuText } from "../src/lib/haiku-call";
 import {
@@ -12,6 +13,18 @@ import {
   serializeVoiceProfile,
   trimTimeline,
 } from "../src/lib/drafts/voice-profile";
+
+export const triggerReflection = action({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthedUser(ctx);
+    await ctx.scheduler.runAfter(
+      0,
+      internal.voiceProfileReflection.runReflectionForUser,
+      { userId },
+    );
+  },
+});
 
 export const runReflectionForUser = internalAction({
   args: { userId: v.string() },
