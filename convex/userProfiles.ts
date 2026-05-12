@@ -253,6 +253,34 @@ export const getVoiceProfileMdInternal = internalQuery({
   },
 });
 
+// Internal mutation — bypasses auth so internalActions can persist the profile.
+export const setVoiceProfileMdInternal = internalMutation({
+  args: { userId: v.string(), md: v.string() },
+  handler: async (ctx, { userId, md }) => {
+    // Hard cap: 32 KB
+    if (md.length > 32 * 1024) throw new Error("voice_profile_too_large");
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) throw new Error("User profile not found");
+    await ctx.db.patch(profile._id, { voiceProfileMd: md });
+  },
+});
+
+// Internal mutation — stamps voiceProfileReflectedAt after reflection runs.
+export const stampVoiceProfileReflectedAt = internalMutation({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!profile) return;
+    await ctx.db.patch(profile._id, { voiceProfileReflectedAt: Date.now() });
+  },
+});
+
 // Authenticated mutation — lets the user (or dashboard) overwrite the profile.
 export const setVoiceProfileMd = mutation({
   args: { md: v.string() },
@@ -309,8 +337,7 @@ export const appendTimelineInternal = internalMutation({
       // TODO: voiceProfileReflection.runReflectionForUser will be added in Task 3.
       await ctx.scheduler.runAfter(
         0,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (internal as any).voiceProfileReflection.runReflectionForUser,
+        internal.voiceProfileReflection.runReflectionForUser,
         { userId },
       );
     }
