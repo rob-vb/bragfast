@@ -334,7 +334,6 @@ export const appendTimelineInternal = internalMutation({
       (approvalCount > 0 && approvalCount % 10 === 0) ||
       (skipCount > 0 && skipCount % 10 === 0)
     ) {
-      // TODO: voiceProfileReflection.runReflectionForUser will be added in Task 3.
       await ctx.scheduler.runAfter(
         0,
         internal.voiceProfileReflection.runReflectionForUser,
