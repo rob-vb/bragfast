@@ -127,6 +127,11 @@ describe("pushToBuffer", () => {
 
     expect(result.providerPostId).toBe("buf_post_123");
     expect(mockBufferGraphQL).toHaveBeenCalledOnce();
+    expect(mockBufferGraphQL.mock.calls[0]?.[2]).toMatchObject({
+      input: {
+        assets: [{ image: { url: "https://example.com/img.jpg" } }],
+      },
+    });
   });
 
   it("video format → throws PushError(media)", async () => {

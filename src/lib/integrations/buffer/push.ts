@@ -156,7 +156,7 @@ export async function pushToBuffer(params: BufferPushParams): Promise<{ provider
   };
 
   if (mediaUrl) {
-    input.assets = { images: [{ url: mediaUrl }] };
+    input.assets = [{ image: { url: mediaUrl } }];
   }
 
   let data: CreatePostResponse;
