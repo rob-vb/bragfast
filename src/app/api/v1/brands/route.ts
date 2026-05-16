@@ -34,8 +34,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rateLimitResponse = await checkRateLimit(auth.userId);
-  if (rateLimitResponse) return rateLimitResponse;
+  try {
+    const rateLimitResponse = await checkRateLimit(auth.userId);
+    if (rateLimitResponse) return rateLimitResponse;
+  } catch (err) {
+    console.error("Failed to rate limit brand create:", err);
+    return Response.json({ error: "Failed to create brand" }, { status: 500 });
+  }
 
   let body: Record<string, unknown>;
   try {

@@ -72,11 +72,18 @@ export function BrandForm({
         : `/api/v1/brands/${brandId}`;
     const method = action === "create" ? "POST" : "PATCH";
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : "Network error");
+      return;
+    }
 
     setLoading(false);
 
