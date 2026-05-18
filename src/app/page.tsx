@@ -11,16 +11,16 @@ import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
 import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Automate your build in public posts",
+  title: "brag.fast | Build in public, automatically",
   description:
-    "brag.fast turns your wins into branded posts. Ship a feature, hit an MRR milestone, gain GitHub stars — your Sous-Chef agent drafts the post for you to approve and post.",
+    "brag.fast turns every PR merge, milestone, and release into a branded post. GitHub App watches your repos, drafts the post, you approve. Build in public without the posting part.",
   alternates: { canonical: "/" },
 };
 
 const FAQ = [
   {
     q: "What kind of wins work?",
-    a: "Anything brag-worthy. New features for your app, MRR milestones, user-count screenshots, launch-day numbers, a before/after. If you'd post about it, brag.fast dresses it up.",
+    a: "Anything brag-worthy. New features, MRR milestones, user-count screenshots, launch-day numbers, a before/after. If you'd post about it, brag.fast dresses it up.",
   },
   {
     q: "Will it match my brand?",
@@ -32,11 +32,11 @@ const FAQ = [
   },
   {
     q: "What if the AI picks the wrong thing to highlight?",
-    a: "Edit before you render. Or skip the AI and write the copy yourself. We are constantly optimizing the agent to produce the best results though.",
+    a: "Edit before you render. Or skip the AI and write the copy yourself. We're constantly tuning the agent to produce better results.",
   },
   {
-    q: "How does Sous-Chef (agent) know what to post?",
-    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef both reacts in real time (a PR merges, a milestone hits) and sweeps on a schedule, drafting a post the moment it spots a win and leaving it for you to cook. You approve every post. Disconnect any integration any time.",
+    q: "How does Sous-Chef know what to post?",
+    a: "Connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics. Sous-Chef reacts in real time and sweeps on a schedule — drafting the moment it spots a win. You approve every post. Disconnect any integration any time.",
   },
 ];
 
@@ -59,10 +59,10 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Automate your build in public posts
+              Turn your work into an audience.
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Let your sous-chef agent turn every commit, release, and milestone into share-ready images and videos, automatically, so you can focus on building.
+              You ship features every week. The work is good. The posts never happen.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -70,10 +70,10 @@ export default function Home() {
                 signedInHref="/admin"
                 className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Get Started for Free
+                Start free — 30 images or 6 videos
               </CtaLink>
             </div>
-            <p className="font-[family-name:var(--font-geist-sans)] text-md text-brand/50 mt-4">
+            <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/50 mt-4">
               30 credits. No credit card required.
             </p>
           </div>
@@ -84,8 +84,156 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sous-Chef audience section */}
-      <section className="pt-16 md:pt-24 pb-0 bg-surface border-b-2 border-brand overflow-hidden">
+      {/* S2: Problem */}
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2.5 mb-8">
+              <div className="w-6 h-[3px] bg-gold" />
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                Sound familiar?
+              </span>
+            </div>
+            <div className="flex flex-col gap-6">
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                You ship a feature. Post about it. Get 3 likes and zero new followers. The work was good. The post got buried.
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                You open the composer. Screenshot? Thread? Announcement? You stare. Close the tab. No post today. You know you should have.
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand leading-relaxed font-medium">
+                Worse products win because their makers shout louder. That&apos;s not how it&apos;s supposed to work.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* S3: Guide — empathy + authority */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-[1fr_1fr] gap-12 md:gap-20 items-start">
+            <div>
+              <div className="flex items-center gap-2.5 mb-6">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  We get it
+                </span>
+              </div>
+              <blockquote className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed border-l-0 pl-0">
+                &ldquo;We know the loop: ship something good, open the post composer, blank out, close the tab. You&apos;re a builder, not a marketer. You shouldn&apos;t have to become one.&rdquo;
+              </blockquote>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-6 h-[3px] bg-gold" />
+                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                  Why trust us
+                </span>
+              </div>
+              <div className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]">
+                <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand mb-2">
+                  &#9656; Founder dogfood
+                </p>
+                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                  Built because I needed it. Every release post on{" "}
+                  <a
+                    href="https://x.com/the_robvb"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-brand transition-colors"
+                  >
+                    @the_robvb
+                  </a>{" "}
+                  was made with brag.fast. Check the profile.
+                </p>
+              </div>
+              <div className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]">
+                <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand mb-2">
+                  &#9656; Real infrastructure
+                </p>
+                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                  Official GitHub App. MCP server for Claude Code. Not a prompt wrapper.
+                </p>
+              </div>
+              <div className="border-2 border-brand bg-white p-4 shadow-[3px_3px_0_var(--color-brand)]">
+                <p className="font-[family-name:var(--font-press-start)] text-[9px] text-brand mb-2">
+                  &#9656; Honest early-stage
+                </p>
+                <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                  v0.X, building in public. You watch it grow, shape it, and get early-adopter pricing.
+                </p>
+              </div>
+              <a
+                href="https://x.com/the_robvb"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-[family-name:var(--font-press-start)] text-[9px] text-brand border-2 border-brand px-4 py-3 bg-surface shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all self-start"
+              >
+                &#9656; See for yourself — @the_robvb
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* S4: The Plan — 3 steps */}
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-2.5 mb-5">
+              <div className="w-6 h-[3px] bg-gold" />
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                How it works
+              </span>
+            </div>
+            <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+              Three steps. Then it runs.
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              {
+                step: "01",
+                title: "Install",
+                body: "Install the GitHub App. Pick the repos brag.fast watches. Takes two minutes.",
+              },
+              {
+                step: "02",
+                title: "Ship. We draft. You approve.",
+                body: "Merge to main. brag.fast drafts a branded post — image, video, or thread — and waits for your tap.",
+              },
+              {
+                step: "03",
+                title: "Build in public. Without the posting part.",
+                body: "Your release posts go out automatically. You stay in the editor. The audience gets fed.",
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="border-[3px] border-brand shadow-[6px_6px_0_var(--color-brand)] overflow-hidden flex flex-col"
+              >
+                <div className="bg-brand px-5 py-4 flex items-center gap-3">
+                  <span className="font-[family-name:var(--font-press-start)] text-[9px] text-brand/40">
+                    {item.step}
+                  </span>
+                  <span className="font-[family-name:var(--font-press-start)] text-[10px] text-gold leading-relaxed">
+                    {item.title}
+                  </span>
+                </div>
+                <div className="bg-white p-5 flex-1">
+                  <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/70 leading-relaxed">
+                    {item.body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* S5: Sous-Chef — step 2 in detail */}
+      <section className="pt-16 md:pt-24 pb-0 bg-white border-b-2 border-brand overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14">
             <div className="flex flex-col gap-5 pb-16 md:pb-24">
@@ -96,10 +244,10 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your Sous-Chef (agent) spots your wins so you can focus on building.
+                Your agent watches so you don&apos;t have to.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to approve and cook. You can even schedule your posts immediately with <strong>Buffer</strong> or <strong>Postiz</strong>.
+                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand — waiting for you to approve and cook. Schedule directly with <strong>Buffer</strong> or <strong>Postiz</strong>.
               </p>
               <div className="flex flex-col gap-3 mt-2">
                 <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60 uppercase tracking-wider">
@@ -145,13 +293,6 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                {/* <CtaLink
-                  signedOutHref="/signup"
-                  signedInHref="/admin/sous-chef"
-                  className="font-[family-name:var(--font-geist-sans)] text-sm text-brand underline underline-offset-4 self-start hover:text-gold transition-colors"
-                >
-                  Connect an integration &#9656;
-                </CtaLink> */}
               </div>
             </div>
             <div className="relative self-stretch hidden md:block">
@@ -164,14 +305,13 @@ export default function Home() {
               />
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* Cook it yourself section */}
+      {/* S6: Cook it yourself */}
       <section
         id="kitchen"
-        className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
       >
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 items-center">
@@ -183,23 +323,11 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Cook it yourself.
+                Or cook it yourself.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Add content, upload a screenshot or screen recording, pick a template, and you&apos;ve got landscape, square, and portrait versions ready to post. Takes about a minute.
+                Add content, upload a screenshot or screen recording, pick a template. Landscape, square, and portrait versions ready to post. About a minute.
               </p>
-              {/* <div className="flex flex-wrap gap-2 pt-1">
-                {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
-                  (t) => (
-                    <span
-                      key={t}
-                      className="font-[family-name:var(--font-press-start)] text-[9px] px-2 py-1.5 border-2 border-brand bg-white"
-                    >
-                      {t}
-                    </span>
-                  ),
-                )}
-              </div> */}
               <CtaLink
                 signedOutHref="/signup"
                 signedInHref="/admin/kitchen"
@@ -231,8 +359,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S5: Before/After */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+      {/* S7: Before/After */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-10">
             <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5] mb-3">
@@ -246,8 +374,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S6: Templates + Brand Kits */}
-      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+      {/* S8: Templates + Brand Kits */}
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="grid md:grid-cols-2 gap-12 md:gap-16">
             <div className="flex flex-col gap-6">
@@ -290,7 +418,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S7: Pricing */}
+      {/* S9: Stakes */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-2.5 mb-5">
+              <div className="w-6 h-[3px] bg-gold" />
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                The cost of waiting
+              </span>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col gap-4">
+              <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand">
+                &#9656; This sprint
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/80 leading-relaxed">
+                Another week of: feature shipped, no post made, knowing you should have, carrying the guilt into the next sprint.
+              </p>
+            </div>
+            <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)] flex flex-col gap-4">
+              <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand">
+                &#9656; Three launches from now
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/80 leading-relaxed">
+                Builders with worse features winning because they showed up and you didn&apos;t. Your next launch starting at zero. An audience you could have been building.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* S10: Pricing */}
       <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="mb-12 md:mb-16 text-center">
@@ -358,7 +518,7 @@ export default function Home() {
               signedInHref="/admin/billing"
               className="inline-block font-[family-name:var(--font-press-start)] text-[10px] px-6 py-3 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              Start with 30 Free Credits
+              Start with 30 free credits
             </CtaLink>
             <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-2">
               No card. Upgrade when you need more.
@@ -367,8 +527,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* S11: Picture of success */}
       <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center gap-2.5 mb-8">
+              <div className="w-6 h-[3px] bg-gold" />
+              <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+                Picture this
+              </span>
+            </div>
+            <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4] mb-8">
+              Friday, week one.
+            </h2>
+            <div className="flex flex-col gap-6">
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Three features merged. Three posts went out. One got traction. You didn&apos;t open a single tab to write anything.
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Ten sprints in. People are DMing you about your latest release. Builders are reposting. Someone emails: &ldquo;where did you build this?&rdquo; Your next launch doesn&apos;t start at zero.
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand leading-relaxed font-medium">
+                Saturday morning. Coffee. Code. No list in your head of what you still need to post. Your work has an audience. All on its own.
+              </p>
+            </div>
+            <div className="mt-10">
+              <CtaLink
+                signedOutHref="/signup"
+                signedInHref="/admin"
+                className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-xs px-6 py-4 text-brand border-2 border-brand bg-gold shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              >
+                Start free — 30 images or 6 videos
+              </CtaLink>
+              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/50 mt-3">
+                30 credits. No credit card required.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* S12: FAQ */}
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-12">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
@@ -406,7 +606,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* S13: Final CTA */}
       <section className="py-16 md:py-24 bg-gold border-b-2 border-brand relative overflow-hidden">
         <div
           aria-hidden
@@ -419,17 +619,17 @@ export default function Home() {
         />
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 text-center">
           <h2 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-[1.4] mb-5">
-            Start free. <span className="block md:inline">Upgrade when you&apos;re ready.</span>
+            The work counts. <span className="block md:inline">Make sure people see it.</span>
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
-            30 free credits. No credit card. First render in under a minute.
+            Start free. 30 images or 6 videos included. First post in under a minute.
           </p>
           <CtaLink
             signedOutHref="/signup"
             signedInHref="/admin"
             className="inline-block font-[family-name:var(--font-press-start)] text-xs md:text-sm px-6 py-4 text-brand border-2 border-brand bg-white shadow-[4px_4px_0_var(--color-brand)] hover:shadow-[2px_2px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
           >
-            Start for free
+            Start free — no card needed
           </CtaLink>
         </div>
       </section>
