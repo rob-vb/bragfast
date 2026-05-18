@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { callHaikuJson, callHaikuText } from "../haiku-call";
+import { voiceProfileBlock } from "./voice-profile";
 
 // Text-only draft copy for Sous-Chef. Keep this intentionally short:
 // drafts are starting points for social cards, not changelog summaries.
@@ -38,6 +39,7 @@ type PlatformOpt = {
   platform?: Platform;
   voicePreset?: VoicePreset | null;
   examples?: ApprovalExample[] | null;
+  voiceProfileMd?: string | null;
 };
 
 export type ComposeCopyInput =
@@ -155,6 +157,9 @@ function platformLine(input: { platform?: Platform }): string {
   return input.platform ? PLATFORM_GUIDE[input.platform] : "";
 }
 
+// voicePreset (coarse tone hint) and voiceProfileBlock (specific learned bullets)
+// both inject into the user prompt. voiceProfileBlock renders first; examples second.
+
 // S8.3: render the few-shot block. Empty string when no examples — callers
 // concat unconditionally without needing a guard.
 export function examplesBlock(
@@ -228,6 +233,7 @@ If the PR contains one real feature plus cleanup/fixes, announce only the featur
   const user = `Repo: ${input.repoFullName}
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 PR title: ${input.title}
 PR body:
@@ -260,6 +266,7 @@ You celebrate a revenue milestone. The title should prominently feature the doll
   const user = `Milestone: ${amount} MRR
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
@@ -286,6 +293,7 @@ You celebrate the first paying customer. Title should feel momentous but not che
   const user = `Milestone: first paying customer
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
@@ -313,6 +321,7 @@ You celebrate a visitor/traffic milestone. Title leads with the number. Descript
   const user = `Milestone: ${n} visitors (rolling 30 days, via ${input.source})
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
@@ -340,6 +349,7 @@ You celebrate a total revenue milestone. Title leads with the dollar amount. Des
   const user = `Milestone: ${amount} in total revenue
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
@@ -363,6 +373,7 @@ You celebrate a paying subscriber milestone. Title leads with the number. Descri
   const user = `Milestone: ${n} paying subscribers
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
@@ -386,6 +397,7 @@ You celebrate a GitHub star milestone. Title names the number and the repo. Desc
   const user = `Milestone: ${n} GitHub stars on ${input.repoFullName}
 ${brandLine(input)}
 ${platformLine(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the brag post JSON.`;
@@ -521,6 +533,7 @@ export async function composeImageCopy(
   const system = `${IMAGE_SYSTEM}
 ${brandLine(input)}`;
   const user = `${imageHintFor(input)}
+${voiceProfileBlock(input.voiceProfileMd)}
 ${examplesBlock(input.examples)}
 
 Write the card text JSON.`;

@@ -50,17 +50,21 @@ export async function createGoalHitDraft(
     goalMilestoneKey(input.goal.externalId),
   );
 
-  const [profile, examples] = await Promise.all([
+  const [profile, examples, voiceProfileMd] = await Promise.all([
     ctx.runQuery(internal.userProfiles.getByUserIdInternal, {
       userId: input.userId,
     }),
     ctx.runQuery(api.drafts.getRecentApprovedEdits, { userId: input.userId }),
+    ctx.runQuery(internal.userProfiles.getVoiceProfileMdInternal, {
+      userId: input.userId,
+    }),
   ]);
   const voicePreset = (profile?.voicePreset ?? null) as VoicePreset | null;
   const composeInput = {
     ...input.composeInput,
     voicePreset,
     examples,
+    voiceProfileMd,
   } as ComposeCopyInput;
 
   const [pick, copy] = await Promise.all([

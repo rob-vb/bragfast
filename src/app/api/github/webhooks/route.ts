@@ -197,9 +197,10 @@ async function createPrMergeDraft(
 ) {
   try {
     const input = buildPrMergeDraftInput(payload, userId);
-    const [voicePreset, examples] = await Promise.all([
+    const [voicePreset, examples, voiceProfileMd] = await Promise.all([
       convex.query(api.userProfiles.getVoicePreset, { userId }),
       convex.query(api.drafts.getRecentApprovedEdits, { userId }),
+      convex.query(api.userProfiles.getVoiceProfileMd, { userId }),
     ]);
     const composeInput = {
       ...input.composeCopyInput,
@@ -210,6 +211,7 @@ async function createPrMergeDraft(
         | "deadpan"
         | null,
       examples,
+      voiceProfileMd,
     };
     const [pick, primary] = await Promise.all([
       pickTemplate(input.pickTemplateInput),

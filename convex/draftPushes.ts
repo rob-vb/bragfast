@@ -460,6 +460,26 @@ export const approveDraft = mutation({
     );
     const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
 
+    // Fire timeline entry async so a profile-side failure can't fail the approval.
+    if (draftRow?.source === "agent") {
+      const originalConfig = draftRow.originalConfig
+        ? (() => { try { return JSON.parse(draftRow.originalConfig!); } catch { return null; } })()
+        : null;
+      const originalTitle: string | undefined = originalConfig?.objectContent?.title?.text || undefined;
+      await ctx.scheduler.runAfter(0, internal.userProfiles.appendTimelineInternal, {
+        userId,
+        entry: {
+          dateIso: new Date().toISOString(),
+          triggerType,
+          action: "approved" as const,
+          wasEdited: editDelta.wasEdited,
+          original: originalTitle,
+          final: title || undefined,
+          editType: editDelta.editType ?? undefined,
+        },
+      });
+    }
+
     return {
       ok: true as const,
       pushIds: pushIds as string[],

@@ -114,9 +114,10 @@ export async function runRetroPrMergeDraft(
     const milestoneKey = prMergedMilestoneKey(repoFullName, pr.number);
     const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
 
-    const [voicePreset, examples] = await Promise.all([
+    const [voicePreset, examples, voiceProfileMd] = await Promise.all([
       convex.query(api.userProfiles.getVoicePreset, { userId }),
       convex.query(api.drafts.getRecentApprovedEdits, { userId }),
+      convex.query(api.userProfiles.getVoiceProfileMd, { userId }),
     ]);
     const preset = voicePreset as
       | "casual_builder"
@@ -137,6 +138,7 @@ export async function runRetroPrMergeDraft(
         repoFullName,
         voicePreset: preset,
         examples,
+        voiceProfileMd,
       }),
     ]);
     const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
