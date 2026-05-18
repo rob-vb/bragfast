@@ -107,3 +107,20 @@ export const backfillGoalHits = internalMutation({
     return { processed: oldHits.length, backfilled };
   },
 });
+
+// One-time migration: remove legacy `previewUrls` field from templates.
+// Run against dev: npx convex run migrations:removePreviewUrls --prod=false
+export const removePreviewUrls = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const templates = await ctx.db.query("templates").collect();
+    let patched = 0;
+    for (const t of templates) {
+      if ("previewUrls" in t) {
+        await ctx.db.patch(t._id, { previewUrls: undefined } as never);
+        patched++;
+      }
+    }
+    return { total: templates.length, patched };
+  },
+});
