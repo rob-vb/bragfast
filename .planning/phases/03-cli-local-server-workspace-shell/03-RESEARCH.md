@@ -585,22 +585,25 @@ process.on("SIGTERM", () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Workspace SPA CSS/Tailwind**
    - What we know: Root package has Tailwind v4 as devDependency; Workspace SPA will need styling.
    - What's unclear: Should `packages/workspace` install its own Tailwind, or share from root? Vite + Tailwind v4 needs `@tailwindcss/vite` plugin.
    - Recommendation: Install `tailwindcss` + `@tailwindcss/vite` in `packages/workspace` directly — packages should be self-contained per project pattern.
+   - RESOLVED: Install Tailwind v4 standalone in `packages/workspace` via `@tailwindcss/vite` plugin; do not share the root Tailwind config.
 
 2. **Component sharing between Next.js app and Workspace SPA**
    - What we know: CONTEXT.md says "components are ported/shared from `src/` as needed".
    - What's unclear: Phase 3 only needs a minimal shell — no shared components needed yet. Phase 4 will need to access design tokens.
    - Recommendation: Defer component sharing architecture to Phase 4; Phase 3 SPA shell is standalone.
+   - RESOLVED: Deferred to Phase 4; Phase 3 shell needs no shared components — SPA is fully standalone.
 
 3. **Vite dev server vs pre-built assets during workspace development**
    - What we know: The CLI serves pre-built `dist/` assets; Vite's dev server is separate.
    - What's unclear: Developer workflow when iterating on the SPA — run `vite dev` directly? Or re-build on every change?
    - Recommendation: `packages/workspace` dev should run `npm run dev` (Vite dev server) directly at port `5173` for fast iteration. The CLI integration is tested with built assets (`npm run build && brag`). No special wiring needed for Phase 3.
+   - RESOLVED: Run `vite dev` at :5173 for SPA iteration; CLI integration is tested and served with built assets (`npm run build --workspace=packages/workspace && brag`).
 
 ---
 
