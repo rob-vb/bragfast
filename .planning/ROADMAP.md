@@ -41,7 +41,15 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
   3. A dependency audit on `packages/render-core` reports zero imports of `convex`, `@aws-sdk`, or `next`
   4. Font paths resolve correctly from `__dirname` (not `process.cwd()`) so render succeeds regardless of the working directory
   5. Sharp native binaries install successfully on macOS arm64 and Linux x64 (verified in CI)
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Workspace scaffold: package.json, tsup config, tsconfig, peerDeps, font TTFs, stub barrel
+- [ ] 01-02-PLAN.md — Test harness: proof scripts (SC#1–SC#3), vitest config, fonts unit test (SC#4), CI matrix (SC#5)
+- [ ] 01-03-PLAN.md — Pure types + canvas-renderer + fonts (__dirname fix + disk cache)
+- [ ] 01-04-PLAN.md — pure-helpers.ts + image.ts (renderImage Satori/Sharp loop — SC#1)
+- [ ] 01-05-PLAN.md — video.ts (renderVideo promoted from renderVideoLocal — SC#2)
+- [ ] 01-06-PLAN.md — App rewiring: next.config.ts + render.ts + render-video.ts adapters + build verification
 
 ### Phase 2: CLI Shell + Device-Flow Auth
 **Goal**: A developer can run `npx brag` and complete browser device-flow login; the CLI stores a credential locally and reuses it on future runs; the backend has the device-flow endpoints and `/device` approval page
@@ -136,7 +144,7 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Render Core Extraction | 0/TBD | Not started | - |
+| 1. Render Core Extraction | 0/6 | Not started | - |
 | 2. CLI Shell + Device-Flow Auth | 0/TBD | Not started | - |
 | 3. CLI Local Server + Workspace Shell | 0/TBD | Not started | - |
 | 4. Workspace Editor + Slot Filling | 0/TBD | Not started | - |
