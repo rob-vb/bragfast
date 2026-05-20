@@ -54,6 +54,9 @@ export default defineSchema({
     isDefault: v.boolean(),
     config: v.any(),
     previewUrl: v.optional(v.string()),
+    importedFromTemplateId: v.optional(v.string()),
+    medium: v.optional(v.union(v.literal("image"), v.literal("video"), v.literal("both"))),
+    visibility: v.optional(v.union(v.literal("private"), v.literal("public"))),
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_userId", ["userId"])
@@ -69,6 +72,27 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_keyHash", ["keyHash"]),
+
+  deviceCodes: defineTable({
+    device_code: v.string(),
+    user_code: v.string(),
+    userId: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("denied"),
+      v.literal("consumed"),
+      v.literal("expired")
+    ),
+    expiresAt: v.number(),
+    created_at: v.string(),
+    approved_at: v.optional(v.string()),
+    denied_at: v.optional(v.string()),
+    consumed_at: v.optional(v.string()),
+  })
+    .index("by_device_code", ["device_code"])
+    .index("by_user_code", ["user_code"])
+    .index("by_status_and_expires", ["status", "expiresAt"]),
 
   rateLimits: defineTable({
     userId: v.string(),

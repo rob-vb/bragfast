@@ -1,16 +1,14 @@
-import satori from "satori";
-import sharp from "sharp";
 import crypto from "crypto";
 import path from "path";
 import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { CanvasRenderer } from "../templates/canvas-renderer";
+import { renderImage } from "@bragfast/render-core";
+import type { ImageRenderResult, LocalRenderRequest } from "@bragfast/render-core";
 import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
-import { loadFontsForFamily, loadFontsForObjects } from "../fonts";
 import { uploadImage } from "../storage/r2";
 import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
-import { resolveTemplate, resolveAllTemplates, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages, applySignatureDefaults } from "./shared";
+import { resolveAllTemplates, resolveBrand, buildSlideDataMaps, prefetchStaticImages } from "./shared";
 import { collectUploadKeys, cleanupUploads } from "./cleanup";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
@@ -101,79 +99,42 @@ export async function renderReleaseAsync(
       bgPerTemplate.set(name, backgroundImageBase64);
     }
 
+    if (request.logo_url && !brand.logoBase64) {
+      throw new Error(
+        `render-core purity violation: brand "${brand.name}" has logo_url but logoBase64 is missing. ` +
+          "resolveBrand() must fetch and embed the logo as base64 before calling renderImage()."
+      );
+    }
+
+    const coreReq: LocalRenderRequest = { brand, formats: [] };
+    for (const formatEntry of request.formats) {
+      const format = formatEntry.name;
+      const slideDataMaps = await buildSlideDataMaps(formatEntry.slides);
+      coreReq.formats.push({
+        name: format,
+        slides: formatEntry.slides.map((slide, idx) => {
+          const slideTemplateName = slide.templateId ?? templateName;
+          return {
+            objectData: slideDataMaps[idx],
+            templateConfig: resolveSlideConfig(slide),
+            backgroundImageBase64: bgPerTemplate.get(slideTemplateName),
+            srcMap: aggregateSrcMap,
+          };
+        }),
+      });
+    }
+
+    const coreResult: ImageRenderResult = await renderImage(coreReq);
+
     for (const formatEntry of request.formats) {
       const format = formatEntry.name;
       const { width, height } = FORMAT_DIMENSIONS[format];
       const slideUrls: string[] = [];
+      const rendered = coreResult.formats[format];
+      if (!rendered) throw new Error(`render-core did not return format "${format}"`);
 
-      // Build slideDataMaps for THIS format's slides
-      const slideDataMaps = await buildSlideDataMaps(formatEntry.slides);
-
-      // Normalize all fetched images through Sharp for Satori compatibility
-      for (const dataMap of slideDataMaps) {
-        for (const entry of Object.values(dataMap)) {
-          if (entry.imageBase64) {
-            entry.imageBase64 = await normalizeDataUri(entry.imageBase64);
-          }
-        }
-      }
-
-      // Inject static images and propagate brand-default signature data per slide
-      formatEntry.slides.forEach((slide, idx) => {
-        const cfg = resolveSlideConfig(slide);
-        const layout = cfg.formats[format as FormatKey] ?? cfg.formats.landscape;
-        injectStaticImages([slideDataMaps[idx]], layout, aggregateSrcMap);
-        applySignatureDefaults(slideDataMaps[idx], layout, brand);
-      });
-
-      // Font loading: aggregate over every layout used by this format's slides
-      const seenLayouts = new Set<string>();
-      let fonts: Awaited<ReturnType<typeof loadFontsForObjects>> = [];
-      for (const slide of formatEntry.slides) {
-        const cfg = resolveSlideConfig(slide);
-        const layout = cfg.formats[format as FormatKey] ?? cfg.formats.landscape;
-        const key = slide.templateId ?? templateName;
-        if (seenLayouts.has(key)) continue;
-        seenLayouts.add(key);
-        const layoutFonts = await loadFontsForObjects(layout.objects);
-        fonts = [...fonts, ...layoutFonts];
-      }
-      if (brand.font_family) {
-        const brandFonts = await loadFontsForFamily(brand.font_family);
-        fonts = [...fonts, ...brandFonts];
-      }
-      const overrideFonts = new Map<string, Set<number>>();
-      for (const dataMap of slideDataMaps) {
-        for (const entry of Object.values(dataMap)) {
-          if (entry.fontFamily) {
-            if (!overrideFonts.has(entry.fontFamily)) overrideFonts.set(entry.fontFamily, new Set());
-            if (entry.fontWeight) overrideFonts.get(entry.fontFamily)!.add(entry.fontWeight);
-          }
-        }
-      }
-      for (const [family, weights] of overrideFonts) {
-        const loaded = await loadFontsForFamily(family, weights);
-        fonts = [...fonts, ...loaded];
-      }
-
-      // Render slides
-      for (let i = 0; i < slideDataMaps.length; i++) {
-        const slide = formatEntry.slides[i];
-        const slideConfig = resolveSlideConfig(slide);
-        const slideTemplateName = slide.templateId ?? templateName;
-        const jsx = CanvasRenderer({
-          config: slideConfig,
-          format: format as FormatKey,
-          objectData: slideDataMaps[i],
-          brand,
-          backgroundImageBase64: bgPerTemplate.get(slideTemplateName),
-          skipEmpty: true,
-        });
-        const svg = await satori(jsx, { width, height, fonts });
-        const jpg = await sharp(Buffer.from(svg))
-          .flatten({ background: '#ffffff' })
-          .jpeg({ quality: 85 })
-          .toBuffer();
+      for (let i = 0; i < rendered.slides.length; i++) {
+        const jpg = rendered.slides[i];
         const filename = `${format}-${i + 1}.jpg`;
         let url: string;
         if (OUTPUT_LOCAL) {
@@ -264,14 +225,6 @@ function validateImageOutputSources(
       }
     });
   }
-}
-
-async function normalizeDataUri(dataUri: string): Promise<string> {
-  const match = dataUri.match(/^data:[^;]+;base64,(.+)$/);
-  if (!match) return dataUri;
-  const raw = Buffer.from(match[1], "base64");
-  const png = await sharp(raw).png().toBuffer();
-  return `data:image/png;base64,${png.toString("base64")}`;
 }
 
 async function callWebhook(

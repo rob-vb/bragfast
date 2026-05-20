@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 
 function generateKey(): string {
@@ -19,24 +20,31 @@ async function hashKey(key: string): Promise<string> {
     .join("");
 }
 
+export async function createApiKeyForUser(
+  ctx: MutationCtx,
+  { userId, name }: { userId: string; name: string }
+): Promise<{ key: string; prefix: string }> {
+  const key = generateKey();
+  const keyHash = await hashKey(key);
+  const prefix = key.slice(0, 10);
+
+  await ctx.db.insert("apiKeys", {
+    userId,
+    name,
+    key,
+    keyHash,
+    prefix,
+    created_at: new Date().toISOString(),
+  });
+
+  return { key, prefix };
+}
+
 export const create = mutation({
   args: { userId: v.string(), name: v.string() },
   handler: async (ctx, { userId, name }) => {
-    const key = generateKey();
-    const keyHash = await hashKey(key);
-    const prefix = key.slice(0, 10);
-
-    await ctx.db.insert("apiKeys", {
-      userId,
-      name,
-      key,
-      keyHash,
-      prefix,
-      created_at: new Date().toISOString(),
-    });
-
     // Return the full key only once — it's never stored in plain text
-    return { key, prefix };
+    return createApiKeyForUser(ctx, { userId, name });
   },
 });
 

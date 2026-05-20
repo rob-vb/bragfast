@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-05-20T14:49:00.476Z"
-last_activity: 2026-05-20 -- Phase 01 planning complete
+stopped_at: Phase 2 complete; ready for Phase 3 planning/execution
+last_updated: "2026-05-20T19:15:00+02:00"
+last_activity: 2026-05-20 -- Phase 02 complete; public CLI package is bragfast
 progress:
   total_phases: 8
-  completed_phases: 0
-  total_plans: 6
-  completed_plans: 0
-  percent: 0
+  completed_phases: 2
+  total_plans: 11
+  completed_plans: 11
+  percent: 25
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** A developer can go from terminal to a finished, branded, ready-to-post image/video in minutes — rendered locally, no AI, no friction.
-**Current focus:** Phase 1 — Render Core Extraction (ready to plan)
+**Current focus:** Phase 3 — CLI Local Server + Workspace Shell
 
 ## Current Position
 
-Phase: 1 of 8 (Render Core Extraction)
-Plan: — of — in current phase
-Status: Ready to execute
-Last activity: 2026-05-20 -- Phase 01 planning complete
+Phase: 3 of 8 (CLI Local Server + Workspace Shell)
+Plan: TBD in current phase
+Status: Phase 2 complete; public first-run command is `npx bragfast`; installed/global bin can still be `brag`
+Last activity: 2026-05-20 -- Phase 02 complete; public CLI package is bragfast
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 11
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -44,11 +44,12 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| Phase 1: Render Core Extraction | 6 | — | — |
+| Phase 2: CLI Shell + Device-Flow Auth | 5 | — | — |
 
 **Recent Trend:**
 
-- Last 5 plans: —
+- Last 5 plans: 02-01, 02-02, 02-03, 02-04, 02-05
 - Trend: —
 
 *Updated after each plan completion*
@@ -70,9 +71,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 1: Sharp cross-platform binary mismatch — must verify on macOS arm64, Linux x64, Linux arm64 before CLI release
-- Phase 1: Font path resolution — fonts.ts uses process.cwd(); render-core must use __dirname
-- Phase 2: npm package name `brag` availability must be checked before Phase 2 begins
+- Phase 1: Sharp cross-platform binary mismatch — CI matrix added for macOS arm64 and Linux x64; live CI must still be checked after push
+- Phase 2: npm package name `brag` is taken (`0.0.2`); package name `bragfast` is selected and Phase 2 is complete. Public first-run command is `npx bragfast`; installed/global bin can still be `brag`.
 - Phase 4/6: Workspace SPA tech decision (Vite standalone vs Next.js SPA export) — resolve at Phase 3 planning
 - Phase 6: Remotion Chrome path isolation on macOS vs Linux — verify in CI before Phase 6 ships
 
@@ -87,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-20T14:12:41.126Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-render-core-extraction/01-CONTEXT.md
+Last session: 2026-05-20T19:15:00+02:00
+Stopped at: Phase 2 complete after switching CLI package to bragfast
+Resume file: .planning/ROADMAP.md

@@ -3,7 +3,7 @@ phase: 1
 slug: render-core-extraction
 status: ready
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-05-20
 ---
 
@@ -41,12 +41,12 @@ created: 2026-05-20
 
 | SC | Validates | Test Type | Automated Command | Status |
 |----|-----------|-----------|-------------------|--------|
-| SC#1 | `renderImage()` standalone → valid JPEGs for landscape/square/portrait, no Convex/R2 | integration (proof script) | `node packages/render-core/scripts/prove-image.mjs` | ⬜ pending |
-| SC#2 | `renderVideo()` standalone → valid `.mp4` via promoted `renderVideoLocal()`, no Lambda/network | integration (proof script) | `node packages/render-core/scripts/prove-video.mjs` | ⬜ pending |
-| SC#3 | dependency audit: zero resolved imports of `convex`, `@aws-sdk`, `next` | unit (audit script) | `node packages/render-core/scripts/audit-deps.mjs` | ⬜ pending |
-| SC#4 | font paths resolve from `__dirname`, render works regardless of cwd | unit | `npx vitest run packages/render-core -t "font __dirname"` | ⬜ pending |
-| SC#5 | Sharp native binaries install on macOS arm64 + Linux x64 | CI matrix | GitHub Actions job `render-core (macos-arm64, ubuntu-x64)` green | ⬜ pending |
-| D-05 | Google Font disk cache: returns cached bytes without network call on repeat fetch | unit | `npx vitest run packages/render-core -t "D-05 disk cache"` | ⬜ pending |
+| SC#1 | `renderImage()` standalone → valid JPEGs for landscape/square/portrait, no Convex/R2 | integration (proof script) | `node packages/render-core/scripts/prove-image.mjs` | ✅ green |
+| SC#2 | `renderVideo()` standalone → valid `.mp4` via promoted `renderVideoLocal()`, no Lambda/network | integration (proof script) | `node packages/render-core/scripts/prove-video.mjs` | ✅ green |
+| SC#3 | dependency audit: zero resolved imports of `convex`, `@aws-sdk`, `next` | unit (audit script) | `node packages/render-core/scripts/audit-deps.mjs` | ✅ green |
+| SC#4 | font paths resolve from `__dirname`, render works regardless of cwd | unit | `npx vitest run packages/render-core -t "font __dirname"` | ✅ green |
+| SC#5 | Sharp native binaries install on macOS arm64 + Linux x64 | CI matrix | GitHub Actions job `render-core (macos-arm64, ubuntu-x64)` green | ⚠️ workflow added; awaits remote CI run |
+| D-05 | Google Font disk cache: returns cached bytes without network call on repeat fetch | unit | `npx vitest run packages/render-core -t "D-05 disk cache"` | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -54,12 +54,12 @@ created: 2026-05-20
 
 ## Wave 0 Requirements
 
-- [ ] `packages/render-core/vitest.config.ts` — package test config
-- [ ] `packages/render-core/scripts/prove-image.mjs` — SC#1 standalone image proof (Buffer in → JPEG out asserted via Sharp metadata)
-- [ ] `packages/render-core/scripts/prove-video.mjs` — SC#2 standalone video proof (MP4 magic-bytes / ffprobe-free Buffer assertion)
-- [ ] `packages/render-core/scripts/audit-deps.mjs` — SC#3 resolved-import audit asserting absence of `convex`/`@aws-sdk`/`next`
-- [ ] CI workflow matrix (macOS arm64 + Linux x64) — SC#5
-- [ ] `packages/render-core/src/__tests__/fonts.test.ts` — SC#4 `__dirname` unit test + D-05 disk-cache unit test (write dummy bytes to temp dir, assert cached read returns bytes without network call)
+- [x] `packages/render-core/vitest.config.ts` — package test config
+- [x] `packages/render-core/scripts/prove-image.mjs` — SC#1 standalone image proof (Buffer in → JPEG out asserted via Sharp metadata)
+- [x] `packages/render-core/scripts/prove-video.mjs` — SC#2 standalone video proof (MP4 magic-bytes / ffprobe-free Buffer assertion)
+- [x] `packages/render-core/scripts/audit-deps.mjs` — SC#3 resolved-import audit asserting absence of `convex`/`@aws-sdk`/`next`
+- [x] CI workflow matrix (macOS arm64 + Linux x64) — SC#5
+- [x] `packages/render-core/src/__tests__/fonts.test.ts` — SC#4 `__dirname` unit test + D-05 disk-cache unit test (write dummy bytes to temp dir, assert cached read returns bytes without network call)
 
 *JPEG/MP4 fixtures: prove scripts construct a minimal in-memory `LocalRenderRequest` (CanvasTemplateConfig + resolved Brand + base64 media), avoiding any network/Convex.*
 
@@ -83,6 +83,6 @@ created: 2026-05-20
 - [x] No watch-mode flags
 - [x] Feedback latency < 90s
 - [x] `nyquist_compliant: true` set — every plan task maps to a check (SC#1–SC#5 + D-05)
-- [ ] Wave 0 scripts executed and passing (completes at execution time, not planning time)
+- [x] Wave 0 scripts executed and passing (completes at execution time, not planning time)
 
 **Approval:** planning complete — execution pending

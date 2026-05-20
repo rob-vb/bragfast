@@ -14,12 +14,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [next] = useState(() => {
+    if (typeof window === "undefined") return "/admin";
+    const param = new URLSearchParams(window.location.search).get("next");
+    return param?.startsWith("/") ? param : "/admin";
+  });
 
   useEffect(() => {
     if (!isPending && session) {
-      router.replace("/admin");
+      router.replace(next);
     }
-  }, [isPending, session, router]);
+  }, [isPending, next, session, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +34,7 @@ export default function LoginPage() {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/admin",
+      callbackURL: next,
     });
 
     setLoading(false);
@@ -39,7 +44,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/admin");
+    router.push(next);
   }
 
   return (

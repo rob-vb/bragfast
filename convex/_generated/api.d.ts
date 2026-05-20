@@ -15,6 +15,7 @@ import type * as brands from "../brands.js";
 import type * as briefings from "../briefings.js";
 import type * as briefingsActions from "../briefingsActions.js";
 import type * as crons from "../crons.js";
+import type * as deviceCodes from "../deviceCodes.js";
 import type * as draftPushes from "../draftPushes.js";
 import type * as drafts from "../drafts.js";
 import type * as githubInstallations from "../githubInstallations.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   briefings: typeof briefings;
   briefingsActions: typeof briefingsActions;
   crons: typeof crons;
+  deviceCodes: typeof deviceCodes;
   draftPushes: typeof draftPushes;
   drafts: typeof drafts;
   githubInstallations: typeof githubInstallations;

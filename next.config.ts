@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [
+    "@bragfast/render-core",
     "@remotion/lambda",
     "@remotion/bundler",
     "@remotion/renderer",
@@ -10,7 +11,7 @@ const nextConfig: NextConfig = {
     "sharp",
   ],
   outputFileTracingIncludes: {
-    "/api/**": ["./src/assets/fonts/**/*"],
+    "/api/**": ["./src/assets/fonts/**/*", "./packages/render-core/fonts/**/*"],
   },
   async headers() {
     return [

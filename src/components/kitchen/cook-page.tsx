@@ -1042,10 +1042,9 @@ const FORMAT_RATIO: Record<FormatKey, number> = {
 
 /** Portals workspace controls into the admin layout's <header> slot. */
 function HeaderSlot({ children }: { children: React.ReactNode }) {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    setTarget(document.getElementById("admin-header-slot"));
-  }, []);
+  const [target] = useState<HTMLElement | null>(() =>
+    typeof document === "undefined" ? null : document.getElementById("admin-header-slot")
+  );
   if (!target) return null;
   return createPortal(children, target);
 }

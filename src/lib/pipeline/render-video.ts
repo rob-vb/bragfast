@@ -1,9 +1,11 @@
 import crypto from "crypto";
 import path from "path";
-import { mkdir } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { renderVideo } from "../video/lambda";
+import { renderVideo as renderVideoCore } from "@bragfast/render-core";
+import type { LocalVideoRenderRequest, VideoRenderResult } from "@bragfast/render-core";
+import { renderVideo as renderVideoLambda } from "../video/lambda";
 import { uploadImage } from "../storage/r2";
 import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages, injectStaticImages } from "./shared";
 import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
@@ -159,10 +161,16 @@ export async function renderVideoAsync(
           const dir = path.join(process.cwd(), ".output", cookId);
           await mkdir(dir, { recursive: true });
           const outputPath = path.join(dir, filename);
-          await renderVideoLocal(formatKey, inputProps, outputPath);
+          const coreReq: LocalVideoRenderRequest = {
+            compositionId: formatKey,
+            inputProps,
+            remotionEntryPoint: path.join(process.cwd(), "src/remotion/index.ts"),
+          };
+          const coreResult: VideoRenderResult = await renderVideoCore(coreReq);
+          await writeFile(outputPath, coreResult.buffer);
           url = `file://${outputPath}`;
         } else {
-          const { outputUrl } = await renderVideo({
+          const { outputUrl } = await renderVideoLambda({
             compositionId: formatKey,
             inputProps,
           });
@@ -235,41 +243,4 @@ export async function renderVideoAsync(
       console.error(`Failed to refund credits:`, refundErr);
     }
   }
-}
-
-async function renderVideoLocal(
-  compositionId: string,
-  inputProps: Record<string, unknown>,
-  outputPath: string
-) {
-  const { bundle } = await import("@remotion/bundler");
-  const { renderMedia, selectComposition } = await import("@remotion/renderer");
-
-  const entryPoint = path.join(process.cwd(), "src/remotion/index.ts");
-
-  console.log(`[LOCAL] Bundling Remotion project...`);
-  const bundleLocation = await bundle({ entryPoint });
-
-  console.log(`[LOCAL] Selecting composition: ${compositionId}`);
-  const composition = await selectComposition({
-    serveUrl: bundleLocation,
-    id: compositionId,
-    inputProps,
-  });
-
-  console.log(`[LOCAL] Rendering ${compositionId} → ${outputPath}`);
-  await renderMedia({
-    composition,
-    serveUrl: bundleLocation,
-    codec: "h264",
-    crf: 28,
-    x264Preset: "slow",
-    encodingMaxRate: "5M",
-    encodingBufferSize: "10M",
-    muted: true,
-    outputLocation: outputPath,
-    inputProps,
-  });
-
-  console.log(`[LOCAL] Render complete: ${outputPath}`);
 }

@@ -1,0 +1,29 @@
+{
+  "name": "bragfast",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "bragfast": "dist/index.js",
+    "brag": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "commander": "14.0.3",
+    "open": "11.0.0",
+    "ora": "9.4.0"
+  },
+  "devDependencies": {
+    "tsup": "8.5.1",
+    "tsx": "4.22.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

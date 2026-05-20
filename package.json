@@ -2,9 +2,13 @@
   "name": "bragfast",
   "version": "0.1.1",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
-    "build": "npx convex codegen --typecheck=disable 2>/dev/null; next build",
+    "build": "npm run build --workspace=packages/render-core && npm run build --workspace=packages/cli && (npx convex codegen --typecheck=disable 2>/dev/null; next build)",
+    "cli:build": "npm run build --workspace=packages/cli",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
@@ -15,6 +19,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@aws-sdk/client-s3": "^3.1003.0",
     "@aws-sdk/s3-request-presigner": "^3.1030.0",
+    "@bragfast/render-core": "workspace:*",
     "@codemirror/autocomplete": "^6.20.1",
     "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-json": "^6.0.2",

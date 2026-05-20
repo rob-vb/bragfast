@@ -1,0 +1,29 @@
+{
+  "name": "@bragfast/render-core",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "fonts"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "audit:purity": "node scripts/audit-deps.mjs"
+  },
+  "peerDependencies": {
+    "@remotion/bundler": "4.0.448",
+    "@remotion/renderer": "4.0.448",
+    "react": "19.2.3",
+    "remotion": "4.0.448",
+    "satori": "^0.24.1",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "tsup": "8.5.1",
+    "tsx": "4.22.3"
+  }
+}

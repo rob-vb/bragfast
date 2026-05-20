@@ -2,7 +2,7 @@
 
 ## Overview
 
-This milestone repositions brag.fast from a server-render SaaS into a CLI-first creation tool for developers. A developer runs `npx brag`, fills branded Templates in a locally-served Workspace, renders output on their own machine, and copies or schedules it through Buffer. Eight phases follow a strict dependency order derived from the codebase: extract the render core first (it has zero upstream dependencies and must be decoupled from Convex/R2 before anything else imports it), then build the CLI shell and auth, then the local server and Workspace shell, then the Workspace editor, then image render, then video render, then schedule-and-post, and finally trim the Admin to its thin-backend role. Each phase unblocks the next; none can be reordered without violating that dependency chain.
+This milestone repositions brag.fast from a server-render SaaS into a CLI-first creation tool for developers. A developer runs `npx bragfast`, fills branded Templates in a locally-served Workspace, renders output on their own machine, and copies or schedules it through Buffer. Eight phases follow a strict dependency order derived from the codebase: extract the render core first (it has zero upstream dependencies and must be decoupled from Convex/R2 before anything else imports it), then build the CLI shell and auth, then the local server and Workspace shell, then the Workspace editor, then image render, then video render, then schedule-and-post, and finally trim the Admin to its thin-backend role. Each phase unblocks the next; none can be reordered without violating that dependency chain.
 
 ## Build-Order Rationale
 
@@ -20,8 +20,8 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 
 ## Phases
 
-- [ ] **Phase 1: Render Core Extraction** - Extract and decouple the Satori/Sharp/Remotion render pipeline into a standalone package the CLI can import
-- [ ] **Phase 2: CLI Shell + Device-Flow Auth** - Ship the `npx brag` binary with browser device-flow login and local credential storage
+- [x] **Phase 1: Render Core Extraction** - Extract and decouple the Satori/Sharp/Remotion render pipeline into a standalone package the CLI can import
+- [x] **Phase 2: CLI Shell + Device-Flow Auth** - Ship the `npx bragfast` package with browser device-flow login and local credential storage *(public package name is `bragfast`; installed/global bin can be `brag`)*
 - [ ] **Phase 3: CLI Local Server + Workspace Shell** - Serve the Workspace SPA from a local Express server with origin-locked proxy to the backend
 - [ ] **Phase 4: Workspace Editor + Slot Filling** - Template picker, slot fill UI (text + media drag-drop), format switcher, caption, and Draft auto-save
 - [ ] **Phase 5: Local Image Render** - Render all three formats locally via Satori/Sharp with in-Workspace preview and output folder
@@ -49,36 +49,37 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Workspace scaffold: package.json, tsup config, tsconfig, peerDeps, font TTFs, stub barrel
+- [x] 01-01-PLAN.md — Workspace scaffold: package.json, tsup config, tsconfig, peerDeps, font TTFs, stub barrel
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — Test harness: proof scripts (SC#1–SC#3), vitest config, fonts unit test (SC#4), CI matrix (SC#5)
-- [ ] 01-03-PLAN.md — Pure types + canvas-renderer + fonts (__dirname fix + disk cache)
-- [ ] 01-04-PLAN.md — pure-helpers.ts + image.ts (renderImage Satori/Sharp loop — SC#1)
+- [x] 01-02-PLAN.md — Test harness: proof scripts (SC#1–SC#3), vitest config, fonts unit test (SC#4), CI matrix (SC#5)
+- [x] 01-03-PLAN.md — Pure types + canvas-renderer + fonts (__dirname fix + disk cache)
+- [x] 01-04-PLAN.md — pure-helpers.ts + image.ts (renderImage Satori/Sharp loop — SC#1)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-05-PLAN.md — video.ts (renderVideo promoted from renderVideoLocal — SC#2)
+- [x] 01-05-PLAN.md — video.ts (renderVideo promoted from renderVideoLocal — SC#2)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 01-06-PLAN.md — App rewiring: next.config.ts + render.ts + render-video.ts adapters + build verification
+- [x] 01-06-PLAN.md — App rewiring: next.config.ts + render.ts + render-video.ts adapters + build verification
 
 ### Phase 2: CLI Shell + Device-Flow Auth
 
-**Goal**: A developer can run `npx brag` and complete browser device-flow login; the CLI stores a credential locally and reuses it on future runs; the backend has the device-flow endpoints and `/device` approval page
+**Goal**: A developer can run `npx bragfast` and complete browser device-flow login; the CLI stores a credential locally and reuses it on future runs; the backend has the device-flow endpoints and `/device` approval page. The package also exposes a `brag` bin for installed/global usage.
 **Depends on**: Nothing (parallel with Phase 1; Phase 3 depends on both)
 **Requirements**: CLI-01, CLI-02, CLI-03, CLI-04, AUTH-01
 **Success Criteria** (what must be TRUE):
 
-  1. Running `npx brag` without a prior global install starts the CLI and prompts the user to log in
+  1. Running `npx bragfast` without a prior global install starts the CLI and prompts the user to log in
   2. `brag login` prints a short code and URL, opens the browser, and polls until the user approves — after approval the CLI prints "Logged in" and proceeds
   3. A second run of `brag` does not prompt for login because the credential file at `~/.brag/credentials.json` (chmod 600) is reused
   4. `brag logout` clears the credential file and confirms logout in the terminal
   5. A logged-in user visiting `/device?code=XXXX-1234` in the browser sees their identity and an "Approve CLI Access" button; clicking it completes the device-flow handshake
 
-**Plans**: TBD
+**Plans**: 5 plans
+**Plan status**: 5/5 complete; public command is `npx bragfast`, installed/global bin can be `brag`
 **UI hint**: yes
 
 ### Phase 3: CLI Local Server + Workspace Shell
@@ -179,8 +180,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Render Core Extraction | 0/6 | Not started | - |
-| 2. CLI Shell + Device-Flow Auth | 0/TBD | Not started | - |
+| 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
+| 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
 | 3. CLI Local Server + Workspace Shell | 0/TBD | Not started | - |
 | 4. Workspace Editor + Slot Filling | 0/TBD | Not started | - |
 | 5. Local Image Render | 0/TBD | Not started | - |

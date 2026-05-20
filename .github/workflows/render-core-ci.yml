@@ -1,0 +1,25 @@
+name: render-core CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [macos-14, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=packages/render-core
+      - run: node packages/render-core/scripts/audit-deps.mjs
+      - run: npx vitest run packages/render-core
