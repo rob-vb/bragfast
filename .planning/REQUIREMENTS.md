@@ -117,13 +117,55 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | — | Pending |
+| CLI-01 | Phase 2 | Pending |
+| CLI-02 | Phase 2 | Pending |
+| CLI-03 | Phase 2 | Pending |
+| CLI-04 | Phase 2 | Pending |
+| CLI-05 | Phase 3 | Pending |
+| CLI-06 | Phase 3 | Pending |
+| CLI-07 | Phase 3 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 3 | Pending |
+| WORK-01 | Phase 4 | Pending |
+| WORK-02 | Phase 4 | Pending |
+| WORK-03 | Phase 4 | Pending |
+| WORK-04 | Phase 4 | Pending |
+| WORK-05 | Phase 4 | Pending |
+| WORK-06 | Phase 4 | Pending |
+| WORK-07 | Phase 4 | Pending |
+| WORK-08 | Phase 4 | Pending |
+| MEDIA-01 | Phase 4 | Pending |
+| MEDIA-02 | Phase 4 | Pending |
+| MEDIA-03 | Phase 4 | Pending |
+| MEDIA-04 | Phase 4 | Pending |
+| MEDIA-05 | Phase 4 | Pending |
+| RND-01 | Phase 5 | Pending |
+| RND-02 | Phase 6 | Pending |
+| RND-03 | Phase 5 | Pending |
+| RND-04 | Phase 6 | Pending |
+| RND-05 | Phase 5 | Pending |
+| RND-06 | Phase 5 | Pending |
+| OUT-01 | Phase 5 | Pending |
+| OUT-02 | Phase 5 | Pending |
+| OUT-03 | Phase 5 | Pending |
+| OUT-04 | Phase 5 | Pending |
+| SCHED-01 | Phase 7 | Pending |
+| SCHED-02 | Phase 7 | Pending |
+| SCHED-03 | Phase 7 | Pending |
+| SCHED-04 | Phase 7 | Pending |
+| SCHED-05 | Phase 7 | Pending |
+| SCHED-06 | Phase 7 | Pending |
+| ADM-01 | Phase 8 | Pending |
+| ADM-02 | Phase 8 | Pending |
+| ADM-03 | Phase 8 | Pending |
+| ADM-04 | Phase 8 | Pending |
+| ADM-05 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 36 total
-- Mapped to phases: TBD
-- Unmapped: TBD
+- Mapped to phases: 36
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-20*
-*Last updated: 2026-05-20 after initial definition*
+*Last updated: 2026-05-20 after roadmap creation — all 36 requirements mapped*
