@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Phase 2 complete; ready for Phase 3 planning/execution
-last_updated: "2026-05-20T19:15:00+02:00"
-last_activity: 2026-05-20 -- Phase 02 complete; public CLI package is bragfast
+stopped_at: Phase 3 planned (5 plans, 3 waves); ready for execution
+last_updated: "2026-05-20T23:20:00+02:00"
+last_activity: 2026-05-20 -- Phase 01+02 code committed; Phase 03 planned (Vite standalone SPA)
 progress:
   total_phases: 8
   completed_phases: 2
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 3 of 8 (CLI Local Server + Workspace Shell)
-Plan: TBD in current phase
-Status: Phase 2 complete; public first-run command is `npx bragfast`; installed/global bin can still be `brag`
-Last activity: 2026-05-20 -- Phase 02 complete; public CLI package is bragfast
+Plan: 5 plans (03-01..03-05) in 3 waves; checker PASS after 1 revision
+Status: Phase 3 planned; SPA tech locked = Vite standalone (packages/workspace). Ready for `/gsd:execute-phase 03`
+Last activity: 2026-05-20 -- Phase 01+02 code committed; Phase 03 planned
 
 Progress: [██░░░░░░░░] 25%
 
@@ -73,7 +73,7 @@ None yet.
 
 - Phase 1: Sharp cross-platform binary mismatch — CI matrix added for macOS arm64 and Linux x64; live CI must still be checked after push
 - Phase 2: npm package name `brag` is taken (`0.0.2`); package name `bragfast` is selected and Phase 2 is complete. Public first-run command is `npx bragfast`; installed/global bin can still be `brag`.
-- Phase 4/6: Workspace SPA tech decision (Vite standalone vs Next.js SPA export) — resolve at Phase 3 planning
+- ~~Phase 4/6: Workspace SPA tech decision~~ — RESOLVED 2026-05-20: Vite standalone SPA in `packages/workspace`, served by CLI Express (see 03-CONTEXT.md)
 - Phase 6: Remotion Chrome path isolation on macOS vs Linux — verify in CI before Phase 6 ships
 
 ## Deferred Items
