@@ -889,22 +889,22 @@ describe("font __dirname resolution", () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Google Font disk cache cross-user permissions on CI**
+1. **Google Font disk cache cross-user permissions on CI** (RESOLVED)
    - What we know: D-05 requires `~/.brag/fonts/` for caching.
-   - What's unclear: On CI runners, `~` resolves to `/root` or `/home/runner` — fine for tests. But if the test script hits Google Fonts (network available in CI), it may fail on corporate proxies or restricted environments.
-   - Recommendation: SC#1 test script should pass a pre-bundled font (Plus Jakarta Sans from the package) as the only font, bypassing Google Fonts entirely. Google Font disk-cache behavior tested separately with a mock.
+   - What was unclear: On CI runners, `~` resolves to `/root` or `/home/runner` — fine for tests. But if the test script hits Google Fonts (network available in CI), it may fail on corporate proxies or restricted environments.
+   - **RESOLVED:** SC#1/prove-image.mjs uses only the bundled Plus Jakarta Sans font (loaded via `__dirname`) and passes `bundledFontsOnly: true` to the render call — no Google Fonts network fetch occurs in CI or in the image proof script. The disk-cache path is exercised exclusively in the D-05 unit test in fonts.test.ts (Plan 03 Task 1), which mocks the network fetch and asserts file read/write against a temp dir.
 
-2. **`process.cwd()` usage in Remotion `bundle()` within test scripts**
-   - What we know: `bundle({ entryPoint })` needs the Remotion entry file — currently `src/remotion/index.ts` in the app. The test scripts for SC#2 will call this.
-   - What's unclear: The test script lives in `packages/render-core/scripts/` — can it reference the app's Remotion composition?
-   - Recommendation: The SC#2 test script is a test-only helper, not shipped code. It may use `path.join(process.cwd(), "src/remotion/index.ts")` from the monorepo root, or the planner can create a minimal standalone composition in `packages/render-core/scripts/fixtures/` for the test.
+2. **`process.cwd()` usage in Remotion `bundle()` within test scripts** (RESOLVED)
+   - What we know: `bundle({ entryPoint })` needs the Remotion entry file — `src/remotion/index.ts` in the app.
+   - What was unclear: The test script lives in `packages/render-core/scripts/` — can it reference the app's Remotion composition?
+   - **RESOLVED:** prove-video.mjs is a test-only developer script (not shipped code) run from the monorepo root. It uses `path.join(process.cwd(), src/remotion/index.ts)` deliberately — `process.cwd()` is correct here because the script's caller (the developer) controls the working directory. The package's own `renderVideo()` function accepts `remotionEntryPoint` as a parameter (the seam is clean); prove-video.mjs passes the app-side path via `process.cwd()`. This is documented in prove-video.mjs with a comment.
 
-3. **`tsup` font asset copying vs `files` field**
+3. **`tsup` font asset copying vs `files` field** (RESOLVED)
    - What we know: `tsup`'s `onSuccess` hook can copy TTF files to `dist/fonts/`.
-   - What's unclear: Alternatively, the `package.json` `files` field can include `fonts/` directly from the source, meaning `dist/` only has JS/types and fonts resolve from the package root. Either works.
-   - Recommendation: Include `fonts/` in the `files` field and use `path.join(__dirname, "../fonts/")` (one level up from `dist/`) to keep font files out of the compilation step. Planner chooses.
+   - What was unclear: Alternatively, the `package.json` `files` field can include `fonts/` directly from the source, so fonts resolve from the package root.
+   - **RESOLVED:** Use the `tsup` `onSuccess` hook to copy TTFs to `dist/fonts/`, and set `__dirname` resolution to `path.join(__dirname, fonts)` (same directory as compiled JS in `dist/`). This keeps the font path simple and avoids the `../fonts/` relative-up ambiguity. The `onSuccess` hook pattern is already codified in tsup.config.ts (Plan 01) and matches the `__dirname` CJS pattern in fonts.ts (Plan 03).
 
 ---
 
