@@ -94,7 +94,22 @@ Plans:
   3. A request from a tab at a different origin is rejected by the CLI server (401 or CORS block), confirming origin-locking works
   4. The `/api/repo-context` endpoint returns the current repo's git tag, commit SHA, package name, and package version, which the Workspace can use to prefill copy slots
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+**Wave 1** *(parallel — no dependencies)*
+
+- [ ] 03-01-PLAN.md — packages/workspace SPA scaffold (Vite react-ts, types, api, App shell)
+- [ ] 03-02-PLAN.md — Test harnesses for all Phase 3 CLI behaviors (server, origin-lock, proxy, repo-context)
+
+**Wave 2** *(blocked on Wave 1 — tests must exist before implementation)*
+
+- [ ] 03-03-PLAN.md — packages/cli/src/server.ts + proxy.ts (Express lifecycle, origin-lock, authenticated proxy)
+- [ ] 03-04-PLAN.md — packages/cli/src/repo-context.ts (git context extraction, non-git graceful)
+
+**Wave 3** *(blocked on Waves 1 + 2 — wiring)*
+
+- [ ] 03-05-PLAN.md — Dependency install (legitimacy checkpoint), tsup.config.ts copy hook, index.ts wire, root build order
 **UI hint**: yes
 
 ### Phase 4: Workspace Editor + Slot Filling
@@ -182,7 +197,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
-| 3. CLI Local Server + Workspace Shell | 0/TBD | Not started | - |
+| 3. CLI Local Server + Workspace Shell | 0/5 | Not started | - |
 | 4. Workspace Editor + Slot Filling | 0/TBD | Not started | - |
 | 5. Local Image Render | 0/TBD | Not started | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
