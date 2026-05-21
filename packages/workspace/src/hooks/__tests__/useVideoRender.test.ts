@@ -20,6 +20,14 @@ const idleStatus = {
   downloadPct: 0,
 };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((innerResolve) => {
+    resolve = innerResolve;
+  });
+  return { promise, resolve };
+}
+
 describe("useVideoRender", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -46,18 +54,22 @@ describe("useVideoRender", () => {
   });
 
   it("flushes, triggers video render, and enters rendering after trigger", async () => {
-    const flush = vi.fn().mockResolvedValue("draft_1");
+    const flushResult = deferred<string | null>();
+    const flush = vi.fn().mockReturnValue(flushResult.promise);
     mocks.triggerVideoRender.mockResolvedValue({ id: "job_1", status: "pending" });
     mocks.pollVideoRenderStatus.mockResolvedValue(idleStatus);
     const { result } = renderHook(() =>
       useVideoRender({ flush, activeFormat: "portrait" }),
     );
 
-    const triggerPromise = act(async () => {
-      await result.current.trigger();
+    act(() => {
+      void result.current.trigger();
     });
     expect(result.current.renderPhase).toBe("flushing");
-    await triggerPromise;
+    await act(async () => {
+      flushResult.resolve("draft_1");
+      await flushResult.promise;
+    });
 
     expect(flush).toHaveBeenCalledOnce();
     expect(mocks.triggerVideoRender).toHaveBeenCalledWith("draft_1", "portrait");
