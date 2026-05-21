@@ -134,6 +134,61 @@ describe("pushToBuffer", () => {
     });
   });
 
+  it("defaults to Buffer queue scheduling", async () => {
+    mockBufferGraphQL.mockResolvedValueOnce({
+      createPost: { __typename: "PostActionSuccess", post: { id: "buf_post_queue" } },
+    });
+
+    await pushToBuffer({
+      apiKey: "tok",
+      channelId: "ch_1",
+      title: "Queue",
+      description: "Next slot",
+      mediaUrl: "https://example.com/img.jpg",
+      format: "square",
+      postState: "queue",
+    });
+
+    expect(mockBufferGraphQL.mock.calls[0]?.[2]).toMatchObject({
+      input: {
+        schedulingType: "automatic",
+        mode: "addToQueue",
+      },
+    });
+    expect(
+      (mockBufferGraphQL.mock.calls[0]?.[2] as { input?: Record<string, unknown> })
+        .input,
+    ).not.toHaveProperty("dueAt");
+  });
+
+  it("maps exact-time scheduling to Buffer customScheduled input", async () => {
+    mockBufferGraphQL.mockResolvedValueOnce({
+      createPost: { __typename: "PostActionSuccess", post: { id: "buf_post_custom" } },
+    });
+
+    await pushToBuffer({
+      apiKey: "tok",
+      channelId: "ch_1",
+      title: "Scheduled",
+      description: "Exact time",
+      mediaUrl: "https://example.com/img.jpg",
+      format: "square",
+      postState: "queue",
+      scheduling: {
+        type: "custom",
+        scheduledAt: "2026-06-01T10:30:00.000Z",
+      },
+    });
+
+    expect(mockBufferGraphQL.mock.calls[0]?.[2]).toMatchObject({
+      input: {
+        schedulingType: "automatic",
+        mode: "customScheduled",
+        dueAt: "2026-06-01T10:30:00.000Z",
+      },
+    });
+  });
+
   it("video format → throws PushError(media)", async () => {
     await expect(
       pushToBuffer({
