@@ -206,7 +206,7 @@ function localRenderRoute(
     }
 
     const draftId = body.draftId;
-    const jobId = randomUUID().replace(/-/g, "").slice(0, 16);
+    const jobId = draftId;
     renderJobs.set(jobId, pendingRenderJob(jobId, draftId));
 
     void resolveAndRender(

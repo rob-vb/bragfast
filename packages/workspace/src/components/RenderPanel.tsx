@@ -18,10 +18,6 @@ function labelFor(format: FormatKey): string {
   return format[0].toUpperCase() + format.slice(1);
 }
 
-function outputUrl(jobId: string, format: FormatKey): string {
-  return `/output/${encodeURIComponent(jobId)}/${format}.jpg`;
-}
-
 function actionClassName(): string {
   return "flex min-h-[44px] items-center rounded-[8px] border border-[var(--workspace-border)] bg-white px-3 text-[12px] font-semibold text-[var(--workspace-forest)] hover:bg-[var(--workspace-surface)]";
 }
@@ -75,7 +71,7 @@ function FormatStatusRow({
 
       {state.phase === "done" && jobId ? (
         <a
-          href={outputUrl(jobId, format)}
+          href={state.url}
           download={`${format}.jpg`}
           aria-label={`Download ${format} image`}
           className="ml-auto flex min-h-[44px] items-center text-[12px] font-semibold text-[var(--workspace-forest)] underline underline-offset-2"
@@ -162,7 +158,7 @@ export function RenderPanel({
 
           {activeState.phase === "done" && jobId ? (
             <a
-              href={outputUrl(jobId, activeFormat)}
+              href={activeState.url}
               download={`${activeFormat}.jpg`}
               aria-label={`Download ${activeFormat} image`}
               className={actionClassName()}
