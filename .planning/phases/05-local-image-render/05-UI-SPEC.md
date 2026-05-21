@@ -56,13 +56,14 @@ Source: `DESIGN.md` spacing conventions; Tailwind 4px default scale.
 | Body | 14px | 400 | 1.5 | Inter |
 | Label | 12px | 600 | 1.3 | Inter |
 | Heading | 16px | 600 | 1.3 | Inter |
-| Display | 20px | 700 | 1.2 | Inter |
+| Display | 20px | 600 | 1.2 | Inter |
 
 **Notes:**
 - The Render panel heading ("Render images") uses the Heading role (16px/600).
 - Per-format status labels (Landscape, Square, Portrait) use the Label role (12px/600).
 - Error message body text uses the Body role (14px/400).
 - No Press Start 2P in the Workspace SPA — that font is Admin-only.
+- Exactly 2 distinct weights: 400 (Body) and 600 (Label, Heading, Display).
 
 Source: existing Workspace components (12–16px observed in `Editor.tsx`, `SavedIndicator.tsx`); defaults applied.
 
