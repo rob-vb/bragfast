@@ -63,8 +63,8 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 - [ ] **SCHED-02**: User can pick which Buffer channels a creation posts to, in the Workspace
 - [x] **SCHED-03**: User can schedule with an exact date/time or the next queue slot
 - [x] **SCHED-04**: On schedule, the rendered file uploads to R2 and its public URL is sent to Buffer
-- [ ] **SCHED-05**: User sees a confirmation when scheduling succeeds
-- [ ] **SCHED-06**: Scheduled creations are marked as scheduled and visible in the admin gallery
+- [x] **SCHED-05**: User sees a confirmation when scheduling succeeds
+- [x] **SCHED-06**: Scheduled creations are marked as scheduled and visible in the admin gallery
 
 ### Admin (thin hosted web)
 
@@ -153,8 +153,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SCHED-02 | Phase 7 | Pending |
 | SCHED-03 | Phase 7 | Complete |
 | SCHED-04 | Phase 7 | Complete |
-| SCHED-05 | Phase 7 | Pending |
-| SCHED-06 | Phase 7 | Pending |
+| SCHED-05 | Phase 7 | Complete |
+| SCHED-06 | Phase 7 | Complete |
 | ADM-01 | Phase 8 | Pending |
 | ADM-02 | Phase 8 | Pending |
 | ADM-03 | Phase 8 | Pending |
