@@ -4,13 +4,45 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CanvasTemplateConfig } from "@bragfast/render-core/browser";
 import type { DraftConfig } from "../types";
 import { SlotPanel } from "../components/SlotPanel";
+import { Editor } from "../pages/Editor";
 
 const mocks = vi.hoisted(() => ({
   uploadLocalMedia: vi.fn(),
+  useBrand: vi.fn(),
+  useAutoSave: vi.fn(),
+  useRender: vi.fn(),
+  useVideoRender: vi.fn(),
+  useSchedule: vi.fn(),
 }));
 
 vi.mock("../media", () => ({
   uploadLocalMedia: mocks.uploadLocalMedia,
+}));
+
+vi.mock("../hooks/useBrand", () => ({
+  useBrand: mocks.useBrand,
+}));
+
+vi.mock("../hooks/useAutoSave", () => ({
+  useAutoSave: mocks.useAutoSave,
+}));
+
+vi.mock("../hooks/useRender", () => ({
+  useRender: mocks.useRender,
+}));
+
+vi.mock("../hooks/useVideoRender", () => ({
+  useVideoRender: mocks.useVideoRender,
+}));
+
+vi.mock("../hooks/useSchedule", () => ({
+  useSchedule: mocks.useSchedule,
+}));
+
+vi.mock("../api", () => ({
+  fetchIntegrations: vi.fn().mockResolvedValue([]),
+  fetchRoutingDefaults: vi.fn().mockResolvedValue([]),
+  revealOutputFolder: vi.fn(),
 }));
 
 const templateConfig: CanvasTemplateConfig = {
@@ -70,6 +102,45 @@ const baseConfig: DraftConfig = {
 describe("SlotPanel", () => {
   beforeEach(() => {
     mocks.uploadLocalMedia.mockReset();
+    mocks.useBrand.mockReturnValue({
+      brands: [],
+      selectedBrand: {
+        name: "Acme",
+        logoBase64: "",
+        website: "",
+        colors: templateConfig.colors,
+      },
+      selectedBrandId: undefined,
+    });
+    mocks.useAutoSave.mockReturnValue({
+      status: "saved",
+      flush: vi.fn().mockResolvedValue("draft_1"),
+    });
+    mocks.useRender.mockReturnValue({
+      renderPhase: "done",
+      formats: {
+        landscape: { phase: "done", url: "/output/landscape.jpg" },
+        square: { phase: "done", url: "/output/square.jpg" },
+        portrait: { phase: "done", url: "/output/portrait.jpg" },
+      },
+      jobId: "job_1",
+      trigger: vi.fn(),
+    });
+    mocks.useVideoRender.mockReturnValue({
+      renderPhase: "idle",
+      framesRendered: 0,
+      totalFrames: 0,
+      downloadPct: 0,
+      url: null,
+      jobId: null,
+      trigger: vi.fn(),
+    });
+    mocks.useSchedule.mockReturnValue({
+      phase: "idle",
+      confirmation: [],
+      error: null,
+      trigger: vi.fn(),
+    });
   });
 
   it("writes text slots and caption into separate config locations", () => {
@@ -146,6 +217,32 @@ describe("SlotPanel", () => {
     expect(onConfigChange).toHaveBeenLastCalledWith({
       ...baseConfig,
       objectContent: { visual: {} },
+    });
+  });
+});
+
+describe("Editor scheduling flow", () => {
+  it("mounts SchedulePanel after image render output is available", async () => {
+    render(
+      <Editor
+        draftId="draft_1"
+        templateId="standard-browser"
+        templateConfig={templateConfig}
+        initialConfig={baseConfig}
+        initialBrand={{
+          name: "Acme",
+          logoBase64: "",
+          website: "",
+          colors: templateConfig.colors,
+        }}
+        onBack={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Schedule post" })).toBeInTheDocument();
+    expect(mocks.useSchedule).toHaveBeenCalledWith({
+      flush: expect.any(Function),
+      caption: "",
     });
   });
 });
