@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
-status: planning
-stopped_at: Phase 7 planned
-last_updated: "2026-05-21T20:45:00.000Z"
-last_activity: 2026-05-21
+status: executing
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-05-21T21:17:16Z"
+last_activity: 2026-05-21 -- Completed Phase 07 Plan 01
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 35
-  completed_plans: 26
-  percent: 57
+  completed_plans: 27
+  percent: 65
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 ## Current Position
 
-Phase: 07 (schedule-time-upload-posting)
-Plan: 0 of 5
-Status: Planned
-Last activity: 2026-05-21
+Phase: 07 (schedule-time-upload-posting) — EXECUTING
+Plan: 2 of 5
+Status: 07-01 complete; ready for 07-02
+Last activity: 2026-05-21 -- Completed Phase 07 Plan 01
 
 Progress: [████████░░] 83%
 
@@ -64,6 +64,7 @@ Progress: [████████░░] 83%
 | Phase 06 P02 | 7min | 2 tasks | 4 files |
 | Phase 06 P03 | 4min | 2 tasks | 5 files |
 | Phase 06 P04 | 8min | 2 tasks | 2 files |
+| Phase 07 P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Phase 06 Plan 03: video render trigger guard blocks flushing, chrome-download, and rendering. — Prevents duplicate local video render jobs during in-progress phases.
 - [Phase 06]: Phase 06 Plan 04: DraftConfig.output is the source of truth for the image/video output toggle.
 - [Phase 06]: Phase 06 Plan 04: RenderPanel now branches by output mode while keeping the existing image render path intact.
+- [Phase 07]: Phase 07 Plan 01: Buffer queue scheduling maps to schedulingType automatic and mode addToQueue.
+- [Phase 07]: Phase 07 Plan 01: Buffer exact-time scheduling maps to mode customScheduled with dueAt preserved as the caller-provided UTC ISO string.
 
 ### Pending Todos
 
@@ -114,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T20:45:00.000Z
-Stopped at: Phase 7 planned
-Resume file: .planning/phases/07-schedule-time-upload-posting/07-01-PLAN.md
+Last session: 2026-05-21T21:17:16Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None

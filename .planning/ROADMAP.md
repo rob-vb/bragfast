@@ -224,7 +224,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 07-01-PLAN.md — Buffer scheduling primitive: queue + customScheduled support in pushToBuffer
+- [x] 07-01-PLAN.md — Buffer scheduling primitive: queue + customScheduled support in pushToBuffer
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -269,5 +269,5 @@ Plans:
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
-| 7. Schedule-Time Upload + Posting | 0/5 | Planned | - |
+| 7. Schedule-Time Upload + Posting | 1/5 | In Progress | - |
 | 8. Admin Trim | 0/TBD | Not started | - |
