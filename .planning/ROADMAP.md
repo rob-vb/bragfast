@@ -161,7 +161,21 @@ Plans:
   4. User can click "Copy caption" to copy the caption to clipboard, "Download" to save a rendered file, and "Open folder" to reveal the output folder in their file manager
   5. A render failure surfaces a clear, actionable error message in the Workspace and terminal — never a silent failure
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1** *(parallel — no dependencies)*
+
+- [ ] 05-01-PLAN.md — CLI render infrastructure: render-resolver.ts + server.ts routes + /output static + security guards
+- [ ] 05-02-PLAN.md — SPA type contracts and API helpers: types.ts + api.ts render/poll/reveal functions
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 05-03-PLAN.md — Hooks: useAutoSave.flush() + useRender lifecycle hook
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 05-04-PLAN.md — RenderPanel component + Editor.tsx wiring + human verification checkpoint
 **UI hint**: yes
 
 ### Phase 6: Local Video Render
