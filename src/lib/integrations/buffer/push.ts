@@ -35,6 +35,7 @@ export interface BufferPushParams {
   format: string;
   /** User intent. Buffer always queues regardless — see queue-only note. */
   postState: "queue" | "draft";
+  scheduling?: { type: "queue" } | { type: "custom"; scheduledAt: string };
 }
 
 interface CreatePostSuccess {
@@ -131,7 +132,16 @@ function classifyBufferError(err: unknown): ErrorClass {
  * Throws PushError on any failure with a classified errorClass.
  */
 export async function pushToBuffer(params: BufferPushParams): Promise<{ providerPostId: string }> {
-  const { apiKey, channelId, title, description, mediaUrl, format, postState } = params;
+  const {
+    apiKey,
+    channelId,
+    title,
+    description,
+    mediaUrl,
+    format,
+    postState,
+    scheduling,
+  } = params;
 
   if (isVideoFormat(format)) {
     throw new PushError(
@@ -152,8 +162,12 @@ export async function pushToBuffer(params: BufferPushParams): Promise<{ provider
     channelId,
     text,
     schedulingType: "automatic",
-    mode: "addToQueue",
+    mode: scheduling?.type === "custom" ? "customScheduled" : "addToQueue",
   };
+
+  if (scheduling?.type === "custom") {
+    input.dueAt = scheduling.scheduledAt;
+  }
 
   if (mediaUrl) {
     input.assets = [{ image: { url: mediaUrl } }];
