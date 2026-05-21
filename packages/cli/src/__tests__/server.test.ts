@@ -126,6 +126,64 @@ describe("server", () => {
     });
   });
 
+  describe("local media routes", () => {
+    it("uploads a PNG locally and serves it back from /media", async () => {
+      const spaDir = makeSpaDir();
+      const mediaDir = path.join(tmp, "media");
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+      const pngBytes = Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ]);
+
+      const handle = await startServer(testCredentials, {
+        openBrowser,
+        stdout,
+        spaDir,
+        mediaDir,
+      });
+      handles.push(handle);
+
+      const upload = await request(`http://127.0.0.1:${handle.port}`)
+        .post("/api/local/media")
+        .attach("file", pngBytes, { filename: "shot.png", contentType: "image/png" });
+
+      expect(upload.status).toBe(200);
+      expect(upload.body.id).toEqual(expect.any(String));
+      expect(upload.body.url).toContain(`/media/`);
+
+      const mediaPath = new URL(upload.body.url).pathname;
+      const served = await request(`http://127.0.0.1:${handle.port}`).get(mediaPath);
+      expect(served.status).toBe(200);
+      expect(served.body).toEqual(pngBytes);
+    });
+
+    it("rejects unsupported local media MIME types without proxying upstream", async () => {
+      const spaDir = makeSpaDir();
+      const mediaDir = path.join(tmp, "media");
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, {
+        openBrowser,
+        stdout,
+        spaDir,
+        mediaDir,
+      });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .post("/api/local/media")
+        .attach("file", Buffer.from("nope"), {
+          filename: "note.txt",
+          contentType: "text/plain",
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain("Unsupported type");
+    });
+  });
+
   describe("server lifecycle", () => {
     it("close() resolves without error", async () => {
       const spaDir = makeSpaDir();
