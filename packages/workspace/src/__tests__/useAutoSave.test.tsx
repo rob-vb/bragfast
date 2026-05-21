@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DraftConfig } from "../types";
 import { useAutoSave } from "../hooks/useAutoSave";
@@ -36,7 +36,9 @@ describe("useAutoSave", () => {
   it("does not create or patch when config is null", async () => {
     renderHook(() => useAutoSave({ draftId: null, config: null }));
 
-    await vi.advanceTimersByTimeAsync(1000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
 
     expect(mocks.createDraft).not.toHaveBeenCalled();
     expect(mocks.patchDraft).not.toHaveBeenCalled();
@@ -47,12 +49,16 @@ describe("useAutoSave", () => {
 
     const { result } = renderHook(() => useAutoSave({ draftId: null, config: baseConfig }));
 
-    await vi.advanceTimersByTimeAsync(899);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(899);
+    });
     expect(mocks.createDraft).not.toHaveBeenCalled();
 
-    await vi.advanceTimersByTimeAsync(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
 
-    await waitFor(() => expect(result.current.draftId).toBe("draft_1"));
+    expect(result.current.draftId).toBe("draft_1");
     expect(mocks.createDraft).toHaveBeenCalledOnce();
     expect(mocks.createDraft).toHaveBeenCalledWith(baseConfig);
   });
@@ -62,7 +68,9 @@ describe("useAutoSave", () => {
 
     renderHook(() => useAutoSave({ draftId: "draft_1", config: baseConfig }));
 
-    await vi.advanceTimersByTimeAsync(900);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(900);
+    });
 
     expect(mocks.patchDraft).toHaveBeenCalledOnce();
     expect(mocks.patchDraft).toHaveBeenCalledWith("draft_1", {
@@ -85,9 +93,15 @@ describe("useAutoSave", () => {
       { initialProps: { config: baseConfig } },
     );
 
-    await vi.advanceTimersByTimeAsync(400);
-    rerender({ config: editedConfig });
-    await vi.advanceTimersByTimeAsync(900);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+    act(() => {
+      rerender({ config: editedConfig });
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(900);
+    });
 
     expect(mocks.patchDraft).toHaveBeenCalledOnce();
     expect(mocks.patchDraft).toHaveBeenCalledWith("draft_1", editedConfig);
@@ -98,9 +112,11 @@ describe("useAutoSave", () => {
 
     const { result } = renderHook(() => useAutoSave({ draftId: "draft_1", config: baseConfig }));
 
-    await vi.advanceTimersByTimeAsync(900);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(900);
+    });
 
-    await waitFor(() => expect(result.current.status).toBe("error"));
+    expect(result.current.status).toBe("error");
     expect(result.current.statusLabel).toBe("Save failed - retrying on next edit");
   });
 });
