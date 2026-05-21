@@ -9,6 +9,13 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   target: "node20",
+  external: [
+    "@bragfast/render-core",
+    "@bragfast/render-core/image",
+    "@remotion/bundler",
+    "@remotion/renderer",
+    "remotion",
+  ],
   async onSuccess() {
     chmodSync("dist/index.js", 0o755);
     // Bundle the built Workspace SPA into the CLI dist so it ships with the
