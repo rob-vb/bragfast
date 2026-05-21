@@ -22,7 +22,7 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 
 - [x] **Phase 1: Render Core Extraction** - Extract and decouple the Satori/Sharp/Remotion render pipeline into a standalone package the CLI can import
 - [x] **Phase 2: CLI Shell + Device-Flow Auth** - Ship the `npx bragfast` package with browser device-flow login and local credential storage *(public package name is `bragfast`; installed/global bin can be `brag`)*
-- [ ] **Phase 3: CLI Local Server + Workspace Shell** - Serve the Workspace SPA from a local Express server with origin-locked proxy to the backend
+- [x] **Phase 3: CLI Local Server + Workspace Shell** - Serve the Workspace SPA from a local Express server with origin-locked proxy to the backend (completed 2026-05-21)
 - [ ] **Phase 4: Workspace Editor + Slot Filling** - Template picker, slot fill UI (text + media drag-drop), format switcher, caption, and Draft auto-save
 - [ ] **Phase 5: Local Image Render** - Render all three formats locally via Satori/Sharp with in-Workspace preview and output folder
 - [ ] **Phase 6: Local Video Render** - Render video locally via Remotion headless Chrome with first-run Chrome download messaging
@@ -109,7 +109,7 @@ Plans:
 
 **Wave 3** *(blocked on Waves 1 + 2 — wiring)*
 
-- [ ] 03-05-PLAN.md — Dependency install (legitimacy checkpoint), tsup.config.ts copy hook, index.ts wire, root build order
+- [x] 03-05-PLAN.md — Dependency install (legitimacy checkpoint), tsup.config.ts copy hook, index.ts wire, root build order
 **UI hint**: yes
 
 ### Phase 4: Workspace Editor + Slot Filling
@@ -197,7 +197,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
-| 3. CLI Local Server + Workspace Shell | 4/5 | In Progress|  |
+| 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
 | 4. Workspace Editor + Slot Filling | 0/TBD | Not started | - |
 | 5. Local Image Render | 0/TBD | Not started | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
