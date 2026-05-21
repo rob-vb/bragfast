@@ -4,13 +4,13 @@ milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
 stopped_at: Phase 6 UI-SPEC approved
-last_updated: "2026-05-21T19:17:50.860Z"
+last_updated: "2026-05-21T19:27:19.263Z"
 last_activity: 2026-05-21 -- Phase 06 planning complete
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 30
-  completed_plans: 22
+  completed_plans: 23
   percent: 50
 ---
 
@@ -30,7 +30,7 @@ Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-05-21 -- Phase 06 planning complete
 
-Progress: [█████████░] 85%
+Progress: [████████░░] 77%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [█████████░] 85%
 | Phase 04 P04 | 10 min | 3 tasks | 9 files |
 | Phase 04 P05 | 7 min | 3 tasks | 7 files |
 | Phase 04 P06 | 6 min | 3 tasks | 0 files |
+| Phase 06 P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,7 @@ Recent decisions affecting current work:
 - Phase 04: Template browsing opens editor state but does not create a draft.
 - Phase 04: Caption lives on DraftConfig.caption and is not rendered into the canvas.
 - Phase 04: Final full-suite verification documents unrelated GitHub callback redirect failures instead of masking them.
+- [Phase ?]: Phase 06 Plan 01: render-core video progress exposes only renderedFrames and totalFrames. — Keeps render-core public API independent of Remotion internals.
 
 ### Pending Todos
 
@@ -101,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T12:47:07.999Z
+Last session: 2026-05-21T19:26:45.184Z
 Stopped at: Phase 6 UI-SPEC approved
-Resume file: .planning/phases/06-local-video-render/06-UI-SPEC.md
+Resume file: None

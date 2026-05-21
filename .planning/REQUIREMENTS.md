@@ -44,7 +44,7 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 ### Local Render
 
 - [x] **RND-01**: User can render the creation to images locally (Satori/Sharp) across all three formats
-- [ ] **RND-02**: User can render the creation to video locally (Remotion local / headless Chrome, no Lambda)
+- [x] **RND-02**: User can render the creation to video locally (Remotion local / headless Chrome, no Lambda)
 - [x] **RND-03**: User sees render progress in both the terminal and the Workspace
 - [ ] **RND-04**: On first video render, user sees clear messaging about the one-time renderer (Chrome) download
 - [x] **RND-05**: Render output is written to a configurable local folder (default `./brag-output`)
@@ -140,7 +140,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | MEDIA-04 | Phase 4 | Complete |
 | MEDIA-05 | Phase 4 | Complete |
 | RND-01 | Phase 5 | Complete |
-| RND-02 | Phase 6 | Pending |
+| RND-02 | Phase 6 | Complete |
 | RND-03 | Phase 5 | Complete |
 | RND-04 | Phase 6 | Pending |
 | RND-05 | Phase 5 | Complete |
