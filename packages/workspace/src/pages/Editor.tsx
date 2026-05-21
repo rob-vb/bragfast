@@ -6,10 +6,12 @@ import { BrandPicker } from "../components/BrandPicker";
 import { SlotPanel } from "../components/SlotPanel";
 import { SavedIndicator } from "../components/SavedIndicator";
 import { RenderPanel } from "../components/RenderPanel";
+import { SchedulePanel } from "../components/SchedulePanel";
 import { revealOutputFolder } from "../api";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useBrand } from "../hooks/useBrand";
 import { useRender } from "../hooks/useRender";
+import { useSchedule } from "../hooks/useSchedule";
 import { useVideoRender } from "../hooks/useVideoRender";
 import { buildDraftObjectData } from "../lib/buildDraftObjectData";
 import type { Brand, DraftConfig, DraftOutput } from "../types";
@@ -51,6 +53,7 @@ export function Editor({
   const render = useRender({ flush: save.flush });
   const activeFormat = config.format ?? "landscape";
   const output = (config.output ?? "image") as DraftOutput;
+  const schedule = useSchedule({ flush: save.flush, caption: config.caption ?? "" });
   const videoRender = useVideoRender({ flush: save.flush, activeFormat });
   const activeRenderState = render.formats[activeFormat];
 
@@ -187,6 +190,13 @@ export function Editor({
             videoUrl={videoRender.url}
             onVideoTrigger={videoRender.trigger}
           />
+          {output === "image" ? (
+            <SchedulePanel
+              schedule={schedule}
+              formats={render.formats}
+              activeFormat={activeFormat}
+            />
+          ) : null}
         </section>
       </div>
     </main>
