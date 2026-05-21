@@ -61,6 +61,7 @@ completed: 2026-05-21
 1. **Task 1: RenderPanel.tsx — full render panel component** - `f03ea2e` (feat)
 2. **Task 2: Wire Editor.tsx — useRender hook + RenderPanel + rendered image swap** - `aae2022` (feat)
 3. **Copy polish: align status copy with UI spec** - `35b8491` (fix)
+4. **Code review fix: align render id with output folder** - `c9725d1` (fix)
 
 ## Files Created/Modified
 
@@ -83,10 +84,18 @@ completed: 2026-05-21
 - **Verification:** `npx tsc -p packages/workspace/tsconfig.json --noEmit`; workspace editor/autosave tests
 - **Committed in:** `35b8491`
 
+**2. [Rule 1 - Bug] Render actions used job id while files were written under draft id**
+- **Found during:** Required code-review gate
+- **Issue:** `POST /api/local/render` returned a random job id, while `resolveAndRender` writes files under `brag-output/<draftId>/`. RenderPanel used the returned id for downloads and open-folder, so those actions could point at a non-existent folder.
+- **Fix:** Made the local render job id equal the draft id and changed RenderPanel download links to use the URL returned by render status.
+- **Files modified:** `packages/cli/src/server.ts`, `packages/workspace/src/components/RenderPanel.tsx`
+- **Verification:** CLI/workspace TypeScript, server route tests, workspace editor/autosave tests
+- **Committed in:** `c9725d1`
+
 ---
 
-**Total deviations:** 1 auto-fixed (Rule 2)
-**Impact on plan:** Copy alignment only; no behavioral scope change.
+**Total deviations:** 2 auto-fixed (Rule 2, Rule 1)
+**Impact on plan:** The id fix is required for OUT-02/OUT-04 correctness; it keeps the Phase 5 overwrite-in-place output model intact.
 
 ## Issues Encountered
 
@@ -104,6 +113,8 @@ Phase 5 implementation is ready for phase-level verification. Manual local rende
 ## Self-Check: PASSED
 
 - `npx tsc -p packages/workspace/tsconfig.json --noEmit` passed.
+- `npx tsc -p packages/cli/tsconfig.json --noEmit` passed after the code-review fix.
+- `npx vitest run packages/cli/src/__tests__/server.test.ts` passed after the code-review fix.
 - `npx vitest run packages/workspace/src/__tests__/editor-flow.test.tsx packages/workspace/src/__tests__/useAutoSave.test.tsx` passed.
 - `npm run build` passed after the final UI wiring.
 
