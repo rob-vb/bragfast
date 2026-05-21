@@ -104,8 +104,8 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 — tests must exist before implementation)*
 
-- [ ] 03-03-PLAN.md — packages/cli/src/server.ts + proxy.ts (Express lifecycle, origin-lock, authenticated proxy)
-- [ ] 03-04-PLAN.md — packages/cli/src/repo-context.ts (git context extraction, non-git graceful)
+- [x] 03-03-PLAN.md — packages/cli/src/server.ts + proxy.ts (Express lifecycle, origin-lock, authenticated proxy)
+- [x] 03-04-PLAN.md — packages/cli/src/repo-context.ts (git context extraction, non-git graceful)
 
 **Wave 3** *(blocked on Waves 1 + 2 — wiring)*
 
@@ -197,7 +197,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
-| 3. CLI Local Server + Workspace Shell | 2/5 | In Progress|  |
+| 3. CLI Local Server + Workspace Shell | 4/5 | In Progress|  |
 | 4. Workspace Editor + Slot Filling | 0/TBD | Not started | - |
 | 5. Local Image Render | 0/TBD | Not started | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
