@@ -3,6 +3,7 @@ import type {
   DraftConfig,
   DraftDetail,
   DraftPreview,
+  RenderStatusResponse,
   RepoContext,
 } from "./types";
 
@@ -49,4 +50,26 @@ export async function patchDraft(
 
 export async function fetchBrands(): Promise<BrandRecord[]> {
   return requestJson<BrandRecord[]>("/api/v1/brands");
+}
+
+export async function triggerRender(draftId: string): Promise<{ id: string; status: "pending" }> {
+  return requestJson<{ id: string; status: "pending" }>("/api/local/render", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ draftId }),
+  });
+}
+
+export async function pollRenderStatus(id: string): Promise<RenderStatusResponse> {
+  return requestJson<RenderStatusResponse>(
+    `/api/local/render/${encodeURIComponent(id)}/status` as `/api/${string}`,
+  );
+}
+
+export async function revealOutputFolder(id: string): Promise<void> {
+  await requestJson<{ ok: true }>("/api/local/reveal", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
 }
