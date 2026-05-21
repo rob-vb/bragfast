@@ -16,6 +16,7 @@ import { createBackendProxy } from "./proxy";
 import { getRepoContext } from "./repo-context";
 import { getBragHome, type Credentials } from "./credentials";
 import { resolveAndRender, type RenderJob } from "./render-resolver";
+import { resolveAndSchedule, type ScheduleSelection } from "./schedule-resolver";
 import { resolveAndRenderVideo, type VideoRenderJob } from "./video-render-resolver";
 import type { FormatKey } from "@bragfast/render-core";
 
@@ -153,6 +154,23 @@ function pendingRenderJob(jobId: string, draftId: string): RenderJob {
 
 function isFormatKey(value: unknown): value is FormatKey {
   return value === "landscape" || value === "square" || value === "portrait";
+}
+
+function isScheduleSelection(value: unknown): value is ScheduleSelection {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const item = value as Record<string, unknown>;
+  if (!isFormatKey(item.format)) return false;
+  if (Array.isArray(item.channelIds)) {
+    return item.channelIds.every((id) => typeof id === "string" && id.length > 0);
+  }
+  return typeof item.channelId === "string" && item.channelId.length > 0;
+}
+
+function isScheduling(value: unknown): value is { mode: "queue" } | { mode: "custom"; scheduledAt: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const item = value as Record<string, unknown>;
+  if (item.mode === "queue") return true;
+  return item.mode === "custom" && typeof item.scheduledAt === "string" && item.scheduledAt.length > 0;
 }
 
 function pendingVideoRenderJob(jobId: string, draftId: string): VideoRenderJob {
@@ -344,6 +362,51 @@ function localVideoRenderStatusRoute(): RequestHandler {
   };
 }
 
+function localScheduleRoute(
+  outputDir: string,
+  credentials: Credentials,
+  stdout: Pick<NodeJS.WriteStream, "write">,
+): RequestHandler {
+  return (req, res, next) => {
+    void (async () => {
+      const body = req.body as {
+        draftId?: unknown;
+        selections?: unknown;
+        caption?: unknown;
+        scheduling?: unknown;
+      } | undefined;
+
+      if (!body || typeof body.draftId !== "string" || !body.draftId || isUnsafeOutputId(body.draftId)) {
+        res.status(400).json({ error: "Invalid draftId" });
+        return;
+      }
+
+      if (!Array.isArray(body.selections) || body.selections.length === 0 || !body.selections.every(isScheduleSelection)) {
+        res.status(400).json({ error: "Invalid selections" });
+        return;
+      }
+
+      if (!isScheduling(body.scheduling)) {
+        res.status(400).json({ error: "Invalid scheduling" });
+        return;
+      }
+
+      const confirmation = await resolveAndSchedule({
+        outputDir,
+        apiKey: credentials.api_key,
+        backendBase: process.env.BRAG_API_BASE ?? "https://api.brag.fast",
+        draftId: body.draftId,
+        selections: body.selections,
+        caption: typeof body.caption === "string" ? body.caption : "",
+        scheduling: body.scheduling,
+        stdout,
+      });
+
+      res.json(confirmation);
+    })().catch(next);
+  };
+}
+
 function localRevealRoute(outputDir: string): RequestHandler {
   return (req, res, next) => {
     void (async () => {
@@ -399,6 +462,7 @@ function buildApp(
   app.get("/api/local/render/:id/status", localRenderStatusRoute());
   app.post("/api/local/render/video", localVideoRenderRoute(outputDir, port, credentials, stdout));
   app.get("/api/local/render/video/:id/status", localVideoRenderStatusRoute());
+  app.post("/api/local/schedule", localScheduleRoute(outputDir, credentials, stdout));
   app.post("/api/local/reveal", localRevealRoute(outputDir));
   app.use("/output", express.static(outputDir));
   // Mounted at root; the proxy's pathFilter scopes it to /api/* so the prefix
