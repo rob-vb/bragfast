@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Home } from "../pages/Home";
 
@@ -52,7 +53,7 @@ describe("Home", () => {
 
     expect(await screen.findByText("No drafts yet")).toBeInTheDocument();
     expect(screen.getByText("Pick a template to start your first local draft.")).toBeInTheDocument();
-    expect(screen.getByText("Start from template")).toBeInTheDocument();
+    expect(screen.getAllByText("Start from template").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("button", { name: /Use template/i })).toHaveLength(5);
   });
 

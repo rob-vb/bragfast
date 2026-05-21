@@ -1,88 +1,44 @@
-import { useEffect, useState } from "react";
-import { fetchRepoContext } from "./api";
-import type { RepoContext } from "./types";
+import { useState } from "react";
+import type { CanvasTemplateConfig } from "@bragfast/render-core/browser";
+import { Home } from "./pages/Home";
+import type { Brand } from "./types";
 
 export default function App() {
-  const [context, setContext] = useState<RepoContext | null>(null);
+  const [editorState, setEditorState] = useState<{
+    draftId: string | null;
+    templateId?: string;
+    config?: CanvasTemplateConfig;
+    brand?: Brand;
+  } | null>(null);
 
-  useEffect(() => {
-    fetchRepoContext().then(setContext).catch(() => undefined);
-  }, []);
+  if (editorState) {
+    return (
+      <main className="min-h-screen bg-[var(--workspace-bg)] px-6 py-6 text-[var(--workspace-ink)]">
+        <div className="mx-auto max-w-5xl rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)] p-5">
+          <button
+            type="button"
+            className="mb-4 text-[12px] font-semibold text-[var(--workspace-forest)] underline decoration-[var(--workspace-lime)] underline-offset-4"
+            onClick={() => setEditorState(null)}
+          >
+            Start from template
+          </button>
+          <h1 className="text-[24px] font-semibold text-[var(--workspace-forest)]">
+            {editorState.draftId ? "Loading draft..." : "Template ready"}
+          </h1>
+          <p className="mt-2 text-[14px] text-[var(--workspace-muted)]">
+            The single-screen editor continues in the next plan.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main
-      style={{
-        fontFamily: "Geist, monospace",
-        background: "#FFF8F0",
-        minHeight: "100vh",
-        padding: "2rem",
-        color: "#4A3326",
-      }}
-    >
-      <h1
-        style={{
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: "14px",
-          marginBottom: "2rem",
-          borderBottom: "3px solid #4A3326",
-          paddingBottom: "1rem",
-          boxShadow: "none",
-        }}
-      >
-        ▸ brag.fast Workspace
-      </h1>
-      {context === null ? (
-        <p style={{ fontFamily: "Geist, monospace", fontSize: "14px" }}>
-          Loading...
-        </p>
-      ) : (
-        <table
-          style={{
-            borderCollapse: "collapse",
-            width: "100%",
-            maxWidth: "480px",
-            border: "2px solid #4A3326",
-            boxShadow: "4px 4px 0 #4A3326",
-          }}
-        >
-          <tbody>
-            {(
-              [
-                ["name", context.name],
-                ["version", context.version],
-                ["sha", context.sha],
-                ["tag", context.tag],
-              ] as [string, string | null][]
-            ).map(([label, value]) => (
-              <tr key={label} style={{ borderBottom: "1px solid #4A3326" }}>
-                <td
-                  style={{
-                    padding: "0.5rem 1rem",
-                    fontFamily: "'Press Start 2P', monospace",
-                    fontSize: "10px",
-                    width: "100px",
-                    borderRight: "2px solid #4A3326",
-                    background: "#4A3326",
-                    color: "#F8AF3C",
-                  }}
-                >
-                  {label}
-                </td>
-                <td
-                  style={{
-                    padding: "0.5rem 1rem",
-                    fontFamily: "Geist Mono, monospace",
-                    fontSize: "13px",
-                    color: value ? "#4A3326" : "#aaa",
-                  }}
-                >
-                  {value ?? "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </main>
+    <Home
+      onReopenDraft={(draftId) => setEditorState({ draftId })}
+      onNewTemplate={(templateId, config, brand) =>
+        setEditorState({ draftId: null, templateId, config, brand })
+      }
+    />
   );
 }
