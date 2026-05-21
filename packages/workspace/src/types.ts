@@ -7,6 +7,7 @@ export interface RepoContext {
 
 export type FormatKey = "landscape" | "square" | "portrait";
 export type DraftOutput = "image" | "video";
+export type PostingProvider = "buffer" | "postiz";
 
 export interface DraftColors {
   background: string;
@@ -77,6 +78,59 @@ export interface Brand {
   website: string;
   font_family?: string;
   colors: DraftColors;
+}
+
+export type SchedulePhase = "idle" | "uploading" | "scheduling" | "done" | "failed";
+
+export interface ScheduleChannel {
+  provider: PostingProvider;
+  channelId: string;
+  channelName?: string;
+}
+
+export interface ScheduleSelection {
+  format: FormatKey;
+  channelIds: string[];
+}
+
+export type ScheduleMode =
+  | { mode: "queue" }
+  | { mode: "custom"; scheduledAt: string };
+
+export interface ScheduleConfirmation {
+  provider: string;
+  channelId: string;
+  channelName?: string;
+  format: FormatKey;
+  status: string;
+  scheduledAt?: string;
+  externalId?: string;
+}
+
+export interface ScheduleRequest {
+  draftId: string;
+  selections: ScheduleSelection[];
+  caption: string;
+  scheduling: ScheduleMode;
+}
+
+export interface ScheduleResponse {
+  confirmation: ScheduleConfirmation[];
+}
+
+export interface IntegrationRecord {
+  provider: "stripe" | "posthog" | "ga4" | "buffer" | "postiz";
+  enabled: boolean;
+  extra: string | null;
+  lastScanAt?: string | null;
+  lastScanOkAt?: string | null;
+  lastScanError?: string | null;
+  lastSnapshotJson?: string | null;
+}
+
+export interface RoutingDefault {
+  format: FormatKey;
+  channels: ScheduleChannel[];
 }
 
 // Phase 5: render job types

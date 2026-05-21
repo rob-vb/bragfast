@@ -4,7 +4,12 @@ import type {
   DraftDetail,
   DraftPreview,
   FormatKey,
+  IntegrationRecord,
   RenderStatusResponse,
+  RoutingDefault,
+  ScheduleChannel,
+  ScheduleRequest,
+  ScheduleResponse,
   RepoContext,
   VideoRenderStatusResponse,
 } from "./types";
@@ -54,6 +59,24 @@ export async function fetchBrands(): Promise<BrandRecord[]> {
   return requestJson<BrandRecord[]>("/api/v1/brands");
 }
 
+export async function fetchIntegrations(): Promise<IntegrationRecord[]> {
+  const response = await requestJson<{ integrations: IntegrationRecord[] }>("/api/v1/sous-chef/integrations");
+  return response.integrations;
+}
+
+export async function fetchRoutingDefaults(): Promise<RoutingDefault[]> {
+  const response = await requestJson<{ formats: RoutingDefault[] }>("/api/v1/routing-defaults");
+  return response.formats;
+}
+
+export async function saveRoutingDefault(format: FormatKey, channels: ScheduleChannel[]): Promise<void> {
+  await requestJson<{ ok: true }>("/api/v1/routing-defaults", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ format, channels }),
+  });
+}
+
 export async function triggerRender(draftId: string): Promise<{ id: string; status: "pending" }> {
   return requestJson<{ id: string; status: "pending" }>("/api/local/render", {
     method: "POST",
@@ -91,4 +114,12 @@ export async function pollVideoRenderStatus(id: string): Promise<VideoRenderStat
   return requestJson<VideoRenderStatusResponse>(
     `/api/local/render/video/${encodeURIComponent(id)}/status` as `/api/${string}`,
   );
+}
+
+export async function schedulePost(request: ScheduleRequest): Promise<ScheduleResponse> {
+  return requestJson<ScheduleResponse>("/api/local/schedule", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
 }
