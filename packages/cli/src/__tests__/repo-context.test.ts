@@ -61,11 +61,20 @@ describe("getRepoContext (CLI-07)", () => {
 
   describe("execSync throws (git not available)", () => {
     it("returns all-null object when execSync throws for every git command", async () => {
-      vi.mock("child_process", () => ({
-        execSync: vi.fn(() => {
+      // vi.doMock (NOT vi.mock) so the mock is scoped to this test only —
+      // vi.mock hoists to module top and would make execSync throw for the
+      // real-git-repo tests above too. Reset the module registry, then
+      // dynamic-import so the fresh copy picks up the mock.
+      vi.resetModules();
+      vi.doMock("child_process", () => {
+        const execSync = vi.fn(() => {
           throw new Error("git not found");
-        }),
-      }));
+        });
+        // child_process is CJS — vitest ESM interop requires a default export
+        // alongside the named one, otherwise the re-import below throws
+        // "No default export is defined on the child_process mock".
+        return { execSync, default: { execSync } };
+      });
 
       // Re-import to pick up the mock
       const { getRepoContext: getRepoContextMocked } = await import("../repo-context");
@@ -73,7 +82,8 @@ describe("getRepoContext (CLI-07)", () => {
       const ctx = getRepoContextMocked(tmp);
       expect(ctx).toEqual({ tag: null, sha: null, name: null, version: null });
 
-      vi.restoreAllMocks();
+      vi.doUnmock("child_process");
+      vi.resetModules();
     });
   });
 });
