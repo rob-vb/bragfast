@@ -91,6 +91,24 @@ export interface RenderStatusResponse {
   formats: Record<"landscape" | "square" | "portrait", FormatRenderState>;
 }
 
+export type VideoRenderPhase =
+  | "idle"
+  | "flushing"
+  | "chrome-download"
+  | "rendering"
+  | "done"
+  | "failed";
+
+export interface VideoRenderStatusResponse {
+  id: string;
+  phase: "pending" | "chrome-download" | "rendering" | "done" | "failed";
+  framesRendered: number;
+  totalFrames: number;
+  downloadPct: number;
+  url?: string;
+  error?: string;
+}
+
 export type EditorView =
   | { screen: "home" }
   | { screen: "editor"; draftId: string | null; config: DraftConfig };

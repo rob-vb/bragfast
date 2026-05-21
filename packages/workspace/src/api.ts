@@ -3,8 +3,10 @@ import type {
   DraftConfig,
   DraftDetail,
   DraftPreview,
+  FormatKey,
   RenderStatusResponse,
   RepoContext,
+  VideoRenderStatusResponse,
 } from "./types";
 
 async function requestJson<T>(url: `/api/${string}`, init?: RequestInit): Promise<T> {
@@ -72,4 +74,21 @@ export async function revealOutputFolder(id: string): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),
   });
+}
+
+export async function triggerVideoRender(
+  draftId: string,
+  format: FormatKey,
+): Promise<{ id: string; status: "pending" }> {
+  return requestJson<{ id: string; status: "pending" }>("/api/local/render/video", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ draftId, format }),
+  });
+}
+
+export async function pollVideoRenderStatus(id: string): Promise<VideoRenderStatusResponse> {
+  return requestJson<VideoRenderStatusResponse>(
+    `/api/local/render/video/${encodeURIComponent(id)}/status` as `/api/${string}`,
+  );
 }
