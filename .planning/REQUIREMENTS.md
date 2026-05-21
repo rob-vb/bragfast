@@ -35,11 +35,11 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 
 ### Media / Slot Fill
 
-- [ ] **MEDIA-01**: User can drag an image from disk into a visual slot
-- [ ] **MEDIA-02**: User can drag a video from disk into a video slot
-- [ ] **MEDIA-03**: User can click-to-browse to fill a slot as a drag-drop fallback
-- [ ] **MEDIA-04**: User can clear or replace media in a slot
-- [ ] **MEDIA-05**: User sees a preview of filled media in the slot before rendering
+- [x] **MEDIA-01**: User can drag an image from disk into a visual slot
+- [x] **MEDIA-02**: User can drag a video from disk into a video slot
+- [x] **MEDIA-03**: User can click-to-browse to fill a slot as a drag-drop fallback
+- [x] **MEDIA-04**: User can clear or replace media in a slot
+- [x] **MEDIA-05**: User sees a preview of filled media in the slot before rendering
 
 ### Local Render
 
@@ -134,11 +134,11 @@ Which phases cover which requirements. Populated during roadmap creation.
 | WORK-06 | Phase 4 | Complete |
 | WORK-07 | Phase 4 | Pending |
 | WORK-08 | Phase 4 | Pending |
-| MEDIA-01 | Phase 4 | Pending |
-| MEDIA-02 | Phase 4 | Pending |
-| MEDIA-03 | Phase 4 | Pending |
-| MEDIA-04 | Phase 4 | Pending |
-| MEDIA-05 | Phase 4 | Pending |
+| MEDIA-01 | Phase 4 | Complete |
+| MEDIA-02 | Phase 4 | Complete |
+| MEDIA-03 | Phase 4 | Complete |
+| MEDIA-04 | Phase 4 | Complete |
+| MEDIA-05 | Phase 4 | Complete |
 | RND-01 | Phase 5 | Pending |
 | RND-02 | Phase 6 | Pending |
 | RND-03 | Phase 5 | Pending |
