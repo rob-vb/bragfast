@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-05-21T09:00:00.000Z"
+stopped_at: Completed 04-06-PLAN.md
+last_updated: "2026-05-21T09:06:00.000Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 22
-  completed_plans: 17
-  percent: 77
+  completed_plans: 18
+  percent: 82
 ---
 
 # Project State
@@ -27,16 +27,16 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 Phase: 04 (workspace-editor-slot-filling) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase execution complete
 Last activity: 2026-05-21
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 19
+- Total plans completed: 20
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 77%
 | Phase 04 P03 | 8 min | 3 tasks | 6 files |
 | Phase 04 P04 | 10 min | 3 tasks | 9 files |
 | Phase 04 P05 | 7 min | 3 tasks | 7 files |
+| Phase 04 P06 | 6 min | 3 tasks | 0 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Recent decisions affecting current work:
 - Phase 04: Auto-save sends full DraftConfig payloads to avoid PATCH shallow-merge data loss.
 - Phase 04: Template browsing opens editor state but does not create a draft.
 - Phase 04: Caption lives on DraftConfig.caption and is not rendered into the canvas.
+- Phase 04: Final full-suite verification documents unrelated GitHub callback redirect failures instead of masking them.
 
 ### Pending Todos
 
@@ -84,6 +86,8 @@ None yet.
 - Phase 1: Sharp cross-platform binary mismatch — CI matrix added for macOS arm64 and Linux x64; live CI must still be checked after push
 - Phase 2: npm package name `brag` is taken (`0.0.2`); package name `bragfast` is selected and Phase 2 is complete. Public first-run command is `npx bragfast`; installed/global bin can still be `brag`.
 - ~~Phase 4/6: Workspace SPA tech decision~~ — RESOLVED 2026-05-20: Vite standalone SPA in `packages/workspace`, served by CLI Express (see 03-CONTEXT.md)
+- Phase 4 final manual smoke: authenticated local CLI smoke could not run here because the CLI entered device-login and exited with `fetch failed`; retry after local credentials/device-login are working.
+- Full-suite Vitest currently has two unrelated GitHub callback redirect failures expecting legacy/repositioned redirects while current route returns `/admin/sous-chef`.
 - Phase 6: Remotion Chrome path isolation on macOS vs Linux — verify in CI before Phase 6 ships
 
 ## Deferred Items
@@ -97,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T09:00:00.000Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-05-21T09:06:00.000Z
+Stopped at: Completed 04-06-PLAN.md
 Resume file: None
