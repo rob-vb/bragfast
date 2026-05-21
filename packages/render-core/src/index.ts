@@ -22,6 +22,7 @@ export type { FontConfig } from "./fonts";
 export type { ObjectDataMap } from "./canvas-renderer";
 
 export { FORMAT_DIMENSIONS } from "./canvas-types";
+export { CANVAS_DEFAULTS, getCanvasDefaultConfig } from "./canvas-defaults";
 export { CanvasRenderer, renderObject } from "./canvas-renderer";
 export { loadFonts, loadFontsForFamily, loadFontsForObjects } from "./fonts";
 export { renderImage } from "./image";
