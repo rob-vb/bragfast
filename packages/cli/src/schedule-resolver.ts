@@ -125,10 +125,12 @@ async function postJson<T>(url: string, apiKey: string, body: unknown): Promise<
 }
 
 async function putJpeg(upload: UploadDescriptor, buffer: Buffer): Promise<void> {
+  const body = new ArrayBuffer(buffer.byteLength);
+  new Uint8Array(body).set(buffer);
   const response = await fetch(upload.uploadUrl, {
     method: "PUT",
     headers: { "Content-Type": "image/jpeg" },
-    body: buffer,
+    body,
   });
 
   if (!response.ok) {
