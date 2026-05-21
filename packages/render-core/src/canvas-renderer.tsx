@@ -76,6 +76,7 @@ interface CanvasRendererProps {
   format: FormatKey;
   objectData: ObjectDataMap;
   brand: Brand;
+  VideoComponent?: RenderObjectOptions["VideoComponent"];
   backgroundImageBase64?: string;
   /** When true, skip text/image objects that have no data in objectData */
   skipEmpty?: boolean;
@@ -84,7 +85,7 @@ interface CanvasRendererProps {
   showPlaceholders?: boolean;
 }
 
-export function CanvasRenderer({ config, format, objectData, brand, backgroundImageBase64, skipEmpty, showPlaceholders }: CanvasRendererProps) {
+export function CanvasRenderer({ config, format, objectData, brand, VideoComponent, backgroundImageBase64, skipEmpty, showPlaceholders }: CanvasRendererProps) {
   const { width, height } = FORMAT_DIMENSIONS[format];
   const layout = config.formats[format] ?? config.formats.landscape;
   const colors = brand.colors ?? config.colors;
@@ -136,7 +137,10 @@ export function CanvasRenderer({ config, format, objectData, brand, backgroundIm
           justifyContent: obj.verticalAlign === "center" ? "center"
                         : obj.verticalAlign === "bottom" ? "flex-end" : "flex-start",
         }}>
-          {renderObject(obj, objectData, brand, colors, { showVisualPlaceholders: showPlaceholders })}
+          {renderObject(obj, objectData, brand, colors, {
+            VideoComponent,
+            showVisualPlaceholders: showPlaceholders,
+          })}
         </div>
       ))}
     </div>
