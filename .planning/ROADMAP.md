@@ -232,7 +232,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 07-03-PLAN.md — Backend API routes: presigned upload-url + schedule endpoint with all-or-nothing errors
+- [x] 07-03-PLAN.md — Backend API routes: presigned upload-url + schedule endpoint with all-or-nothing errors
 
 **Wave 4** *(blocked on Wave 3)*
 

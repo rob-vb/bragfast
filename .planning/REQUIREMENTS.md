@@ -60,7 +60,7 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 ### Scheduling (Buffer)
 
 - [ ] **SCHED-01**: User can connect Buffer via OAuth in the admin
-- [ ] **SCHED-02**: User can pick which Buffer channels a creation posts to, in the Workspace
+- [x] **SCHED-02**: User can pick which Buffer channels a creation posts to, in the Workspace
 - [x] **SCHED-03**: User can schedule with an exact date/time or the next queue slot
 - [x] **SCHED-04**: On schedule, the rendered file uploads to R2 and its public URL is sent to Buffer
 - [x] **SCHED-05**: User sees a confirmation when scheduling succeeds
@@ -150,7 +150,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | OUT-03 | Phase 5 | Complete |
 | OUT-04 | Phase 5 | Complete |
 | SCHED-01 | Phase 7 | Pending |
-| SCHED-02 | Phase 7 | Pending |
+| SCHED-02 | Phase 7 | Complete |
 | SCHED-03 | Phase 7 | Complete |
 | SCHED-04 | Phase 7 | Complete |
 | SCHED-05 | Phase 7 | Complete |

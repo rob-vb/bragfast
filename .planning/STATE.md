@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-05-21T21:27:26.974Z"
-last_activity: 2026-05-21 -- Completed Phase 07 Plan 02
+stopped_at: Completed 07-03-PLAN.md
+last_updated: "2026-05-21T21:37:28.512Z"
+last_activity: 2026-05-21 -- Completed Phase 07 Plan 03
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 35
-  completed_plans: 28
-  percent: 80
+  completed_plans: 29
+  percent: 83
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 Phase: 07 (schedule-time-upload-posting) — EXECUTING
 Plan: 3 of 5
-Status: 07-02 complete; ready for 07-03
-Last activity: 2026-05-21 -- Completed Phase 07 Plan 02
+Status: 07-03 complete; ready for 07-04
+Last activity: 2026-05-21 -- Completed Phase 07 Plan 03
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [████████░░] 80%
 | Phase 06 P04 | 8min | 2 tasks | 2 files |
 | Phase 07 P01 | 2min | 2 tasks | 4 files |
 | Phase 07 P02 | 5min | 3 tasks | 8 files |
+| Phase 07 P03 | 4min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 02: schedulePush.run is a public trusted action for authenticated route handlers; it keeps Buffer credentials server-side and returns only provider post summaries.
 - [Phase 07]: Phase 07 Plan 02: scheduled release rows use externalId prefix rel_ and template local-render with channel/scheduling details in metadata JSON.
 - [Phase 07]: Phase 07 Plan 02: R2 HEAD checks run for every provided key before the first Buffer push to prevent partial scheduling.
+- [Phase 07]: Phase 07 Plan 03: schedule routes accept only landscape, square, and portrait image formats; video formats are excluded from this phase.
+- [Phase 07]: Phase 07 Plan 03: route handlers derive userId from authenticate(request) and pass it to schedulePush.run instead of trusting request-supplied user identifiers.
 
 ### Pending Todos
 
@@ -121,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T21:27:26.968Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-05-21T21:37:22.416Z
+Stopped at: Completed 07-03-PLAN.md
 Resume file: None
