@@ -196,7 +196,7 @@ Plans:
 **Wave 1** *(parallel — no dependencies)*
 
 - [x] 06-01-PLAN.md — render-core onProgress extension: add onProgress to LocalVideoRenderRequest + wire into renderMedia
-- [ ] 06-02-PLAN.md — CLI video resolver + server routes: video-render-resolver.ts + POST/GET endpoints + unit tests
+- [x] 06-02-PLAN.md — CLI video resolver + server routes: video-render-resolver.ts + POST/GET endpoints + unit tests
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -247,6 +247,6 @@ Plans:
 | 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
 | 5. Local Image Render | 4/4 | Human verification | - |
-| 6. Local Video Render | 1/4 | In Progress|  |
+| 6. Local Video Render | 2/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
 | 8. Admin Trim | 0/TBD | Not started | - |

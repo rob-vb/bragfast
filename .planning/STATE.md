@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Phase 6 UI-SPEC approved
-last_updated: "2026-05-21T19:27:19.263Z"
-last_activity: 2026-05-21 -- Phase 06 planning complete
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-05-21T19:38:14.221Z"
+last_activity: 2026-05-21
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 30
-  completed_plans: 23
-  percent: 50
+  completed_plans: 24
+  percent: 80
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** A developer can go from terminal to a finished, branded, ready-to-post image/video in minutes — rendered locally, no AI, no friction.
-**Current focus:** Phase 05 — local-image-render
+**Current focus:** Phase 06 — local-video-render
 
 ## Current Position
 
-Phase: 05 (local-image-render) — HUMAN VERIFICATION
-Plan: 4 of 4
+Phase: 06 (local-video-render)
+Plan: 3 of 4
 Status: Ready to execute
-Last activity: 2026-05-21 -- Phase 06 planning complete
+Last activity: 2026-05-21
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 77%
 | Phase 04 P05 | 7 min | 3 tasks | 7 files |
 | Phase 04 P06 | 6 min | 3 tasks | 0 files |
 | Phase 06 P01 | 2min | 2 tasks | 3 files |
+| Phase 06 P02 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - Phase 04: Caption lives on DraftConfig.caption and is not rendered into the canvas.
 - Phase 04: Final full-suite verification documents unrelated GitHub callback redirect failures instead of masking them.
 - [Phase ?]: Phase 06 Plan 01: render-core video progress exposes only renderedFrames and totalFrames. — Keeps render-core public API independent of Remotion internals.
+- [Phase 06]: Phase 06 Plan 02: CLI video render writes a single active-format MP4 to brag-output/<draftId>/<format>.mp4.
+- [Phase 06]: Phase 06 Plan 02: Chrome download status only enters chrome-download when Remotion reports alreadyAvailable:false.
+- [Phase 06]: Phase 06 Plan 02: CLI Remotion entry resolves from import.meta.url using ../../../src/remotion/index.ts from the CLI module directory.
 
 ### Pending Todos
 
@@ -103,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T19:26:45.184Z
-Stopped at: Phase 6 UI-SPEC approved
+Last session: 2026-05-21T19:38:14.221Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
