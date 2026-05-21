@@ -79,6 +79,18 @@ export interface Brand {
   colors: DraftColors;
 }
 
+// Phase 5: render job types
+export type FormatRenderState =
+  | { phase: "idle" }
+  | { phase: "pending" }
+  | { phase: "done"; url: string }
+  | { phase: "failed"; error: string };
+
+export interface RenderStatusResponse {
+  id: string;
+  formats: Record<"landscape" | "square" | "portrait", FormatRenderState>;
+}
+
 export type EditorView =
   | { screen: "home" }
   | { screen: "editor"; draftId: string | null; config: DraftConfig };
