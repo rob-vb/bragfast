@@ -106,6 +106,7 @@ export function validateDraftPayload(body: unknown): ValidationResult {
     "objectContent",
     "video",
     "notes",
+    "caption",
   ]);
   const unknown = Object.keys(body).filter((k) => !allowedTop.has(k));
   if (unknown.length > 0) return fail(`unknown keys: ${unknown.join(",")}`);
@@ -158,6 +159,10 @@ export function validateDraftPayload(body: unknown): ValidationResult {
     if (typeof body.notes !== "string") return fail("notes must be string");
     config.notes = body.notes;
   }
+  if (body.caption !== undefined) {
+    if (typeof body.caption !== "string") return fail("caption must be string");
+    config.caption = body.caption;
+  }
 
   return { ok: true, config, name };
 }
@@ -178,6 +183,7 @@ export function validateDraftPatchPayload(body: unknown): PatchValidationResult 
     "objectContent",
     "video",
     "notes",
+    "caption",
   ]);
   const unknown = Object.keys(body).filter((k) => !allowedTop.has(k));
   if (unknown.length > 0) return fail(`unknown keys: ${unknown.join(",")}`);
@@ -236,6 +242,10 @@ export function validateDraftPatchPayload(body: unknown): PatchValidationResult 
   if (body.notes !== undefined) {
     if (typeof body.notes !== "string") return fail("notes must be string");
     patch.notes = body.notes;
+  }
+  if (body.caption !== undefined) {
+    if (typeof body.caption !== "string") return fail("caption must be string");
+    patch.caption = body.caption;
   }
 
   return { ok: true, patch, name };

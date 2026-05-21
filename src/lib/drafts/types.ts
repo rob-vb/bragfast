@@ -46,6 +46,7 @@ export interface DraftConfig {
   objectContent?: Record<string, DraftObjectContent>;
   video?: DraftVideo;
   notes?: string;
+  caption?: string;
   /**
    * Platform-specific copy variants generated at draft time. The image render
    * uses `objectContent.title/description` as the canonical visual; this map
