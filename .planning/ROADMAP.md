@@ -126,7 +126,26 @@ Plans:
   5. After editing, the Draft auto-saves without any explicit user action; the user can reopen a recent Draft from the Workspace and resume editing where they left off
   6. When the user's brand has a logo, the logo Slot auto-populates with it on Template selection
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — Shared contracts, workspace test/style setup, render-core browser entry, built-in template relocation, caption validation
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 04-02-PLAN.md — CLI-local media upload and static media serving
+- [ ] 04-03-PLAN.md — Workspace draft/brand/media API helpers and debounced full-config auto-save
+- [ ] 04-04-PLAN.md — Workspace home, template thumbnails, browser preview, format switcher, brand picker
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 04-05-PLAN.md — Single-screen editor, slot panel, media fields, caption, saved indicator, app transitions
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 04-06-PLAN.md — Final integration, UI/accessibility polish, full build/test/manual Workspace verification
 **UI hint**: yes
 
 ### Phase 5: Local Image Render
