@@ -3,6 +3,7 @@ import { Command } from "commander";
 import path from "path";
 import { clearCredentials, readCredentials } from "./credentials";
 import { login } from "./auth";
+import { startServer } from "./server";
 
 const program = new Command();
 const invoked = path.basename(process.argv[1] ?? "bragfast");
@@ -18,7 +19,15 @@ program
       await login();
       return;
     }
-    process.stdout.write("Logged in. Workspace server arrives in Phase 3.\n");
+    const { close } = await startServer(credentials);
+    process.on("SIGINT", async () => {
+      await close();
+      process.exit(0);
+    });
+    process.on("SIGTERM", async () => {
+      await close();
+      process.exit(0);
+    });
   });
 
 program

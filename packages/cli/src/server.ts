@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import open from "open";
 import { createBackendProxy } from "./proxy";
+import { getRepoContext } from "./repo-context";
 import type { Credentials } from "./credentials";
 
 const DEFAULT_PORT = 3421;
@@ -49,7 +50,7 @@ export function originLockMiddleware(port: number): RequestHandler[] {
     next();
   };
 
-  const corsMiddleware = cors({
+  const corsHandler = cors({
     origin: (incoming, callback) => {
       if (!incoming || incoming === allowedOrigin) {
         callback(null, true);
@@ -59,6 +60,21 @@ export function originLockMiddleware(port: number): RequestHandler[] {
     },
     credentials: false,
   });
+
+  // Wrap cors so a rejected origin yields a 401 directly. The cors package
+  // forwards its rejection to next(err), which Express's default handler would
+  // turn into a 500 — but a forbidden cross-origin request is an auth failure
+  // (T-03-05), so it must be 401. Keeps the array two elements (the contract
+  // origin-lock.test.ts destructures), with no separate error middleware.
+  const corsMiddleware: RequestHandler = (req, res, next) => {
+    corsHandler(req, res, (err: unknown) => {
+      if (err) {
+        res.status(401).json({ error: "forbidden" });
+        return;
+      }
+      next();
+    });
+  };
 
   return [hostGuard, corsMiddleware];
 }
@@ -77,10 +93,18 @@ function getSpaDir(override?: string): string {
 function buildApp(credentials: Credentials, port: number, spaDir: string): Application {
   const app = express();
   app.use(...originLockMiddleware(port));
+  // Local-only route: served by the CLI itself (not proxied to the backend),
+  // so it must be registered before the catch-all /api proxy. Reads git/
+  // package.json context from the invoking directory to prefill Workspace copy.
+  app.get("/api/repo-context", (_req, res) => {
+    res.json(getRepoContext(process.cwd()));
+  });
   app.use("/api", createBackendProxy(credentials.api_key));
   app.use(express.static(spaDir));
   // SPA client-side router fallback: any unmatched path serves index.html.
-  app.get("*", (_req, res) => {
+  // Express 5 (path-to-regexp v8) removed the bare "*" wildcard — a named
+  // wildcard ("/*splat") is required.
+  app.get("/*splat", (_req, res) => {
     res.sendFile(path.join(spaDir, "index.html"));
   });
   return app;
