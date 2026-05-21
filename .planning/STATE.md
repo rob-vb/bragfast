@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-05-21T21:37:28.512Z"
-last_activity: 2026-05-21 -- Completed Phase 07 Plan 03
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-05-21T21:49:12.669Z"
+last_activity: 2026-05-21 -- Completed Phase 07 Plan 04
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 35
-  completed_plans: 29
-  percent: 83
+  completed_plans: 30
+  percent: 86
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 07 (schedule-time-upload-posting) — EXECUTING
-Plan: 3 of 5
-Status: 07-03 complete; ready for 07-04
-Last activity: 2026-05-21 -- Completed Phase 07 Plan 03
+Plan: 4 of 5
+Status: 07-04 complete; ready for 07-05
+Last activity: 2026-05-21 -- Completed Phase 07 Plan 04
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 83%
 | Phase 07 P01 | 2min | 2 tasks | 4 files |
 | Phase 07 P02 | 5min | 3 tasks | 8 files |
 | Phase 07 P03 | 4min | 3 tasks | 3 files |
+| Phase 07 P04 | 8min | 4 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 02: R2 HEAD checks run for every provided key before the first Buffer push to prevent partial scheduling.
 - [Phase 07]: Phase 07 Plan 03: schedule routes accept only landscape, square, and portrait image formats; video formats are excluded from this phase.
 - [Phase 07]: Phase 07 Plan 03: route handlers derive userId from authenticate(request) and pass it to schedulePush.run instead of trusting request-supplied user identifiers.
+- [Phase 07]: Phase 07 Plan 04: Workspace schedule calls target /api/local/schedule; the CLI performs presigned R2 PUTs and only sends public URLs/keys to the hosted backend.
+- [Phase 07]: Phase 07 Plan 04: CLI schedule orchestration accepts only landscape, square, and portrait image formats for this phase.
+- [Phase 07]: Phase 07 Plan 04: useSchedule ignores duplicate trigger calls while uploading or scheduling.
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T21:37:22.416Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-05-21T21:49:12.669Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None

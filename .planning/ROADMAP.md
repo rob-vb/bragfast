@@ -236,7 +236,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 07-04-PLAN.md — CLI + Workspace schedule orchestration: local file upload to R2 + useSchedule hook
+- [x] 07-04-PLAN.md — CLI + Workspace schedule orchestration: local file upload to R2 + useSchedule hook
 
 **Wave 5** *(blocked on Wave 4)*
 
