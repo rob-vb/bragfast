@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-05-21T08:43:00.000Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-05-21T08:53:00.000Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 22
-  completed_plans: 15
-  percent: 68
+  completed_plans: 16
+  percent: 73
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 04 (workspace-editor-slot-filling) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [███████░░░] 68%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -57,6 +57,7 @@ Progress: [███████░░░] 68%
 | Phase 04 P01 | 7 min | 3 tasks | 16 files |
 | Phase 04 P02 | 5 min | 2 tasks | 4 files |
 | Phase 04 P03 | 8 min | 3 tasks | 6 files |
+| Phase 04 P04 | 10 min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,7 @@ Recent decisions affecting current work:
 - ADR-0003: BYO-AI — no server copy gen; repo context prefill only
 - Phase 04: Workspace API helpers use relative URLs only; the CLI proxy owns auth.
 - Phase 04: Auto-save sends full DraftConfig payloads to avoid PATCH shallow-merge data loss.
+- Phase 04: Template browsing opens editor state but does not create a draft.
 
 ### Pending Todos
 
@@ -93,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T08:43:00.000Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-05-21T08:53:00.000Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
