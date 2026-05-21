@@ -25,7 +25,7 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 - [x] **Phase 3: CLI Local Server + Workspace Shell** - Serve the Workspace SPA from a local Express server with origin-locked proxy to the backend (completed 2026-05-21)
 - [x] **Phase 4: Workspace Editor + Slot Filling** - Template picker, slot fill UI (text + media drag-drop), format switcher, caption, and Draft auto-save (completed 2026-05-21)
 - [ ] **Phase 5: Local Image Render** - Render all three formats locally via Satori/Sharp with in-Workspace preview and output folder (awaiting human verification)
-- [ ] **Phase 6: Local Video Render** - Render video locally via Remotion headless Chrome with first-run Chrome download messaging
+- [ ] **Phase 6: Local Video Render** - Render video locally via Remotion headless Chrome with first-run Chrome download messaging (awaiting human verification)
 - [ ] **Phase 7: Schedule-Time Upload + Posting** - Upload rendered files to R2 at schedule-time and post to Buffer channels via the existing posting backbone
 - [ ] **Phase 8: Admin Trim** - Remove legacy cook UI, add device approval page, confirm read-only gallery and brand setup are working
 
@@ -204,7 +204,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 06-04-PLAN.md — RenderPanel extension + Editor.tsx wiring + human verification checkpoint
+- [x] 06-04-PLAN.md — RenderPanel extension + Editor.tsx wiring + human verification checkpoint
 **UI hint**: yes
 
 ### Phase 7: Schedule-Time Upload + Posting

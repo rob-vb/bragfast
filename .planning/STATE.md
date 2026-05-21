@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-05-21T19:45:30.501Z"
+stopped_at: Completed 06-04-PLAN.md; human video render UAT pending
+last_updated: "2026-05-21T19:55:00.000Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 30
-  completed_plans: 25
+  completed_plans: 26
   percent: 50
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 Phase: 06 (local-video-render)
 Plan: 4 of 4
-Status: Ready to execute
+Status: Human verification pending
 Last activity: 2026-05-21
 
 Progress: [████████░░] 83%
@@ -63,6 +63,7 @@ Progress: [████████░░] 83%
 | Phase 06 P01 | 2min | 2 tasks | 3 files |
 | Phase 06 P02 | 7min | 2 tasks | 4 files |
 | Phase 06 P03 | 4min | 2 tasks | 5 files |
+| Phase 06 P04 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 06]: Phase 06 Plan 02: CLI Remotion entry resolves from import.meta.url using ../../../src/remotion/index.ts from the CLI module directory.
 - [Phase 06]: Phase 06 Plan 03: pending video poll status remains in rendering phase. — Avoids a separate Workspace pending UI state after trigger while CLI job starts.
 - [Phase 06]: Phase 06 Plan 03: video render trigger guard blocks flushing, chrome-download, and rendering. — Prevents duplicate local video render jobs during in-progress phases.
+- [Phase 06]: Phase 06 Plan 04: DraftConfig.output is the source of truth for the image/video output toggle.
+- [Phase 06]: Phase 06 Plan 04: RenderPanel now branches by output mode while keeping the existing image render path intact.
 
 ### Pending Todos
 
@@ -98,6 +101,7 @@ None yet.
 - Phase 4 final manual smoke: authenticated local CLI smoke could not run here because the CLI entered device-login and exited with `fetch failed`; retry after local credentials/device-login are working.
 - Full-suite Vitest currently has two unrelated GitHub callback redirect failures expecting legacy/repositioned redirects while current route returns `/admin/sous-chef`.
 - Phase 6: Remotion Chrome path isolation on macOS vs Linux — verify in CI before Phase 6 ships
+- Phase 6 human UAT pending: drag/drop a real video, render locally, confirm Chrome gate, frame progress, MP4 preview/download/open-folder.
 
 ## Deferred Items
 
@@ -110,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T19:45:30.496Z
-Stopped at: Completed 06-03-PLAN.md
-Resume file: None
+Last session: 2026-05-21T19:55:00.000Z
+Stopped at: Completed 06-04-PLAN.md; human video render UAT pending
+Resume file: .planning/phases/06-local-video-render/06-HUMAN-UAT.md
