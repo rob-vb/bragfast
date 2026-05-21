@@ -43,7 +43,9 @@ export function originLockMiddleware(port: number): RequestHandler[] {
 
   const hostGuard: RequestHandler = (req, res, next) => {
     const host = req.headers.host;
-    if (host && host !== `127.0.0.1:${port}`) {
+    // Reject a missing Host as well as a wrong one — HTTP/1.0 clients and raw
+    // tools can omit it, and a blank Host must not slip past the guard.
+    if (!host || host !== `127.0.0.1:${port}`) {
       res.status(401).json({ error: "forbidden" });
       return;
     }
@@ -99,7 +101,9 @@ function buildApp(credentials: Credentials, port: number, spaDir: string): Appli
   app.get("/api/repo-context", (_req, res) => {
     res.json(getRepoContext(process.cwd()));
   });
-  app.use("/api", createBackendProxy(credentials.api_key));
+  // Mounted at root; the proxy's pathFilter scopes it to /api/* so the prefix
+  // is preserved on the upstream request (see proxy.ts).
+  app.use(createBackendProxy(credentials.api_key));
   app.use(express.static(spaDir));
   // SPA client-side router fallback: any unmatched path serves index.html.
   // Express 5 (path-to-regexp v8) removed the bare "*" wildcard — a named

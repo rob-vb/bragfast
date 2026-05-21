@@ -18,6 +18,10 @@ export function createBackendProxy(apiKey: string): RequestHandler {
   return createProxyMiddleware({
     target: getApiUrl(),
     changeOrigin: true,
+    // Mounted at the app root (not app.use("/api", ...)) so Express does not
+    // strip the prefix; pathFilter scopes the proxy to /api/* and req.url keeps
+    // the full path, so the backend receives /api/v1/... unchanged.
+    pathFilter: "/api",
     on: {
       proxyReq: (proxyReq) => {
         proxyReq.setHeader("Authorization", `Bearer ${apiKey}`);
