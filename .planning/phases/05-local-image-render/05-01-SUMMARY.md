@@ -28,6 +28,9 @@ key-files:
     - packages/cli/src/server.ts
     - packages/cli/src/__tests__/server.test.ts
     - packages/cli/src/__tests__/proxy.test.ts
+    - packages/render-core/package.json
+    - packages/render-core/tsup.config.ts
+    - packages/render-core/src/image-entry.ts
 
 key-decisions:
   - "Render jobs return immediately and are polled by job id."
@@ -54,7 +57,7 @@ completed: 2026-05-21
 - **Started:** 2026-05-21T11:44:00Z
 - **Completed:** 2026-05-21T12:02:53Z
 - **Tasks:** 2
-- **Files modified:** 4
+- **Files modified:** 7
 
 ## Accomplishments
 
@@ -74,6 +77,9 @@ completed: 2026-05-21
 - `packages/cli/src/server.ts` - Registers render/status/reveal endpoints plus `/output` static route before the backend proxy.
 - `packages/cli/src/__tests__/server.test.ts` - Covers local render route contracts and output serving.
 - `packages/cli/src/__tests__/proxy.test.ts` - Casts proxy callback mocks so the package compile gate passes under current middleware types.
+- `packages/render-core/src/image-entry.ts` - Exposes image-only render-core APIs without pulling video bundler code.
+- `packages/render-core/package.json` - Adds the `@bragfast/render-core/image` subpath export.
+- `packages/render-core/tsup.config.ts` - Builds the image-only entrypoint.
 
 ## Decisions Made
 
@@ -92,14 +98,23 @@ completed: 2026-05-21
 - **Verification:** `npx tsc -p packages/cli/tsconfig.json --noEmit`
 - **Committed in:** `ec6eab4`
 
+**2. [Rule 3 - Blocking] CLI bundle pulled render-core video dependencies**
+- **Found during:** Post-wave build gate
+- **Issue:** Importing from `@bragfast/render-core` pulled the package index, including the video export and optional Rspack native bindings, which broke `npm run build` during the CLI package build.
+- **Fix:** Added an image-only `@bragfast/render-core/image` entrypoint and updated the CLI resolver to import render image APIs from it.
+- **Files modified:** `packages/render-core/src/image-entry.ts`, `packages/render-core/package.json`, `packages/render-core/tsup.config.ts`, `packages/cli/src/render-resolver.ts`
+- **Verification:** `npm run build`
+- **Committed in:** `a86daee`
+
 ---
 
-**Total deviations:** 1 auto-fixed (Rule 3)
-**Impact on plan:** The fix was limited to an existing test compile blocker needed for the plan's TypeScript gate.
+**Total deviations:** 2 auto-fixed (Rule 3)
+**Impact on plan:** Both fixes were build/verification blockers. The render-core subpath keeps the CLI image path isolated from video bundler dependencies without changing the existing root export.
 
 ## Issues Encountered
 
 - The sandbox blocked local port binding for the server test suite (`listen EPERM`). The same suite passed when rerun with local port binding allowed.
+- The full post-wave Vitest run still has two unrelated GitHub callback redirect expectation failures already recorded in project state.
 
 ## User Setup Required
 
@@ -113,6 +128,7 @@ Plan 05-03 can call the render trigger/status endpoints through the SPA API help
 
 - `npx tsc -p packages/cli/tsconfig.json --noEmit` passed.
 - `npx vitest run packages/cli/src/__tests__/server.test.ts` passed with 16 tests.
+- `npm run build` passed after adding the image-only render-core entrypoint.
 - Required server route strings and path traversal guard are present.
 
 ---
