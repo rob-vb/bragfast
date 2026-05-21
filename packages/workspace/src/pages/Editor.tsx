@@ -10,8 +10,11 @@ import { revealOutputFolder } from "../api";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useBrand } from "../hooks/useBrand";
 import { useRender } from "../hooks/useRender";
+import { useVideoRender } from "../hooks/useVideoRender";
 import { buildDraftObjectData } from "../lib/buildDraftObjectData";
-import type { Brand, DraftConfig } from "../types";
+import type { Brand, DraftConfig, DraftOutput } from "../types";
+
+const OUTPUT_OPTIONS: DraftOutput[] = ["image", "video"];
 
 interface EditorProps {
   draftId: string | null;
@@ -47,6 +50,8 @@ export function Editor({
   const save = useAutoSave({ draftId, config: dirty ? config : null });
   const render = useRender({ flush: save.flush });
   const activeFormat = config.format ?? "landscape";
+  const output = (config.output ?? "image") as DraftOutput;
+  const videoRender = useVideoRender({ flush: save.flush, activeFormat });
   const activeRenderState = render.formats[activeFormat];
 
   const previewBrand = useMemo<Brand>(() => ({
@@ -89,7 +94,15 @@ export function Editor({
           </div>
 
           <div className="overflow-hidden rounded-[8px] border border-[var(--workspace-border)] bg-white">
-            {(render.renderPhase === "done" || render.renderPhase === "partial") &&
+            {output === "video" && videoRender.renderPhase === "done" && videoRender.url ? (
+              <video
+                src={videoRender.url}
+                muted
+                controls
+                aria-label={`${activeFormat} render`}
+                className="w-full"
+              />
+            ) : (render.renderPhase === "done" || render.renderPhase === "partial") &&
             activeRenderState.phase === "done" ? (
               <img
                 src={activeRenderState.url}
@@ -105,18 +118,6 @@ export function Editor({
               />
             )}
           </div>
-
-          <RenderPanel
-            renderPhase={render.renderPhase}
-            formats={render.formats}
-            jobId={render.jobId}
-            caption={config.caption ?? ""}
-            activeFormat={activeFormat}
-            onTrigger={render.trigger}
-            onReveal={() => {
-              if (render.jobId) void revealOutputFolder(render.jobId);
-            }}
-          />
         </section>
 
         <section className="flex flex-col gap-4">
@@ -136,6 +137,55 @@ export function Editor({
             config={config}
             brandLogoUrl={previewBrand.logoBase64}
             onConfigChange={updateConfig}
+          />
+          <div
+            role="tablist"
+            aria-label="Output type"
+            className="grid w-full max-w-[420px] grid-cols-2 rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)] p-1"
+          >
+            {OUTPUT_OPTIONS.map((option) => {
+              const active = output === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={[
+                    "relative min-h-[40px] min-w-0 rounded-[6px] px-2 text-[12px] font-semibold transition-colors",
+                    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--workspace-lime)]",
+                    active
+                      ? "bg-[rgba(111,143,136,0.16)] text-[var(--workspace-forest)]"
+                      : "text-[var(--workspace-muted)] hover:text-[var(--workspace-forest)]",
+                  ].join(" ")}
+                  onClick={() => updateConfig({ ...config, output: option })}
+                >
+                  {option === "image" ? "Image" : "Video"}
+                  {active ? (
+                    <span className="absolute inset-x-3 bottom-1 h-[2px] rounded-full bg-[var(--workspace-lime)]" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          <RenderPanel
+            output={output}
+            renderPhase={render.renderPhase}
+            formats={render.formats}
+            jobId={render.jobId}
+            caption={config.caption ?? ""}
+            activeFormat={activeFormat}
+            onTrigger={render.trigger}
+            onReveal={() => {
+              const id = output === "video" ? videoRender.jobId : render.jobId;
+              if (id) void revealOutputFolder(id);
+            }}
+            videoRenderPhase={videoRender.renderPhase}
+            framesRendered={videoRender.framesRendered}
+            totalFrames={videoRender.totalFrames}
+            downloadPct={videoRender.downloadPct}
+            videoUrl={videoRender.url}
+            onVideoTrigger={videoRender.trigger}
           />
         </section>
       </div>
