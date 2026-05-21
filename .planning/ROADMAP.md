@@ -99,8 +99,8 @@ Plans:
 Plans:
 **Wave 1** *(parallel — no dependencies)*
 
-- [ ] 03-01-PLAN.md — packages/workspace SPA scaffold (Vite react-ts, types, api, App shell)
-- [ ] 03-02-PLAN.md — Test harnesses for all Phase 3 CLI behaviors (server, origin-lock, proxy, repo-context)
+- [x] 03-01-PLAN.md — packages/workspace SPA scaffold (Vite react-ts, types, api, App shell)
+- [x] 03-02-PLAN.md — Test harnesses for all Phase 3 CLI behaviors (server, origin-lock, proxy, repo-context)
 
 **Wave 2** *(blocked on Wave 1 — tests must exist before implementation)*
 
@@ -197,7 +197,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
-| 3. CLI Local Server + Workspace Shell | 0/5 | Not started | - |
+| 3. CLI Local Server + Workspace Shell | 2/5 | In Progress|  |
 | 4. Workspace Editor + Slot Filling | 0/TBD | Not started | - |
 | 5. Local Image Render | 0/TBD | Not started | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
