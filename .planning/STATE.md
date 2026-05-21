@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-05-21T08:53:00.000Z"
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-05-21T09:00:00.000Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 22
-  completed_plans: 16
-  percent: 73
+  completed_plans: 17
+  percent: 77
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 04 (workspace-editor-slot-filling) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 77%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 18
+- Total plans completed: 19
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -58,6 +58,7 @@ Progress: [███████░░░] 73%
 | Phase 04 P02 | 5 min | 2 tasks | 4 files |
 | Phase 04 P03 | 8 min | 3 tasks | 6 files |
 | Phase 04 P04 | 10 min | 3 tasks | 9 files |
+| Phase 04 P05 | 7 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,7 @@ Recent decisions affecting current work:
 - Phase 04: Workspace API helpers use relative URLs only; the CLI proxy owns auth.
 - Phase 04: Auto-save sends full DraftConfig payloads to avoid PATCH shallow-merge data loss.
 - Phase 04: Template browsing opens editor state but does not create a draft.
+- Phase 04: Caption lives on DraftConfig.caption and is not rendered into the canvas.
 
 ### Pending Todos
 
@@ -95,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T08:53:00.000Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-05-21T09:00:00.000Z
+Stopped at: Completed 04-05-PLAN.md
 Resume file: None

@@ -27,7 +27,7 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 - [x] **WORK-01**: User can pick a starting template from the 5 built-ins in the Workspace
 - [x] **WORK-02**: User can see a live canvas preview at scaled production size
 - [x] **WORK-03**: User can switch the preview between landscape, square, and portrait
-- [ ] **WORK-04**: User can fill text slots by typing or pasting copy
+- [x] **WORK-04**: User can fill text slots by typing or pasting copy
 - [x] **WORK-05**: User can enter a separate caption for the social post
 - [x] **WORK-06**: Workspace auto-saves the draft as the user edits
 - [x] **WORK-07**: User can reopen a recent draft from the Workspace
@@ -129,7 +129,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | WORK-01 | Phase 4 | Complete |
 | WORK-02 | Phase 4 | Complete |
 | WORK-03 | Phase 4 | Complete |
-| WORK-04 | Phase 4 | Pending |
+| WORK-04 | Phase 4 | Complete |
 | WORK-05 | Phase 4 | Complete |
 | WORK-06 | Phase 4 | Complete |
 | WORK-07 | Phase 4 | Complete |

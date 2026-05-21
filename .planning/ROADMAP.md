@@ -141,7 +141,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04-05-PLAN.md — Single-screen editor, slot panel, media fields, caption, saved indicator, app transitions
+- [x] 04-05-PLAN.md — Single-screen editor, slot panel, media fields, caption, saved indicator, app transitions
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -217,7 +217,7 @@ Plans:
 | 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
 | 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
-| 4. Workspace Editor + Slot Filling | 4/6 | In Progress|  |
+| 4. Workspace Editor + Slot Filling | 5/6 | In Progress|  |
 | 5. Local Image Render | 0/TBD | Not started | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
 | 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
