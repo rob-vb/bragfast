@@ -171,7 +171,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 05-03-PLAN.md — Hooks: useAutoSave.flush() + useRender lifecycle hook
+- [x] 05-03-PLAN.md — Hooks: useAutoSave.flush() + useRender lifecycle hook
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -232,7 +232,7 @@ Plans:
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
 | 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
-| 5. Local Image Render | 2/4 | In Progress|  |
+| 5. Local Image Render | 3/4 | In Progress|  |
 | 6. Local Video Render | 0/TBD | Not started | - |
 | 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
 | 8. Admin Trim | 0/TBD | Not started | - |
