@@ -2,8 +2,12 @@ import cors from "cors";
 import express from "express";
 import type { Application, RequestHandler } from "express";
 import getPort from "get-port";
+import multer from "multer";
+import { randomUUID } from "node:crypto";
+import { promises as fs } from "node:fs";
 import { createServer } from "node:http";
 import type { Server } from "node:http";
+import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import open from "open";
@@ -12,6 +16,16 @@ import { getRepoContext } from "./repo-context";
 import type { Credentials } from "./credentials";
 
 const DEFAULT_PORT = 3421;
+const MAX_MEDIA_SIZE = 50 * 1024 * 1024;
+const ALLOWED_MEDIA_TYPES = new Map<string, { ext: string }>([
+  ["image/png", { ext: "png" }],
+  ["image/jpeg", { ext: "jpg" }],
+  ["image/webp", { ext: "webp" }],
+  ["image/svg+xml", { ext: "svg" }],
+  ["video/mp4", { ext: "mp4" }],
+  ["video/quicktime", { ext: "mov" }],
+  ["video/webm", { ext: "webm" }],
+]);
 
 export interface ServerOptions {
   port?: number;
@@ -19,6 +33,8 @@ export interface ServerOptions {
   stdout?: Pick<NodeJS.WriteStream, "write">;
   /** Override the compiled workspace-dist path (used by tests). */
   spaDir?: string;
+  /** Override the local media cache path (used by tests). */
+  mediaDir?: string;
 }
 
 export interface ServerHandle {
@@ -92,7 +108,60 @@ function getSpaDir(override?: string): string {
   return path.join(here, "workspace-dist");
 }
 
-function buildApp(credentials: Credentials, port: number, spaDir: string): Application {
+function getMediaDir(override?: string): string {
+  return override ?? path.join(homedir(), ".brag", "media");
+}
+
+function localMediaUploadRoute(mediaDir: string, port: number): RequestHandler {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: MAX_MEDIA_SIZE },
+  }).single("file");
+
+  return (req, res, next) => {
+    upload(req, res, (err: unknown) => {
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        res.status(413).json({ error: "File too large" });
+        return;
+      }
+      if (err) {
+        next(err);
+        return;
+      }
+
+      void (async () => {
+        const file = req.file;
+        if (!file) {
+          res.status(400).json({ error: "Missing file" });
+          return;
+        }
+
+        const mediaType = ALLOWED_MEDIA_TYPES.get(file.mimetype);
+        if (!mediaType) {
+          res.status(400).json({ error: `Unsupported type: ${file.mimetype}` });
+          return;
+        }
+
+        await fs.mkdir(mediaDir, { recursive: true });
+        const id = randomUUID().replace(/-/g, "").slice(0, 16);
+        const filename = `${id}.${mediaType.ext}`;
+        await fs.writeFile(path.join(mediaDir, filename), file.buffer);
+
+        res.json({
+          id,
+          url: `http://127.0.0.1:${port}/media/${filename}`,
+        });
+      })().catch(next);
+    });
+  };
+}
+
+function buildApp(
+  credentials: Credentials,
+  port: number,
+  spaDir: string,
+  mediaDir: string,
+): Application {
   const app = express();
   app.use(...originLockMiddleware(port));
   // Local-only route: served by the CLI itself (not proxied to the backend),
@@ -101,6 +170,8 @@ function buildApp(credentials: Credentials, port: number, spaDir: string): Appli
   app.get("/api/repo-context", (_req, res) => {
     res.json(getRepoContext(process.cwd()));
   });
+  app.post("/api/local/media", localMediaUploadRoute(mediaDir, port));
+  app.use("/media", express.static(mediaDir));
   // Mounted at root; the proxy's pathFilter scopes it to /api/* so the prefix
   // is preserved on the upstream request (see proxy.ts).
   app.use(createBackendProxy(credentials.api_key));
@@ -141,7 +212,8 @@ export async function startServer(
 ): Promise<ServerHandle> {
   const port = await getPort({ port: opts.port ?? DEFAULT_PORT });
   const spaDir = getSpaDir(opts.spaDir);
-  const app = buildApp(credentials, port, spaDir);
+  const mediaDir = getMediaDir(opts.mediaDir);
+  const app = buildApp(credentials, port, spaDir, mediaDir);
   const httpServer = createServer(app);
 
   await listen(httpServer, port, "127.0.0.1");
