@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "dev": "next dev",
-    "build": "npm run build --workspace=packages/render-core && npm run build --workspace=packages/cli && (npx convex codegen --typecheck=disable 2>/dev/null; next build)",
-    "cli:build": "npm run build --workspace=packages/cli",
+    "build": "npm run build --workspace=packages/render-core && npm run build --workspace=packages/workspace && npm run build --workspace=packages/cli && (npx convex codegen --typecheck=disable 2>/dev/null; next build)",
+    "cli:build": "npm run build --workspace=packages/workspace && npm run build --workspace=packages/cli",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
