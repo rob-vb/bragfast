@@ -24,7 +24,7 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 - [x] **Phase 2: CLI Shell + Device-Flow Auth** - Ship the `npx bragfast` package with browser device-flow login and local credential storage *(public package name is `bragfast`; installed/global bin can be `brag`)*
 - [x] **Phase 3: CLI Local Server + Workspace Shell** - Serve the Workspace SPA from a local Express server with origin-locked proxy to the backend (completed 2026-05-21)
 - [x] **Phase 4: Workspace Editor + Slot Filling** - Template picker, slot fill UI (text + media drag-drop), format switcher, caption, and Draft auto-save (completed 2026-05-21)
-- [x] **Phase 5: Local Image Render** - Render all three formats locally via Satori/Sharp with in-Workspace preview and output folder (completed 2026-05-21)
+- [ ] **Phase 5: Local Image Render** - Render all three formats locally via Satori/Sharp with in-Workspace preview and output folder (awaiting human verification)
 - [ ] **Phase 6: Local Video Render** - Render video locally via Remotion headless Chrome with first-run Chrome download messaging
 - [ ] **Phase 7: Schedule-Time Upload + Posting** - Upload rendered files to R2 at schedule-time and post to Buffer channels via the existing posting backbone
 - [ ] **Phase 8: Admin Trim** - Remove legacy cook UI, add device approval page, confirm read-only gallery and brand setup are working
@@ -232,7 +232,7 @@ Plans:
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
 | 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
-| 5. Local Image Render | 4/4 | Complete   | 2026-05-21 |
+| 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
 | 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
 | 8. Admin Trim | 0/TBD | Not started | - |
