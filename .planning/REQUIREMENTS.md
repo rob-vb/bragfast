@@ -24,12 +24,12 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 
 ### Workspace Editor
 
-- [ ] **WORK-01**: User can pick a starting template from the 5 built-ins in the Workspace
-- [ ] **WORK-02**: User can see a live canvas preview at scaled production size
+- [x] **WORK-01**: User can pick a starting template from the 5 built-ins in the Workspace
+- [x] **WORK-02**: User can see a live canvas preview at scaled production size
 - [ ] **WORK-03**: User can switch the preview between landscape, square, and portrait
 - [ ] **WORK-04**: User can fill text slots by typing or pasting copy
-- [ ] **WORK-05**: User can enter a separate caption for the social post
-- [ ] **WORK-06**: Workspace auto-saves the draft as the user edits
+- [x] **WORK-05**: User can enter a separate caption for the social post
+- [x] **WORK-06**: Workspace auto-saves the draft as the user edits
 - [ ] **WORK-07**: User can reopen a recent draft from the Workspace
 - [ ] **WORK-08**: Logo slot auto-populates from the user's brand when one is set
 
@@ -126,12 +126,12 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CLI-07 | Phase 3 | Pending |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 3 | Pending |
-| WORK-01 | Phase 4 | Pending |
-| WORK-02 | Phase 4 | Pending |
+| WORK-01 | Phase 4 | Complete |
+| WORK-02 | Phase 4 | Complete |
 | WORK-03 | Phase 4 | Pending |
 | WORK-04 | Phase 4 | Pending |
-| WORK-05 | Phase 4 | Pending |
-| WORK-06 | Phase 4 | Pending |
+| WORK-05 | Phase 4 | Complete |
+| WORK-06 | Phase 4 | Complete |
 | WORK-07 | Phase 4 | Pending |
 | WORK-08 | Phase 4 | Pending |
 | MEDIA-01 | Phase 4 | Pending |
