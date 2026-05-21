@@ -16,6 +16,8 @@ import { createBackendProxy } from "./proxy";
 import { getRepoContext } from "./repo-context";
 import { getBragHome, type Credentials } from "./credentials";
 import { resolveAndRender, type RenderJob } from "./render-resolver";
+import { resolveAndRenderVideo, type VideoRenderJob } from "./video-render-resolver";
+import type { FormatKey } from "@bragfast/render-core";
 
 const DEFAULT_PORT = 3421;
 const MAX_MEDIA_SIZE = 50 * 1024 * 1024;
@@ -29,6 +31,7 @@ const ALLOWED_MEDIA_TYPES = new Map<string, { ext: string }>([
   ["video/webm", { ext: "webm" }],
 ]);
 const renderJobs = new Map<string, RenderJob>();
+const videoRenderJobs = new Map<string, VideoRenderJob>();
 
 export interface ServerOptions {
   port?: number;
@@ -148,6 +151,21 @@ function pendingRenderJob(jobId: string, draftId: string): RenderJob {
   };
 }
 
+function isFormatKey(value: unknown): value is FormatKey {
+  return value === "landscape" || value === "square" || value === "portrait";
+}
+
+function pendingVideoRenderJob(jobId: string, draftId: string): VideoRenderJob {
+  return {
+    jobId,
+    draftId,
+    phase: "pending",
+    framesRendered: 0,
+    totalFrames: 0,
+    downloadPct: 0,
+  };
+}
+
 function localMediaUploadRoute(mediaDir: string, port: number): RequestHandler {
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -261,6 +279,71 @@ function localRenderStatusRoute(): RequestHandler {
   };
 }
 
+function localVideoRenderRoute(
+  outputDir: string,
+  port: number,
+  credentials: Credentials,
+  stdout: Pick<NodeJS.WriteStream, "write">,
+): RequestHandler {
+  return (req, res) => {
+    const body = req.body as { draftId?: unknown; format?: unknown } | undefined;
+    if (!body || typeof body.draftId !== "string" || !body.draftId || isUnsafeOutputId(body.draftId)) {
+      res.status(400).json({ error: "Missing draftId" });
+      return;
+    }
+    if (body.format !== undefined && !isFormatKey(body.format)) {
+      res.status(400).json({ error: "Invalid format" });
+      return;
+    }
+
+    const draftId = body.draftId;
+    const format = body.format ?? "landscape";
+    const jobId = draftId;
+    const job = pendingVideoRenderJob(jobId, draftId);
+    videoRenderJobs.set(jobId, job);
+
+    void resolveAndRenderVideo(
+      draftId,
+      format,
+      credentials.api_key,
+      process.env.BRAG_API_BASE ?? "https://api.brag.fast",
+      outputDir,
+      port,
+      stdout as NodeJS.WriteStream,
+      job,
+    ).catch((err: unknown) => {
+      const error = err instanceof Error ? err.message : String(err);
+      stdout.write(`  [brag] Video render failed for ${draftId}: ${error}\n`);
+      job.phase = "failed";
+      job.error = error;
+    });
+
+    res.status(202).json({ id: jobId, status: "pending" });
+  };
+}
+
+function localVideoRenderStatusRoute(): RequestHandler {
+  return (req, res) => {
+    const id = req.params.id;
+    if (Array.isArray(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    if (!id || isUnsafeOutputId(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+
+    const job = videoRenderJobs.get(id);
+    if (!job) {
+      res.status(404).json({ error: "Video render job not found" });
+      return;
+    }
+
+    res.json(job);
+  };
+}
+
 function localRevealRoute(outputDir: string): RequestHandler {
   return (req, res, next) => {
     void (async () => {
@@ -314,6 +397,8 @@ function buildApp(
   app.use("/media", express.static(mediaDir));
   app.post("/api/local/render", localRenderRoute(outputDir, port, credentials, stdout));
   app.get("/api/local/render/:id/status", localRenderStatusRoute());
+  app.post("/api/local/render/video", localVideoRenderRoute(outputDir, port, credentials, stdout));
+  app.get("/api/local/render/video/:id/status", localVideoRenderStatusRoute());
   app.post("/api/local/reveal", localRevealRoute(outputDir));
   app.use("/output", express.static(outputDir));
   // Mounted at root; the proxy's pathFilter scopes it to /api/* so the prefix

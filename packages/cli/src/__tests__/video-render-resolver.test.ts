@@ -74,7 +74,7 @@ function mockFetchWithVideo(durationSeconds: number | null) {
       }), { status: 200, headers: { "content-type": "application/json" } });
     }
     if (href.includes("/media/foo.mp4") && durationSeconds !== null) {
-      return new Response(makeMvhdMp4(durationSeconds), { status: 206 });
+      return new Response(new Uint8Array(makeMvhdMp4(durationSeconds)), { status: 206 });
     }
     if (href.includes("/media/foo.mp4")) {
       return new Response("nope", { status: 500 });
@@ -113,7 +113,7 @@ afterEach(async () => {
 
 describe("probeClipDurationInFrames", () => {
   it("returns rounded duration in frames from a faststart MP4 mvhd box", async () => {
-    global.fetch = vi.fn(async () => new Response(makeMvhdMp4(3), { status: 206 })) as typeof fetch;
+    global.fetch = vi.fn(async () => new Response(new Uint8Array(makeMvhdMp4(3)), { status: 206 })) as typeof fetch;
 
     await expect(probeClipDurationInFrames("http://127.0.0.1:3421/media/clip.mp4")).resolves.toBe(90);
   });
@@ -128,7 +128,12 @@ describe("probeClipDurationInFrames", () => {
 describe("resolveAndRenderVideo", () => {
   it("sets the Chrome download phase only when Chromium is not already available", async () => {
     renderVideoMock.mockImplementation(async (req) => {
-      req.onBrowserDownload?.().onProgress({ alreadyAvailable: false, percent: 0.42 });
+      req.onBrowserDownload?.({ chromeMode: "headless-shell" }).onProgress({
+        alreadyAvailable: false,
+        percent: 0.42,
+        downloadedBytes: 42,
+        totalSizeInBytes: 100,
+      });
       return { buffer: Buffer.from("mp4"), compositionId: "landscape" };
     });
     const job = makeJob();
@@ -141,7 +146,12 @@ describe("resolveAndRenderVideo", () => {
 
   it("does not enter chrome-download when Chromium is already available", async () => {
     renderVideoMock.mockImplementation(async (req) => {
-      req.onBrowserDownload?.().onProgress({ alreadyAvailable: true, percent: 1 });
+      req.onBrowserDownload?.({ chromeMode: "headless-shell" }).onProgress({
+        alreadyAvailable: true,
+        percent: 1,
+        downloadedBytes: 100,
+        totalSizeInBytes: 100,
+      });
       expect(job.phase).toBe("pending");
       return { buffer: Buffer.from("mp4"), compositionId: "landscape" };
     });
