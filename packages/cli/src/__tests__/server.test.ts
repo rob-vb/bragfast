@@ -1,5 +1,5 @@
 import { mkdtempSync, writeFileSync } from "fs";
-import { rm } from "fs/promises";
+import { mkdir, rm } from "fs/promises";
 import { createServer } from "node:net";
 import os from "os";
 import path from "path";
@@ -181,6 +181,128 @@ describe("server", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error).toContain("Unsupported type");
+    });
+  });
+
+  describe("local render routes", () => {
+    it("POST /api/local/render returns 202 for a draftId", async () => {
+      const spaDir = makeSpaDir();
+      const outputDir = path.join(tmp, "output");
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, {
+        openBrowser,
+        stdout,
+        spaDir,
+        outputDir,
+      });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .post("/api/local/render")
+        .send({ draftId: "draft_123" });
+
+      expect(res.status).toBe(202);
+      expect(res.body).toEqual({ id: expect.any(String), status: "pending" });
+    });
+
+    it("POST /api/local/render rejects a missing draftId", async () => {
+      const spaDir = makeSpaDir();
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, { openBrowser, stdout, spaDir });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .post("/api/local/render")
+        .send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it("GET /api/local/render/:id/status returns 404 for an unknown job", async () => {
+      const spaDir = makeSpaDir();
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, { openBrowser, stdout, spaDir });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .get("/api/local/render/unknown/status");
+
+      expect(res.status).toBe(404);
+    });
+
+    it("GET /api/local/render/:id/status rejects traversal ids", async () => {
+      const spaDir = makeSpaDir();
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, { openBrowser, stdout, spaDir });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .get("/api/local/render/..%2F..%2Fetc%2Fpasswd/status");
+
+      expect(res.status).toBe(400);
+    });
+
+    it("POST /api/local/reveal rejects traversal ids", async () => {
+      const spaDir = makeSpaDir();
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, { openBrowser, stdout, spaDir });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .post("/api/local/reveal")
+        .send({ id: "../escape" });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("POST /api/local/reveal rejects ids containing slashes", async () => {
+      const spaDir = makeSpaDir();
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+
+      const handle = await startServer(testCredentials, { openBrowser, stdout, spaDir });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .post("/api/local/reveal")
+        .send({ id: "nested/folder" });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("serves rendered output files from /output", async () => {
+      const spaDir = makeSpaDir();
+      const outputDir = path.join(tmp, "output");
+      const openBrowser = vi.fn(async (_url: string) => undefined);
+      const stdout = { write: () => true };
+      const jpgBytes = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+
+      await mkdir(path.join(outputDir, "draft_123"), { recursive: true });
+      writeFileSync(path.join(outputDir, "draft_123", "landscape.jpg"), jpgBytes);
+
+      const handle = await startServer(testCredentials, {
+        openBrowser,
+        stdout,
+        spaDir,
+        outputDir,
+      });
+      handles.push(handle);
+
+      const res = await request(`http://127.0.0.1:${handle.port}`)
+        .get("/output/draft_123/landscape.jpg");
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(jpgBytes);
     });
   });
 

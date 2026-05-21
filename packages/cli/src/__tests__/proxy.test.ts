@@ -52,7 +52,7 @@ describe("createBackendProxy (AUTH-02)", () => {
         removeHeader: vi.fn(),
       };
 
-      options!.on!.proxyReq!(mockProxyReq, undefined, undefined);
+      options!.on!.proxyReq!(mockProxyReq as never, undefined as never, undefined as never, undefined as never);
 
       expect(mockProxyReq.setHeader).toHaveBeenCalledWith(
         "Authorization",
@@ -68,7 +68,7 @@ describe("createBackendProxy (AUTH-02)", () => {
         ._lastOptions;
 
       const mockProxyReq = { setHeader: vi.fn(), getHeader: vi.fn(), removeHeader: vi.fn() };
-      options!.on!.proxyReq!(mockProxyReq, undefined, undefined);
+      options!.on!.proxyReq!(mockProxyReq as never, undefined as never, undefined as never, undefined as never);
 
       expect(mockProxyReq.setHeader).toHaveBeenCalledWith(
         "Authorization",
@@ -90,7 +90,7 @@ describe("createBackendProxy (AUTH-02)", () => {
       // The response object sent to the caller — Authorization must NOT be set here
       const mockRes = { setHeader: vi.fn(), removeHeader: vi.fn() };
 
-      options!.on!.proxyReq!(mockProxyReq, undefined, mockRes);
+      options!.on!.proxyReq!(mockProxyReq as never, undefined as never, mockRes as never, undefined as never);
 
       // The Authorization header must be set on proxyReq
       expect(mockProxyReq.setHeader).toHaveBeenCalledWith("Authorization", expect.stringContaining("Bearer"));

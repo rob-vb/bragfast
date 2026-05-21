@@ -4,6 +4,7 @@ import type { Application, RequestHandler } from "express";
 import getPort from "get-port";
 import multer from "multer";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { promises as fs } from "node:fs";
 import { createServer } from "node:http";
 import type { Server } from "node:http";
@@ -13,7 +14,8 @@ import { fileURLToPath } from "node:url";
 import open from "open";
 import { createBackendProxy } from "./proxy";
 import { getRepoContext } from "./repo-context";
-import type { Credentials } from "./credentials";
+import { getBragHome, type Credentials } from "./credentials";
+import { resolveAndRender, type RenderJob } from "./render-resolver";
 
 const DEFAULT_PORT = 3421;
 const MAX_MEDIA_SIZE = 50 * 1024 * 1024;
@@ -26,6 +28,7 @@ const ALLOWED_MEDIA_TYPES = new Map<string, { ext: string }>([
   ["video/quicktime", { ext: "mov" }],
   ["video/webm", { ext: "webm" }],
 ]);
+const renderJobs = new Map<string, RenderJob>();
 
 export interface ServerOptions {
   port?: number;
@@ -35,6 +38,8 @@ export interface ServerOptions {
   spaDir?: string;
   /** Override the local media cache path (used by tests). */
   mediaDir?: string;
+  /** Override the rendered image output path (used by tests). */
+  outputDir?: string;
 }
 
 export interface ServerHandle {
@@ -112,6 +117,37 @@ function getMediaDir(override?: string): string {
   return override ?? path.join(homedir(), ".brag", "media");
 }
 
+function getOutputDir(override?: string): string {
+  if (override) return override;
+  try {
+    const raw = readFileSync(path.join(getBragHome(), "config.json"), "utf8");
+    const parsed = JSON.parse(raw) as { outputDir?: unknown };
+    if (typeof parsed.outputDir === "string" && parsed.outputDir.trim()) {
+      return parsed.outputDir;
+    }
+  } catch {
+    // Missing or malformed user config falls back to the project-local default.
+  }
+  return path.join(process.cwd(), "brag-output");
+}
+
+function isUnsafeOutputId(id: string): boolean {
+  return id.includes("..") || id.includes("/");
+}
+
+function pendingRenderJob(jobId: string, draftId: string): RenderJob {
+  return {
+    jobId,
+    draftId,
+    createdAt: Date.now(),
+    formats: {
+      landscape: { phase: "pending" },
+      square: { phase: "pending" },
+      portrait: { phase: "pending" },
+    },
+  };
+}
+
 function localMediaUploadRoute(mediaDir: string, port: number): RequestHandler {
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -156,14 +192,118 @@ function localMediaUploadRoute(mediaDir: string, port: number): RequestHandler {
   };
 }
 
+function localRenderRoute(
+  outputDir: string,
+  port: number,
+  credentials: Credentials,
+  stdout: Pick<NodeJS.WriteStream, "write">,
+): RequestHandler {
+  return (req, res) => {
+    const body = req.body as { draftId?: unknown } | undefined;
+    if (!body || typeof body.draftId !== "string" || !body.draftId) {
+      res.status(400).json({ error: "Missing draftId" });
+      return;
+    }
+
+    const draftId = body.draftId;
+    const jobId = randomUUID().replace(/-/g, "").slice(0, 16);
+    renderJobs.set(jobId, pendingRenderJob(jobId, draftId));
+
+    void resolveAndRender(
+      draftId,
+      credentials.api_key,
+      process.env.BRAG_API_BASE ?? "https://api.brag.fast",
+      outputDir,
+      port,
+      stdout as NodeJS.WriteStream,
+    )
+      .then((job) => {
+        renderJobs.set(jobId, { ...job, jobId });
+      })
+      .catch((err: unknown) => {
+        const error = err instanceof Error ? err.message : String(err);
+        stdout.write(`  [brag] Render failed for ${draftId}: ${error}\n`);
+        renderJobs.set(jobId, {
+          jobId,
+          draftId,
+          createdAt: Date.now(),
+          formats: {
+            landscape: { phase: "failed", error },
+            square: { phase: "failed", error },
+            portrait: { phase: "failed", error },
+          },
+        });
+      });
+
+    res.status(202).json({ id: jobId, status: "pending" });
+  };
+}
+
+function localRenderStatusRoute(): RequestHandler {
+  return (req, res) => {
+    const id = req.params.id;
+    if (Array.isArray(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    if (!id || isUnsafeOutputId(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+
+    const job = renderJobs.get(id);
+    if (!job) {
+      res.status(404).json({ error: "Render job not found" });
+      return;
+    }
+
+    res.json({ id, formats: job.formats });
+  };
+}
+
+function localRevealRoute(outputDir: string): RequestHandler {
+  return (req, res, next) => {
+    void (async () => {
+      const body = req.body as { id?: unknown } | undefined;
+      if (!body || typeof body.id !== "string" || !body.id || isUnsafeOutputId(body.id)) {
+        res.status(400).json({ error: "Invalid id" });
+        return;
+      }
+
+      const revealPath = path.resolve(path.join(outputDir, body.id));
+      if (!revealPath.startsWith(path.resolve(outputDir))) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+
+      try {
+        const stat = await fs.stat(revealPath);
+        if (!stat.isDirectory()) {
+          res.status(404).json({ error: "Output folder not found" });
+          return;
+        }
+      } catch {
+        res.status(404).json({ error: "Output folder not found" });
+        return;
+      }
+
+      await open(revealPath);
+      res.json({ ok: true });
+    })().catch(next);
+  };
+}
+
 function buildApp(
   credentials: Credentials,
   port: number,
   spaDir: string,
   mediaDir: string,
+  outputDir: string,
+  stdout: Pick<NodeJS.WriteStream, "write">,
 ): Application {
   const app = express();
   app.use(...originLockMiddleware(port));
+  app.use(express.json());
   // Local-only route: served by the CLI itself (not proxied to the backend),
   // so it must be registered before the catch-all /api proxy. Reads git/
   // package.json context from the invoking directory to prefill Workspace copy.
@@ -172,6 +312,10 @@ function buildApp(
   });
   app.post("/api/local/media", localMediaUploadRoute(mediaDir, port));
   app.use("/media", express.static(mediaDir));
+  app.post("/api/local/render", localRenderRoute(outputDir, port, credentials, stdout));
+  app.get("/api/local/render/:id/status", localRenderStatusRoute());
+  app.post("/api/local/reveal", localRevealRoute(outputDir));
+  app.use("/output", express.static(outputDir));
   // Mounted at root; the proxy's pathFilter scopes it to /api/* so the prefix
   // is preserved on the upstream request (see proxy.ts).
   app.use(createBackendProxy(credentials.api_key));
@@ -213,13 +357,15 @@ export async function startServer(
   const port = await getPort({ port: opts.port ?? DEFAULT_PORT });
   const spaDir = getSpaDir(opts.spaDir);
   const mediaDir = getMediaDir(opts.mediaDir);
-  const app = buildApp(credentials, port, spaDir, mediaDir);
+  const outputDir = getOutputDir(opts.outputDir);
+  const stdout = opts.stdout ?? process.stdout;
+  const app = buildApp(credentials, port, spaDir, mediaDir, outputDir, stdout);
   const httpServer = createServer(app);
 
   await listen(httpServer, port, "127.0.0.1");
 
   const url = `http://127.0.0.1:${port}`;
-  (opts.stdout ?? process.stdout).write(`Workspace: ${url}\n`);
+  stdout.write(`Workspace: ${url}\n`);
 
   const openBrowser = opts.openBrowser ?? ((u: string) => open(u));
   await openBrowser(url).catch(() => undefined);
