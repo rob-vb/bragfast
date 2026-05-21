@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import "@testing-library/jest-dom/vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SchedulePanel } from "../components/SchedulePanel";
-import type { FormatRenderState, IntegrationRecord, RoutingDefault } from "../types";
+import type { FormatRenderState, IntegrationRecord, RoutingDefault, ScheduleRequest } from "../types";
 
 const mocks = vi.hoisted(() => ({
   fetchIntegrations: vi.fn(),
@@ -33,11 +33,13 @@ const bufferIntegration: IntegrationRecord = {
 };
 
 function renderPanel({
+  integrations = [bufferIntegration],
   routingDefaults = [],
   phase = "idle",
   confirmation = [],
   trigger = vi.fn().mockResolvedValue(undefined),
 }: {
+  integrations?: IntegrationRecord[];
   routingDefaults?: RoutingDefault[];
   phase?: "idle" | "uploading" | "scheduling" | "done" | "failed";
   confirmation?: Array<{
@@ -48,9 +50,9 @@ function renderPanel({
     status: string;
     scheduledAt?: string;
   }>;
-  trigger?: ReturnType<typeof vi.fn>;
+  trigger?: (request: Omit<ScheduleRequest, "draftId" | "caption">) => Promise<void>;
 } = {}) {
-  mocks.fetchIntegrations.mockResolvedValue([bufferIntegration]);
+  mocks.fetchIntegrations.mockResolvedValue(integrations);
   mocks.fetchRoutingDefaults.mockResolvedValue(routingDefaults);
 
   render(
@@ -76,10 +78,7 @@ describe("SchedulePanel", () => {
   });
 
   it("shows a Buffer not connected notice when no enabled Buffer integration exists", async () => {
-    mocks.fetchIntegrations.mockResolvedValue([]);
-    mocks.fetchRoutingDefaults.mockResolvedValue([]);
-
-    renderPanel();
+    renderPanel({ integrations: [] });
 
     expect(
       await screen.findByText("Buffer not connected. Connect Buffer in Settings to schedule posts."),
