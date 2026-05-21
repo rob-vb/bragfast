@@ -43,19 +43,19 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 
 ### Local Render
 
-- [ ] **RND-01**: User can render the creation to images locally (Satori/Sharp) across all three formats
+- [x] **RND-01**: User can render the creation to images locally (Satori/Sharp) across all three formats
 - [ ] **RND-02**: User can render the creation to video locally (Remotion local / headless Chrome, no Lambda)
-- [ ] **RND-03**: User sees render progress in both the terminal and the Workspace
+- [x] **RND-03**: User sees render progress in both the terminal and the Workspace
 - [ ] **RND-04**: On first video render, user sees clear messaging about the one-time renderer (Chrome) download
-- [ ] **RND-05**: Render output is written to a configurable local folder (default `./brag-output`)
-- [ ] **RND-06**: Render failures surface a clear, actionable error and never fail silently
+- [x] **RND-05**: Render output is written to a configurable local folder (default `./brag-output`)
+- [x] **RND-06**: Render failures surface a clear, actionable error and never fail silently
 
 ### Output / Copy
 
-- [ ] **OUT-01**: User can copy the caption to the clipboard with one click
-- [ ] **OUT-02**: User can open the output folder from the Workspace
-- [ ] **OUT-03**: User sees the actual rendered file previewed in the Workspace after render
-- [ ] **OUT-04**: User can download a rendered file from the Workspace
+- [x] **OUT-01**: User can copy the caption to the clipboard with one click
+- [x] **OUT-02**: User can open the output folder from the Workspace
+- [x] **OUT-03**: User sees the actual rendered file previewed in the Workspace after render
+- [x] **OUT-04**: User can download a rendered file from the Workspace
 
 ### Scheduling (Buffer)
 
@@ -139,16 +139,16 @@ Which phases cover which requirements. Populated during roadmap creation.
 | MEDIA-03 | Phase 4 | Complete |
 | MEDIA-04 | Phase 4 | Complete |
 | MEDIA-05 | Phase 4 | Complete |
-| RND-01 | Phase 5 | Pending |
+| RND-01 | Phase 5 | Complete |
 | RND-02 | Phase 6 | Pending |
-| RND-03 | Phase 5 | Pending |
+| RND-03 | Phase 5 | Complete |
 | RND-04 | Phase 6 | Pending |
-| RND-05 | Phase 5 | Pending |
-| RND-06 | Phase 5 | Pending |
-| OUT-01 | Phase 5 | Pending |
-| OUT-02 | Phase 5 | Pending |
-| OUT-03 | Phase 5 | Pending |
-| OUT-04 | Phase 5 | Pending |
+| RND-05 | Phase 5 | Complete |
+| RND-06 | Phase 5 | Complete |
+| OUT-01 | Phase 5 | Complete |
+| OUT-02 | Phase 5 | Complete |
+| OUT-03 | Phase 5 | Complete |
+| OUT-04 | Phase 5 | Complete |
 | SCHED-01 | Phase 7 | Pending |
 | SCHED-02 | Phase 7 | Pending |
 | SCHED-03 | Phase 7 | Pending |

@@ -166,8 +166,8 @@ Plans:
 Plans:
 **Wave 1** *(parallel — no dependencies)*
 
-- [ ] 05-01-PLAN.md — CLI render infrastructure: render-resolver.ts + server.ts routes + /output static + security guards
-- [ ] 05-02-PLAN.md — SPA type contracts and API helpers: types.ts + api.ts render/poll/reveal functions
+- [x] 05-01-PLAN.md — CLI render infrastructure: render-resolver.ts + server.ts routes + /output static + security guards
+- [x] 05-02-PLAN.md — SPA type contracts and API helpers: types.ts + api.ts render/poll/reveal functions
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -232,7 +232,7 @@ Plans:
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
 | 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
-| 5. Local Image Render | 0/TBD | Not started | - |
+| 5. Local Image Render | 2/4 | In Progress|  |
 | 6. Local Video Render | 0/TBD | Not started | - |
 | 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
 | 8. Admin Trim | 0/TBD | Not started | - |
