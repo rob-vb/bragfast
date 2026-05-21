@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-05-21T08:36:59.050Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-05-21T08:43:00.000Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 22
-  completed_plans: 14
-  percent: 25
+  completed_plans: 15
+  percent: 68
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 04 (workspace-editor-slot-filling) — EXECUTING
-Plan: 2 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [██████░░░░] 64%
+Progress: [███████░░░] 68%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -56,6 +56,7 @@ Progress: [██████░░░░] 64%
 *Updated after each plan completion*
 | Phase 04 P01 | 7 min | 3 tasks | 16 files |
 | Phase 04 P02 | 5 min | 2 tasks | 4 files |
+| Phase 04 P03 | 8 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -65,8 +66,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - ADR-0001: CLI-first reposition — shelved automation PRD
-- ADR-0002: Local render, thin backend — no Lambda, no server render
+- ADR-0002: Local render, thin backend — no Lambda, thin backend, R2 upload only at schedule-time
 - ADR-0003: BYO-AI — no server copy gen; repo context prefill only
+- Phase 04: Workspace API helpers use relative URLs only; the CLI proxy owns auth.
+- Phase 04: Auto-save sends full DraftConfig payloads to avoid PATCH shallow-merge data loss.
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T08:36:59.041Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-05-21T08:43:00.000Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None

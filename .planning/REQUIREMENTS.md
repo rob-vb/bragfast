@@ -30,8 +30,8 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 - [ ] **WORK-04**: User can fill text slots by typing or pasting copy
 - [x] **WORK-05**: User can enter a separate caption for the social post
 - [x] **WORK-06**: Workspace auto-saves the draft as the user edits
-- [ ] **WORK-07**: User can reopen a recent draft from the Workspace
-- [ ] **WORK-08**: Logo slot auto-populates from the user's brand when one is set
+- [x] **WORK-07**: User can reopen a recent draft from the Workspace
+- [x] **WORK-08**: Logo slot auto-populates from the user's brand when one is set
 
 ### Media / Slot Fill
 
@@ -132,8 +132,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | WORK-04 | Phase 4 | Pending |
 | WORK-05 | Phase 4 | Complete |
 | WORK-06 | Phase 4 | Complete |
-| WORK-07 | Phase 4 | Pending |
-| WORK-08 | Phase 4 | Pending |
+| WORK-07 | Phase 4 | Complete |
+| WORK-08 | Phase 4 | Complete |
 | MEDIA-01 | Phase 4 | Complete |
 | MEDIA-02 | Phase 4 | Complete |
 | MEDIA-03 | Phase 4 | Complete |

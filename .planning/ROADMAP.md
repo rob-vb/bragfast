@@ -136,7 +136,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 04-02-PLAN.md — CLI-local media upload and static media serving
-- [ ] 04-03-PLAN.md — Workspace draft/brand/media API helpers and debounced full-config auto-save
+- [x] 04-03-PLAN.md — Workspace draft/brand/media API helpers and debounced full-config auto-save
 - [ ] 04-04-PLAN.md — Workspace home, template thumbnails, browser preview, format switcher, brand picker
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -217,7 +217,7 @@ Plans:
 | 1. Render Core Extraction | 6/6 | Complete | 2026-05-20 |
 | 2. CLI Shell + Device-Flow Auth | 5/5 | Complete | 2026-05-20 |
 | 3. CLI Local Server + Workspace Shell | 5/5 | Complete   | 2026-05-21 |
-| 4. Workspace Editor + Slot Filling | 2/6 | In Progress|  |
+| 4. Workspace Editor + Slot Filling | 3/6 | In Progress|  |
 | 5. Local Image Render | 0/TBD | Not started | - |
 | 6. Local Video Render | 0/TBD | Not started | - |
 | 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
