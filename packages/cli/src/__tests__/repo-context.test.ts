@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "fs";
+import { mkdtempSync, writeFileSync } from "fs";
 import { rm } from "fs/promises";
 import os from "os";
 import path from "path";
