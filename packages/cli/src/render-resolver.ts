@@ -7,7 +7,7 @@ import {
   type FormatKey,
   type LocalRenderRequest,
   type ObjectDataMap,
-} from "@bragfast/render-core";
+} from "@bragfast/render-core/image";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { getBragHome } from "./credentials";
