@@ -32,6 +32,13 @@ export async function renderVideo(req: LocalVideoRenderRequest): Promise<VideoRe
       muted: true,
       outputLocation: tmpFile,
       inputProps: req.inputProps,
+      onProgress: req.onProgress
+        ? (p: { renderedFrames: number }) =>
+            req.onProgress?.({
+              renderedFrames: p.renderedFrames,
+              totalFrames: composition.durationInFrames,
+            })
+        : undefined,
     });
     const buffer = await fs.readFile(tmpFile);
     return { buffer, compositionId: req.compositionId };

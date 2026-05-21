@@ -52,4 +52,5 @@ export interface LocalVideoRenderRequest {
   inputProps: Record<string, unknown>;
   remotionEntryPoint: string;
   onBrowserDownload?: OnBrowserDownload;
+  onProgress?: (progress: { renderedFrames: number; totalFrames: number }) => void;
 }
