@@ -9,7 +9,7 @@ type Release = {
   _id: string;
   externalId: string;
   template: string;
-  status: "completed" | "pending" | "failed";
+  status: "completed" | "scheduled" | "pending" | "failed";
   output?: "image" | "video";
   images?: unknown;
   videos?: unknown;

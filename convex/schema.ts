@@ -114,6 +114,7 @@ export default defineSchema({
     template: v.string(),
     status: v.union(
       v.literal("pending"),
+      v.literal("scheduled"),
       v.literal("completed"),
       v.literal("failed")
     ),

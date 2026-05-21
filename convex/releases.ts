@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
@@ -92,6 +92,26 @@ export const markFailed = mutation({
     await ctx.db.patch(r._id, {
       status: "failed",
       completed_at: new Date().toISOString(),
+    });
+  },
+});
+
+export const insertScheduled = internalMutation({
+  args: {
+    userId: v.string(),
+    externalId: v.string(),
+    template: v.string(),
+    images: v.any(),
+    socialCopy: v.string(),
+    metadata: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("releases", {
+      ...args,
+      status: "scheduled",
+      output: "image",
+      credits_used: 0,
+      created_at: new Date().toISOString(),
     });
   },
 });

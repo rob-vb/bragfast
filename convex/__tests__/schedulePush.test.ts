@@ -3,6 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { convexTest } from "convex-test";
+import { makeFunctionReference } from "convex/server";
 import schema from "../schema";
 import { api } from "../_generated/api";
 
@@ -28,6 +29,36 @@ const mockPushToBuffer = vi.mocked(pushToBuffer);
 
 const USER_ID = "user_schedule_001";
 const DRAFT_ID = "drf_schedule_001";
+const schedulePushRun = makeFunctionReference<
+  "action",
+  {
+    userId: string;
+    draftId: string;
+    urls: Record<string, string>;
+    keys: Record<string, string>;
+    selections: Array<{
+      format: "landscape" | "square" | "portrait";
+      provider: "buffer";
+      channelId: string;
+      channelName?: string;
+    }>;
+    caption: string;
+    scheduling: { type: "queue" } | { type: "custom"; scheduledAt: string };
+  },
+  | { ok: false; error: "upload_missing"; missing: string[] }
+  | { ok: false; error: "buffer_not_connected" }
+  | {
+      ok: true;
+      releaseId: string;
+      scheduled: Array<{
+        format: string;
+        channelId: string;
+        channelName?: string;
+        providerPostId: string;
+        scheduledAt?: string;
+      }>;
+    }
+>("schedulePush:run");
 
 const urls = {
   landscape: "https://cdn.example.com/releases/drf_schedule_001/landscape.jpg",
@@ -80,12 +111,7 @@ async function seedBufferSecret(t: ReturnType<typeof convexTest>) {
 }
 
 async function listReleases(t: ReturnType<typeof convexTest>) {
-  return t.run(async (ctx) =>
-    ctx.db
-      .query("releases")
-      .withIndex("by_userId", (q) => q.eq("userId", USER_ID))
-      .collect(),
-  );
+  return t.query(api.releases.listByUser, { userId: USER_ID });
 }
 
 describe("schedulePush.run", () => {
@@ -105,7 +131,7 @@ describe("schedulePush.run", () => {
       key === keys.square ? null : { size: 123, contentType: "image/jpeg" },
     );
 
-    const result = await t.action(api.schedulePush.run, {
+    const result = await t.action(schedulePushRun, {
       userId: USER_ID,
       draftId: DRAFT_ID,
       urls,
@@ -138,7 +164,7 @@ describe("schedulePush.run", () => {
       type: "custom" as const,
       scheduledAt: "2026-05-22T15:30:00.000Z",
     };
-    const result = await t.action(api.schedulePush.run, {
+    const result = await t.action(schedulePushRun, {
       userId: USER_ID,
       draftId: DRAFT_ID,
       urls,
@@ -246,7 +272,7 @@ describe("schedulePush.run", () => {
 
     mockHeadObject.mockResolvedValue({ size: 123, contentType: "image/jpeg" });
 
-    const result = await t.action(api.schedulePush.run, {
+    const result = await t.action(schedulePushRun, {
       userId: USER_ID,
       draftId: DRAFT_ID,
       urls,
