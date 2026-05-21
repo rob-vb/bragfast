@@ -97,7 +97,7 @@ Source: `packages/workspace/src/index.css` — all `--workspace-*` tokens.
 | Text muted | `--workspace-muted` = `rgba(26,26,26,0.62)` | Hint text, disabled channel names |
 | Error | `red-600` (Tailwind) | Error messages, failed upload state |
 
-Accent (`--workspace-lime`) reserved for: **submit/CTA button only** ("Schedule post"). No other interactive elements use lime as background.
+Accent (`--workspace-lime`) reserved for: **submit/CTA button background** ("Schedule post"), **timing toggle active-state indicator**, and **focus ring outline** (`focus-visible:outline-[var(--workspace-lime)]`). No other interactive elements use lime as background.
 
 ### Admin gallery surface
 
