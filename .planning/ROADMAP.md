@@ -219,7 +219,28 @@ Plans:
   3. After successful scheduling, the Workspace shows a confirmation ("Scheduled to Buffer") with the channel name and post time
   4. The scheduled Creation appears in the Admin gallery with a "Scheduled" status badge
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 07-01-PLAN.md — Buffer scheduling primitive: queue + customScheduled support in pushToBuffer
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 07-02-PLAN.md — Backend schedule core: Convex schedule action, releases scheduled status, Admin badge type
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 07-03-PLAN.md — Backend API routes: presigned upload-url + schedule endpoint with all-or-nothing errors
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 07-04-PLAN.md — CLI + Workspace schedule orchestration: local file upload to R2 + useSchedule hook
+
+**Wave 5** *(blocked on Wave 4)*
+
+- [ ] 07-05-PLAN.md — SchedulePanel + Editor wiring + human verification checkpoint
 **UI hint**: yes
 
 ### Phase 8: Admin Trim
@@ -248,5 +269,5 @@ Plans:
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
-| 7. Schedule-Time Upload + Posting | 0/TBD | Not started | - |
+| 7. Schedule-Time Upload + Posting | 0/5 | Planned | - |
 | 8. Admin Trim | 0/TBD | Not started | - |
