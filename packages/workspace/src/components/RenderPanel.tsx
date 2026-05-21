@@ -61,7 +61,7 @@ function FormatStatusRow({
         ].join(" ")}
       >
         {state.phase === "pending"
-          ? `${label} rendering...`
+          ? `${label} rendering…`
           : state.phase === "failed"
             ? `${label} failed`
             : label}
@@ -103,7 +103,7 @@ export function RenderPanel({
   const showRetry = renderPhase === "failed-all";
   const showPreview = showActions && activeState.phase === "done";
   const buttonDisabled = renderPhase === "flushing" || renderPhase === "rendering";
-  const buttonLabel = renderPhase === "flushing" ? "Saving..." : showRetry ? "Retry render" : "Render images";
+  const buttonLabel = renderPhase === "flushing" ? "Saving…" : showRetry ? "Retry render" : "Render images";
 
   function handleCopy() {
     void navigator.clipboard.writeText(caption).then(() => {
