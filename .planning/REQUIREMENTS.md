@@ -71,7 +71,7 @@ Requirements for the CLI-first MVP. Each maps to a roadmap phase.
 - [x] **ADM-01**: User can sign up and log in to the admin
 - [x] **ADM-02**: User can set up a brand (logo + colors) in the admin
 - [x] **ADM-03**: User can view a read-only gallery of past creations
-- [ ] **ADM-04**: User can create, list, and revoke API keys
+- [x] **ADM-04**: User can create, list, and revoke API keys
 - [x] **ADM-05**: User can subscribe to the single plan with a 14-day trial
 
 ## v2 Requirements
@@ -158,7 +158,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | ADM-01 | Phase 8 | Complete |
 | ADM-02 | Phase 8 | Complete |
 | ADM-03 | Phase 8 | Complete |
-| ADM-04 | Phase 8 | Pending |
+| ADM-04 | Phase 8 | Complete |
 | ADM-05 | Phase 8 | Complete |
 
 **Coverage:**

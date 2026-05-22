@@ -27,7 +27,7 @@ Template authoring (canvas drag-resize editor, AUTHOR-01..05) is deliberately ab
 - [ ] **Phase 5: Local Image Render** - Render all three formats locally via Satori/Sharp with in-Workspace preview and output folder (awaiting human verification)
 - [ ] **Phase 6: Local Video Render** - Render video locally via Remotion headless Chrome with first-run Chrome download messaging (awaiting human verification)
 - [x] **Phase 7: Schedule-Time Upload + Posting** - Upload rendered files to R2 at schedule-time and post to Buffer channels via the existing posting backbone (completed 2026-05-22)
-- [ ] **Phase 8: Admin Trim** - Remove legacy cook UI, add device approval page, confirm read-only gallery and brand setup are working
+- [x] **Phase 8: Admin Trim** - Remove legacy cook UI, add device approval page, confirm read-only gallery and brand setup are working (completed 2026-05-22)
 
 ## Phase Details
 
@@ -290,7 +290,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5)*
 
-- [ ] 08-10-PLAN.md — Final schema cleanup (remove creditsRemaining) + device path verification + human checkpoint
+- [x] 08-10-PLAN.md — Final schema cleanup (remove creditsRemaining) + device path verification + human checkpoint
 
 ## Progress
 
@@ -303,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 9/10 | In Progress|  |
+| 8. Admin Trim | 10/10 | Complete   | 2026-05-22 |
