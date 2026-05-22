@@ -21,14 +21,8 @@ vi.mock("@convex/_generated/api", () => ({
       upsertAction: "api.integrationSecrets.upsertAction",
       disconnectAction: "api.integrationSecrets.disconnectAction",
     },
-    sousChef: {
-      seedAction: "api.sousChef.seedAction",
-    },
     userProfiles: {
       getByUserId: "api.userProfiles.getByUserId",
-    },
-    githubInstallations: {
-      listByUserId: "api.githubInstallations.listByUserId",
     },
   },
 }));
@@ -39,6 +33,11 @@ vi.mock("@/lib/auth/authenticate", () => ({
 
 vi.mock("@/lib/crypto/secret-box", () => ({
   seal: sealMock,
+}));
+
+// captureServer is a fire-and-forget side effect — mock it to avoid network calls
+vi.mock("@/lib/analytics/posthog-server", () => ({
+  captureServer: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("/api/v1/sous-chef/integrations", () => {
@@ -57,9 +56,6 @@ describe("/api/v1/sous-chef/integrations", () => {
     });
     queryMock.mockImplementation((name: string) => {
       if (name === "api.integrationSecrets.listByUser") {
-        return Promise.resolve([]);
-      }
-      if (name === "api.githubInstallations.listByUserId") {
         return Promise.resolve([]);
       }
       return Promise.resolve(null);
@@ -106,42 +102,8 @@ describe("/api/v1/sous-chef/integrations", () => {
     expect(actionMock).not.toHaveBeenCalled();
   });
 
-  it("disconnects and returns 502 when seeding fails after connect", async () => {
-    actionMock.mockResolvedValueOnce({ created: true }); // upsertAction succeeds
-    actionMock.mockRejectedValueOnce(new Error("seed blew up")); // seedAction fails
-    actionMock.mockResolvedValueOnce(true); // disconnectAction
-
-    const { POST } = await import("../integrations/route");
-    const response = await POST(
-      new Request("http://localhost/api/v1/sous-chef/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: "stripe", apiKey: "rk_test_123456789" }),
-      }),
-    );
-
-    expect(response.status).toBe(502);
-    expect(actionMock).toHaveBeenNthCalledWith(
-      1,
-      "api.integrationSecrets.upsertAction",
-      expect.objectContaining({
-        userId: "user_123",
-        provider: "stripe",
-      }),
-    );
-    expect(actionMock).toHaveBeenNthCalledWith(2, "api.sousChef.seedAction", {
-      userId: "user_123",
-      provider: "stripe",
-    });
-    expect(actionMock).toHaveBeenNthCalledWith(
-      3,
-      "api.integrationSecrets.disconnectAction",
-      { userId: "user_123", provider: "stripe" },
-    );
-  });
-
-  it("stores the secret and seeds successfully for an allowlisted PostHog host", async () => {
-    actionMock.mockResolvedValue({ seeded: [100] });
+  it("stores the secret for an analytics provider (no seedAction)", async () => {
+    actionMock.mockResolvedValue(undefined);
 
     const { POST } = await import("../integrations/route");
     const response = await POST(
@@ -158,6 +120,8 @@ describe("/api/v1/sous-chef/integrations", () => {
     );
 
     expect(response.status).toBe(200);
+    // Route calls upsertAction only — seedAction was removed with sousChef.ts
+    expect(actionMock).toHaveBeenCalledTimes(1);
     expect(actionMock).toHaveBeenCalledWith(
       "api.integrationSecrets.upsertAction",
       expect.objectContaining({
@@ -169,9 +133,28 @@ describe("/api/v1/sous-chef/integrations", () => {
         }),
       }),
     );
-    expect(actionMock).toHaveBeenCalledWith("api.sousChef.seedAction", {
-      userId: "user_123",
-      provider: "posthog",
-    });
+  });
+
+  it("stores stripe secret and returns 200", async () => {
+    actionMock.mockResolvedValue(undefined);
+
+    const { POST } = await import("../integrations/route");
+    const response = await POST(
+      new Request("http://localhost/api/v1/sous-chef/integrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "stripe", apiKey: "rk_test_123456789" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(actionMock).toHaveBeenCalledTimes(1);
+    expect(actionMock).toHaveBeenCalledWith(
+      "api.integrationSecrets.upsertAction",
+      expect.objectContaining({
+        userId: "user_123",
+        provider: "stripe",
+      }),
+    );
   });
 });
