@@ -1,6 +1,8 @@
 import { ConvexHttpClient } from "convex/browser";
+import { createHmac } from "crypto";
 import { api } from "@convex/_generated/api";
 import { authenticate } from "@/lib/auth/authenticate";
+import { publicUrlForKey } from "@/lib/storage/r2";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -22,6 +24,15 @@ type SchedulePayload = {
   selections: Selection[];
   caption: string;
   scheduling: Scheduling;
+};
+type ServerProofPayload = {
+  userId: string;
+  draftId: string;
+  keys: Record<string, string>;
+  selections: Selection[];
+  caption: string;
+  scheduling: Scheduling;
+  issuedAt: number;
 };
 
 function isSafeId(value: string): boolean {
@@ -161,6 +172,56 @@ function parseSchedulePayload(raw: unknown): SchedulePayload | { error: string }
   };
 }
 
+function canonicalize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalize).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalize(entry)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function createServerProof(payload: ServerProofPayload) {
+  const secret = process.env.INTERNAL_API_SECRET;
+  if (!secret) {
+    throw new Error("INTERNAL_API_SECRET is not set");
+  }
+  return {
+    issuedAt: payload.issuedAt,
+    signature: createHmac("sha256", secret)
+      .update(canonicalize(payload))
+      .digest("hex"),
+  };
+}
+
+function deriveScheduleUrls(
+  authUserId: string,
+  payload: SchedulePayload,
+): Record<string, string> | { error: string } {
+  const selectedFormats = new Set(payload.selections.map((selection) => selection.format));
+  for (const format of Object.keys(payload.keys)) {
+    if (!selectedFormats.has(format as ImageFormat)) {
+      return { error: "upload key does not match authenticated draft" };
+    }
+  }
+
+  const derivedUrls: Record<string, string> = {};
+  for (const selection of payload.selections) {
+    const expectedKey = `scheduled/${authUserId}/${payload.draftId}/${selection.format}.jpg`;
+    const key = payload.keys[selection.format];
+    if (key !== expectedKey) {
+      return { error: "upload key does not match authenticated draft" };
+    }
+    derivedUrls[selection.format] = publicUrlForKey(key);
+  }
+
+  return derivedUrls;
+}
+
 function mapScheduleError(result: { error: string; missing?: string[] }) {
   if (result.error === "upload_missing") {
     return Response.json(
@@ -214,9 +275,35 @@ export async function POST(request: Request) {
     return Response.json({ error: payload.error }, { status: 400 });
   }
 
+  const derivedUrls = deriveScheduleUrls(auth.userId, payload);
+  if ("error" in derivedUrls) {
+    return Response.json({ error: derivedUrls.error }, { status: 400 });
+  }
+
+  let serverProof: { issuedAt: number; signature: string };
+  try {
+    const issuedAt = Date.now();
+    serverProof = createServerProof({
+      userId: auth.userId,
+      draftId: payload.draftId,
+      keys: payload.keys,
+      selections: payload.selections,
+      caption: payload.caption,
+      scheduling: payload.scheduling,
+      issuedAt,
+    });
+  } catch {
+    return Response.json(
+      { error: "schedule server proof is not configured" },
+      { status: 500 },
+    );
+  }
+
   const result = await convex.action(api.schedulePush.run, {
     userId: auth.userId,
     ...payload,
+    urls: derivedUrls,
+    serverProof,
   });
 
   if (!result.ok) {

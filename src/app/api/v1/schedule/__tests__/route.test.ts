@@ -35,6 +35,7 @@ describe("/api/v1/schedule/upload-url", () => {
     authenticateMock.mockReset();
     createPresignedUploadUrlMock.mockReset();
     authenticateMock.mockResolvedValue({ userId: "user_123" });
+    process.env.INTERNAL_API_SECRET = "test_internal_secret";
     createPresignedUploadUrlMock.mockImplementation(
       async (key: string, contentType: string) => ({
         uploadUrl: `https://uploads.example/${key}?contentType=${contentType}`,
@@ -144,6 +145,7 @@ describe("/api/v1/schedule", () => {
     createPresignedUploadUrlMock.mockReset();
     publicUrlForKeyMock.mockReset();
     authenticateMock.mockResolvedValue({ userId: "user_123" });
+    process.env.INTERNAL_API_SECRET = "test_internal_secret";
     publicUrlForKeyMock.mockImplementation((key: string) => `https://cdn.example/${key}`);
     actionMock.mockResolvedValue({ ok: true, releaseId: "rel_123", scheduled: [] });
   });

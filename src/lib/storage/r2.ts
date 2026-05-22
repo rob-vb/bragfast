@@ -16,6 +16,10 @@ const client = new S3Client({
 const BUCKET = process.env.R2_BUCKET_NAME!
 const PUBLIC_URL = process.env.R2_PUBLIC_URL!
 
+export function publicUrlForKey(key: string): string {
+  return `${PUBLIC_URL}/${key}`
+}
+
 export function isR2Url(url: string): boolean {
   return url.startsWith(PUBLIC_URL)
 }
@@ -82,7 +86,7 @@ export async function createPresignedUploadUrl(
     }),
     { expiresIn },
   )
-  return { uploadUrl, publicUrl: `${PUBLIC_URL}/${key}` }
+  return { uploadUrl, publicUrl: publicUrlForKey(key) }
 }
 
 export async function headObject(key: string): Promise<{ size: number; contentType: string } | null> {
