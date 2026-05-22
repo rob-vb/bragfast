@@ -1,13 +1,10 @@
 import {
-  action,
   mutation,
   query,
   internalMutation,
 } from "./_generated/server";
-import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
-import { insertTriggerEvent } from "./triggerEvents";
 
 const sourceSystem = v.union(
   v.literal("github"),
@@ -86,71 +83,6 @@ export const update = mutation({
     if (config !== undefined) patch.config = config;
     if (Object.keys(patch).length > 0) await ctx.db.patch(row._id, patch);
     return { id: row.externalId, created_at: row.created_at };
-  },
-});
-
-// S8.3: few-shot. Returns recent (original → edited) pairs for a user, drawn
-// from approved drafts whose user-edited title or description differs from the
-// frozen `originalConfig`. Used by composeCopy to bias Haiku toward this
-// user's voice. Capped at `limit` (default 3) and ordered newest first.
-export const getRecentApprovedEdits = query({
-  args: { userId: v.string(), limit: v.optional(v.number()) },
-  handler: async (ctx, { userId, limit }) => {
-    const cap = limit ?? 3;
-    // Pull most recent approved triggerEvents — these reference drafts that
-    // were pushed. We need a few extras since not every approval was edited.
-    const events = await ctx.db
-      .query("triggerEvents")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .order("desc")
-      .filter((q) => q.eq(q.field("decision"), "approved"))
-      .take(cap * 4);
-
-    const examples: Array<{
-      original: { title: string; description: string };
-      edited: { title: string; description: string };
-    }> = [];
-
-    for (const evt of events) {
-      if (examples.length >= cap) break;
-      if (!evt.draftExternalId) continue;
-      const draft = await ctx.db
-        .query("drafts")
-        .withIndex("by_externalId", (q) =>
-          q.eq("externalId", evt.draftExternalId!),
-        )
-        .first();
-      if (!draft?.originalConfig) continue;
-      let original: {
-        objectContent?: { title?: { text?: string }; description?: { text?: string } };
-      };
-      try {
-        original = JSON.parse(draft.originalConfig);
-      } catch {
-        continue;
-      }
-      const origTitle = original?.objectContent?.title?.text?.trim() ?? "";
-      const origDescription = original?.objectContent?.description?.text?.trim() ?? "";
-
-      const push = await ctx.db
-        .query("draftPushes")
-        .withIndex("by_draftId", (q) => q.eq("draftId", evt.draftExternalId!))
-        .first();
-      if (!push) continue;
-      const finalTitle = push.title.trim();
-      const finalDescription = push.description.trim();
-      if (
-        finalTitle === origTitle &&
-        finalDescription === origDescription
-      ) {
-        continue;
-      }
-      examples.push({
-        original: { title: origTitle, description: origDescription },
-        edited: { title: finalTitle, description: finalDescription },
-      });
-    }
-    return examples;
   },
 });
 
@@ -297,30 +229,6 @@ export const insertDraftIfNew = internalMutation({
   },
 });
 
-// Public action wrapper — callable from Next.js webhook route (which validates
-// the GitHub signature). Delegates to internal mutation so the mutation itself
-// is not directly reachable from the public Convex client.
-export const insertDraftIfNewAction = action({
-  args: {
-    userId: v.string(),
-    idempotencyKey: v.string(),
-    sourceSystem,
-    milestoneKey: v.string(),
-    eventReference: v.optional(v.string()),
-    name: v.optional(v.string()),
-    config: v.string(),
-    createdBy: v.optional(v.string()),
-    confidence: v.optional(v.number()),
-    suppressed: v.optional(v.boolean()),
-  },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{ created: boolean; id: string; created_at: string }> => {
-    return await ctx.runMutation(internal.drafts.insertDraftIfNew, args);
-  },
-});
-
 // Override: flip a suppressed draft to visible. Auth-gated to caller's drafts.
 export const unsuppressDraft = mutation({
   args: { externalId: v.string() },
@@ -333,109 +241,6 @@ export const unsuppressDraft = mutation({
     if (!row || row.userId !== userId) return false;
     if (!row.suppressed) return true;
     await ctx.db.patch(row._id, { suppressed: false });
-    return true;
-  },
-});
-
-// Sous-Chef: count PR-merge drafts for a given repo since an ISO timestamp.
-// Used by the webhook handler to enforce the per-repo daily cap.
-// NOTE: scans all drafts for the user + filters in JS. Sized for founder-only v1
-// (<~200 drafts). Revisit with a compound index if scale grows.
-export const countRecentPrMergesByRepo = query({
-  args: {
-    userId: v.string(),
-    repoFullName: v.string(),
-    sinceIso: v.string(),
-  },
-  handler: async (ctx, { userId, repoFullName, sinceIso }) => {
-    const rows = await ctx.db
-      .query("drafts")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect();
-    const prefix = `pr_merged:${repoFullName}#`;
-    return rows.filter(
-      (r) =>
-        r.created_at >= sinceIso &&
-        r.sourceSystem === "github" &&
-        (r.milestoneKey?.startsWith(prefix) ?? false),
-    ).length;
-  },
-});
-
-export const findRecentPrMergeForRepo = query({
-  args: {
-    userId: v.string(),
-    repoFullName: v.string(),
-    sinceIso: v.string(),
-  },
-  handler: async (ctx, { userId, repoFullName, sinceIso }) => {
-    const rows = await ctx.db
-      .query("drafts")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect();
-    const prefix = `pr_merged:${repoFullName}#`;
-    const matches = rows
-      .filter(
-        (r) =>
-          r.created_at >= sinceIso &&
-          r.sourceSystem === "github" &&
-          (r.milestoneKey?.startsWith(prefix) ?? false),
-      )
-      .sort((a, b) => (a.created_at > b.created_at ? -1 : 1));
-    const first = matches[0];
-    if (!first) return null;
-    return {
-      id: first.externalId,
-      config: first.config,
-      milestoneKey: first.milestoneKey ?? null,
-      created_at: first.created_at,
-    };
-  },
-});
-
-// Append a new PR mention to an existing Sous-Chef draft's description.
-// Used to debounce-rollup rapid-fire merges (< 30 min apart) into a single draft.
-export const appendPrMergeRollup = mutation({
-  args: {
-    externalId: v.string(),
-    userId: v.string(),
-    prTitle: v.string(),
-    prNumber: v.number(),
-  },
-  handler: async (ctx, { externalId, userId, prTitle, prNumber }) => {
-    const row = await ctx.db
-      .query("drafts")
-      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
-      .first();
-    if (!row || row.userId !== userId) return false;
-
-    let parsed: {
-      objectContent?: Record<string, { text?: string }>;
-      [k: string]: unknown;
-    };
-    try {
-      parsed = JSON.parse(row.config);
-    } catch {
-      return false;
-    }
-
-    const existingDesc =
-      parsed.objectContent?.description?.text ?? "";
-    const addition = `\n• Also merged: ${prTitle} (#${prNumber})`;
-    const nextDesc = (existingDesc + addition).slice(0, 600);
-
-    const nextConfig = {
-      ...parsed,
-      objectContent: {
-        ...(parsed.objectContent ?? {}),
-        description: {
-          ...(parsed.objectContent?.description ?? {}),
-          text: nextDesc,
-        },
-      },
-    };
-
-    await ctx.db.patch(row._id, { config: JSON.stringify(nextConfig) });
     return true;
   },
 });
@@ -491,22 +296,6 @@ export const remove = mutation({
       .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
       .first();
     if (!row || row.userId !== userId) return false;
-    // Record user_skipped for agent-fired drafts so the feed reflects the user
-    // dismissing a Sous-Chef trigger. User-created drafts aren't trigger events.
-    if (row.source === "agent") {
-      const triggerType = row.milestoneKey?.split(":")[0] ?? "manual";
-      const trimmedReason = reason?.trim().slice(0, 200);
-      await insertTriggerEvent(ctx, {
-        userId,
-        sourceSystem: row.sourceSystem ?? "manual",
-        triggerType,
-        decision: "user_skipped",
-        reason: trimmedReason ? trimmedReason : undefined,
-        confidence: row.confidence ?? undefined,
-        sourceReference: row.eventReference ?? undefined,
-        draftExternalId: externalId,
-      });
-    }
     await ctx.db.delete(row._id);
     return true;
   },

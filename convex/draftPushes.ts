@@ -18,7 +18,6 @@ import { mutation, query, internalMutation, internalQuery } from "./_generated/s
 import { internal } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
 import { requireAuthedUser } from "./auth";
-import { insertTriggerEvent } from "./triggerEvents";
 import { evaluatePostSelections } from "./planTiers";
 
 const formatValidator = v.union(
@@ -288,18 +287,12 @@ export const approveDraft = mutation({
       return { ok: false as const, error: "no_providers_connected" as const };
     }
 
-    // S8.1: fetch draftRow once for edit-delta + telemetry. Also probe
-    // is_first_post_for_user via a single approved-event lookup.
+    // S8.1: fetch draftRow once for edit-delta + telemetry.
     const draftRow = await ctx.db
       .query("drafts")
       .withIndex("by_externalId", (q) => q.eq("externalId", draftId))
       .first();
-    const priorApproval = await ctx.db
-      .query("triggerEvents")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .filter((q) => q.eq(q.field("decision"), "approved"))
-      .first();
-    const isFirstApproved = priorApproval === null;
+    const isFirstApproved = false; // triggerEvents table removed; stub false
 
     // ── Idempotency: duplicate nonce within 60 seconds ────────────────────────
     const existing = await ctx.db
@@ -434,23 +427,6 @@ export const approveDraft = mutation({
         draftId,
         userId,
       });
-
-      // Record the approval as a trigger event. We look up the draft's
-      // sourceSystem/triggerType so the feed shows what was approved.
-      const triggerType = draftRow?.milestoneKey?.split(":")[0] ?? "manual";
-      await insertTriggerEvent(ctx, {
-        userId,
-        sourceSystem: draftRow?.sourceSystem ?? "manual",
-        triggerType,
-        decision: "approved",
-        confidence: draftRow?.confidence ?? undefined,
-        sourceReference: draftRow?.eventReference ?? undefined,
-        draftExternalId: draftId,
-        metadata: JSON.stringify({
-          pushCount: pushIds.length,
-          postState,
-        }),
-      });
     }
 
     // ── S8.1: edit-delta for post_approved telemetry ──────────────────────────
@@ -498,18 +474,6 @@ export const approveDraftClipboard = mutation({
     }
 
     await ctx.db.patch(draftRow._id, { suppressed: true });
-
-    const triggerType = draftRow.milestoneKey?.split(":")[0] ?? "manual";
-    await insertTriggerEvent(ctx, {
-      userId,
-      sourceSystem: draftRow.sourceSystem ?? "manual",
-      triggerType,
-      decision: "approved",
-      confidence: draftRow.confidence ?? undefined,
-      sourceReference: draftRow.eventReference ?? undefined,
-      draftExternalId: draftId,
-      metadata: JSON.stringify({ destination, pushCount: 0 }),
-    });
 
     return { ok: true as const };
   },
