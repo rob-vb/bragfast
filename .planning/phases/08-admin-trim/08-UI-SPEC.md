@@ -1,10 +1,11 @@
 ---
 phase: 8
 slug: admin-trim
-status: draft
+status: approved
 shadcn_initialized: true
 preset: new-york / neutral / css-variables
 created: 2026-05-22
+reviewed_at: 2026-05-22
 ---
 
 # Phase 8 — UI Design Contract
