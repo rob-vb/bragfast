@@ -61,8 +61,8 @@ export const create = mutation({
     return ctx.db.insert("userProfiles", {
       userId,
       email,
-      creditsRemaining: previous ? 0 : 30,
       plan: "trial",
+      trialEnd: Date.now() + 14 * 24 * 60 * 60 * 1000,
     });
   },
 });
