@@ -4,7 +4,7 @@ import {
   validateReleaseColors,
   validateFormats,
 } from "@/lib/validation";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
+import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import type { FormatEntry, ReleaseRequest } from "@/lib/types";
 
@@ -118,54 +118,3 @@ export function toReleaseRequest(body: Record<string, unknown>): ReleaseRequest 
   return request;
 }
 
-/**
- * Refunds reserved credits and returns the standard 500 response. Swallows refund
- * errors with a structured console.error — credits may leak if the refund mutation
- * itself fails, which is logged for later reconciliation.
- */
-export async function refundAndFail(
-  userId: string,
-  amount: number,
-  context: string
-): Promise<Response> {
-  await fetchMutation(api.userProfiles.refund, { userId, amount }).catch((err) => {
-    console.error(`[cook] Refund failed userId=${userId} amount=${amount} context=${context}:`, err);
-  });
-  return Response.json({ error: "Something burned. Try again." }, { status: 500 });
-}
-
-/**
- * Reserves credits for a render. Returns `{ remaining }` on success or a Response
- * with a client-appropriate status (429 for insufficient credits, 403 for missing profile).
- * Unknown errors are re-thrown so the caller can convert them to 500s.
- */
-export async function reserveCreditsOrError(
-  userId: string,
-  amount: number
-): Promise<{ remaining: number } | Response> {
-  try {
-    const remaining = await fetchMutation(api.userProfiles.reserve, {
-      userId,
-      amount,
-    });
-    return { remaining };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "";
-    if (msg.includes("Insufficient credits")) {
-      return Response.json(
-        {
-          error: "Your plate is empty. Pick a plan to keep serving.",
-          credits_needed: amount,
-        },
-        { status: 429 }
-      );
-    }
-    if (msg.includes("User profile not found")) {
-      return Response.json(
-        { error: "No user profile found. Create an API key first to initialize your account." },
-        { status: 403 }
-      );
-    }
-    throw err;
-  }
-}

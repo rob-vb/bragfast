@@ -28,11 +28,5 @@ export async function GET(
     return Response.json({ error: "Release not found" }, { status: 404 });
   }
 
-  // Fill in credits_remaining
-  const balance = await fetchQuery(api.userProfiles.getBalance, {
-    userId: auth.userId,
-  });
-  result.credits_remaining = balance;
-
   return Response.json(result);
 }

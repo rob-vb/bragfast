@@ -7,9 +7,9 @@ import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
 // Stub — account page reworked in plan 08-05, plan-tiers deleted in 08-04
 type Plan = string;
-function resolvePostAllowance(input: { plan: Plan; creditsRemaining: number }) {
+function resolvePostAllowance(input: { plan: Plan }) {
   const names: Record<string, string> = { trial: "On the House", free: "Free", plate: "Full Plate" };
-  return { name: names[input.plan] ?? input.plan, remaining: input.creditsRemaining, total: 0, unitLabel: "posts" as const };
+  return { name: names[input.plan] ?? input.plan, remaining: 0, total: 0, unitLabel: "posts" as const };
 }
 import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
@@ -42,7 +42,6 @@ export default async function AccountPage() {
 
   const allowance = resolvePostAllowance({
     plan: stats.plan as Plan,
-    creditsRemaining: stats.creditsRemaining,
   });
   const legacyPlan = PLANS[stats.plan as keyof typeof PLANS];
   const isFree = stats.plan === "trial" || stats.plan === "free";
@@ -98,13 +97,7 @@ export default async function AccountPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-brand/10 sm:grid-cols-4">
-            <div>
-              <p className="font-[family-name:var(--font-press-start)] text-lg text-brand">
-                {stats.creditsUsedThisMonth}
-              </p>
-              <p className="text-xs text-brand/60">Used this month</p>
-            </div>
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-brand/10 sm:grid-cols-3">
             <div>
               <p className="font-[family-name:var(--font-press-start)] text-lg text-brand">
                 {stats.totalReleases}

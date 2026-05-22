@@ -7,7 +7,7 @@ import { renderImage } from "@bragfast/render-core";
 import type { ImageRenderResult, LocalRenderRequest } from "@bragfast/render-core";
 import type { CanvasTemplateConfig, FormatKey } from "../templates/canvas-types";
 import { uploadImage } from "../storage/r2";
-import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS, calculateCredits } from "../types";
+import { ReleaseRequest, ReleaseResult, FORMAT_DIMENSIONS } from "../types";
 import { resolveAllTemplates, resolveBrand, buildSlideDataMaps, prefetchStaticImages } from "./shared";
 import { collectUploadKeys, cleanupUploads } from "./cleanup";
 
@@ -21,13 +21,12 @@ export async function createRelease(
   sourceInfo?: { source: "api" }
 ): Promise<ReleaseResult> {
   const releaseId = `cook_${crypto.randomUUID().slice(0, 10)}`;
-  const creditsUsed = calculateCredits({ formats: request.formats });
 
   await convex.mutation(api.releases.create, {
     userId,
     externalId: releaseId,
     template: request.template || "standard-browser",
-    credits_used: creditsUsed,
+    credits_used: 0,
     metadata: request.metadata,
     webhook_url: request.webhook_url,
     source: sourceInfo?.source,
@@ -38,8 +37,6 @@ export async function createRelease(
     output: "image" as const,
     status: "pending" as const,
     images: null,
-    credits_used: creditsUsed,
-    credits_remaining: -1, // filled by caller
     created_at: new Date().toISOString(),
     metadata: request.metadata,
     webhook_url: request.webhook_url,
@@ -59,8 +56,6 @@ export async function getRelease(
     status: r.status,
     images: r.images ?? null,
     videos: r.videos ?? null,
-    credits_used: r.credits_used,
-    credits_remaining: -1, // filled by caller
     progress: r.progress,
     created_at: r.created_at,
     completed_at: r.completed_at,
@@ -160,8 +155,6 @@ export async function renderReleaseAsync(
       images,
     });
 
-    // Credits already reserved by the route handler — no deduction needed here
-
     if (request.webhook_url) {
       const result = await getRelease(releaseId);
       if (result) await callWebhook(request.webhook_url, result);
@@ -169,14 +162,6 @@ export async function renderReleaseAsync(
   } catch (err) {
     const errMsg = err instanceof Error ? `${err.message}\n${err.stack}` : String(err);
     console.error(`Render failed for ${releaseId}: ${errMsg}`);
-
-    // Refund reserved credits on render failure
-    const amount = calculateCredits({ formats: request.formats });
-    try {
-      await convex.mutation(api.userProfiles.refund, { userId, amount });
-    } catch (refundErr) {
-      console.error(`Failed to refund credits:`, refundErr);
-    }
 
     try {
       await convex.mutation(api.releases.markFailed, {

@@ -7,11 +7,9 @@ import {
   authenticateAndCheckRateLimit,
   parseJsonBody,
   validateCommonFields,
-  reserveCreditsOrError,
-  refundAndFail,
 } from "../_shared";
 import { validateVideoField } from "@/lib/validation";
-import { ReleaseResult, VideoField, FormatEntry, calculateCredits } from "@/lib/types";
+import { ReleaseResult, VideoField, FormatEntry } from "@/lib/types";
 
 export async function POST(request: Request) {
   const authResult = await authenticateAndCheckRateLimit(request);
@@ -49,12 +47,6 @@ export async function POST(request: Request) {
     ? true
     : (rawVideo as VideoField);
 
-  const creditsNeeded = calculateCredits({ video, formats });
-
-  const reserveResult = await reserveCreditsOrError(userId, creditsNeeded);
-  if (reserveResult instanceof Response) return reserveResult;
-  const { remaining } = reserveResult;
-
   try {
     const cookId = `cook_${crypto.randomUUID().slice(0, 10)}`;
     const metadata = typeof body.metadata === "string" ? body.metadata : undefined;
@@ -67,8 +59,6 @@ export async function POST(request: Request) {
       status: "pending",
       images: null,
       videos: null,
-      credits_used: creditsNeeded,
-      credits_remaining: remaining,
       created_at: new Date().toISOString(),
       metadata,
       webhook_url: webhookUrl,
@@ -87,7 +77,7 @@ export async function POST(request: Request) {
       userId,
       externalId: cookId,
       template,
-      credits_used: creditsNeeded,
+      credits_used: 0,
       metadata,
       webhook_url: webhookUrl,
       source: "api",
@@ -97,6 +87,6 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 202 });
   } catch (err) {
     console.error("Failed to create video release:", err);
-    return refundAndFail(userId, creditsNeeded, "video scheduleRender");
+    return Response.json({ error: "Something burned. Try again." }, { status: 500 });
   }
 }

@@ -11,7 +11,6 @@ import { resolveTemplate, resolveBrand, buildSlideDataMaps, prefetchStaticImages
 import { FORMAT_DIMENSIONS } from "../templates/canvas-types";
 import type { FormatKey } from "../templates/canvas-types";
 import type { ReleaseResult, FormatEntry, VideoField, AnimationPreset } from "../types";
-import { calculateCredits } from "../types";
 import { probeMp4DurationSeconds } from "../video/probe";
 
 const OUTPUT_LOCAL = process.env.OUTPUT_LOCAL === "true";
@@ -52,9 +51,7 @@ function calculateVideoDuration(slideCount: number, slideDuration: number): numb
   return slideDuration * slideCount;
 }
 
-export function createVideoRelease(
-  creditsUsed: number
-): { cookId: string; result: ReleaseResult } {
+export function createVideoRelease(): { cookId: string; result: ReleaseResult } {
   const cookId = `cook_${crypto.randomUUID().slice(0, 10)}`;
   return {
     cookId,
@@ -64,8 +61,6 @@ export function createVideoRelease(
       status: "pending" as const,
       images: null,
       videos: null,
-      credits_used: creditsUsed,
-      credits_remaining: 0,
       created_at: new Date().toISOString(),
     },
   };
@@ -76,8 +71,6 @@ export async function renderVideoAsync(
   userId: string,
   request: VideoRenderRequest
 ) {
-  let partialRefundCredits = 0; // credits already refunded (for partial failure)
-  const creditsPerFormat = (request.formats[0]?.slides.length ?? 0) * 10;
   try {
     const templateName = request.template || "standard-browser";
     let templateConfig = await resolveTemplate(templateName, userId, convex);
@@ -193,15 +186,8 @@ export async function renderVideoAsync(
       throw new Error(`All formats failed: ${failures.join("; ")}`);
     }
 
-    // Refund credits for failed formats only
     if (failures.length > 0) {
-      const refundAmount = failures.length * creditsPerFormat;
-      partialRefundCredits = refundAmount;
       console.warn(`[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`);
-      await convex.mutation(api.userProfiles.refund, {
-        userId,
-        amount: refundAmount,
-      }).catch((err: Error) => console.error(`Failed to refund partial credits:`, err));
     }
 
     await convex.mutation(api.releases.markCompleted, {
@@ -227,20 +213,6 @@ export async function renderVideoAsync(
       await convex.mutation(api.releases.markFailed, { externalId: cookId });
     } catch (markErr) {
       console.error(`Failed to mark release as failed:`, markErr);
-    }
-
-    // Only refund formats not already refunded by partial-refund above
-    try {
-      const totalCredits = request.formats.length * creditsPerFormat;
-      const refundAmount = totalCredits - partialRefundCredits;
-      if (refundAmount > 0) {
-        await convex.mutation(api.userProfiles.refund, {
-          userId,
-          amount: refundAmount,
-        });
-      }
-    } catch (refundErr) {
-      console.error(`Failed to refund credits:`, refundErr);
     }
   }
 }

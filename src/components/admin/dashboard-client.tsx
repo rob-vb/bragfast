@@ -5,9 +5,9 @@ import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
 // Stub — dashboard reworked in plan 08-05, plan-tiers deleted in 08-04
 type Plan = string;
-function resolvePostAllowance(input: { plan: Plan; creditsRemaining: number }) {
+function resolvePostAllowance(input: { plan: Plan }) {
   const names: Record<string, string> = { trial: "On the House", free: "Free", plate: "Full Plate" };
-  return { name: names[input.plan] ?? input.plan, remaining: input.creditsRemaining, total: 0 };
+  return { name: names[input.plan] ?? input.plan, remaining: 0, total: 0 };
 }
 import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
@@ -36,14 +36,13 @@ export function DashboardClient() {
 
   const allowance = resolvePostAllowance({
     plan: stats.plan as Plan,
-    creditsRemaining: stats.creditsRemaining,
   });
 
   const recent = releases.slice(0, 10);
   const statCards = [
-    { label: "Used (Month)", value: stats.creditsUsedThisMonth },
     { label: "Releases", value: stats.totalReleases },
     { label: "Images", value: stats.totalImages },
+    { label: "Videos", value: stats.totalVideos ?? 0 },
   ];
 
   return (

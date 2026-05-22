@@ -50,7 +50,6 @@ export const render = internalAction({
   },
   handler: async (ctx, { cookId, userId, request: requestJson }) => {
     const request: VideoRenderRequest = JSON.parse(requestJson);
-    let partialRefundCount = 0;
     const uploadKeys = collectUploadKeys(request.formats);
 
     try {
@@ -226,22 +225,10 @@ export const render = internalAction({
         throw new Error(`All formats failed: ${failures.join("; ")}`);
       }
 
-      // Refund credits for failed formats only
       if (failures.length > 0) {
-        partialRefundCount = failures.length;
-        const slidesPerFormat = request.formats[0]?.slides.length ?? 1;
-        const refundAmount = failures.length * slidesPerFormat * 5;
         console.warn(
           `[VIDEO] ${failures.length} format(s) failed for ${cookId}: ${failures.join("; ")}`
         );
-        await ctx
-          .runMutation(internal.videoRenderHelpers.refundCredits, {
-            userId,
-            amount: refundAmount,
-          })
-          .catch((err: unknown) =>
-            console.error(`Failed to refund partial credits:`, err)
-          );
       }
 
       await ctx.runMutation(internal.videoRenderHelpers.markReleaseCompleted, {
@@ -271,20 +258,6 @@ export const render = internalAction({
         });
       } catch (markErr) {
         console.error(`Failed to mark release as failed:`, markErr);
-      }
-
-      // Only refund formats not already refunded by partial-refund above
-      try {
-        const slidesPerFormat = request.formats[0]?.slides.length ?? 1;
-        const refundAmount = (request.formats.length - partialRefundCount) * slidesPerFormat * 5;
-        if (refundAmount > 0) {
-          await ctx.runMutation(internal.videoRenderHelpers.refundCredits, {
-            userId,
-            amount: refundAmount,
-          });
-        }
-      } catch (refundErr) {
-        console.error(`Failed to refund credits:`, refundErr);
       }
     } finally {
       await cleanupUploads(uploadKeys).catch((err) =>

@@ -50,19 +50,6 @@ export const markReleaseFailed = internalMutation({
   },
 });
 
-export const refundCredits = internalMutation({
-  args: { userId: v.string(), amount: v.number() },
-  handler: async (ctx, { userId, amount }) => {
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .first();
-    if (!profile) throw new Error("User profile not found");
-    await ctx.db.patch(profile._id, {
-      creditsRemaining: (profile.creditsRemaining ?? 0) + amount,
-    });
-  },
-});
 
 export const updateProgress = internalMutation({
   args: { externalId: v.string(), progress: v.number() },
