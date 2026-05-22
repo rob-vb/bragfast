@@ -15,8 +15,6 @@ const NEW_TIERS: NewTierConfig[] = [
 const FEATURES: { name: string; [key: string]: string | boolean | undefined }[] = [
   { name: "Posts / month", plate: "Unlimited" },
 ];
-import { getLaunchMode } from "@/lib/launch-mode";
-
 export const metadata: Metadata = {
   title: "brag.fast | Automate your build in public posts",
   description:
@@ -49,7 +47,7 @@ const FAQ = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-surface text-brand" data-launch-mode={getLaunchMode()}>
+    <div className="min-h-screen bg-surface text-brand">
       <LandingNav />
 
       {/* S1: Hero */}

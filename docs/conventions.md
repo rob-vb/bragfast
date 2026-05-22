@@ -60,9 +60,4 @@ flow in production; ownership = author of the launch checklist sweep.
 4. Capture from the boundary that owns the action — never from a shared lib.
 5. PR description must call out the new event.
 
-## Launch mode flag
-
-`NEXT_PUBLIC_LAUNCH_MODE` = `"legacy"` | `"repositioned"`. Helper:
-`src/lib/launch-mode.ts`. Defaults to `legacy` when unset. Render output
-carries `data-launch-mode` on root layouts so the active mode is observable
-in DOM during rollout.
+<!-- Launch mode flag removed in Phase 8 — the product is the repositioned experience. -->
