@@ -275,7 +275,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 08-04-PLAN.md — Credits teardown: strip calculateCredits, reserve/refund mutations, cook API credit logic, render pipeline credits
+- [x] 08-04-PLAN.md — Credits teardown: strip calculateCredits, reserve/refund mutations, cook API credit logic, render pipeline credits
 - [ ] 08-05-PLAN.md — Launch-mode collapse + admin sidebar trim + dashboard slim
 
 **Wave 4** *(blocked on Wave 3)*
@@ -303,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 3/10 | In Progress|  |
+| 8. Admin Trim | 4/10 | In Progress|  |
