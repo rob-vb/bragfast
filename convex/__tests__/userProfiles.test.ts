@@ -74,6 +74,35 @@ describe("userProfiles disabledPlatforms", () => {
   });
 });
 
+describe("userProfiles create — trialEnd", () => {
+  it("create mutation sets trialEnd approximately 14 days from now", async () => {
+    const t = convexTest(schema, modules);
+    const expectedTrialEnd = Date.now() + 14 * 24 * 60 * 60 * 1000;
+    await t.mutation(api.userProfiles.create, {
+      userId: "user_trial_001",
+      email: "trial@example.com",
+    });
+    const profile = await t.query(api.userProfiles.getByUserId, {
+      userId: "user_trial_001",
+    });
+    expect(
+      Math.abs((profile?.trialEnd ?? 0) - expectedTrialEnd),
+    ).toBeLessThan(5000);
+  });
+
+  it("create mutation does not set creditsRemaining", async () => {
+    const t = convexTest(schema, modules);
+    await t.mutation(api.userProfiles.create, {
+      userId: "user_trial_002",
+      email: "trial2@example.com",
+    });
+    const profile = await t.query(api.userProfiles.getByUserId, {
+      userId: "user_trial_002",
+    });
+    expect(profile?.creditsRemaining).toBeUndefined();
+  });
+});
+
 describe("userProfiles credits", () => {
   it("new profile starts with 30 credits on trial plan", async () => {
     const t = convexTest(schema, modules);
