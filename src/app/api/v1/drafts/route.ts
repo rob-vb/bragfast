@@ -3,6 +3,7 @@ import { api } from "@convex/_generated/api";
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
+import { checkSubscriptionGate } from "@/lib/auth/subscription-gate";
 import { validateDraftPayload } from "@/lib/drafts/validate";
 import { derivePreviewTitle } from "@/lib/drafts/preview";
 import type { DraftConfig, DraftPreview, DraftSource } from "@/lib/drafts/types";
@@ -20,6 +21,9 @@ async function resolveAuth(request: Request): Promise<AuthResolved | null> {
 export async function POST(request: Request) {
   const auth = await resolveAuth(request);
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const gate = await checkSubscriptionGate(auth.userId);
+  if (gate) return gate;
 
   const rateLimitResponse = await checkRateLimit(auth.userId);
   if (rateLimitResponse) return rateLimitResponse;

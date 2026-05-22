@@ -3,6 +3,7 @@ import { api } from "@convex/_generated/api";
 import { validateApiKey } from "@/lib/auth/validate-api-key";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { validateDraftPatchPayload } from "@/lib/drafts/validate";
+import { checkSubscriptionGate } from "@/lib/auth/subscription-gate";
 import type { DraftConfig, DraftSource } from "@/lib/drafts/types";
 
 type AuthResolved = { userId: string; source: DraftSource };
@@ -45,6 +46,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await resolveAuth(request);
   if (!auth) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const gate = await checkSubscriptionGate(auth.userId);
+  if (gate) return gate;
 
   const { id } = await params;
   let body: unknown;

@@ -2,6 +2,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { createHmac } from "crypto";
 import { api } from "@convex/_generated/api";
 import { authenticate } from "@/lib/auth/authenticate";
+import { checkSubscriptionGate } from "@/lib/auth/subscription-gate";
 import { publicUrlForKey } from "@/lib/storage/r2";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -262,6 +263,9 @@ export async function POST(request: Request) {
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const gate = await checkSubscriptionGate(auth.userId);
+  if (gate) return gate;
 
   let raw: unknown;
   try {

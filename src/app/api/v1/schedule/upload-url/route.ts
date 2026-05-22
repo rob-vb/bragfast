@@ -1,4 +1,5 @@
 import { authenticate } from "@/lib/auth/authenticate";
+import { checkSubscriptionGate } from "@/lib/auth/subscription-gate";
 import { createPresignedUploadUrl } from "@/lib/storage/r2";
 
 const ALLOWED_FORMATS = ["landscape", "square", "portrait"] as const;
@@ -33,6 +34,9 @@ export async function POST(request: Request) {
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const gate = await checkSubscriptionGate(auth.userId);
+  if (gate) return gate;
 
   let raw: unknown;
   try {
