@@ -2,6 +2,31 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
+const providerPostValidator = v.object({
+  format: v.union(v.literal("landscape"), v.literal("square"), v.literal("portrait")),
+  provider: v.literal("buffer"),
+  channelId: v.string(),
+  channelName: v.optional(v.string()),
+  providerPostId: v.string(),
+  scheduledAt: v.optional(v.string()),
+});
+
+function parseMetadata(metadata: string | undefined): Record<string, unknown> {
+  if (!metadata) return {};
+  try {
+    const parsed = JSON.parse(metadata) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function providerPostsFrom(metadata: Record<string, unknown>) {
+  return Array.isArray(metadata.providerPosts) ? metadata.providerPosts : [];
+}
+
 export const create = mutation({
   args: {
     userId: v.string(),
@@ -112,6 +137,120 @@ export const insertScheduled = internalMutation({
       output: "image",
       credits_used: 0,
       created_at: new Date().toISOString(),
+    });
+  },
+});
+
+export const insertScheduledAttempt = internalMutation({
+  args: {
+    userId: v.string(),
+    externalId: v.string(),
+    template: v.string(),
+    images: v.any(),
+    socialCopy: v.string(),
+    metadata: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", args.externalId))
+      .first();
+    if (existing) {
+      return {
+        releaseId: existing.externalId,
+        status: existing.status,
+        metadata: existing.metadata ?? "{}",
+      };
+    }
+
+    await ctx.db.insert("releases", {
+      ...args,
+      status: "pending",
+      output: "image",
+      credits_used: 0,
+      created_at: new Date().toISOString(),
+    });
+    return {
+      releaseId: args.externalId,
+      status: "pending" as const,
+      metadata: args.metadata,
+    };
+  },
+});
+
+export const recordScheduledProviderPost = internalMutation({
+  args: {
+    externalId: v.string(),
+    post: providerPostValidator,
+  },
+  handler: async (ctx, { externalId, post }) => {
+    const release = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!release) throw new Error("Release not found");
+
+    const metadata = parseMetadata(release.metadata);
+    const providerPosts = providerPostsFrom(metadata).filter((entry) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return true;
+      const candidate = entry as Record<string, unknown>;
+      return !(
+        candidate.format === post.format &&
+        candidate.provider === post.provider &&
+        candidate.channelId === post.channelId
+      );
+    });
+    providerPosts.push(post);
+    const nextMetadata = { ...metadata, providerPosts };
+
+    await ctx.db.patch(release._id, {
+      metadata: JSON.stringify(nextMetadata),
+    });
+    return { metadata: JSON.stringify(nextMetadata) };
+  },
+});
+
+export const markScheduledSuccess = internalMutation({
+  args: {
+    externalId: v.string(),
+    metadata: v.string(),
+  },
+  handler: async (ctx, { externalId, metadata }) => {
+    const release = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!release) throw new Error("Release not found");
+
+    await ctx.db.patch(release._id, {
+      status: "scheduled",
+      metadata,
+      completed_at: new Date().toISOString(),
+    });
+    return { releaseId: release.externalId };
+  },
+});
+
+export const markScheduledFailure = internalMutation({
+  args: {
+    externalId: v.string(),
+    error: v.object({
+      errorClass: v.string(),
+      message: v.string(),
+    }),
+  },
+  handler: async (ctx, { externalId, error }) => {
+    const release = await ctx.db
+      .query("releases")
+      .withIndex("by_externalId", (q) => q.eq("externalId", externalId))
+      .first();
+    if (!release) throw new Error("Release not found");
+
+    const metadata = parseMetadata(release.metadata);
+    await ctx.db.patch(release._id, {
+      status: "failed",
+      metadata: JSON.stringify({ ...metadata, error }),
+      completed_at: new Date().toISOString(),
     });
   },
 });
