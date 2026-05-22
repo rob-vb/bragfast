@@ -3,13 +3,6 @@
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
-// Stub — dashboard reworked in plan 08-05, plan-tiers deleted in 08-04
-type Plan = string;
-function resolvePostAllowance(input: { plan: Plan }) {
-  const names: Record<string, string> = { trial: "On the House", free: "Free", plate: "Full Plate" };
-  return { name: names[input.plan] ?? input.plan, remaining: 0, total: 0 };
-}
-import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
@@ -34,10 +27,6 @@ export function DashboardClient() {
     );
   }
 
-  const allowance = resolvePostAllowance({
-    plan: stats.plan as Plan,
-  });
-
   const recent = releases.slice(0, 10);
   const statCards = [
     { label: "Releases", value: stats.totalReleases },
@@ -50,12 +39,6 @@ export function DashboardClient() {
       <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
         Dashboard
       </h1>
-
-      <CreditMeter
-        remaining={allowance.remaining}
-        total={allowance.total}
-        plan={allowance.name}
-      />
 
       <div className="grid grid-cols-3 gap-4">
         {statCards.map((s) => (
@@ -81,7 +64,7 @@ export function DashboardClient() {
             noPrimary
           />
         ) : (
-          <PixelTable headers={["ID", "Template", "Status", "Credits", "Date"]}>
+          <PixelTable headers={["ID", "Template", "Status", "Date"]}>
             {recent.map((r) => (
               <tr key={r._id} className="hover:bg-gold/5">
                 <td className="px-4 py-3 font-mono text-xs">
@@ -96,7 +79,6 @@ export function DashboardClient() {
                 <td className="px-4 py-3">
                   <PixelBadge status={r.status} />
                 </td>
-                <td className="px-4 py-3 text-xs">{r.credits_used}</td>
                 <td className="px-4 py-3 text-xs">
                   {new Date(r.created_at).toLocaleDateString()}
                 </td>

@@ -9,6 +9,7 @@ import {
   LayoutTemplate,
   Palette,
   KeyRound,
+  Plug,
   ChevronsUpDown,
   CreditCard,
   Sparkles,
@@ -61,6 +62,7 @@ const configureNav: NavItem[] = [
 
 const developersNav: NavItem[] = [
   { label: "API Keys", href: "/admin/keys", icon: KeyRound },
+  { label: "Integrations", href: "/admin/integrations", icon: Plug },
 ];
 
 function isItemActive(pathname: string, href: string) {
