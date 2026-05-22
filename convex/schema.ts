@@ -6,7 +6,7 @@ export default defineSchema({
   userProfiles: defineTable({
     userId: v.string(),
     email: v.optional(v.string()),
-    creditsRemaining: v.number(),
+    creditsRemaining: v.optional(v.number()),
     plan: v.union(
       v.literal("trial"),
       v.literal("starter"),
@@ -17,6 +17,7 @@ export default defineSchema({
       v.literal("plate"),
       v.literal("buffet")
     ),
+    trialEnd: v.optional(v.number()),
     lastDraftsVisitAt: v.optional(v.number()),
     lastBriefingVisitAt: v.optional(v.number()),
     // Sous-Chef draft generation skips composeCopy for these platforms.
