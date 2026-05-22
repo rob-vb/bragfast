@@ -6,7 +6,6 @@ export default defineSchema({
   userProfiles: defineTable({
     userId: v.string(),
     email: v.optional(v.string()),
-    creditsRemaining: v.optional(v.number()),
     plan: v.union(
       v.literal("trial"),
       v.literal("plate"),
