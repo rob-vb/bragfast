@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
-stopped_at: Planned 07-06-PLAN.md
-last_updated: "2026-05-22T06:48:08.876Z"
-last_activity: 2026-05-22 -- Phase 07 planning complete
+stopped_at: Completed 07-06-PLAN.md
+last_updated: "2026-05-22T07:02:58.623Z"
+last_activity: 2026-05-22 -- Phase 07 gap closure complete
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 36
-  completed_plans: 31
-  percent: 86
+  completed_plans: 32
+  percent: 89
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 ## Current Position
 
-Phase: 07 (schedule-time-upload-posting) — GAP CLOSURE READY
+Phase: 07 (schedule-time-upload-posting) — READY FOR VERIFICATION
 Plan: 6 of 6
-Status: Ready to execute gap-closure plan 07-06
-Last activity: 2026-05-22 -- Phase 07 planning complete
+Status: Gap-closure plan 07-06 complete; phase verification ready
+Last activity: 2026-05-22 -- Phase 07 gap closure complete
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -107,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 05: Workspace exact-time scheduling sends a UTC ISO dueAt derived from the native datetime-local input.
 - [Phase 07]: Phase 07 Plan 05: Editor only mounts SchedulePanel for image output after rendered image output is available; video scheduling remains deferred.
 - [Phase 07]: Phase 07 Plan 05: Human verification checkpoint was approved by user response `Proceed` on 2026-05-22.
+- [Phase 07]: Phase 07 Plan 06: schedulePush.run stays public for ConvexHttpClient access but requires a short-lived INTERNAL_API_SECRET HMAC proof before any R2, credential, or Buffer side effect.
+- [Phase 07]: Phase 07 Plan 06: schedule request externalId is derived from authenticated userId plus canonical schedule payload so retries reuse the same release attempt.
+- [Phase 07]: Phase 07 Plan 06: POST /api/v1/schedule ignores caller-provided media URLs and derives Buffer URLs from authenticated scheduled/{userId}/{draftId}/{format}.jpg keys.
 
 ### Pending Todos
 

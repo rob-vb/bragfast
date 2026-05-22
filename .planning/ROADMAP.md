@@ -244,7 +244,7 @@ Plans:
 
 **Wave 6** *(gap closure; blocked on Wave 5)*
 
-- [ ] 07-06-PLAN.md — Gap closure: trusted schedule action, derived R2 URLs, durable provider-post recording
+- [x] 07-06-PLAN.md — Gap closure: trusted schedule action, derived R2 URLs, durable provider-post recording
 **UI hint**: yes
 
 ### Phase 8: Admin Trim
@@ -273,5 +273,5 @@ Plans:
 | 4. Workspace Editor + Slot Filling | 6/6 | Complete   | 2026-05-21 |
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
-| 7. Schedule-Time Upload + Posting | 5/5 | Complete   | 2026-05-22 |
+| 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
 | 8. Admin Trim | 0/TBD | Not started | - |
