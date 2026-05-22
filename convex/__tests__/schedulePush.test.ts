@@ -2,6 +2,7 @@
 /// <reference types="vite/client" />
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createHmac } from "crypto";
 import { convexTest } from "convex-test";
 import { makeFunctionReference } from "convex/server";
 import schema from "../schema";
@@ -44,9 +45,15 @@ const schedulePushRun = makeFunctionReference<
     }>;
     caption: string;
     scheduling: { type: "queue" } | { type: "custom"; scheduledAt: string };
+    serverProof?: {
+      issuedAt: number;
+      signature: string;
+    };
   },
   | { ok: false; error: "upload_missing"; missing: string[] }
   | { ok: false; error: "buffer_not_connected" }
+  | { ok: false; error: "unauthorized" }
+  | { ok: false; error: "provider_failed"; errorClass: string; message: string }
   | {
       ok: true;
       releaseId: string;
@@ -60,16 +67,16 @@ const schedulePushRun = makeFunctionReference<
     }
 >("schedulePush:run");
 
-const urls = {
-  landscape: "https://cdn.example.com/releases/drf_schedule_001/landscape.jpg",
-  square: "https://cdn.example.com/releases/drf_schedule_001/square.jpg",
-  portrait: "https://cdn.example.com/releases/drf_schedule_001/portrait.jpg",
+const keys = {
+  landscape: `scheduled/${USER_ID}/${DRAFT_ID}/landscape.jpg`,
+  square: `scheduled/${USER_ID}/${DRAFT_ID}/square.jpg`,
+  portrait: `scheduled/${USER_ID}/${DRAFT_ID}/portrait.jpg`,
 };
 
-const keys = {
-  landscape: "releases/drf_schedule_001/landscape.jpg",
-  square: "releases/drf_schedule_001/square.jpg",
-  portrait: "releases/drf_schedule_001/portrait.jpg",
+const urls = {
+  landscape: `https://cdn.example.com/${keys.landscape}`,
+  square: `https://cdn.example.com/${keys.square}`,
+  portrait: `https://cdn.example.com/${keys.portrait}`,
 };
 
 const selections = [
@@ -114,22 +121,79 @@ async function listReleases(t: ReturnType<typeof convexTest>) {
   return t.query(api.releases.listByUser, { userId: USER_ID });
 }
 
+function canonicalize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalize).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalize(entry)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function serverProof(args: {
+  userId: string;
+  draftId: string;
+  keys: Record<string, string>;
+  selections: typeof selections;
+  caption: string;
+  scheduling: { type: "queue" } | { type: "custom"; scheduledAt: string };
+}) {
+  const issuedAt = Date.now();
+  const signature = createHmac("sha256", process.env.INTERNAL_API_SECRET!)
+    .update(canonicalize({ ...args, issuedAt }))
+    .digest("hex");
+  return { issuedAt, signature };
+}
+
+function scheduleArgs(
+  overrides: Partial<Parameters<typeof serverProof>[0]> & {
+    urls?: Record<string, string>;
+    serverProof?: { issuedAt: number; signature: string };
+  } = {},
+) {
+  const base = {
+    userId: USER_ID,
+    draftId: DRAFT_ID,
+    urls,
+    keys,
+    selections,
+    caption: "We shipped scheduled posting.",
+    scheduling: { type: "queue" as const },
+    ...overrides,
+  };
+  return {
+    ...base,
+    serverProof:
+      overrides.serverProof ??
+      serverProof({
+        userId: base.userId,
+        draftId: base.draftId,
+        keys: base.keys,
+        selections: base.selections,
+        caption: base.caption,
+        scheduling: base.scheduling,
+      }),
+  };
+}
+
 describe("schedulePush.run", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    process.env.INTERNAL_API_SECRET = "test_internal_secret";
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+    delete process.env.INTERNAL_API_SECRET;
   });
 
-  it("returns upload_missing without pushing or inserting when any R2 key is missing", async () => {
+  it("rejects direct calls without server proof before any side effects", async () => {
     const t = convexTest(schema, modules);
     await seedBufferSecret(t);
-
-    mockHeadObject.mockImplementation(async (key) =>
-      key === keys.square ? null : { size: 123, contentType: "image/jpeg" },
-    );
 
     const result = await t.action(schedulePushRun, {
       userId: USER_ID,
@@ -140,6 +204,22 @@ describe("schedulePush.run", () => {
       caption: "We shipped scheduled posting.",
       scheduling: { type: "queue" },
     });
+
+    expect(result).toEqual({ ok: false, error: "unauthorized" });
+    expect(mockHeadObject).not.toHaveBeenCalled();
+    expect(mockPushToBuffer).not.toHaveBeenCalled();
+    expect(await listReleases(t)).toHaveLength(0);
+  });
+
+  it("returns upload_missing without pushing or inserting when any R2 key is missing", async () => {
+    const t = convexTest(schema, modules);
+    await seedBufferSecret(t);
+
+    mockHeadObject.mockImplementation(async (key) =>
+      key === keys.square ? null : { size: 123, contentType: "image/jpeg" },
+    );
+
+    const result = await t.action(schedulePushRun, scheduleArgs());
 
     expect(result).toEqual({
       ok: false,
@@ -164,15 +244,9 @@ describe("schedulePush.run", () => {
       type: "custom" as const,
       scheduledAt: "2026-05-22T15:30:00.000Z",
     };
-    const result = await t.action(schedulePushRun, {
-      userId: USER_ID,
-      draftId: DRAFT_ID,
-      urls,
-      keys,
-      selections,
-      caption: "We shipped scheduled posting.",
+    const result = await t.action(schedulePushRun, scheduleArgs({
       scheduling,
-    });
+    }));
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -267,20 +341,84 @@ describe("schedulePush.run", () => {
     });
   });
 
+  it("marks release failed and preserves provider posts when a later Buffer push fails", async () => {
+    const t = convexTest(schema, modules);
+    await seedBufferSecret(t);
+
+    mockHeadObject.mockResolvedValue({ size: 123, contentType: "image/jpeg" });
+    mockPushToBuffer
+      .mockResolvedValueOnce({ providerPostId: "buf_post_landscape" })
+      .mockRejectedValueOnce(new Error("Buffer rejected channel"));
+
+    const result = await t.action(schedulePushRun, scheduleArgs());
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: "provider_failed",
+      message: expect.stringContaining("Buffer rejected channel"),
+    });
+    const releases = await listReleases(t);
+    expect(releases).toHaveLength(1);
+    expect(releases[0].status).toBe("failed");
+    const metadata = JSON.parse(releases[0].metadata ?? "{}");
+    expect(metadata.providerPosts).toEqual([
+      expect.objectContaining({
+        format: "landscape",
+        provider: "buffer",
+        channelId: "ch_landscape",
+        providerPostId: "buf_post_landscape",
+      }),
+    ]);
+  });
+
+  it("skips provider posts already recorded for the same schedule request", async () => {
+    const t = convexTest(schema, modules);
+    await seedBufferSecret(t);
+
+    mockHeadObject.mockResolvedValue({ size: 123, contentType: "image/jpeg" });
+    mockPushToBuffer
+      .mockResolvedValueOnce({ providerPostId: "buf_post_landscape" })
+      .mockRejectedValueOnce(new Error("temporary channel failure"));
+
+    await t.action(schedulePushRun, scheduleArgs());
+
+    mockPushToBuffer.mockReset();
+    mockPushToBuffer.mockResolvedValueOnce({ providerPostId: "buf_post_square_retry" });
+
+    const result = await t.action(schedulePushRun, scheduleArgs());
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(mockPushToBuffer).toHaveBeenCalledTimes(1);
+    expect(mockPushToBuffer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channelId: "ch_square",
+        mediaUrl: urls.square,
+      }),
+    );
+    expect(result.scheduled).toEqual([
+      expect.objectContaining({
+        format: "landscape",
+        channelId: "ch_landscape",
+        providerPostId: "buf_post_landscape",
+      }),
+      expect.objectContaining({
+        format: "square",
+        channelId: "ch_square",
+        providerPostId: "buf_post_square_retry",
+      }),
+    ]);
+  });
+
   it("returns buffer_not_connected when the Buffer secret is missing", async () => {
     const t = convexTest(schema, modules);
 
     mockHeadObject.mockResolvedValue({ size: 123, contentType: "image/jpeg" });
 
-    const result = await t.action(schedulePushRun, {
-      userId: USER_ID,
-      draftId: DRAFT_ID,
-      urls,
-      keys,
-      selections: [selections[0]],
-      caption: "We shipped scheduled posting.",
-      scheduling: { type: "queue" },
-    });
+    const oneSelection = [selections[0]];
+    const result = await t.action(schedulePushRun, scheduleArgs({
+      selections: oneSelection,
+    }));
 
     expect(result).toEqual({ ok: false, error: "buffer_not_connected" });
     expect(mockPushToBuffer).not.toHaveBeenCalled();

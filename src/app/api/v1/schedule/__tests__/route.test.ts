@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const actionMock = vi.fn();
 const authenticateMock = vi.fn();
 const createPresignedUploadUrlMock = vi.fn();
+const publicUrlForKeyMock = vi.fn();
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
@@ -24,6 +25,7 @@ vi.mock("@/lib/auth/authenticate", () => ({
 
 vi.mock("@/lib/storage/r2", () => ({
   createPresignedUploadUrl: createPresignedUploadUrlMock,
+  publicUrlForKey: publicUrlForKeyMock,
 }));
 
 describe("/api/v1/schedule/upload-url", () => {
@@ -39,6 +41,7 @@ describe("/api/v1/schedule/upload-url", () => {
         publicUrl: `https://cdn.example/${key}`,
       }),
     );
+    publicUrlForKeyMock.mockImplementation((key: string) => `https://cdn.example/${key}`);
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -139,7 +142,9 @@ describe("/api/v1/schedule", () => {
     actionMock.mockReset();
     authenticateMock.mockReset();
     createPresignedUploadUrlMock.mockReset();
+    publicUrlForKeyMock.mockReset();
     authenticateMock.mockResolvedValue({ userId: "user_123" });
+    publicUrlForKeyMock.mockImplementation((key: string) => `https://cdn.example/${key}`);
     actionMock.mockResolvedValue({ ok: true, releaseId: "rel_123", scheduled: [] });
   });
 
@@ -222,7 +227,7 @@ describe("/api/v1/schedule", () => {
     expect(actionMock).toHaveBeenCalledWith("api.schedulePush.run", {
       userId: "user_123",
       draftId: "drf_1",
-      urls: { landscape: "https://cdn.example/landscape.jpg" },
+      urls: { landscape: "https://cdn.example/scheduled/user_123/drf_1/landscape.jpg" },
       keys: { landscape: "scheduled/user_123/drf_1/landscape.jpg" },
       selections: [
         {
@@ -237,12 +242,79 @@ describe("/api/v1/schedule", () => {
         type: "custom",
         scheduledAt: "2026-06-01T12:00:00.000Z",
       },
+      serverProof: {
+        issuedAt: expect.any(Number),
+        signature: expect.any(String),
+      },
     });
     expect(await response.json()).toEqual({
       ok: true,
       releaseId: "rel_123",
       scheduled: [],
     });
+  });
+
+  it("rejects mismatched schedule keys and media urls by deriving the Buffer URL", async () => {
+    const { POST } = await import("../route");
+
+    const response = await POST(
+      new Request("http://localhost/api/v1/schedule", {
+        method: "POST",
+        body: JSON.stringify({
+          draftId: "drf_1",
+          urls: { landscape: "https://attacker.example/landscape.jpg" },
+          keys: { landscape: "scheduled/user_123/drf_1/landscape.jpg" },
+          selections: [
+            {
+              format: "landscape",
+              provider: "buffer",
+              channelId: "buf_channel_1",
+            },
+          ],
+          caption: "Ship it",
+          scheduling: { type: "queue" },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(actionMock).toHaveBeenCalledWith(
+      "api.schedulePush.run",
+      expect.objectContaining({
+        urls: { landscape: "https://cdn.example/scheduled/user_123/drf_1/landscape.jpg" },
+        keys: { landscape: "scheduled/user_123/drf_1/landscape.jpg" },
+      }),
+    );
+  });
+
+  it("rejects upload keys that do not match the authenticated draft", async () => {
+    const { POST } = await import("../route");
+
+    const response = await POST(
+      new Request("http://localhost/api/v1/schedule", {
+        method: "POST",
+        body: JSON.stringify({
+          draftId: "drf_1",
+          urls: { landscape: "https://cdn.example/scheduled/user_123/other/landscape.jpg" },
+          keys: { landscape: "scheduled/user_123/other/landscape.jpg" },
+          selections: [
+            {
+              format: "landscape",
+              provider: "buffer",
+              channelId: "buf_channel_1",
+            },
+          ],
+          caption: "Ship it",
+          scheduling: { type: "queue" },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: expect.stringContaining("upload key does not match authenticated draft"),
+    });
+    expect(actionMock).not.toHaveBeenCalled();
   });
 
   it("maps upload_missing to an actionable non-2xx response", async () => {
