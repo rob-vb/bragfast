@@ -219,7 +219,7 @@ Plans:
   3. After successful scheduling, the Workspace shows a confirmation ("Scheduled to Buffer") with the channel name and post time
   4. The scheduled Creation appears in the Admin gallery with a "Scheduled" status badge
 
-**Plans**: 5 plans
+**Plans**: 6 plans
 
 Plans:
 **Wave 1**
@@ -241,6 +241,10 @@ Plans:
 **Wave 5** *(blocked on Wave 4)*
 
 - [x] 07-05-PLAN.md — SchedulePanel + Editor wiring + human verification checkpoint
+
+**Wave 6** *(gap closure; blocked on Wave 5)*
+
+- [ ] 07-06-PLAN.md — Gap closure: trusted schedule action, derived R2 URLs, durable provider-post recording
 **UI hint**: yes
 
 ### Phase 8: Admin Trim
