@@ -140,7 +140,7 @@ describe("approveDraftPost", () => {
 
     expect(result).toEqual({
       status: 200,
-      body: { ok: true, pushIds: ["push_1"], skipped: [], credits_remaining: 29 },
+      body: { ok: true, pushIds: ["push_1"], skipped: [] },
     });
     expect(createReleaseMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -210,10 +210,7 @@ describe("approveDraftPost", () => {
     });
 
     expect(result).toEqual({ status: 500, body: { error: "Render failed." } });
-    expect(fetchMutationMock).toHaveBeenCalledWith("api.userProfiles.refund", {
-      userId: "user_123",
-      amount: 1,
-    });
+    expect(fetchMutationMock).not.toHaveBeenCalledWith("api.userProfiles.refund", expect.anything());
     expect(fetchMutationMock).not.toHaveBeenCalledWith(
       "api.draftPushes.approveDraft",
       expect.anything(),
@@ -280,7 +277,8 @@ describe("approveDraftPost", () => {
       error: "all_selections_skipped",
       skipped,
     });
-    expect(refundCalls).toEqual([{ userId: "user_123", amount: 1 }]);
+    // No refund: credits system removed.
+    expect(refundCalls).toEqual([]);
     // drafts.remove must NOT have been called: the draft must survive a retry.
     expect(removeCalls).toEqual([]);
   });

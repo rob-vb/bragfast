@@ -14,7 +14,6 @@ async function seedProfile(t: ReturnType<typeof convexTest>) {
     await ctx.db.insert("userProfiles", {
       userId: USER_ID,
       email: "u@example.com",
-      creditsRemaining: 30,
       plan: "trial",
     });
   });
@@ -90,45 +89,4 @@ describe("userProfiles create — trialEnd", () => {
     ).toBeLessThan(5000);
   });
 
-  it("create mutation does not set creditsRemaining", async () => {
-    const t = convexTest(schema, modules);
-    await t.mutation(api.userProfiles.create, {
-      userId: "user_trial_002",
-      email: "trial2@example.com",
-    });
-    const profile = await t.query(api.userProfiles.getByUserId, {
-      userId: "user_trial_002",
-    });
-    expect(profile?.creditsRemaining).toBeUndefined();
-  });
-});
-
-describe("userProfiles credits", () => {
-  it("new profile starts with 30 credits on trial plan", async () => {
-    const t = convexTest(schema, modules);
-    await seedProfile(t);
-    const profile = await t.query(api.userProfiles.getByUserId, { userId: USER_ID });
-    expect(profile?.creditsRemaining).toBe(30);
-    expect(profile?.plan).toBe("trial");
-  });
-
-  it("reserve deducts credits atomically", async () => {
-    const t = convexTest(schema, modules);
-    await seedProfile(t);
-    const remaining = await t.mutation(api.userProfiles.reserve, {
-      userId: USER_ID,
-      amount: 5,
-    });
-    expect(remaining).toBe(25);
-    const profile = await t.query(api.userProfiles.getByUserId, { userId: USER_ID });
-    expect(profile?.creditsRemaining).toBe(25);
-  });
-
-  it("reserve throws when insufficient credits", async () => {
-    const t = convexTest(schema, modules);
-    await seedProfile(t);
-    await expect(
-      t.mutation(api.userProfiles.reserve, { userId: USER_ID, amount: 50 }),
-    ).rejects.toThrow(/Insufficient credits/);
-  });
 });

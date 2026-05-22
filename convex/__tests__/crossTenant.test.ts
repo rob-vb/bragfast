@@ -31,13 +31,11 @@ describe("cross-tenant isolation — S0.4d", () => {
       await t.run(async (ctx) => {
         await ctx.db.insert("userProfiles", {
           userId: USER_A,
-          creditsRemaining: 0,
           plan: "free",
           lastDraftsVisitAt: 0,
         });
         await ctx.db.insert("userProfiles", {
           userId: USER_B,
-          creditsRemaining: 0,
           plan: "free",
           lastDraftsVisitAt: 0,
         });
@@ -64,13 +62,11 @@ describe("cross-tenant isolation — S0.4d", () => {
       await t.run(async (ctx) => {
         await ctx.db.insert("userProfiles", {
           userId: USER_A,
-          creditsRemaining: 0,
           plan: "free",
           lastDraftsVisitAt: 0,
         });
         await ctx.db.insert("userProfiles", {
           userId: USER_B,
-          creditsRemaining: 0,
           plan: "free",
           lastDraftsVisitAt: 0,
         });

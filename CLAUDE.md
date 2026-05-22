@@ -37,7 +37,6 @@ npm run dev              # Next.js dev server
 npm run build            # Convex codegen + Next.js build
 npm run lint             # ESLint
 npx vitest run           # Run tests once
-npx vitest run src/lib/__tests__/credits.test.ts  # Single test file
 npm run remotion:studio  # Remotion preview
 ```
 
@@ -73,14 +72,12 @@ Next.js 16 App Router · Convex (DB + auth + Stripe) · Satori + Sharp (image ge
 | `src/lib/templates/canvas-types.ts` | CanvasTemplateConfig, TemplateObject, migrateConfig() |
 | `src/lib/templates/canvas-renderer.tsx` | Satori-compatible JSX renderer |
 | `src/lib/auth/authenticate.ts` | Dual auth: API key or session (Better Auth cookies) |
-| `src/lib/github/pr-merge.ts` | PR-merge webhook → Sous-Chef draft (via Haiku) |
 | `src/lib/storage/r2.ts` | R2 via S3Client |
 | `src/lib/fonts.ts` | Font loading, in-process cache |
-| `src/lib/video/lambda.ts` | Remotion Lambda render + polling with retry |
 | `src/lib/pipeline/shared.ts` | resolveTemplate, resolveBrand, buildSlideDataMaps |
 | `convex/videoRender.ts` | Convex node action for video (`"use node"`) |
 | `src/remotion/VideoCanvasComposition.tsx` | Remotion composition |
-| `convex/schema.ts` | Tables: userProfiles, brands, templates, apiKeys, releases, rateLimits, githubInstallations, githubRepoConfigs, drafts, integrationSecrets, milestoneHits, uploadTokens, uploads |
+| `convex/schema.ts` | Tables: userProfiles, brands, templates, apiKeys, deviceCodes, releases, rateLimits, drafts, integrationSecrets, routingDefaults, draftPushes, oauthStates, uploadTokens, uploads |
 | `docs/solutions/` | Past bugs/solutions with YAML frontmatter |
 
 ## Dimensions
@@ -89,12 +86,11 @@ Landscape: 1200×675 · Square: 1080×1080 · Portrait: 1080×1350 · Video: sam
 
 ## GitHub App
 
-Installations + per-repo config are managed on `/admin/sous-chef`. Webhook handles `pull_request` (closed+merged → Sous-Chef draft if `notifyOnPrMerge` is enabled) and `installation` (lifecycle). No release ingestion.
+GitHub App integration removed in Phase 8 (ADR-0001 — shelved automation).
 
 ## API Routes
 
-`/api/v1/`: `cook/image`, `cook/video`, `cook/[id]` (poll/download/copy), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `drafts`, `sous-chef/integrations` — all Bearer auth.
-GitHub: `webhooks`, `callback`, `installations`, `repos`, `configs`
+`/api/v1/`: `cook/image`, `cook/video`, `cook/[id]` (poll/download/copy), `brands`, `templates`, `fonts`, `account`, `api-keys`, `upload`, `drafts`, `schedule`, `integrations` — all Bearer auth.
 
 ## Route Groups
 
@@ -112,7 +108,7 @@ Local dev (`OUTPUT_LOCAL=true`): `.output/:id/`, `.brands/:id/`. Prod: Convex + 
 
 ## Conventions
 
-See `docs/conventions.md` for PostHog naming/setup, the 14 launch events, and `NEXT_PUBLIC_LAUNCH_MODE` flag. New analytics events must conform.
+See `docs/conventions.md` for PostHog naming/setup and launch events. New analytics events must conform.
 
 ## Brand & Design
 
