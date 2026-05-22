@@ -280,7 +280,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 08-06-PLAN.md — Billing reshape: single-price stripe.ts, plan union migration, account/upgrade pages
+- [x] 08-06-PLAN.md — Billing reshape: single-price stripe.ts, plan union migration, account/upgrade pages
 - [ ] 08-07-PLAN.md — Gallery read-only (strip SocialCopySection) + new /admin/integrations page
 
 **Wave 5** *(blocked on Wave 4)*
@@ -303,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 5/10 | In Progress|  |
+| 8. Admin Trim | 6/10 | In Progress|  |
