@@ -4,13 +4,13 @@ milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
 stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-05-22T19:50:34.823Z"
+last_updated: "2026-05-22T19:53:41.901Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 46
-  completed_plans: 39
+  completed_plans: 40
   percent: 75
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 08 (admin-trim) — EXECUTING
-Plan: 8 of 10
+Plan: 9 of 10
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 87%
 
 ## Performance Metrics
 
@@ -73,6 +73,7 @@ Progress: [█████████░] 85%
 | Phase 08-admin-trim P02 | 8 | 2 tasks | 4 files |
 | Phase 08-admin-trim P05 | 8 | 2 tasks | 8 files |
 | Phase 08-admin-trim P06 | 12 | 2 tasks | 9 files |
+| Phase 08-admin-trim P09 | 8min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,7 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 06: schedule request externalId is derived from authenticated userId plus canonical schedule payload so retries reuse the same release attempt.
 - [Phase 07]: Phase 07 Plan 06: POST /api/v1/schedule ignores caller-provided media URLs and derives Buffer URLs from authenticated scheduled/{userId}/{draftId}/{format}.jpg keys.
 - [Phase ?]: Phase 08 Plan 02: D-10 implemented — userProfiles.create sets trialEnd = Date.now() + 14d server-side with no client-supplied arg
+- [Phase ?]: Phase 08 Plan 09: D-05 implemented — Workspace picker has Default/Custom toggle; Custom tab fetches /api/v1/templates through CLI proxy
 
 ### Pending Todos
 
@@ -141,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-22T19:50:34.817Z
+Last session: 2026-05-22T19:53:36.105Z
 Stopped at: Phase 8 UI-SPEC approved
 Resume file: None
