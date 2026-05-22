@@ -10,12 +10,8 @@ const modules = import.meta.glob("../**/*.*s");
 const USER_ID = "user_stripe_001";
 
 beforeEach(() => {
-  process.env.STRIPE_STARTER_PRICE_ID = "price_legacy_starter";
-  process.env.STRIPE_PRO_PRICE_ID = "price_legacy_pro";
-  process.env.STRIPE_SCALE_PRICE_ID = "price_legacy_scale";
-  process.env.STRIPE_TOAST_PRICE_ID = "price_new_toast";
-  process.env.STRIPE_PLATE_PRICE_ID = "price_new_plate";
-  process.env.STRIPE_BUFFET_PRICE_ID = "price_new_buffet";
+  process.env.STRIPE_PLATE_PRICE_ID = "price_plate_single";
+  process.env.SITE_URL = "https://brag.fast";
 });
 
 async function seedTrial(t: ReturnType<typeof convexTest>) {
@@ -23,7 +19,6 @@ async function seedTrial(t: ReturnType<typeof convexTest>) {
     await ctx.db.insert("userProfiles", {
       userId: USER_ID,
       email: "u@example.com",
-      creditsRemaining: 30,
       plan: "trial",
     });
   });
@@ -33,98 +28,31 @@ async function readProfile(t: ReturnType<typeof convexTest>) {
   return t.query(api.userProfiles.getByUserId, { userId: USER_ID });
 }
 
-describe("handleInvoicePaid — new tiers", () => {
-  it("Toast → plan=toast, creditsRemaining=200", async () => {
-    const t = convexTest(schema, modules);
-    await seedTrial(t);
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_new_toast",
-    });
-    const p = await readProfile(t);
-    expect(p?.plan).toBe("toast");
-    expect(p?.creditsRemaining).toBe(200);
-  });
-
-  it("Plate → creditsRemaining=800", async () => {
-    const t = convexTest(schema, modules);
-    await seedTrial(t);
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_new_plate",
-    });
-    const p = await readProfile(t);
-    expect(p?.plan).toBe("plate");
-    expect(p?.creditsRemaining).toBe(800);
-  });
-
-  it("Buffet → creditsRemaining=2500", async () => {
-    const t = convexTest(schema, modules);
-    await seedTrial(t);
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_new_buffet",
-    });
-    const p = await readProfile(t);
-    expect(p?.plan).toBe("buffet");
-    expect(p?.creditsRemaining).toBe(2500);
-  });
-
-  it("downgrade Buffet→Toast resets to 200, no rollover", async () => {
-    const t = convexTest(schema, modules);
-    await seedTrial(t);
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_new_buffet",
-    });
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_new_toast",
-    });
-    const p = await readProfile(t);
-    expect(p?.plan).toBe("toast");
-    expect(p?.creditsRemaining).toBe(200);
-  });
-});
-
-describe("handleInvoicePaid — legacy tiers (R4)", () => {
-  it("Starter → creditsRemaining=200", async () => {
-    const t = convexTest(schema, modules);
-    await seedTrial(t);
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_legacy_starter",
-    });
-    const p = await readProfile(t);
-    expect(p?.plan).toBe("starter");
-    expect(p?.creditsRemaining).toBe(200);
-  });
-
-  it("unknown price → no patch", async () => {
-    const t = convexTest(schema, modules);
-    await seedTrial(t);
-    await t.mutation(internal.stripe.handleInvoicePaid, {
-      userId: USER_ID,
-      priceId: "price_unknown_zzz",
-    });
-    const p = await readProfile(t);
-    expect(p?.plan).toBe("trial");
-    expect(p?.creditsRemaining).toBe(30);
-  });
-});
-
-describe("handleSubscriptionChange", () => {
-  it("Toast active → plan=toast, creditsRemaining=200", async () => {
+describe("handleSubscriptionChange — single-plan model", () => {
+  it("STRIPE_PLATE_PRICE_ID active → plan=plate, no creditsRemaining", async () => {
     const t = convexTest(schema, modules);
     await seedTrial(t);
     await t.mutation(internal.stripe.handleSubscriptionChange, {
       userId: USER_ID,
-      priceId: "price_new_toast",
+      priceId: "price_plate_single",
       status: "active",
     });
     const p = await readProfile(t);
-    expect(p?.plan).toBe("toast");
-    expect(p?.creditsRemaining).toBe(200);
+    expect(p?.plan).toBe("plate");
+    // creditsRemaining should NOT be set (no credit model)
+    expect(p?.creditsRemaining).toBeUndefined();
+  });
+
+  it("trialing status → plan=plate", async () => {
+    const t = convexTest(schema, modules);
+    await seedTrial(t);
+    await t.mutation(internal.stripe.handleSubscriptionChange, {
+      userId: USER_ID,
+      priceId: "price_plate_single",
+      status: "trialing",
+    });
+    const p = await readProfile(t);
+    expect(p?.plan).toBe("plate");
   });
 
   it("non-active status is ignored", async () => {
@@ -132,8 +60,20 @@ describe("handleSubscriptionChange", () => {
     await seedTrial(t);
     await t.mutation(internal.stripe.handleSubscriptionChange, {
       userId: USER_ID,
-      priceId: "price_new_toast",
+      priceId: "price_plate_single",
       status: "past_due",
+    });
+    const p = await readProfile(t);
+    expect(p?.plan).toBe("trial");
+  });
+
+  it("unknown price ID is ignored", async () => {
+    const t = convexTest(schema, modules);
+    await seedTrial(t);
+    await t.mutation(internal.stripe.handleSubscriptionChange, {
+      userId: USER_ID,
+      priceId: "price_unknown_zzz",
+      status: "active",
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("trial");
@@ -141,14 +81,13 @@ describe("handleSubscriptionChange", () => {
 });
 
 describe("handleSubscriptionDeleted", () => {
-  it("new-tier subscriber → free + creditsRemaining=0", async () => {
+  it("plate subscriber → free, no creditsRemaining", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {
       await ctx.db.insert("userProfiles", {
         userId: USER_ID,
         email: "u@example.com",
-        creditsRemaining: 500,
-        plan: "buffet",
+        plan: "plate",
       });
     });
     await t.mutation(internal.stripe.handleSubscriptionDeleted, {
@@ -156,24 +95,35 @@ describe("handleSubscriptionDeleted", () => {
     });
     const p = await readProfile(t);
     expect(p?.plan).toBe("free");
-    expect(p?.creditsRemaining).toBe(0);
+    expect(p?.creditsRemaining).toBeUndefined();
   });
 
-  it("legacy subscriber → trial + credits=0", async () => {
+  it("trial subscriber deleted → free", async () => {
     const t = convexTest(schema, modules);
-    await t.run(async (ctx) => {
-      await ctx.db.insert("userProfiles", {
-        userId: USER_ID,
-        email: "u@example.com",
-        creditsRemaining: 100,
-        plan: "starter",
-      });
-    });
+    await seedTrial(t);
     await t.mutation(internal.stripe.handleSubscriptionDeleted, {
       userId: USER_ID,
     });
     const p = await readProfile(t);
-    expect(p?.plan).toBe("trial");
-    expect(p?.creditsRemaining).toBe(0);
+    expect(p?.plan).toBe("free");
+  });
+});
+
+describe("planMigration.migratePlanLiterals", () => {
+  it("migrates old paid plan literals to plate", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("userProfiles", { userId: "u1", email: "a@x.com", plan: "plate" });
+      await ctx.db.insert("userProfiles", { userId: "u2", email: "b@x.com", plan: "trial" });
+      await ctx.db.insert("userProfiles", { userId: "u3", email: "c@x.com", plan: "free" });
+    });
+    const result = await t.mutation(internal.planMigration.migratePlanLiterals, {});
+    expect(result.migrated).toBe(0); // all already valid
+    const u1 = await t.query(api.userProfiles.getByUserId, { userId: "u1" });
+    const u2 = await t.query(api.userProfiles.getByUserId, { userId: "u2" });
+    const u3 = await t.query(api.userProfiles.getByUserId, { userId: "u3" });
+    expect(u1?.plan).toBe("plate");
+    expect(u2?.plan).toBe("trial");
+    expect(u3?.plan).toBe("free");
   });
 });
