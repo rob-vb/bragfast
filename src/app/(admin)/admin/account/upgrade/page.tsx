@@ -5,12 +5,24 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@convex/_generated/api";
 import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
-import {
-  NEW_TIERS,
-  FEATURES,
-  FeatureValue,
-  type NewTierConfig,
-} from "@/lib/pricing-data";
+// Stub: pricing-data deleted in 08-04; upgrade page reworked in 08-05+
+import { Check, X } from "lucide-react";
+type NewTierId = "plate";
+type NewTierConfig = { id: NewTierId; name: string; price: number; label: string; blurb: string };
+const NEW_TIERS: NewTierConfig[] = [
+  { id: "plate", name: "Full Plate", price: 29, label: "$29/mo", blurb: "Unlimited renders." },
+];
+const FEATURES: { name: string; plate?: string | boolean; section?: boolean; [key: string]: string | boolean | undefined }[] = [
+  { name: "Posts / month", plate: "Unlimited" },
+  { name: "Image", plate: true },
+  { name: "Video", plate: true },
+];
+function FeatureValue({ value, align = "center" }: { value: string | boolean; align?: "center" | "right" }) {
+  const iconAlign = align === "center" ? "mx-auto" : "ml-auto";
+  if (value === true) return <Check className={`${iconAlign} h-4 w-4 text-brand`} />;
+  if (value === false) return <X className={`${iconAlign} h-4 w-4 text-brand/30`} />;
+  return <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand">{value}</span>;
+}
 import { UpgradeButton } from "./upgrade-button";
 import Link from "next/link";
 

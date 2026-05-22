@@ -77,7 +77,7 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const planConfig = PLANS[plan];
+  const planConfig = PLANS[plan as keyof typeof PLANS] ?? PLANS.free;
   const [portalPending, setPortalPending] = useState(false);
 
   function handleLogout() {

@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
 import { PLANS } from "@/lib/plans";
-import { resolvePostAllowance, type Plan } from "@/lib/plan-tiers";
+// Stub — account page reworked in plan 08-05, plan-tiers deleted in 08-04
+type Plan = string;
+function resolvePostAllowance(input: { plan: Plan; creditsRemaining: number }) {
+  const names: Record<string, string> = { trial: "On the House", free: "Free", plate: "Full Plate" };
+  return { name: names[input.plan] ?? input.plan, remaining: input.creditsRemaining, total: 0, unitLabel: "posts" as const };
+}
 import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
 

@@ -95,8 +95,6 @@ export interface ReleaseResult {
   status: 'pending' | 'scheduled' | 'completed' | 'failed'
   images: Record<string, { slides: string[]; dimensions: string }> | null
   videos?: Record<string, { url: string; duration: number; dimensions: string }> | null
-  credits_used: number
-  credits_remaining: number
   created_at: string
   progress?: number
   completed_at?: string
@@ -111,22 +109,6 @@ export const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }
   landscape: { width: 1200, height: 675 },
   square: { width: 1080, height: 1080 },
   portrait: { width: 1080, height: 1350 },
-}
-
-export type CookCreditsInput = {
-  video?: VideoField | false;
-  formats: FormatEntry[];
-};
-
-export function calculateCredits(input: CookCreditsInput): number {
-  const totalSlides = input.formats.reduce(
-    (sum, f) => sum + f.slides.length,
-    0
-  );
-  if (input.video) {
-    return totalSlides * 5;
-  }
-  return totalSlides;
 }
 
 export const VALID_ANIMATION_PRESETS: AnimationPreset[] = [

@@ -7,7 +7,14 @@ import { HeroSocialStack } from "@/components/landing/social-card";
 import { BrandKitMockup } from "@/components/landing/brand-kit-mockup";
 import { LazyVideo } from "@/components/landing/lazy-video";
 import { CtaLink } from "@/components/landing/cta-link";
-import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
+// Stub: pricing-data deleted in 08-04; homepage pricing section reworked in 08-05+
+type NewTierConfig = { id: string; name: string; price: number; label: string; blurb: string };
+const NEW_TIERS: NewTierConfig[] = [
+  { id: "plate", name: "Full Plate", price: 29, label: "$29/mo", blurb: "Unlimited renders." },
+];
+const FEATURES: { name: string; [key: string]: string | boolean | undefined }[] = [
+  { name: "Posts / month", plate: "Unlimited" },
+];
 import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {

@@ -6,7 +6,24 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { CtaLink } from "@/components/landing/cta-link";
-import { NEW_TIERS, FEATURES, FeatureValue } from "@/lib/pricing-data";
+// Stub: pricing-data deleted in 08-04; pricing page reworked in 08-05+
+import { Check, X } from "lucide-react";
+type NewTierId = "plate";
+type NewTierConfig = { id: NewTierId; name: string; price: number; label: string; blurb: string };
+const NEW_TIERS: NewTierConfig[] = [
+  { id: "plate", name: "Full Plate", price: 29, label: "$29/mo", blurb: "Unlimited renders." },
+];
+const FEATURES: { name: string; plate?: string | boolean; section?: boolean; [key: string]: string | boolean | undefined }[] = [
+  { name: "Posts / month", plate: "Unlimited" },
+  { name: "Image", plate: true },
+  { name: "Video", plate: true },
+];
+function FeatureValue({ value, align = "center" }: { value: string | boolean; align?: "center" | "right" }) {
+  const iconAlign = align === "center" ? "mx-auto" : "ml-auto";
+  if (value === true) return <Check className={`${iconAlign} h-4 w-4 text-brand`} />;
+  if (value === false) return <X className={`${iconAlign} h-4 w-4 text-brand/30`} />;
+  return <span className="font-[family-name:var(--font-geist-sans)] text-sm text-brand">{value}</span>;
+}
 
 export const metadata: Metadata = {
   title: "Pricing | brag.fast",

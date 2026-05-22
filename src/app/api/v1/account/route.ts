@@ -16,7 +16,6 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    credits_remaining: profile?.creditsRemaining ?? 0,
     plan: profile?.plan ?? "trial",
   });
 }

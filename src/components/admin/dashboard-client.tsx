@@ -3,7 +3,12 @@
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useUserId } from "@/hooks/use-user-id";
-import { resolvePostAllowance, type Plan } from "@/lib/plan-tiers";
+// Stub — dashboard reworked in plan 08-05, plan-tiers deleted in 08-04
+type Plan = string;
+function resolvePostAllowance(input: { plan: Plan; creditsRemaining: number }) {
+  const names: Record<string, string> = { trial: "On the House", free: "Free", plate: "Full Plate" };
+  return { name: names[input.plan] ?? input.plan, remaining: input.creditsRemaining, total: 0 };
+}
 import { CreditMeter } from "@/components/admin/credit-meter";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";

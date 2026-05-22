@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import type { Tier } from "@/lib/plan-tiers";
-import { TIER_CONFIG } from "@/lib/plan-tiers";
+// Stub types — upsell modal removed in plan 08-05, plan-tiers deleted in 08-04
+type Tier = "free" | "toast" | "plate" | "buffet";
+const TIER_CONFIG: Record<Tier, { platforms: number }> = {
+  free: { platforms: 1 },
+  toast: { platforms: 1 },
+  plate: { platforms: 2 },
+  buffet: { platforms: 2 },
+};
 
 type UpsellReason = "format" | "video" | "platforms";
 

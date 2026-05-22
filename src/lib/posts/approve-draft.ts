@@ -3,7 +3,6 @@ import { ConvexError } from "convex/values";
 import { api } from "@convex/_generated/api";
 import { createRelease, getRelease, renderReleaseAsync } from "@/lib/pipeline/render";
 import {
-  calculateCredits,
   type FormatEntry,
   type ObjectModification,
   type ReleaseRequest,
@@ -95,8 +94,6 @@ export async function approveDraftPost(input: {
   ) as Array<"square" | "landscape" | "portrait">;
 
   const mediaUrlByFormat: Partial<Record<ApprovalFormat, string>> = {};
-  let creditsRemaining: number | undefined;
-  let creditsNeeded = 0;
 
   if (body.cookId) {
     // Reuse the release the kitchen just cooked. No second cook, no second
@@ -158,36 +155,12 @@ export async function approveDraftPost(input: {
           : {}),
     };
 
-    creditsNeeded = calculateCredits({ formats });
-    try {
-      creditsRemaining = await fetchMutation(api.userProfiles.reserve, {
-        userId,
-        amount: creditsNeeded,
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "";
-      if (message.includes("Insufficient credits")) {
-        return json(429, {
-          error: "Not enough credits.",
-          credits_needed: creditsNeeded,
-        });
-      }
-      if (message.includes("User profile not found")) {
-        return json(403, { error: "No user profile." });
-      }
-      return json(500, { error: "Reserve failed." });
-    }
-
     let release;
     try {
       release = await createRelease(releaseRequest, userId, { source: "api" });
       await renderReleaseAsync(release.cook_id, releaseRequest, userId);
     } catch (err) {
       console.error("[drafts/approve] render failed:", err);
-      await fetchMutation(api.userProfiles.refund, {
-        userId,
-        amount: creditsNeeded,
-      }).catch(() => {});
       return json(500, { error: "Render failed." });
     }
 
@@ -226,15 +199,6 @@ export async function approveDraftPost(input: {
       err.data !== null &&
       (err.data as { code?: unknown }).code === "all_selections_skipped"
     ) {
-      // Only refund when this call was the one that reserved (legacy path).
-      // The cookId path doesn't reserve here — credits were charged at cook
-      // time and stay spent regardless of approval outcome.
-      if (creditsNeeded > 0) {
-        await fetchMutation(api.userProfiles.refund, {
-          userId,
-          amount: creditsNeeded,
-        }).catch(() => {});
-      }
       return json(409, {
         error: "all_selections_skipped",
         skipped: (err.data as { skipped?: unknown }).skipped,
@@ -248,10 +212,5 @@ export async function approveDraftPost(input: {
     userId,
   }).catch((err) => console.error("[drafts/approve] draft remove failed:", err));
 
-  return json(
-    200,
-    creditsRemaining === undefined
-      ? { ...result }
-      : { ...result, credits_remaining: creditsRemaining },
-  );
+  return json(200, { ...result });
 }
