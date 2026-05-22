@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { createCheckout } from "./actions";
 
-export function UpgradeButton({ planId }: { planId: string }) {
+export function UpgradeButton({ planId: _planId }: { planId: string }) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
     setLoading(true);
     try {
-      const url = await createCheckout(planId);
+      const url = await createCheckout();
       if (url) {
         window.location.href = url;
       }

@@ -4,33 +4,8 @@ import { getSessionUser } from "@/lib/auth/get-session-user";
 import { redirect } from "next/navigation";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { DeleteAccountDialog } from "@/components/admin/delete-account-dialog";
-import { PLANS } from "@/lib/plans";
-// Stub — account page reworked in plan 08-05, plan-tiers deleted in 08-04
-type Plan = string;
-function resolvePostAllowance(input: { plan: Plan }) {
-  const names: Record<string, string> = { trial: "On the House", free: "Free", plate: "Full Plate" };
-  return { name: names[input.plan] ?? input.plan, remaining: 0, total: 0, unitLabel: "posts" as const };
-}
 import { ManageBillingButton } from "./manage-billing-button";
 import Link from "next/link";
-
-function CreditBar({ remaining, total }: { remaining: number; total: number }) {
-  const blocks = 20;
-  const filled = Math.min(blocks, Math.round((remaining / total) * blocks));
-
-  return (
-    <div className="flex gap-[3px]">
-      {Array.from({ length: blocks }).map((_, i) => (
-        <div
-          key={i}
-          className={`h-4 w-3 border border-brand/10 ${
-            i < filled ? "bg-gold" : "bg-brand/10"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default async function AccountPage() {
   const user = await getSessionUser();
@@ -40,11 +15,18 @@ export default async function AccountPage() {
     userId: user._id,
   });
 
-  const allowance = resolvePostAllowance({
-    plan: stats.plan as Plan,
-  });
-  const legacyPlan = PLANS[stats.plan as keyof typeof PLANS];
-  const isFree = stats.plan === "trial" || stats.plan === "free";
+  const plan = stats.plan;
+  const trialEnd = stats.trialEnd ?? null;
+  const now = Date.now();
+
+  const isTrialActive = plan === "trial" && trialEnd !== null && trialEnd > now;
+  const isTrialExpired = plan === "trial" && (trialEnd === null || trialEnd <= now);
+  const isFree = plan === "free";
+  const isSubscribed = plan === "plate";
+
+  const trialDaysLeft = isTrialActive && trialEnd
+    ? Math.ceil((trialEnd - now) / (24 * 60 * 60 * 1000))
+    : 0;
 
   return (
     <div className="space-y-8">
@@ -52,48 +34,46 @@ export default async function AccountPage() {
         Account
       </h1>
 
-      {/* Card 1 — Plan & Credits */}
+      {/* Card 1 — Plan & Subscription Status */}
       <PixelCard>
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-                {allowance.name} Plan
+                {isSubscribed ? "Full Plate" : isTrialActive ? "On the House" : "Free"}
               </h2>
-              {isFree ? (
-                <p className="mt-1 text-xs text-brand/60">
-                  {allowance.total} free {allowance.unitLabel} to try it out
+              {isTrialActive && (
+                <p className="mt-1 font-[family-name:var(--font-geist-sans)] text-sm text-brand/70">
+                  {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left in your trial
                 </p>
-              ) : (
-                <p className="mt-1 text-xs text-brand/60">
-                  {legacyPlan ? `$${legacyPlan.price}/mo ` : ""}
-                  {legacyPlan ? <>&middot; </> : null}
-                  {allowance.total.toLocaleString()} {allowance.unitLabel}/mo
+              )}
+              {isTrialExpired && (
+                <p className="mt-1 font-[family-name:var(--font-geist-sans)] text-sm text-red-600">
+                  Trial ended
+                </p>
+              )}
+              {isFree && (
+                <p className="mt-1 font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
+                  No active subscription
+                </p>
+              )}
+              {isSubscribed && (
+                <p className="mt-1 font-[family-name:var(--font-geist-sans)] text-sm text-brand/70">
+                  $29/mo &middot; Subscribed
                 </p>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {!isFree && <ManageBillingButton />}
-              <Link
-                href="/admin/account/upgrade"
-                className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-              >
-                {isFree ? "View Plans" : "Upgrade"}
-              </Link>
+              {isSubscribed && <ManageBillingButton />}
+              {!isSubscribed && (
+                <Link
+                  href="/admin/account/upgrade"
+                  className="font-[family-name:var(--font-press-start)] text-[10px] px-3 py-2 border-2 border-brand bg-gold text-brand shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                >
+                  Subscribe Now
+                </Link>
+              )}
             </div>
-          </div>
-
-          {/* Credit bar */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-brand/60">
-                {allowance.unitLabel === "posts" ? "Posts remaining" : "Credits remaining"}
-              </span>
-              <span className="font-[family-name:var(--font-press-start)] text-xs text-brand">
-                {allowance.remaining} / {allowance.total}
-              </span>
-            </div>
-            <CreditBar remaining={allowance.remaining} total={allowance.total} />
           </div>
 
           {/* Stats */}
