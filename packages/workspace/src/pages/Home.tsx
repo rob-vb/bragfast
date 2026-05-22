@@ -3,10 +3,10 @@ import {
   CANVAS_DEFAULTS,
   type CanvasTemplateConfig,
 } from "@bragfast/render-core/browser";
-import { fetchDrafts } from "../api";
+import { fetchDrafts, fetchUserTemplates } from "../api";
 import { TemplatePreview } from "../components/TemplatePreview";
 import { useBrand } from "../hooks/useBrand";
-import type { Brand, DraftPreview } from "../types";
+import type { Brand, DraftPreview, UserTemplate } from "../types";
 
 const TEMPLATE_IDS = [
   "standard-browser",
@@ -31,6 +31,10 @@ export function Home({ onReopenDraft, onNewTemplate }: HomeProps) {
   const [drafts, setDrafts] = useState<DraftPreview[]>([]);
   const [loadingDrafts, setLoadingDrafts] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [templateMode, setTemplateMode] = useState<"default" | "custom">("default");
+  const [userTemplates, setUserTemplates] = useState<UserTemplate[]>([]);
+  const [loadingUserTemplates, setLoadingUserTemplates] = useState(false);
+  const [userTemplatesError, setUserTemplatesError] = useState(false);
   const templates = useMemo(
     () => TEMPLATE_IDS.map((id) => ({ id, ...CANVAS_DEFAULTS[id] })),
     [],
@@ -56,6 +60,27 @@ export function Home({ onReopenDraft, onNewTemplate }: HomeProps) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (templateMode !== "custom") return;
+    let cancelled = false;
+    setLoadingUserTemplates(true);
+    fetchUserTemplates()
+      .then((rows) => {
+        if (cancelled) return;
+        setUserTemplates(rows);
+        setUserTemplatesError(false);
+      })
+      .catch(() => {
+        if (!cancelled) setUserTemplatesError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingUserTemplates(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [templateMode]);
 
   return (
     <main className="min-h-screen bg-[var(--workspace-bg)] px-4 py-6 text-[var(--workspace-ink)] sm:px-6 lg:px-8">
@@ -138,33 +163,116 @@ export function Home({ onReopenDraft, onNewTemplate }: HomeProps) {
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {templates.map((template) => (
-                <article
-                  key={template.id}
-                  className="overflow-hidden rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)]"
-                >
-                  <div className="aspect-video border-b border-[var(--workspace-border)] bg-[var(--workspace-bg)]">
-                    <TemplatePreview
-                      config={template.config}
-                      brand={selectedBrand}
-                      format="landscape"
-                    />
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-semibold text-[14px] leading-[1.35]">{template.name}</h3>
-                    <button
-                      type="button"
-                      className="mt-3 min-h-[40px] w-full rounded-[6px] border border-[var(--workspace-forest)] bg-[var(--workspace-forest)] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#294b47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--workspace-lime)]"
-                      onClick={() => onNewTemplate(template.id, template.config, selectedBrand)}
-                      aria-label={`Use template ${template.name}`}
-                    >
-                      Use template
-                    </button>
-                  </div>
-                </article>
-              ))}
+            <div className="flex gap-2" role="group" aria-label="Template type">
+              <button
+                type="button"
+                className={`min-h-[36px] rounded-[6px] border px-4 text-[12px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--workspace-lime)] ${
+                  templateMode === "default"
+                    ? "border-[var(--workspace-forest)] bg-[var(--workspace-forest)] text-white"
+                    : "border-[var(--workspace-border)] bg-transparent text-[var(--workspace-ink)] hover:bg-[var(--workspace-surface)]"
+                }`}
+                onClick={() => setTemplateMode("default")}
+                aria-pressed={templateMode === "default"}
+              >
+                Default
+              </button>
+              <button
+                type="button"
+                className={`min-h-[36px] rounded-[6px] border px-4 text-[12px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--workspace-lime)] ${
+                  templateMode === "custom"
+                    ? "border-[var(--workspace-forest)] bg-[var(--workspace-forest)] text-white"
+                    : "border-[var(--workspace-border)] bg-transparent text-[var(--workspace-ink)] hover:bg-[var(--workspace-surface)]"
+                }`}
+                onClick={() => setTemplateMode("custom")}
+                aria-pressed={templateMode === "custom"}
+              >
+                Custom
+              </button>
             </div>
+
+            {templateMode === "default" ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {templates.map((template) => (
+                  <article
+                    key={template.id}
+                    className="overflow-hidden rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)]"
+                  >
+                    <div className="aspect-video border-b border-[var(--workspace-border)] bg-[var(--workspace-bg)]">
+                      <TemplatePreview
+                        config={template.config}
+                        brand={selectedBrand}
+                        format="landscape"
+                      />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-[14px] leading-[1.35]">{template.name}</h3>
+                      <button
+                        type="button"
+                        className="mt-3 min-h-[40px] w-full rounded-[6px] border border-[var(--workspace-forest)] bg-[var(--workspace-forest)] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#294b47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--workspace-lime)]"
+                        onClick={() => onNewTemplate(template.id, template.config, selectedBrand)}
+                        aria-label={`Use template ${template.name}`}
+                      >
+                        Use template
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : loadingUserTemplates ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    className="overflow-hidden rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)]"
+                  >
+                    <div className="aspect-video animate-pulse bg-[var(--workspace-bg)]" />
+                    <div className="p-3">
+                      <div className="h-4 w-2/3 animate-pulse rounded bg-[var(--workspace-bg)]" />
+                      <div className="mt-3 h-10 animate-pulse rounded-[6px] bg-[var(--workspace-bg)]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : userTemplatesError ? (
+              <div className="rounded-[8px] border border-red-200 bg-white px-4 py-3 text-[14px] text-red-700">
+                Something went wrong. Try again or reload the page.
+              </div>
+            ) : userTemplates.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col justify-center rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)] p-5">
+                <h3 className="font-semibold text-[18px] leading-[1.3]">No custom templates</h3>
+                <p className="mt-2 text-[14px] leading-[1.5] text-[var(--workspace-muted)]">
+                  Build a template in the admin, then it'll appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {userTemplates.map((template) => (
+                  <article
+                    key={template.id}
+                    className="overflow-hidden rounded-[8px] border border-[var(--workspace-border)] bg-[var(--workspace-surface)]"
+                  >
+                    <div className="aspect-video border-b border-[var(--workspace-border)] bg-[var(--workspace-bg)]">
+                      <TemplatePreview
+                        config={template.config}
+                        brand={selectedBrand}
+                        format="landscape"
+                      />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-[14px] leading-[1.35]">{template.name}</h3>
+                      <button
+                        type="button"
+                        className="mt-3 min-h-[40px] w-full rounded-[6px] border border-[var(--workspace-forest)] bg-[var(--workspace-forest)] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#294b47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--workspace-lime)]"
+                        onClick={() => onNewTemplate(template.id, template.config, selectedBrand)}
+                        aria-label={`Use template ${template.name}`}
+                      >
+                        Use template
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </div>
