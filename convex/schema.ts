@@ -9,13 +9,8 @@ export default defineSchema({
     creditsRemaining: v.optional(v.number()),
     plan: v.union(
       v.literal("trial"),
-      v.literal("starter"),
-      v.literal("pro"),
-      v.literal("scale"),
-      v.literal("free"),
-      v.literal("toast"),
       v.literal("plate"),
-      v.literal("buffet")
+      v.literal("free")
     ),
     trialEnd: v.optional(v.number()),
     lastDraftsVisitAt: v.optional(v.number()),

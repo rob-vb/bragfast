@@ -98,6 +98,7 @@ export const getStats = query({
 
     return {
       plan: profile?.plan ?? "trial",
+      trialEnd: profile?.trialEnd ?? null,
       totalReleases: releases.length,
       totalImages,
       totalVideos,
