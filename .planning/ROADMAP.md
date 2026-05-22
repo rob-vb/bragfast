@@ -285,7 +285,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4)*
 
-- [ ] 08-08-PLAN.md — 402 subscription gate: subscription-gate.ts + 4 gated routes
+- [x] 08-08-PLAN.md — 402 subscription gate: subscription-gate.ts + 4 gated routes
 - [x] 08-09-PLAN.md — Workspace Default/Custom template toggle
 
 **Wave 6** *(blocked on Wave 5)*
@@ -303,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 8/10 | In Progress|  |
+| 8. Admin Trim | 9/10 | In Progress|  |

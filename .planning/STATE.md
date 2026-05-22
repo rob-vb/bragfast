@@ -4,13 +4,13 @@ milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
 stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-05-22T19:53:41.901Z"
+last_updated: "2026-05-22T19:56:56.266Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 46
-  completed_plans: 40
+  completed_plans: 41
   percent: 75
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 08 (admin-trim) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [█████████░] 87%
 | Phase 08-admin-trim P05 | 8 | 2 tasks | 8 files |
 | Phase 08-admin-trim P06 | 12 | 2 tasks | 9 files |
 | Phase 08-admin-trim P09 | 8min | 2 tasks | 3 files |
+| Phase 08-admin-trim P08 | 7 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,7 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 06: POST /api/v1/schedule ignores caller-provided media URLs and derives Buffer URLs from authenticated scheduled/{userId}/{draftId}/{format}.jpg keys.
 - [Phase ?]: Phase 08 Plan 02: D-10 implemented — userProfiles.create sets trialEnd = Date.now() + 14d server-side with no client-supplied arg
 - [Phase ?]: Phase 08 Plan 09: D-05 implemented — Workspace picker has Default/Custom toggle; Custom tab fetches /api/v1/templates through CLI proxy
+- [Phase ?]: Phase 08 Plan 08: T-08-16 mitigation — undefined trialEnd on trial plan treated as expired
 
 ### Pending Todos
 
@@ -143,6 +145,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-22T19:53:36.105Z
+Last session: 2026-05-22T19:56:52.599Z
 Stopped at: Phase 8 UI-SPEC approved
 Resume file: None
