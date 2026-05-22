@@ -4,14 +4,14 @@ milestone: v2.0
 milestone_name: CLI-First Reposition
 status: executing
 stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-05-22T18:24:00.453Z"
+last_updated: "2026-05-22T18:27:53.778Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 46
-  completed_plans: 33
-  percent: 72
+  completed_plans: 34
+  percent: 74
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 08 (admin-trim) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [███████░░░] 72%
+Progress: [███████░░░] 74%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [███████░░░] 72%
 | Phase 07 P03 | 4min | 3 tasks | 3 files |
 | Phase 07 P04 | 8min | 4 tasks | 7 files |
 | Phase 07 P05 | 10min | 4 tasks | 5 files |
+| Phase 08-admin-trim P02 | 8 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 06: schedulePush.run stays public for ConvexHttpClient access but requires a short-lived INTERNAL_API_SECRET HMAC proof before any R2, credential, or Buffer side effect.
 - [Phase 07]: Phase 07 Plan 06: schedule request externalId is derived from authenticated userId plus canonical schedule payload so retries reuse the same release attempt.
 - [Phase 07]: Phase 07 Plan 06: POST /api/v1/schedule ignores caller-provided media URLs and derives Buffer URLs from authenticated scheduled/{userId}/{draftId}/{format}.jpg keys.
+- [Phase ?]: Phase 08 Plan 02: D-10 implemented — userProfiles.create sets trialEnd = Date.now() + 14d server-side with no client-supplied arg
 
 ### Pending Todos
 
@@ -137,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-22T18:24:00.447Z
+Last session: 2026-05-22T18:27:50.188Z
 Stopped at: Phase 8 UI-SPEC approved
 Resume file: None

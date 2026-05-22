@@ -270,7 +270,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 08-02-PLAN.md — Schema Step 1: make creditsRemaining optional + add trialEnd; userProfiles.create sets trialEnd
+- [x] 08-02-PLAN.md — Schema Step 1: make creditsRemaining optional + add trialEnd; userProfiles.create sets trialEnd
 - [ ] 08-03-PLAN.md — Mass deletion: Kitchen, Sous-Chef, GitHub App, Briefing, goals/backend Convex modules
 
 **Wave 3** *(blocked on Wave 2)*
@@ -303,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 1/10 | In Progress|  |
+| 8. Admin Trim | 2/10 | In Progress|  |
