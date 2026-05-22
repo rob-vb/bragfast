@@ -137,7 +137,9 @@ Nav link visual pattern: Geist Sans 14px, brand color, gold left-border on activ
 
 Strip: Sous-Chef activity widget
 Keep: stats row (PixelCard × N), recent Creations list
-Layout: two-column at lg breakpoint (stats row full-width top, recent Creations below). Exact widget layout at implementer discretion per Claude's Discretion.
+Layout: two-column at lg breakpoint (stats row full-width top, recent Creations below).
+
+**Visual focal point:** The stats row is the primary focal point of the /admin landing screen — it is full-width, sits at the top of the content area, and receives the first visual weight. The recent Creations list is the secondary element below it. Exact number of stat cards and widget layout within the stats row is at implementer discretion per Claude's Discretion.
 
 ### Gallery / History (read-only — D-13/D-14)
 
@@ -198,11 +200,11 @@ All copy uses the brag.fast diner/NES voice: direct, no AI slop, honest, develop
 | Disconnect Buffer confirmation | Disconnect Buffer? Scheduled posts already sent won't be affected. | Default |
 
 Destructive actions in this phase:
-1. Delete API key — confirmation dialog (AlertDialog): "Delete key?" + key name. Confirm button: "Delete Key" (destructive red). Cancel: "Cancel".
-2. Disconnect Buffer — confirmation dialog: "Disconnect Buffer?" with consequence note. Confirm: "Disconnect" (destructive). Cancel: "Cancel".
-3. Delete template — confirmation dialog: "Delete template?" Confirm: "Delete" (destructive). Cancel: "Cancel".
+1. Delete API key — confirmation dialog (AlertDialog): "Delete key?" + key name. Confirm button: "Delete Key" (destructive red). Dismiss: "Keep Key".
+2. Disconnect Buffer — confirmation dialog: "Disconnect Buffer?" with consequence note. Confirm: "Disconnect" (destructive). Dismiss: "Stay Connected".
+3. Delete template — confirmation dialog: "Delete template?" Confirm: "Delete" (destructive). Dismiss: "Keep Template".
 
-All destructive confirmations use the existing `alert-dialog.tsx` shadcn component. Confirm button uses `PixelButton` danger variant (`bg-red-500 text-white`).
+All destructive confirmations use the existing `alert-dialog.tsx` shadcn component. Confirm button uses `PixelButton` danger variant (`bg-red-500 text-white`). Dismiss button uses ghost variant.
 
 ---
 
