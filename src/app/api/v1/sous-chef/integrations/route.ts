@@ -22,21 +22,15 @@ async function captureSourceConnected(
   sourceType: "stripe" | "posthog" | "ga4" | "buffer" | "postiz",
 ): Promise<void> {
   try {
-    const [integrations, ghInstalls] = await Promise.all([
-      convex.query(api.integrationSecrets.listByUser, { userId }),
-      convex.query(api.githubInstallations.listByUserId, { userId }),
-    ]);
-    const nonGithubCount = integrations.filter((r) => r.enabled).length;
-    const githubConnected = ghInstalls.some(
-      (i) => i.status === "active" && i.enabled,
-    );
+    const integrations = await convex.query(api.integrationSecrets.listByUser, { userId });
+    const connectedCount = integrations.filter((r) => r.enabled).length;
     await captureServer({
       event: "source_connected",
       distinctId: userId,
       properties: {
         source_type: sourceType,
-        is_first_non_github_source: nonGithubCount === 1,
-        total_sources_connected: nonGithubCount + (githubConnected ? 1 : 0),
+        is_first_source: connectedCount === 1,
+        total_sources_connected: connectedCount,
         was_prompted_by_goal: null,
       },
     });
@@ -292,23 +286,6 @@ export async function POST(request: Request) {
     tag: sealed.tag,
     extra,
   });
-
-  try {
-    await convex.action(api.sousChef.seedAction, {
-      userId,
-      provider: body.provider,
-    });
-  } catch (err) {
-    console.error("[sous-chef] seed on connect failed:", err);
-    await convex.action(api.integrationSecrets.disconnectAction, {
-      userId,
-      provider: body.provider,
-    });
-    return Response.json(
-      { error: "seed failed, please retry" },
-      { status: 502 },
-    );
-  }
 
   await captureSourceConnected(userId, body.provider);
   return Response.json({ ok: true, provider: body.provider });

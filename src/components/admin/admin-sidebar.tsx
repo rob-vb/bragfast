@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ChefHat,
-  FileText,
   History,
   LayoutDashboard,
   LayoutTemplate,
@@ -16,14 +14,9 @@ import {
   Sparkles,
   LogOut,
   UserCircle,
-  Settings,
-  Target,
-  Bell,
 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { toast } from "sonner";
-import { useQuery } from "convex/react";
-import { api } from "@convex/_generated/api";
 
 import {
   Sidebar,
@@ -56,19 +49,9 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-// S6.2: promote Sous-Chef (sources + goals) to Main. Demote Kitchen + API Keys
-// to Developers group — kept reachable but off the primary path.
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Kitchen", href: "/admin/kitchen", icon: ChefHat },
-  { label: "Drafts", href: "/admin/drafts", icon: FileText },
-];
-
-const sousChefNav: NavItem[] = [
-  { label: "Briefing", href: "/admin/briefing", icon: Bell },
-  { label: "Goals", href: "/admin/sous-chef/goals", icon: Target },
-  { label: "Activity log", href: "/admin/sous-chef/history", icon: History },
-  { label: "Settings", href: "/admin/sous-chef", icon: Settings },
+  { label: "History", href: "/admin/history", icon: History },
 ];
 
 const configureNav: NavItem[] = [
@@ -77,15 +60,11 @@ const configureNav: NavItem[] = [
 ];
 
 const developersNav: NavItem[] = [
-  { label: "API history", href: "/admin/history", icon: History },
   { label: "API Keys", href: "/admin/keys", icon: KeyRound },
 ];
 
 function isItemActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
-  // Exact match for Sous-Chef Settings so deeper sous-chef sub-routes
-  // (history, goals) don't also light up Settings.
-  if (href === "/admin/sous-chef") return pathname === "/admin/sous-chef";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -99,8 +78,6 @@ export function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const planConfig = PLANS[plan];
-  const unseenBriefing =
-    useQuery(api.triggerEvents.countUnseenBriefingDrafts, {}) ?? 0;
   const [portalPending, setPortalPending] = useState(false);
 
   function handleLogout() {
@@ -178,45 +155,6 @@ export function AdminSidebar({
                       <Link href={item.href}>
                         <item.icon />
                         <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Sous-Chef</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {sousChefNav.map((item) => {
-                const active = isItemActive(pathname, item.href);
-                const showBadge =
-                  item.href === "/admin/briefing" && unseenBriefing > 0;
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={
-                        showBadge
-                          ? `${item.label} (${unseenBriefing} new)`
-                          : item.label
-                      }
-                    >
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                        {showBadge ? (
-                          <span
-                            aria-label={`${unseenBriefing} new briefing items`}
-                            className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-medium leading-none text-white group-data-[collapsible=icon]:hidden"
-                          >
-                            {unseenBriefing > 99 ? "99+" : unseenBriefing}
-                          </span>
-                        ) : null}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
