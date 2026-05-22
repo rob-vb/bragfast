@@ -222,7 +222,7 @@ function deriveScheduleUrls(
   return derivedUrls;
 }
 
-function mapScheduleError(result: { error: string; missing?: string[] }) {
+function mapScheduleError(result: { error: string; missing?: readonly string[] }) {
   if (result.error === "upload_missing") {
     return Response.json(
       {
