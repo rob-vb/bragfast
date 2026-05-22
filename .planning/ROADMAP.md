@@ -260,8 +260,37 @@ Plans:
   4. User can create, list, and revoke API keys from the Admin
   5. User can subscribe to the single ~$29/mo plan with a 14-day trial and see their current billing status
 
-**Plans**: TBD
+**Plans**: 10 plans
 **UI hint**: yes
+
+Plans:
+**Wave 1** *(no dependencies)*
+
+- [ ] 08-01-PLAN.md — Wave 0 test scaffolds: subscription-gate test + trialEnd assertion
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 08-02-PLAN.md — Schema Step 1: make creditsRemaining optional + add trialEnd; userProfiles.create sets trialEnd
+- [ ] 08-03-PLAN.md — Mass deletion: Kitchen, Sous-Chef, GitHub App, Briefing, goals/backend Convex modules
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 08-04-PLAN.md — Credits teardown: strip calculateCredits, reserve/refund mutations, cook API credit logic, render pipeline credits
+- [ ] 08-05-PLAN.md — Launch-mode collapse + admin sidebar trim + dashboard slim
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 08-06-PLAN.md — Billing reshape: single-price stripe.ts, plan union migration, account/upgrade pages
+- [ ] 08-07-PLAN.md — Gallery read-only (strip SocialCopySection) + new /admin/integrations page
+
+**Wave 5** *(blocked on Wave 4)*
+
+- [ ] 08-08-PLAN.md — 402 subscription gate: subscription-gate.ts + 4 gated routes
+- [ ] 08-09-PLAN.md — Workspace Default/Custom template toggle
+
+**Wave 6** *(blocked on Wave 5)*
+
+- [ ] 08-10-PLAN.md — Final schema cleanup (remove creditsRemaining) + device path verification + human checkpoint
 
 ## Progress
 
@@ -274,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 0/TBD | Not started | - |
+| 8. Admin Trim | 0/10 | Not started | - |
