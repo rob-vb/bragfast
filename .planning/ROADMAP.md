@@ -266,7 +266,7 @@ Plans:
 Plans:
 **Wave 1** *(no dependencies)*
 
-- [ ] 08-01-PLAN.md — Wave 0 test scaffolds: subscription-gate test + trialEnd assertion
+- [x] 08-01-PLAN.md — Wave 0 test scaffolds: subscription-gate test + trialEnd assertion
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -303,4 +303,4 @@ Plans:
 | 5. Local Image Render | 4/4 | Human verification | - |
 | 6. Local Video Render | 3/4 | In Progress|  |
 | 7. Schedule-Time Upload + Posting | 6/6 | Complete   | 2026-05-22 |
-| 8. Admin Trim | 0/10 | Not started | - |
+| 8. Admin Trim | 1/10 | In Progress|  |
