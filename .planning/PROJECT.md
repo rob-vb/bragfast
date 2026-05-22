@@ -69,6 +69,7 @@ See `.planning/REQUIREMENTS.md` for this milestone's scoped requirements.
 | Public CLI package name is `bragfast`; installed bin includes `brag` | npm package `brag` is already owned, while `bragfast` is available | — Phase 2 implemented |
 | Author one format, anchor+scale auto-derive + nudge | Cuts editor + user effort ~3x, keeps full authoring feasible | — Pending |
 | Single flat ~$29/mo sub, 14-day trial | Simple billing; compute is free so meter coordination not throughput | — Pending |
+| Schedule-time posting trust boundary uses route HMAC + derived R2 URLs + durable provider posts | Keeps Buffer credentials backend-only, proves media URL/key correspondence, and prevents duplicate posts after partial failure | — Phase 7 implemented |
 
 ## Evolution
 
@@ -88,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-20 after bootstrapping v2.0 CLI-First Reposition milestone*
+*Last updated: 2026-05-22 after Phase 7 schedule-time upload + posting completion*
