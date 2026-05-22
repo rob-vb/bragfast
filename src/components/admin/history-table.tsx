@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelTable } from "@/components/admin/pixel-table";
-import { PixelButton } from "@/components/admin/pixel-button";
 
 type Release = {
   _id: string;
@@ -13,8 +12,6 @@ type Release = {
   output?: "image" | "video";
   images?: unknown;
   videos?: unknown;
-  socialCopy?: string;
-  credits_used: number;
   metadata?: string;
   webhook_url?: string;
   created_at: string;
@@ -29,7 +26,6 @@ function buildResponseBody(r: Release) {
     status: r.status,
     images: r.images ?? null,
     videos: r.videos ?? null,
-    credits_used: r.credits_used,
     created_at: r.created_at,
     ...(r.completed_at ? { completed_at: r.completed_at } : {}),
     ...(r.metadata ? { metadata: r.metadata } : {}),
@@ -76,132 +72,6 @@ function DownloadButton({ releaseId, status }: { releaseId: string; status: stri
   );
 }
 
-function SocialCopySection({ release }: { release: Release }) {
-  const [editing, setEditing] = useState(false);
-  const [twitter, setTwitter] = useState("");
-  const [linkedin, setLinkedin] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const copy = release.socialCopy ? (() => {
-    try { return JSON.parse(release.socialCopy!) as { twitter: string; linkedin: string }; }
-    catch { return null; }
-  })() : null;
-
-  if (!copy || (!copy.twitter && !copy.linkedin)) return null;
-
-  function startEdit(e: React.MouseEvent) {
-    e.stopPropagation();
-    setTwitter(copy!.twitter);
-    setLinkedin(copy!.linkedin);
-    setEditing(true);
-  }
-
-  async function save(e: React.MouseEvent) {
-    e.stopPropagation();
-    setSaving(true);
-    try {
-      await fetch(`/api/v1/cook/${release.externalId}/copy`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ twitter, linkedin }),
-      });
-      copy!.twitter = twitter;
-      copy!.linkedin = linkedin;
-      setEditing(false);
-    } catch (err) {
-      console.error("Save failed:", err);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function copyToClipboard(text: string, platform: string, e: React.MouseEvent) {
-    e.stopPropagation();
-    navigator.clipboard.writeText(text);
-    setCopied(platform);
-    setTimeout(() => setCopied(null), 2000);
-  }
-
-  return (
-    <div className="mt-3 border-2 border-brand bg-white p-4 shadow-[4px_4px_0_var(--color-brand)]">
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-[family-name:var(--font-press-start)] text-[10px] text-brand">
-          Social Copy
-        </span>
-        {!editing && (
-          <button
-            onClick={startEdit}
-            className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60 hover:text-gold transition-colors"
-          >
-            Edit
-          </button>
-        )}
-      </div>
-      {editing ? (
-        <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-          <div>
-            <label className="text-xs text-brand/60 mb-1 block">Twitter / X</label>
-            <textarea
-              value={twitter}
-              onChange={(e) => setTwitter(e.target.value)}
-              maxLength={280}
-              rows={3}
-              className="w-full border-2 border-brand p-2 font-mono text-xs bg-white resize-none focus:outline-none focus:ring-2 focus:ring-gold"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-brand/60 mb-1 block">LinkedIn</label>
-            <textarea
-              value={linkedin}
-              onChange={(e) => setLinkedin(e.target.value)}
-              maxLength={500}
-              rows={4}
-              className="w-full border-2 border-brand p-2 font-mono text-xs bg-white resize-none focus:outline-none focus:ring-2 focus:ring-gold"
-            />
-          </div>
-          <div className="flex gap-2">
-            <PixelButton onClick={save} disabled={saving}>
-              {saving ? "Saving..." : "Save"}
-            </PixelButton>
-            <PixelButton variant="ghost" onClick={(e) => { e.stopPropagation(); setEditing(false); }}>
-              Cancel
-            </PixelButton>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {copy.twitter && (
-            <div className="flex items-start gap-3 border border-brand/10 p-3">
-              <span className="text-xs font-bold text-brand/60 shrink-0" aria-label="Twitter draft">X</span>
-              <p className="text-xs text-brand flex-1">{copy.twitter}</p>
-              <button
-                onClick={(e) => copyToClipboard(copy.twitter, "twitter", e)}
-                className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/40 hover:text-gold transition-colors shrink-0"
-                aria-live="polite"
-              >
-                {copied === "twitter" ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          )}
-          {copy.linkedin && (
-            <div className="flex items-start gap-3 border border-brand/10 p-3">
-              <span className="text-xs font-bold text-brand/60 shrink-0" aria-label="LinkedIn draft">in</span>
-              <p className="text-xs text-brand flex-1 whitespace-pre-line">{copy.linkedin}</p>
-              <button
-                onClick={(e) => copyToClipboard(copy.linkedin, "linkedin", e)}
-                className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/40 hover:text-gold transition-colors shrink-0"
-                aria-live="polite"
-              >
-                {copied === "linkedin" ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
@@ -238,9 +108,6 @@ function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen
         <td className="px-4 py-3">
           <PixelBadge status={release.status} />
         </td>
-        <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
-          {release.credits_used}
-        </td>
         <td className="px-4 py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
           {new Date(release.created_at).toLocaleDateString()}
         </td>
@@ -250,10 +117,7 @@ function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen
       </tr>
       {open && (
         <tr>
-          <td colSpan={6} className="px-4 py-0">
-            {/* Social copy */}
-            <SocialCopySection release={release} />
-
+          <td colSpan={5} className="px-4 py-0">
             {/* Response JSON */}
             <div className="mb-4 mt-3 border-2 border-brand bg-brand shadow-[4px_4px_0_var(--color-brand)]">
               <div className="flex items-center justify-between border-b border-brand/10 px-3 py-2">
@@ -285,7 +149,7 @@ function ExpandableRow({ release, defaultOpen }: { release: Release; defaultOpen
 
 export function HistoryTable({ releases, highlightId }: { releases: Release[]; highlightId?: string }) {
   return (
-    <PixelTable headers={["ID", "Template", "Status", "Credits", "Date", ""]}>
+    <PixelTable headers={["ID", "Template", "Status", "Date", ""]}>
       {releases.map((r) => (
         <ExpandableRow key={r._id} release={r} defaultOpen={r.externalId === highlightId} />
       ))}
