@@ -4,6 +4,7 @@ const actionMock = vi.fn();
 const authenticateMock = vi.fn();
 const createPresignedUploadUrlMock = vi.fn();
 const publicUrlForKeyMock = vi.fn();
+const fetchQueryMock = vi.fn();
 
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {
@@ -11,10 +12,17 @@ vi.mock("convex/browser", () => ({
   },
 }));
 
+vi.mock("convex/nextjs", () => ({
+  fetchQuery: fetchQueryMock,
+}));
+
 vi.mock("@convex/_generated/api", () => ({
   api: {
     schedulePush: {
       run: "api.schedulePush.run",
+    },
+    userProfiles: {
+      getByUserId: "api.userProfiles.getByUserId",
     },
   },
 }));
@@ -34,7 +42,10 @@ describe("/api/v1/schedule/upload-url", () => {
     actionMock.mockReset();
     authenticateMock.mockReset();
     createPresignedUploadUrlMock.mockReset();
+    fetchQueryMock.mockReset();
     authenticateMock.mockResolvedValue({ userId: "user_123" });
+    // Active subscriber by default so the subscription gate (08-08) allows through.
+    fetchQueryMock.mockResolvedValue({ plan: "plate" });
     process.env.INTERNAL_API_SECRET = "test_internal_secret";
     createPresignedUploadUrlMock.mockImplementation(
       async (key: string, contentType: string) => ({
@@ -144,7 +155,10 @@ describe("/api/v1/schedule", () => {
     authenticateMock.mockReset();
     createPresignedUploadUrlMock.mockReset();
     publicUrlForKeyMock.mockReset();
+    fetchQueryMock.mockReset();
     authenticateMock.mockResolvedValue({ userId: "user_123" });
+    // Active subscriber by default so the subscription gate (08-08) allows through.
+    fetchQueryMock.mockResolvedValue({ plan: "plate" });
     process.env.INTERNAL_API_SECRET = "test_internal_secret";
     publicUrlForKeyMock.mockImplementation((key: string) => `https://cdn.example/${key}`);
     actionMock.mockResolvedValue({ ok: true, releaseId: "rel_123", scheduled: [] });
