@@ -59,7 +59,7 @@ export const refundCredits = internalMutation({
       .first();
     if (!profile) throw new Error("User profile not found");
     await ctx.db.patch(profile._id, {
-      creditsRemaining: profile.creditsRemaining + amount,
+      creditsRemaining: (profile.creditsRemaining ?? 0) + amount,
     });
   },
 });

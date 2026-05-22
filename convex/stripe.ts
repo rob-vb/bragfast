@@ -141,7 +141,7 @@ export const handleSubscriptionChange = internalMutation({
     await ctx.db.patch(profile._id, {
       plan: planId,
       creditsRemaining: isFirstSubscription
-        ? profile.creditsRemaining + newCredits // trial→paid: add on top
+        ? (profile.creditsRemaining ?? 0) + newCredits // trial→paid: add on top
         : newCredits, // plan change: set to new amount
     });
   },

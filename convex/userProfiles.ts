@@ -88,9 +88,9 @@ export const reserve = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (!profile) throw new Error("User profile not found");
-    if (profile.creditsRemaining < amount)
+    if ((profile.creditsRemaining ?? 0) < amount)
       throw new Error("Insufficient credits");
-    const remaining = profile.creditsRemaining - amount;
+    const remaining = (profile.creditsRemaining ?? 0) - amount;
     await ctx.db.patch(profile._id, { creditsRemaining: remaining });
     return remaining;
   },
@@ -212,7 +212,7 @@ export const refund = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (!profile) throw new Error("User profile not found");
-    const remaining = profile.creditsRemaining + amount;
+    const remaining = (profile.creditsRemaining ?? 0) + amount;
     await ctx.db.patch(profile._id, { creditsRemaining: remaining });
     return remaining;
   },
