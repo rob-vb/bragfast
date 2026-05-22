@@ -166,3 +166,9 @@ export interface VideoRenderStatusResponse {
 export type EditorView =
   | { screen: "home" }
   | { screen: "editor"; draftId: string | null; config: DraftConfig };
+
+export interface UserTemplate {
+  id: string;
+  name: string;
+  config: import("@bragfast/render-core/browser").CanvasTemplateConfig;
+}

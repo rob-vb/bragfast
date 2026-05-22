@@ -12,6 +12,7 @@ import type {
   ScheduleResponse,
   RepoContext,
   VideoRenderStatusResponse,
+  UserTemplate,
 } from "./types";
 
 async function requestJson<T>(url: `/api/${string}`, init?: RequestInit): Promise<T> {
@@ -122,4 +123,9 @@ export async function schedulePost(request: ScheduleRequest): Promise<ScheduleRe
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
+}
+
+export async function fetchUserTemplates(): Promise<UserTemplate[]> {
+  const response = await requestJson<{ templates: UserTemplate[] }>("/api/v1/templates");
+  return response.templates;
 }
