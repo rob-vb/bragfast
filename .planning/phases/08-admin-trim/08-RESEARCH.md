@@ -578,7 +578,7 @@ packages/workspace/src/
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **plan field data migration scope**
    - What we know: Production has users on `"toast"`, `"plate"`, `"buffet"`, `"starter"`, `"pro"`, `"scale"` plans
