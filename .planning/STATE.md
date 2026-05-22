@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: CLI-First Reposition
-status: executing
-stopped_at: Completed 07-04-PLAN.md
-last_updated: "2026-05-21T21:49:12.669Z"
+status: completed
+stopped_at: Completed 07-05-PLAN.md
+last_updated: "2026-05-22T06:23:42.836Z"
 last_activity: 2026-05-21 -- Completed Phase 07 Plan 04
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 35
-  completed_plans: 30
-  percent: 86
+  completed_plans: 31
+  percent: 89
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 ## Current Position
 
-Phase: 07 (schedule-time-upload-posting) — EXECUTING
-Plan: 4 of 5
-Status: 07-04 complete; ready for 07-05
-Last activity: 2026-05-21 -- Completed Phase 07 Plan 04
+Phase: 07 (schedule-time-upload-posting) — COMPLETE
+Plan: 5 of 5
+Status: 07-05 complete; Phase 07 complete
+Last activity: 2026-05-22 -- Completed Phase 07 Plan 05
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 86%
 | Phase 07 P02 | 5min | 3 tasks | 8 files |
 | Phase 07 P03 | 4min | 3 tasks | 3 files |
 | Phase 07 P04 | 8min | 4 tasks | 7 files |
+| Phase 07 P05 | 10min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,10 @@ Recent decisions affecting current work:
 - [Phase 07]: Phase 07 Plan 04: Workspace schedule calls target /api/local/schedule; the CLI performs presigned R2 PUTs and only sends public URLs/keys to the hosted backend.
 - [Phase 07]: Phase 07 Plan 04: CLI schedule orchestration accepts only landscape, square, and portrait image formats for this phase.
 - [Phase 07]: Phase 07 Plan 04: useSchedule ignores duplicate trigger calls while uploading or scheduling.
+- [Phase 07]: Phase 07 Plan 05: SchedulePanel respects saved routingDefaults first and uses BUILT_IN_FORMAT_DEFAULTS only when a format has no saved defaults.
+- [Phase 07]: Phase 07 Plan 05: Workspace exact-time scheduling sends a UTC ISO dueAt derived from the native datetime-local input.
+- [Phase 07]: Phase 07 Plan 05: Editor only mounts SchedulePanel for image output after rendered image output is available; video scheduling remains deferred.
+- [Phase 07]: Phase 07 Plan 05: Human verification checkpoint was approved by user response `Proceed` on 2026-05-22.
 
 ### Pending Todos
 
@@ -128,6 +133,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-21T21:49:12.669Z
-Stopped at: Completed 07-04-PLAN.md
+Last session: 2026-05-22T06:23:42.830Z
+Stopped at: Completed 07-05-PLAN.md
 Resume file: None
