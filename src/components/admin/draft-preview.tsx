@@ -9,7 +9,7 @@ import { FORMAT_DIMENSIONS, migrateConfig } from "@/lib/templates/canvas-types";
 import { getCanvasDefaultConfig } from "@/lib/templates/canvas-defaults";
 import { buildDraftObjectData } from "@/lib/preview-sample";
 import type { Brand } from "@/lib/types";
-import { TemplatePreview } from "@/components/kitchen/template-preview";
+import { TemplatePreview } from "@/components/admin/template-preview";
 import { MotionPreview } from "@/components/editor/motion-preview";
 
 interface DraftPreviewProps {

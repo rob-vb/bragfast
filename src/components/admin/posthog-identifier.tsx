@@ -19,19 +19,17 @@ export function PostHogIdentifier({
   userId: string;
   plan: string;
 }) {
-  const installations = useQuery(api.githubInstallations.listByUserId, { userId });
   const integrations = useQuery(api.integrationSecrets.listByUser, { userId });
 
   useEffect(() => {
-    if (installations === undefined || integrations === undefined) return;
+    if (integrations === undefined) return;
 
-    const githubAppInstalled = installations.length > 0;
     const sourceCount = integrations.length;
 
     // Third arg = $set_once — PostHog writes these only if not already on the person.
     posthog.identify(
       userId,
-      { plan, github_app_installed: githubAppInstalled, source_count: sourceCount },
+      { plan, source_count: sourceCount },
       { signup_date: new Date().toISOString() },
     );
 
@@ -49,7 +47,7 @@ export function PostHogIdentifier({
         });
       }
     }
-  }, [userId, plan, installations, integrations]);
+  }, [userId, plan, integrations]);
 
   return null;
 }

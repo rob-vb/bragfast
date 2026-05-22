@@ -9,8 +9,6 @@ import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelTable } from "@/components/admin/pixel-table";
 import { PixelBadge } from "@/components/admin/pixel-badge";
 import { PixelEmptyState } from "@/components/admin/pixel-empty-state";
-import { SousChefHistoryFeed } from "@/components/admin/sous-chef-history-feed";
-import { isLaunchModeRepositioned } from "@/lib/launch-mode";
 import Link from "next/link";
 
 export function DashboardClient() {
@@ -35,43 +33,7 @@ export function DashboardClient() {
     plan: stats.plan as Plan,
     creditsRemaining: stats.creditsRemaining,
   });
-  const repositioned = isLaunchModeRepositioned();
 
-  // S6.1: launch-mode dashboard — Goal hero → History → Sources → Posts → Drafts.
-  if (repositioned) {
-    return (
-      <div className="space-y-8">
-        <h1 className="font-[family-name:var(--font-press-start)] text-lg text-brand">
-          Dashboard
-        </h1>
-
-        {/* Posts/credits meter */}
-        <CreditMeter
-          remaining={allowance.remaining}
-          total={allowance.total}
-          plan={allowance.name}
-        />
-
-        {/* Recent activity */}
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-[family-name:var(--font-press-start)] text-sm text-brand">
-              Recent activity
-            </h2>
-            <Link
-              href="/admin/sous-chef/history"
-              className="text-xs underline underline-offset-4 hover:text-gold"
-            >
-              Full history →
-            </Link>
-          </div>
-          <SousChefHistoryFeed limit={3} excludeDismissed />
-        </div>
-      </div>
-    );
-  }
-
-  // Legacy dashboard (pre-launch / off-mode).
   const recent = releases.slice(0, 10);
   const statCards = [
     { label: "Used (Month)", value: stats.creditsUsedThisMonth },
@@ -108,11 +70,10 @@ export function DashboardClient() {
         </h2>
         {recent.length === 0 ? (
           <PixelEmptyState
-            title="Time to cook!"
+            title="No releases yet"
             description="Generate your first branded images via the API or MCP."
             cta={{ label: "Read the Docs", href: "/docs" }}
             secondaryCta={{ label: "Set up the MCP", href: "/docs#mcp" }}
-            extraCtas={[{ label: "Cook", href: "/admin/kitchen" }]}
             noPrimary
           />
         ) : (

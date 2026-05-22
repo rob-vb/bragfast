@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { PixelCard } from "@/components/admin/pixel-card";
 import { PixelButton } from "@/components/admin/pixel-button";
 import { CopyButton } from "@/components/admin/copy-button";
-import { TemplatePreview } from "@/components/kitchen/template-preview";
+import { TemplatePreview } from "@/components/admin/template-preview";
 import { buildSampleBrand } from "@/lib/preview-sample";
 import type { CanvasTemplateConfig } from "@/lib/templates/canvas-types";
 import {
