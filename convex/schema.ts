@@ -54,6 +54,7 @@ export default defineSchema({
     isDefault: v.boolean(),
     config: v.any(),
     previewUrl: v.optional(v.string()),
+    importedFromTemplateId: v.optional(v.string()),
     created_at: v.string(),
     updated_at: v.string(),
   }).index("by_userId", ["userId"])
