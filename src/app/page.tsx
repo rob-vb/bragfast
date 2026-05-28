@@ -189,7 +189,7 @@ export default function Home() {
                   },
                   {
                     t: "Ask for a cook",
-                    d: "Pick a template, get branded images back in your flow.",
+                    d: "Pick a template, get branded visuals back in your flow.",
                   },
                 ].map((step, i) => (
                   <li key={step.t} className="flex gap-3.5 items-start">
