@@ -180,7 +180,8 @@ export default defineSchema({
         v.literal("stripe"),
         v.literal("posthog"),
         v.literal("ga4"),
-        v.literal("cron")
+        v.literal("cron"),
+        v.literal("manual")
       )
     ),
     milestoneKey: v.optional(v.string()),      // e.g. "mrr:1000", "pr_merged:owner/repo#42"

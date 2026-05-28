@@ -83,7 +83,7 @@ function decisionLabel(decision: Decision): string {
     case "ignored_48h":
       return "IGNORED";
     default:
-      return decision.toUpperCase();
+      return String(decision).toUpperCase();
   }
 }
 
