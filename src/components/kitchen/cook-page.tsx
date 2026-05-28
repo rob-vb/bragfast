@@ -238,6 +238,7 @@ export function CookPage({ templates }: CookPageProps) {
   const [draftLoading, setDraftLoading] = useState(false);
   const [draftMissingTemplate, setDraftMissingTemplate] = useState<string | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [draftContextNote, setDraftContextNote] = useState<string | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -351,8 +352,11 @@ export function CookPage({ templates }: CookPageProps) {
           dispatch({ type: "HYDRATE", patch });
         }
 
-        setDraftId(draftParam);
-        setDraftCopyByPlatform(cfg.copyByPlatform);
+        if (!cancelled) {
+          setDraftId(draftParam);
+          setDraftCopyByPlatform(cfg.copyByPlatform);
+          setDraftContextNote(cfg.notes?.trim() || null);
+        }
       } catch (err) {
         console.error("Draft hydration failed", err);
         if (!cancelled) setDraftError("Failed to load draft.");
@@ -737,6 +741,16 @@ export function CookPage({ templates }: CookPageProps) {
             <div className="border-2 border-red-500 bg-red-50 px-4 py-3">
               <p className="font-[family-name:var(--font-geist-sans)] text-xs text-red-700">
                 {draftError}
+              </p>
+            </div>
+          )}
+          {draftContextNote && !draftLoading && (
+            <div className="border-2 border-brand bg-gold/15 px-4 py-3 shadow-[3px_3px_0_var(--color-brand)]">
+              <p className="font-[family-name:var(--font-press-start)] text-[10px] text-brand mb-1 uppercase">
+                ▸ From your merge
+              </p>
+              <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/85 leading-relaxed whitespace-pre-wrap">
+                {draftContextNote}
               </p>
             </div>
           )}

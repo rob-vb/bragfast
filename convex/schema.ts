@@ -361,9 +361,12 @@ export default defineSchema({
 
   // Sous-Chef: append-only event log of every trigger seen + decision taken.
   // Powers the /admin/sous-chef/history feed. Decision enum:
-  //   drafted        — a draft (fresh or rolled-up) was inserted
-  //   auto_skipped   — system declined (content filter, rate cap, low confidence)
-  //   user_skipped   — user deleted/dismissed an agent-fired draft
+  //   surfaced       — trigger visible in feed (summary on row; no eager draft)
+  //   bragged        — user hit Brag; draftExternalId set
+  //   dismissed      — user dismissed from feed
+  //   drafted        — legacy: eager auto-draft inserted
+  //   auto_skipped   — legacy: system declined (content filter, rate cap, low confidence)
+  //   user_skipped   — legacy: user deleted/dismissed an agent-fired draft
   //   approved       — user approved & dispatched pushes
   //   ignored_48h    — draft sat untouched for 48h (reserved; no auto-emitter yet)
   triggerEvents: defineTable({
@@ -379,6 +382,9 @@ export default defineSchema({
     ),
     triggerType: v.string(),                 // "pr_merged", "mrr", "first_sale", ...
     decision: v.union(
+      v.literal("surfaced"),
+      v.literal("bragged"),
+      v.literal("dismissed"),
       v.literal("drafted"),
       v.literal("auto_skipped"),
       v.literal("user_skipped"),
@@ -387,6 +393,7 @@ export default defineSchema({
     ),
     reason: v.optional(v.string()),          // "content_filter", "rate_cap", "low_confidence", "rollup", ...
     confidence: v.optional(v.number()),
+    summary: v.optional(v.string()),         // feed + Kitchen context (surface-only model)
     sourceReference: v.optional(v.string()), // PR URL, milestoneKey, etc.
     draftExternalId: v.optional(v.string()),
     metadata: v.optional(v.string()),        // JSON blob for trigger-specific extras
@@ -394,6 +401,7 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_userId_created_at", ["userId", "created_at"])
+    .index("by_userId_sourceReference", ["userId", "sourceReference"])
     .index("by_draftExternalId", ["draftExternalId"]),
 
   uploads: defineTable({

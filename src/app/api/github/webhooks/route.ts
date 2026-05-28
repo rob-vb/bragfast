@@ -7,16 +7,16 @@ import {
   buildPrMergeDraftInput,
   type GitHubPullRequestPayload,
 } from "@/lib/github/pr-merge";
-import { composeCopy, SUPPRESS_THRESHOLD } from "@/lib/drafts/compose-copy";
-import { pickTemplate } from "@/lib/drafts/pick-template";
-import type { DraftConfig } from "@/lib/drafts/types";
+import {
+  surfaceTrigger,
+  fallbackSurfaceTrigger,
+} from "@/lib/drafts/surface-trigger";
 import { scanContent } from "@/lib/safety/content-filter";
 import { captureServer } from "@/lib/analytics/posthog-server";
 
 export const maxDuration = 60;
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -43,9 +43,6 @@ export async function POST(request: Request) {
       return Response.json({ ok: true, skipped: "unhandled event" });
   }
 }
-
-const PR_MERGE_DAILY_CAP = 10;
-const PR_MERGE_DEBOUNCE_MS = 30 * 60 * 1000;
 
 async function handlePullRequest(payload: GitHubPullRequestPayload) {
   if (!shouldHandlePrMerge(payload)) {
@@ -81,207 +78,91 @@ async function handlePullRequest(payload: GitHubPullRequestPayload) {
     return Response.json({ ok: true, skipped: "pr_merge_opt_out" });
   }
 
-  // Layer 1 safety: pre-render content filter. Skip both fresh and rollup
-  // draft paths if PR title or body matches sensitive keyword patterns.
-  const filter = scanContent(
-    payload.pull_request.title,
-    payload.pull_request.body,
-  );
-  if (filter.blocked) {
-    const categories = [...new Set(filter.matches.map((m) => m.category))];
-    const terms = filter.matches.map((m) => ({
-      category: m.category,
-      term: m.term,
-    }));
-    console.log(
-      "[sous-chef] PR draft skipped by content filter",
-      JSON.stringify({
-        userId,
-        repoFullName,
-        prNumber: payload.pull_request.number,
-        categories,
-        terms,
-      }),
-    );
-    await convex
-      .action(api.triggerEvents.recordAction, {
-        userId,
-        sourceSystem: "github",
-        triggerType: "pr_merged",
-        decision: "auto_skipped",
-        reason: "content_filter",
-        sourceReference: payload.pull_request.html_url,
-        metadata: JSON.stringify({ categories, terms }),
-      })
-      .catch((err) =>
-        console.error("[sous-chef] recordAction (content_filter) failed", err),
-      );
-    return Response.json({
-      ok: true,
-      skipped: "sensitive_content",
-      categories,
-    });
-  }
+  after(() => surfacePrMerge(payload, userId));
 
-  const now = new Date();
-  const dayAgoIso = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-
-  // Noise cap: skip if this repo already produced N PR-merge drafts today.
-  const recentCount = await convex.query(
-    api.drafts.countRecentPrMergesByRepo,
-    { userId, repoFullName, sinceIso: dayAgoIso },
-  );
-  if (recentCount >= PR_MERGE_DAILY_CAP) {
-    await convex
-      .action(api.triggerEvents.recordAction, {
-        userId,
-        sourceSystem: "github",
-        triggerType: "pr_merged",
-        decision: "auto_skipped",
-        reason: "rate_cap",
-        sourceReference: payload.pull_request.html_url,
-      })
-      .catch((err) =>
-        console.error("[sous-chef] recordAction (rate_cap) failed", err),
-      );
-    return Response.json({ ok: true, skipped: "rate_cap" });
-  }
-
-  // Debounce: if a PR-merge draft for this repo was created < 30 min ago,
-  // roll this PR into it instead of creating a new draft.
-  const debounceSinceIso = new Date(
-    now.getTime() - PR_MERGE_DEBOUNCE_MS,
-  ).toISOString();
-  const recent = await convex.query(api.drafts.findRecentPrMergeForRepo, {
-    userId,
-    repoFullName,
-    sinceIso: debounceSinceIso,
-  });
-  if (recent) {
-    await convex.mutation(api.drafts.appendPrMergeRollup, {
-      externalId: recent.id,
-      userId,
-      prTitle: payload.pull_request.title,
-      prNumber: payload.pull_request.number,
-    });
-    await convex
-      .action(api.triggerEvents.recordAction, {
-        userId,
-        sourceSystem: "github",
-        triggerType: "pr_merged",
-        decision: "drafted",
-        reason: "rollup",
-        sourceReference: payload.pull_request.html_url,
-        draftExternalId: recent.id,
-      })
-      .catch((err) =>
-        console.error("[sous-chef] recordAction (rollup) failed", err),
-      );
-    return Response.json({
-      ok: true,
-      rollup: recent.id,
-      mode: "debounced",
-    });
-  }
-
-  // Fresh draft path: picker + copy + idempotent insert.
-  // Move the heavy work into after() so the webhook ack is fast.
-  after(() => createPrMergeDraft(payload, userId));
-
-  return Response.json({ ok: true, mode: "draft_scheduled" });
+  return Response.json({ ok: true, mode: "surface_scheduled" });
 }
 
-async function createPrMergeDraft(
+async function surfacePrMerge(
   payload: GitHubPullRequestPayload,
   userId: string,
 ) {
   try {
     const input = buildPrMergeDraftInput(payload, userId);
-    const [voicePreset, examples] = await Promise.all([
-      convex.query(api.userProfiles.getVoicePreset, { userId }),
-      convex.query(api.drafts.getRecentApprovedEdits, { userId }),
-    ]);
-    const composeInput = {
-      ...input.composeCopyInput,
-      voicePreset: voicePreset as
-        | "casual_builder"
-        | "dry_technical"
-        | "earnest_milestone"
-        | "deadpan"
-        | null,
-      examples,
-    };
-    const [pick, primary] = await Promise.all([
-      pickTemplate(input.pickTemplateInput),
-      composeCopy(composeInput),
-    ]);
+    const prUrl = payload.pull_request.html_url;
+    const title = payload.pull_request.title;
+    const body = payload.pull_request.body ?? "";
 
-    const draftConfig: DraftConfig = {
-      output: "image",
-      templateId: pick.templateId,
-      objectContent: {
-        title: { text: primary.title },
-        description: { text: primary.description },
-      },
-      notes: `Sous-Chef: PR #${input.prNumber} merged to ${payload.repository.default_branch} in ${input.repoFullName}`,
-    };
+    const filter = scanContent(title, body);
+    let summary: string;
+    let confidence: number;
+    let reason: string | undefined;
 
-    const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
-
-    const inserted = await convex.action(api.drafts.insertDraftIfNewAction, {
-      userId,
-      idempotencyKey: input.idempotencyKey,
-      sourceSystem: "github",
-      milestoneKey: input.milestoneKey,
-      eventReference: input.eventReference,
-      name: primary.title,
-      config: JSON.stringify(draftConfig),
-      createdBy: "sous-chef",
-      confidence: primary.confidence,
-      suppressed,
-    });
-
-    await convex
-      .action(api.triggerEvents.recordAction, {
+    if (filter.blocked) {
+      const categories = [...new Set(filter.matches.map((m) => m.category))];
+      summary = fallbackSurfaceTrigger({
+        type: "pr_merged",
+        title,
+        body,
+        repoFullName: input.repoFullName,
+      }).summary;
+      confidence = 0;
+      reason = "content_filter";
+      await convex.action(api.triggerEvents.recordSurfacedAction, {
         userId,
         sourceSystem: "github",
         triggerType: "pr_merged",
-        decision: suppressed ? "auto_skipped" : "drafted",
-        reason: suppressed ? "low_confidence" : undefined,
-        confidence: primary.confidence,
-        sourceReference: input.eventReference,
-        draftExternalId: inserted.id,
+        sourceReference: prUrl,
+        summary,
+        confidence,
+        reason,
         metadata: JSON.stringify({
           milestoneKey: input.milestoneKey,
-          templateId: pick.templateId,
-          templatePickReason: pick.reason,
-          templatePickRule: pick.debug?.rule,
-          templatePickKeyword: pick.debug?.matchedKeyword,
+          repoFullName: input.repoFullName,
+          prNumber: input.prNumber,
+          categories,
+          contentFiltered: true,
         }),
-      })
-      .catch((err) =>
-        console.error(
-          "[sous-chef] recordAction (createPrMergeDraft) failed",
-          err,
-        ),
-      );
+      });
+      return;
+    }
 
-    await captureServer({
-      event: "draft_generated",
-      distinctId: userId,
-      properties: {
-        trigger_type: "pr_merged",
-        source_type: "github",
-        confidence_score: primary.confidence,
-        was_suppressed: suppressed,
-        has_visual_asset: true,
-        formats_to_render: ["landscape"],
-        video_requested: false,
-        platforms_generated: [],
-      },
+    const surfaced = await surfaceTrigger({
+      type: "pr_merged",
+      title,
+      body,
+      repoFullName: input.repoFullName,
     });
+    summary = surfaced.summary;
+    confidence = surfaced.confidence;
+
+    const result = await convex.action(api.triggerEvents.recordSurfacedAction, {
+      userId,
+      sourceSystem: "github",
+      triggerType: "pr_merged",
+      sourceReference: prUrl,
+      summary,
+      confidence,
+      metadata: JSON.stringify({
+        milestoneKey: input.milestoneKey,
+        repoFullName: input.repoFullName,
+        prNumber: input.prNumber,
+      }),
+    });
+
+    if (result.created) {
+      await captureServer({
+        event: "trigger_surfaced",
+        distinctId: userId,
+        properties: {
+          trigger_type: "pr_merged",
+          source_type: "github",
+          confidence_score: confidence,
+        },
+      });
+    }
   } catch (err) {
-    console.error("[sous-chef] createPrMergeDraft failed:", err);
+    console.error("[sous-chef] surfacePrMerge failed:", err);
   }
 }
 
@@ -295,11 +176,9 @@ async function handleInstallation(payload: {
   const { installation } = payload;
 
   if (payload.action === "created") {
-    // Installation created — store it without a userId for now.
-    // The callback route links it to a user after OAuth redirect.
     await convex.action(api.githubInstallations.upsertAction, {
       installationId: installation.id,
-      userId: "", // linked in callback
+      userId: "",
       accountLogin: installation.account.login,
       accountType: installation.account.type as "User" | "Organization",
     });

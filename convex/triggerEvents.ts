@@ -2,8 +2,8 @@
  * triggerEvents.ts
  *
  * Append-only event log: every Sous-Chef trigger (PR merge, scan hit, manual
- * fire) records a row capturing the decision (drafted / auto_skipped /
- * user_skipped / approved / ignored_48h) plus the originating reference.
+ * fire) records a row capturing the decision (surfaced / bragged / dismissed,
+ * plus legacy drafted / auto_skipped / …) plus the originating reference.
  * Powers the /admin/sous-chef/history feed.
  *
  * The internal `record` mutation is the single insertion point. Callers in
@@ -22,6 +22,12 @@ import {
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { requireAuthedUser } from "./auth";
+import { pickTemplateByRules } from "../src/lib/drafts/pick-template";
+import {
+  buildIdempotencyKey,
+  prMergedMilestoneKey,
+} from "../src/lib/drafts/idempotency-key";
+import type { DraftConfig } from "../src/lib/drafts/types";
 
 export const sourceSystemValidator = v.union(
   v.literal("github"),
@@ -33,6 +39,9 @@ export const sourceSystemValidator = v.union(
 );
 
 export const decisionValidator = v.union(
+  v.literal("surfaced"),
+  v.literal("bragged"),
+  v.literal("dismissed"),
   v.literal("drafted"),
   v.literal("auto_skipped"),
   v.literal("user_skipped"),
@@ -47,6 +56,7 @@ const recordArgs = {
   decision: decisionValidator,
   reason: v.optional(v.string()),
   confidence: v.optional(v.number()),
+  summary: v.optional(v.string()),
   sourceReference: v.optional(v.string()),
   draftExternalId: v.optional(v.string()),
   metadata: v.optional(v.string()),
@@ -57,6 +67,9 @@ type RecordArgs = {
   sourceSystem: "github" | "stripe" | "posthog" | "ga4" | "manual" | "cron";
   triggerType: string;
   decision:
+    | "surfaced"
+    | "bragged"
+    | "dismissed"
     | "drafted"
     | "auto_skipped"
     | "user_skipped"
@@ -64,6 +77,7 @@ type RecordArgs = {
     | "ignored_48h";
   reason?: string;
   confidence?: number;
+  summary?: string;
   sourceReference?: string;
   draftExternalId?: string;
   metadata?: string;
@@ -87,6 +101,7 @@ export async function insertTriggerEvent(
     decision: args.decision,
     reason: args.reason,
     confidence: args.confidence,
+    summary: args.summary,
     sourceReference: args.sourceReference,
     draftExternalId: args.draftExternalId,
     metadata: args.metadata,
@@ -94,6 +109,44 @@ export async function insertTriggerEvent(
   });
   return { externalId, created_at };
 }
+
+/** Idempotent surface insert for PR merges (webhook redelivery). */
+export const recordSurfacedIfNew = internalMutation({
+  args: {
+    userId: v.string(),
+    sourceSystem: sourceSystemValidator,
+    triggerType: v.string(),
+    sourceReference: v.string(),
+    summary: v.string(),
+    confidence: v.number(),
+    reason: v.optional(v.string()),
+    metadata: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId_sourceReference", (q) =>
+        q.eq("userId", args.userId).eq("sourceReference", args.sourceReference),
+      )
+      .filter((q) => q.eq(q.field("triggerType"), args.triggerType))
+      .first();
+    if (existing) {
+      return { created: false as const, externalId: existing.externalId };
+    }
+    const { externalId } = await insertTriggerEvent(ctx, {
+      userId: args.userId,
+      sourceSystem: args.sourceSystem,
+      triggerType: args.triggerType,
+      decision: "surfaced",
+      reason: args.reason,
+      confidence: args.confidence,
+      summary: args.summary,
+      sourceReference: args.sourceReference,
+      metadata: args.metadata,
+    });
+    return { created: true as const, externalId };
+  },
+});
 
 export const record = internalMutation({
   args: recordArgs,
@@ -108,6 +161,23 @@ export const recordAction = action({
   args: recordArgs,
   handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.triggerEvents.record, args);
+  },
+});
+
+/** Webhook path: idempotent surfaced row for a PR merge. */
+export const recordSurfacedAction = action({
+  args: {
+    userId: v.string(),
+    sourceSystem: sourceSystemValidator,
+    triggerType: v.string(),
+    sourceReference: v.string(),
+    summary: v.string(),
+    confidence: v.number(),
+    reason: v.optional(v.string()),
+    metadata: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.runMutation(internal.triggerEvents.recordSurfacedIfNew, args);
   },
 });
 
@@ -159,6 +229,181 @@ export const overrideAutoSkippedEvent = mutation({
       draftExternalId: match.externalId,
     });
     return { ok: true, draftExternalId: match.externalId };
+  },
+});
+
+function sortFeedRows<T extends { confidence: number | null; created_at: string }>(
+  rows: T[],
+): T[] {
+  return [...rows].sort((a, b) => {
+    const ca = a.confidence ?? -1;
+    const cb = b.confidence ?? -1;
+    if (cb !== ca) return cb - ca;
+    return a.created_at > b.created_at ? -1 : 1;
+  });
+}
+
+function mapTriggerRow(
+  r: {
+    externalId: string;
+    sourceSystem: RecordArgs["sourceSystem"];
+    triggerType: string;
+    decision: RecordArgs["decision"];
+    reason?: string;
+    confidence?: number;
+    summary?: string;
+    sourceReference?: string;
+    draftExternalId?: string;
+    metadata?: string;
+    created_at: string;
+  },
+  draftBackfill?: string | null,
+): TriggerEventRow {
+  return {
+    id: r.externalId,
+    sourceSystem: r.sourceSystem,
+    triggerType: r.triggerType,
+    decision: r.decision,
+    reason: r.reason ?? null,
+    confidence: r.confidence ?? null,
+    summary: r.summary ?? null,
+    sourceReference: r.sourceReference ?? null,
+    draftExternalId: r.draftExternalId ?? draftBackfill ?? null,
+    metadata: r.metadata ?? null,
+    created_at: r.created_at,
+  };
+}
+
+/** User dismissed a surfaced trigger from the activity feed. */
+export const dismissTrigger = mutation({
+  args: { externalId: v.string() },
+  handler: async (
+    ctx,
+    { externalId },
+  ): Promise<{ ok: true } | { ok: false; error: "not_found" | "already_dismissed" }> => {
+    const userId = await requireAuthedUser(ctx);
+    const event = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("externalId"), externalId))
+      .first();
+    if (!event) return { ok: false, error: "not_found" };
+    if (event.decision === "dismissed" || event.decision === "user_skipped") {
+      return { ok: false, error: "already_dismissed" };
+    }
+    await ctx.db.patch(event._id, { decision: "dismissed" });
+    return { ok: true };
+  },
+});
+
+/**
+ * Brag: create a lightweight draft from a surfaced trigger and link it.
+ * Opens in Kitchen via returned draftExternalId.
+ */
+export const bragFromTrigger = mutation({
+  args: { externalId: v.string() },
+  handler: async (
+    ctx,
+    { externalId },
+  ): Promise<
+    | { ok: true; draftExternalId: string; created: boolean }
+    | { ok: false; error: "not_found" | "not_braggable" | "no_reference" }
+  > => {
+    const userId = await requireAuthedUser(ctx);
+    const event = await ctx.db
+      .query("triggerEvents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("externalId"), externalId))
+      .first();
+    if (!event) return { ok: false, error: "not_found" };
+
+    if (event.decision === "bragged" && event.draftExternalId) {
+      return {
+        ok: true,
+        draftExternalId: event.draftExternalId,
+        created: false,
+      };
+    }
+    const braggable: RecordArgs["decision"][] = [
+      "surfaced",
+      "drafted",
+      "auto_skipped",
+    ];
+    if (!braggable.includes(event.decision)) {
+      return { ok: false, error: "not_braggable" };
+    }
+    if (!event.sourceReference) return { ok: false, error: "no_reference" };
+
+    if (event.draftExternalId) {
+      await ctx.db.patch(event._id, { decision: "bragged" });
+      return {
+        ok: true,
+        draftExternalId: event.draftExternalId,
+        created: false,
+      };
+    }
+
+    const meta = event.metadata ? (JSON.parse(event.metadata) as { milestoneKey?: string; repoFullName?: string; prNumber?: number }) : {};
+    const milestoneKey =
+      meta.milestoneKey ??
+      (meta.repoFullName && meta.prNumber != null
+        ? prMergedMilestoneKey(meta.repoFullName, meta.prNumber)
+        : `pr_merged:${event.sourceReference}`);
+    const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
+    const existingDraft = await ctx.db
+      .query("drafts")
+      .withIndex("by_idempotencyKey", (q) => q.eq("idempotencyKey", idempotencyKey))
+      .first();
+
+    let draftExternalId: string;
+    let created = false;
+
+    if (existingDraft) {
+      draftExternalId = existingDraft.externalId;
+    } else {
+      const pick = pickTemplateByRules({
+        milestoneKey,
+        prContext: meta.repoFullName
+          ? { title: event.summary ?? "Merged PR", body: "" }
+          : undefined,
+      });
+      const templateId =
+        pick.templateId !== null ? pick.templateId : "standard-browser";
+      const summary =
+        event.summary?.trim() ||
+        "Make a branded visual for this merged change.";
+      const draftConfig: DraftConfig = {
+        output: "image",
+        templateId,
+        notes: `${summary}\n\nSource: ${event.sourceReference}`,
+      };
+      draftExternalId = `drf_${crypto.randomUUID().slice(0, 10)}`;
+      const now = new Date().toISOString();
+      await ctx.db.insert("drafts", {
+        userId,
+        externalId: draftExternalId,
+        name: summary.slice(0, 80),
+        source: "agent",
+        createdBy: "sous-chef-brag",
+        config: JSON.stringify(draftConfig),
+        originalConfig: JSON.stringify(draftConfig),
+        sourceSystem: event.sourceSystem,
+        milestoneKey,
+        eventReference: event.sourceReference,
+        idempotencyKey,
+        confidence: event.confidence,
+        suppressed: false,
+        created_at: now,
+      });
+      created = true;
+    }
+
+    await ctx.db.patch(event._id, {
+      decision: "bragged",
+      draftExternalId,
+    });
+
+    return { ok: true, draftExternalId, created };
   },
 });
 
@@ -274,9 +519,18 @@ type TriggerEventRow = {
   id: string;
   sourceSystem: "github" | "stripe" | "posthog" | "ga4" | "manual" | "cron";
   triggerType: string;
-  decision: "drafted" | "auto_skipped" | "user_skipped" | "approved" | "ignored_48h";
+  decision:
+    | "surfaced"
+    | "bragged"
+    | "dismissed"
+    | "drafted"
+    | "auto_skipped"
+    | "user_skipped"
+    | "approved"
+    | "ignored_48h";
   reason: string | null;
   confidence: number | null;
+  summary: string | null;
   sourceReference: string | null;
   draftExternalId: string | null;
   metadata: string | null;
@@ -333,19 +587,12 @@ export const listByUserForDay = query({
           .withIndex("by_userId", (q) => q.eq("userId", userId))
           .collect()
       : [];
-    return rows.map((r) => ({
-      id: r.externalId,
-      sourceSystem: r.sourceSystem,
-      triggerType: r.triggerType,
-      decision: r.decision,
-      reason: r.reason ?? null,
-      confidence: r.confidence ?? null,
-      sourceReference: r.sourceReference ?? null,
-      draftExternalId:
-        r.draftExternalId ?? resolveMissingDraftId(r.metadata, drafts),
-      metadata: r.metadata ?? null,
-      created_at: r.created_at,
-    }));
+    return rows.map((r) =>
+      mapTriggerRow(
+        r,
+        resolveMissingDraftId(r.metadata, drafts),
+      ),
+    );
   },
 });
 
@@ -365,18 +612,7 @@ export const listByUserForWeek = query({
       )
       .order("desc")
       .collect();
-    return rows.map((r) => ({
-      id: r.externalId,
-      sourceSystem: r.sourceSystem,
-      triggerType: r.triggerType,
-      decision: r.decision,
-      reason: r.reason ?? null,
-      confidence: r.confidence ?? null,
-      sourceReference: r.sourceReference ?? null,
-      draftExternalId: r.draftExternalId ?? null,
-      metadata: r.metadata ?? null,
-      created_at: r.created_at,
-    }));
+    return rows.map((r) => mapTriggerRow(r));
   },
 });
 
@@ -414,8 +650,8 @@ export const listByUserForWeekInternal = internalQuery({
 });
 
 /**
- * Briefing-page badge: count of `decision=drafted` trigger events created
- * after the user's last visit to /admin/briefing. Returns 0 unauthenticated
+ * Briefing-page badge: count of surfaced (or legacy drafted) trigger events
+ * created after the user's last visit to /admin/briefing. Returns 0 unauthenticated
  * so the sidebar badge silently hides during the auth-resolution flicker.
  */
 export const countUnseenBriefingDrafts = query({
@@ -436,7 +672,9 @@ export const countUnseenBriefingDrafts = query({
         q.eq("userId", userId).gte("created_at", lastVisitISO),
       )
       .collect();
-    return rows.filter((r) => r.decision === "drafted").length;
+    return rows.filter(
+      (r) => r.decision === "surfaced" || r.decision === "drafted",
+    ).length;
   },
 });
 
@@ -476,19 +714,15 @@ export const listByUser = query({
       .query("triggerEvents")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
-    rows.sort((a, b) => (a.created_at > b.created_at ? -1 : 1));
-    const trimmed = typeof limit === "number" ? rows.slice(0, limit) : rows;
-    return trimmed.map((r) => ({
-      id: r.externalId,
-      sourceSystem: r.sourceSystem,
-      triggerType: r.triggerType,
-      decision: r.decision,
-      reason: r.reason ?? null,
-      confidence: r.confidence ?? null,
-      sourceReference: r.sourceReference ?? null,
-      draftExternalId: r.draftExternalId ?? null,
-      metadata: r.metadata ?? null,
-      created_at: r.created_at,
-    }));
+    const sorted = sortFeedRows(
+      rows.map((r) => ({
+        row: r,
+        confidence: r.confidence ?? null,
+        created_at: r.created_at,
+      })),
+    ).map((x) => x.row);
+    const trimmed =
+      typeof limit === "number" ? sorted.slice(0, limit) : sorted;
+    return trimmed.map((r) => mapTriggerRow(r));
   },
 });

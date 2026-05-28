@@ -110,7 +110,7 @@ describe("fetchLatestMergedPr", () => {
     expect(out).toBeNull();
   });
 
-  it("Sous-Chef retro draft: one Haiku call, no copyByPlatform", async () => {
+  it("Sous-Chef retro surface: one Haiku call, records surfaced trigger", async () => {
     const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
     fetchMock
       .mockResolvedValueOnce(jsonRes({ default_branch: "main" }))
@@ -131,40 +131,29 @@ describe("fetchLatestMergedPr", () => {
       content: [
         {
           type: "text",
-          text: '{"title":"Carousel slides","description":"You can now ship carousel posts.","confidence":0.9}',
+          text: '{"summary":"Screenshot the carousel editor — carousel slides ship today.","confidence":0.9}',
         },
       ],
     });
 
-    const inserts: Array<Record<string, unknown>> = [];
+    const surfacedCalls: Array<Record<string, unknown>> = [];
     const convex = {
-      query: vi
-        .fn()
-        // Returned in declaration order in retro-pr.ts:
-        // [getVoicePreset, getRecentApprovedEdits]
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce([]),
       action: vi.fn().mockImplementation(async (_ref, args) => {
-        // The first action is insertDraftIfNewAction; subsequent recordAction
-        // calls are .catch()'d in the impl, so returning undefined is safe.
-        if (args && typeof args === "object" && "config" in args) {
-          inserts.push(args as Record<string, unknown>);
-          return { id: "drf_xyz", inserted: true };
+        if (args && typeof args === "object" && "summary" in args) {
+          surfacedCalls.push(args as Record<string, unknown>);
+          return { created: true, externalId: "evt_retro1" };
         }
         return undefined;
       }),
     } as unknown as Parameters<typeof runRetroPrMergeDraft>[0];
 
     const out = await runRetroPrMergeDraft(convex, "user_1", 1, "rob/test");
-    expect(out, JSON.stringify(out)).toEqual({ ok: true, mode: "drafted" });
+    expect(out, JSON.stringify(out)).toEqual({ ok: true, mode: "surfaced" });
 
     expect(mockCreate).toHaveBeenCalledTimes(1);
-
-    expect(inserts).toHaveLength(1);
-    const config = JSON.parse(inserts[0].config as string) as {
-      copyByPlatform?: unknown;
-    };
-    expect(config.copyByPlatform).toBeUndefined();
+    expect(surfacedCalls).toHaveLength(1);
+    expect(surfacedCalls[0].summary).toContain("carousel");
+    expect(surfacedCalls[0].confidence).toBe(0.9);
   });
 
   it("requests the default branch in the listing query", async () => {

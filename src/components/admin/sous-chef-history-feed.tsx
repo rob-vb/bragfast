@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import posthog from "posthog-js";
@@ -12,6 +13,9 @@ import { PixelEventCard, PixelEventList } from "@/components/admin/pixel-event-c
 import type { DraftConfig } from "@/lib/drafts/types";
 
 type Decision =
+  | "surfaced"
+  | "bragged"
+  | "dismissed"
   | "drafted"
   | "auto_skipped"
   | "user_skipped"
@@ -25,25 +29,10 @@ type EventRow = {
   decision: Decision;
   reason: string | null;
   confidence: number | null;
+  summary: string | null;
   sourceReference: string | null;
   draftExternalId?: string | null;
   created_at: string;
-};
-
-const DECISION_VARIANT: Record<Decision, "completed" | "suspended"> = {
-  drafted: "completed",
-  approved: "completed",
-  auto_skipped: "suspended",
-  user_skipped: "suspended",
-  ignored_48h: "suspended",
-};
-
-const DECISION_LABEL: Record<Decision, string> = {
-  drafted: "DRAFTED",
-  approved: "APPROVED",
-  auto_skipped: "AUTO-SKIP",
-  user_skipped: "DISMISSED",
-  ignored_48h: "IGNORED",
 };
 
 const SOURCE_LABEL: Record<EventRow["sourceSystem"], string> = {
@@ -55,14 +44,7 @@ const SOURCE_LABEL: Record<EventRow["sourceSystem"], string> = {
   cron: "Cron",
 };
 
-const OVERRIDABLE_REASONS = new Set(["low_confidence"]);
-
-const OVERRIDE_ERROR_COPY: Record<string, string> = {
-  not_found: "Trigger event not found",
-  not_skipped: "Already drafted",
-  no_reference: "No source reference on this event",
-  no_draft: "No suppressed draft exists for this trigger",
-};
+const SCORE_MUTED_THRESHOLD = 0.45;
 
 function parseConfig(raw: string | undefined): DraftConfig | null {
   if (!raw) return null;
@@ -73,7 +55,7 @@ function parseConfig(raw: string | undefined): DraftConfig | null {
   }
 }
 
-function extractAiSummary(rawConfig: string | undefined): string | null {
+function extractLegacyDraftSummary(rawConfig: string | undefined): string | null {
   const cfg = parseConfig(rawConfig);
   const text = cfg?.objectContent?.description?.text;
   return text && text.trim().length > 0 ? text.trim() : null;
@@ -83,19 +65,70 @@ function formatTimestamp(iso: string): string {
   return new Date(iso).toLocaleString();
 }
 
+function decisionLabel(decision: Decision): string {
+  switch (decision) {
+    case "surfaced":
+      return "SURFACED";
+    case "bragged":
+      return "BRAGGED";
+    case "dismissed":
+    case "user_skipped":
+      return "DISMISSED";
+    case "drafted":
+      return "DRAFTED";
+    case "approved":
+      return "APPROVED";
+    case "auto_skipped":
+      return "LOW SCORE";
+    case "ignored_48h":
+      return "IGNORED";
+    default:
+      return decision.toUpperCase();
+  }
+}
+
+function decisionVariant(
+  decision: Decision,
+): "completed" | "suspended" {
+  if (decision === "approved" || decision === "bragged" || decision === "drafted") {
+    return "completed";
+  }
+  if (decision === "surfaced") return "completed";
+  return "suspended";
+}
+
+function canBrag(event: EventRow): boolean {
+  if (event.decision === "bragged" && event.draftExternalId) return true;
+  return (
+    event.decision === "surfaced" ||
+    event.decision === "drafted" ||
+    event.decision === "auto_skipped"
+  );
+}
+
+function canDismiss(event: EventRow): boolean {
+  return event.decision === "surfaced" || event.decision === "auto_skipped";
+}
+
 export function SousChefHistoryFeed({
   limit = 200,
   excludeDismissed = false,
 }: { limit?: number; excludeDismissed?: boolean } = {}) {
-  // Over-fetch when filtering so the post-filter list still hits `limit`.
+  const router = useRouter();
   const fetchLimit = excludeDismissed ? limit * 4 : limit;
   const raw = useQuery(api.triggerEvents.listByUser, { limit: fetchLimit });
-  const overrideEvent = useMutation(api.triggerEvents.overrideAutoSkippedEvent);
+  const bragTrigger = useMutation(api.triggerEvents.bragFromTrigger);
+  const dismissTrigger = useMutation(api.triggerEvents.dismissTrigger);
   const [pending, setPending] = useState<Set<string>>(new Set());
 
   const events = raw
     ? excludeDismissed
-      ? raw.filter((e) => e.decision !== "user_skipped").slice(0, limit)
+      ? raw
+          .filter(
+            (e) =>
+              e.decision !== "user_skipped" && e.decision !== "dismissed",
+          )
+          .slice(0, limit)
       : raw
     : raw;
 
@@ -108,39 +141,66 @@ export function SousChefHistoryFeed({
   if (events.length === 0) {
     return (
       <PixelEmptyState
-        title="No trigger events yet"
-        description="Sous-Chef logs every trigger it sees here — drafts, skips, approvals."
+        title="No activity yet"
+        description="Merged PRs and other triggers show up here — hit Brag when you want to make a post."
         noPrimary
         cta={{ label: "", href: "#" }}
       />
     );
   }
 
-  async function handleOverride(eventId: string, reason: string | null) {
-    setPending((prev) => new Set(prev).add(eventId));
+  async function handleBrag(eventId: string) {
+    setPending((prev) => new Set(prev).add(`brag:${eventId}`));
     try {
-      const result = await overrideEvent({ externalId: eventId });
+      const result = await bragTrigger({ externalId: eventId });
       if (result.ok) {
-        posthog.capture("trigger_event_overridden", {
+        posthog.capture("trigger_bragged", {
           event_id: eventId,
-          reason: reason ?? "unknown",
           draft_id: result.draftExternalId,
-          surface: "sous_chef_history",
+          created: result.created,
+          surface: "activity_feed",
         });
-        toast.success("Draft restored — review it on the Drafts page.");
+        router.push(
+          `/admin/kitchen?draft=${encodeURIComponent(result.draftExternalId)}`,
+        );
       } else {
         toast.error(
-          OVERRIDE_ERROR_COPY[result.error] ??
-            `Override failed: ${result.error}`,
+          result.error === "not_braggable"
+            ? "This trigger can't be bragged."
+            : `Brag failed: ${result.error}`,
         );
       }
     } catch (err) {
-      console.error("[sous-chef] override failed", err);
-      toast.error("Override failed");
+      console.error("[activity-feed] brag failed", err);
+      toast.error("Brag failed");
     } finally {
       setPending((prev) => {
         const next = new Set(prev);
-        next.delete(eventId);
+        next.delete(`brag:${eventId}`);
+        return next;
+      });
+    }
+  }
+
+  async function handleDismiss(eventId: string) {
+    setPending((prev) => new Set(prev).add(`dismiss:${eventId}`));
+    try {
+      const result = await dismissTrigger({ externalId: eventId });
+      if (result.ok) {
+        posthog.capture("trigger_dismissed", {
+          event_id: eventId,
+          surface: "activity_feed",
+        });
+      } else if (result.error !== "already_dismissed") {
+        toast.error("Dismiss failed");
+      }
+    } catch (err) {
+      console.error("[activity-feed] dismiss failed", err);
+      toast.error("Dismiss failed");
+    } finally {
+      setPending((prev) => {
+        const next = new Set(prev);
+        next.delete(`dismiss:${eventId}`);
         return next;
       });
     }
@@ -153,8 +213,10 @@ export function SousChefHistoryFeed({
           <FeedCard
             key={e.id}
             event={e as EventRow}
-            pending={pending.has(e.id)}
-            onOverride={() => handleOverride(e.id, e.reason)}
+            bragPending={pending.has(`brag:${e.id}`)}
+            dismissPending={pending.has(`dismiss:${e.id}`)}
+            onBrag={() => handleBrag(e.id)}
+            onDismiss={() => handleDismiss(e.id)}
           />
         ))}
       </PixelEventList>
@@ -164,23 +226,30 @@ export function SousChefHistoryFeed({
 
 function FeedCard({
   event,
-  pending,
-  onOverride,
+  bragPending,
+  dismissPending,
+  onBrag,
+  onDismiss,
 }: {
   event: EventRow;
-  pending: boolean;
-  onOverride: () => void;
+  bragPending: boolean;
+  dismissPending: boolean;
+  onBrag: () => void;
+  onDismiss: () => void;
 }) {
-  const decision = event.decision;
   const draft = useQuery(
     api.drafts.getByExternalIdAuthed,
-    event.draftExternalId ? { externalId: event.draftExternalId } : "skip",
+    event.draftExternalId && !event.summary
+      ? { externalId: event.draftExternalId }
+      : "skip",
   );
-  const summary = extractAiSummary(draft?.config);
-  const canOverride =
-    decision === "auto_skipped" &&
-    event.reason != null &&
-    OVERRIDABLE_REASONS.has(event.reason);
+  const summary =
+    event.summary?.trim() ||
+    extractLegacyDraftSummary(draft?.config) ||
+    null;
+  const score = event.confidence;
+  const muted =
+    score !== null && score < SCORE_MUTED_THRESHOLD && event.decision === "surfaced";
 
   const refIsUrl =
     event.sourceReference != null && /^https?:\/\//.test(event.sourceReference);
@@ -188,19 +257,31 @@ function FeedCard({
   return (
     <PixelEventCard
       testId={`trigger-event-row-${event.id}`}
-      dataAttrs={{ "data-decision": decision }}
+      dataAttrs={{
+        "data-decision": event.decision,
+        ...(score != null ? { "data-confidence": String(score) } : {}),
+      }}
       header={
         <>
           <PixelBadge
-            variant={DECISION_VARIANT[decision]}
+            variant={decisionVariant(event.decision)}
             label={SOURCE_LABEL[event.sourceSystem]}
           />
           <span className="font-[family-name:var(--font-geist-mono)] text-[12px] text-brand/70">
             {event.triggerType}
           </span>
+          {score !== null && (
+            <span
+              className={`font-[family-name:var(--font-geist-mono)] text-[11px] ${
+                muted ? "text-brand/45" : "text-gold"
+              }`}
+            >
+              {(score * 100).toFixed(0)}% brag-worthy
+            </span>
+          )}
           <PixelBadge
-            label={DECISION_LABEL[decision]}
-            variant={DECISION_VARIANT[decision]}
+            label={decisionLabel(event.decision)}
+            variant={decisionVariant(event.decision)}
           />
           <span className="ml-auto font-[family-name:var(--font-geist-mono)] text-[11px] text-brand/60 whitespace-nowrap">
             {formatTimestamp(event.created_at)}
@@ -212,10 +293,7 @@ function FeedCard({
           {event.reason ? (
             <span>{event.reason}</span>
           ) : (
-            <span className="text-brand/30">no reason</span>
-          )}
-          {event.confidence !== null && (
-            <span>· {(event.confidence * 100).toFixed(0)}% conf</span>
+            <span className="text-brand/30">—</span>
           )}
           {event.sourceReference ? (
             refIsUrl ? (
@@ -236,19 +314,39 @@ function FeedCard({
         </>
       }
       actions={
-        canOverride ? (
-          <PixelButton
-            onClick={onOverride}
-            disabled={pending}
-            data-testid={`trigger-event-override-${event.id}`}
-          >
-            {pending ? "..." : "Draft anyway"}
-          </PixelButton>
-        ) : undefined
+        <div className="flex flex-wrap gap-2">
+          {canBrag(event) ? (
+            <PixelButton
+              onClick={onBrag}
+              disabled={bragPending}
+              data-testid={`trigger-event-brag-${event.id}`}
+            >
+              {bragPending
+                ? "..."
+                : event.decision === "bragged"
+                  ? "Open in Kitchen"
+                  : "Brag"}
+            </PixelButton>
+          ) : null}
+          {canDismiss(event) ? (
+            <PixelButton
+              variant="ghost"
+              onClick={onDismiss}
+              disabled={dismissPending}
+              data-testid={`trigger-event-dismiss-${event.id}`}
+            >
+              {dismissPending ? "..." : "Dismiss"}
+            </PixelButton>
+          ) : null}
+        </div>
       }
     >
       {summary ? (
-        <p className="font-[family-name:var(--font-geist-sans)] text-sm leading-relaxed text-brand/85 max-w-prose">
+        <p
+          className={`font-[family-name:var(--font-geist-sans)] text-sm leading-relaxed max-w-prose ${
+            muted ? "text-brand/65" : "text-brand/85"
+          }`}
+        >
           {summary}
         </p>
       ) : (

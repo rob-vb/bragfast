@@ -41,7 +41,7 @@ describe("Sous-Chef Convex security boundaries", () => {
     expect(integrationsRouteSrc).toContain("api.integrationSecrets.upsertAction");
     expect(integrationsRouteSrc).toContain("api.integrationSecrets.disconnectAction");
     expect(integrationsRouteSrc).toContain("api.sousChef.seedAction");
-    expect(githubWebhookSrc).toContain("api.drafts.insertDraftIfNewAction");
+    expect(githubWebhookSrc).toContain("api.triggerEvents.recordSurfacedAction");
     expect(githubWebhookSrc).toContain("api.githubInstallations.upsertAction");
     expect(githubCallbackSrc).toContain("api.githubInstallations.upsertAction");
     expect(githubCallbackSrc).toContain('provider: "github"');

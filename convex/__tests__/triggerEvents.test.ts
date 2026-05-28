@@ -317,6 +317,96 @@ describe("countUnseenBriefingDrafts + markBriefingSeen", () => {
   });
 });
 
+describe("recordSurfacedIfNew + brag + dismiss", () => {
+  it("surfaces idempotently and sorts by confidence", async () => {
+    const t = convexTest(schema, modules);
+    await t.mutation(internal.triggerEvents.recordSurfacedIfNew, {
+      userId: USER_ID,
+      sourceSystem: "github",
+      triggerType: "pr_merged",
+      sourceReference: "https://github.com/rob/test/pull/1",
+      summary: "Low-priority fix",
+      confidence: 0.2,
+    });
+    await t.mutation(internal.triggerEvents.recordSurfacedIfNew, {
+      userId: USER_ID,
+      sourceSystem: "github",
+      triggerType: "pr_merged",
+      sourceReference: "https://github.com/rob/test/pull/2",
+      summary: "Shipped dark mode",
+      confidence: 0.9,
+    });
+    const dup = await t.mutation(internal.triggerEvents.recordSurfacedIfNew, {
+      userId: USER_ID,
+      sourceSystem: "github",
+      triggerType: "pr_merged",
+      sourceReference: "https://github.com/rob/test/pull/2",
+      summary: "Shipped dark mode",
+      confidence: 0.9,
+    });
+    expect(dup.created).toBe(false);
+
+    const rows = await t
+      .withIdentity({ subject: USER_ID })
+      .query(api.triggerEvents.listByUser, {});
+    expect(rows).toHaveLength(2);
+    expect(rows[0].confidence).toBe(0.9);
+    expect(rows[0].summary).toContain("dark mode");
+  });
+
+  it("brag creates draft and dismiss hides from excludeDismissed feed", async () => {
+    const t = convexTest(schema, modules);
+    const surfaced = await t.mutation(internal.triggerEvents.recordSurfacedIfNew, {
+      userId: USER_ID,
+      sourceSystem: "github",
+      triggerType: "pr_merged",
+      sourceReference: "https://github.com/rob/test/pull/9",
+      summary: "Make a hero visual for the new API docs.",
+      confidence: 0.75,
+      metadata: JSON.stringify({
+        milestoneKey: "pr_merged:rob/test#9",
+        repoFullName: "rob/test",
+        prNumber: 9,
+      }),
+    });
+
+    const brag = await t
+      .withIdentity({ subject: USER_ID })
+      .mutation(api.triggerEvents.bragFromTrigger, {
+        externalId: surfaced.externalId,
+      });
+    expect(brag.ok).toBe(true);
+    if (!brag.ok) return;
+    expect(brag.created).toBe(true);
+    expect(brag.draftExternalId).toMatch(/^drf_/);
+
+    const dismissed = await t.mutation(internal.triggerEvents.recordSurfacedIfNew, {
+      userId: USER_ID,
+      sourceSystem: "github",
+      triggerType: "pr_merged",
+      sourceReference: "https://github.com/rob/test/pull/10",
+      summary: "Skip this one",
+      confidence: 0.1,
+    });
+    await t
+      .withIdentity({ subject: USER_ID })
+      .mutation(api.triggerEvents.dismissTrigger, {
+        externalId: dismissed.externalId,
+      });
+
+    const all = await t
+      .withIdentity({ subject: USER_ID })
+      .query(api.triggerEvents.listByUser, { limit: 10 });
+    expect(all.some((e) => e.id === dismissed.externalId)).toBe(true);
+
+    const filtered = all.filter(
+      (e) => e.decision !== "dismissed" && e.decision !== "user_skipped",
+    );
+    expect(filtered.some((e) => e.id === dismissed.externalId)).toBe(false);
+    expect(filtered.some((e) => e.id === surfaced.externalId)).toBe(true);
+  });
+});
+
 describe("approveDraft records approved event", () => {
   it("emits an approved row tied to the draft", async () => {
     const t = convexTest(schema, modules);
