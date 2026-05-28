@@ -168,43 +168,80 @@ export default function Home() {
       >
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="grid md:grid-cols-[1fr_1.05fr] gap-10 md:gap-14 items-start">
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-6">
               <SectionLabel>MCP</SectionLabel>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
                 Your agent in the kitchen.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Wire brag.fast into Claude Code, Claude Desktop, Cursor, or any HTTP MCP client. Ask for a cook, pick a template, get branded images back without leaving your flow.
+                Wire brag.fast into Claude Code, Claude Desktop, Cursor, or any HTTP MCP client. Three steps, then your agent cooks branded images without you leaving the editor.
               </p>
-              <Link
-                href="/docs"
-                className="font-[family-name:var(--font-geist-sans)] text-sm text-brand underline underline-offset-4 self-start hover:text-gold transition-colors"
-              >
-                Read the API docs &#9656;
-              </Link>
+
+              <ol className="flex flex-col gap-4 max-w-md">
+                {[
+                  {
+                    t: "Add the server",
+                    d: "One command, shown on the right. Works in any HTTP MCP client.",
+                  },
+                  {
+                    t: "Authenticate",
+                    d: "Create an account, then issue an API key under Admin → Keys.",
+                  },
+                  {
+                    t: "Ask for a cook",
+                    d: "Pick a template, get branded images back in your flow.",
+                  },
+                ].map((step, i) => (
+                  <li key={step.t} className="flex gap-3.5 items-start">
+                    <span className="shrink-0 w-7 h-7 flex items-center justify-center border-2 border-brand bg-gold font-[family-name:var(--font-press-start)] text-[10px] text-brand shadow-[2px_2px_0_var(--color-brand)]">
+                      {i + 1}
+                    </span>
+                    <div className="pt-0.5">
+                      <p className="font-[family-name:var(--font-press-start)] text-[10px] leading-relaxed">
+                        {step.t}
+                      </p>
+                      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/65 leading-relaxed mt-1">
+                        {step.d}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             </div>
-            <div className="border-2 border-brand bg-[#24292e] p-5 md:p-6 shadow-[6px_6px_0_var(--color-brand)] space-y-4">
-              <div>
-                <p className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
-                  Server URL
-                </p>
-                <p className="font-[family-name:var(--font-geist-mono)] text-sm text-emerald-400 break-all">
-                  https://mcp.brag.fast/mcp
-                </p>
+
+            <div className="border-2 border-brand bg-[#24292e] shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
+              <div className="flex items-center justify-between border-b border-zinc-700 px-4 py-2.5">
+                <div className="flex items-center gap-1.5" aria-hidden>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                </div>
+                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-zinc-500">
+                  bragfast &middot; mcp
+                </span>
               </div>
-              <div>
-                <p className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
-                  Claude Code
-                </p>
-                <pre className="font-[family-name:var(--font-geist-mono)] text-xs text-zinc-200 leading-relaxed overflow-x-auto whitespace-pre-wrap">
-                  {`claude mcp add bragfast \\
+
+              <div className="p-5 md:p-6 space-y-5">
+                <div>
+                  <p className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
+                    Server URL
+                  </p>
+                  <p className="font-[family-name:var(--font-geist-mono)] text-sm text-emerald-400 break-all">
+                    https://mcp.brag.fast/mcp
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
+                    Add to Claude Code
+                  </p>
+                  <pre className="font-[family-name:var(--font-geist-mono)] text-xs text-zinc-200 leading-relaxed overflow-x-auto whitespace-pre-wrap">
+                    {`claude mcp add bragfast \\
   --transport http \\
   https://mcp.brag.fast/mcp`}
-                </pre>
+                  </pre>
+                </div>
               </div>
-              <p className="font-[family-name:var(--font-geist-sans)] text-xs text-zinc-400 leading-relaxed">
-                Create an account, then issue an API key under Admin → Keys. Tools include start_cook, generate_release_images, list_templates, and check_account.
-              </p>
             </div>
           </div>
         </div>
