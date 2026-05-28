@@ -1,23 +1,22 @@
 /**
- * Retro PR fetch + draft pipeline.
+ * Retro PR fetch + surface pipeline.
  *
  * When a user enables Sous-Chef PR-merge notifications for a repo, we fetch
- * the most-recent merged PR on the default branch and run the same pipeline
- * the live webhook does (Layer 1 filter → composeCopy → confidence → idempotent
- * insert). The result is that signing up + picking a repo yields a pre-rendered
- * draft on the dashboard, instead of an empty state.
+ * the most-recent merged PR on the default branch and surface it in the
+ * activity feed (summary + brag-worthiness) — no eager draft.
  */
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 import { getInstallationToken } from "./auth";
-import { composeCopy, SUPPRESS_THRESHOLD } from "@/lib/drafts/compose-copy";
-import { pickTemplate } from "@/lib/drafts/pick-template";
 import { scanContent } from "@/lib/safety/content-filter";
 import {
-  buildIdempotencyKey,
-  prMergedMilestoneKey,
-} from "@/lib/drafts/idempotency-key";
-import type { DraftConfig } from "@/lib/drafts/types";
+  buildPrMergeDraftInput,
+  type GitHubPullRequestPayload,
+} from "./pr-merge";
+import {
+  surfaceTrigger,
+  fallbackSurfaceTrigger,
+} from "@/lib/drafts/surface-trigger";
 
 interface GhPull {
   number: number;
@@ -71,9 +70,30 @@ export async function fetchLatestMergedPr(
   return { pr: merged, defaultBranch };
 }
 
+function prToPayload(
+  pr: GhPull,
+  repoFullName: string,
+  defaultBranch: string,
+): GitHubPullRequestPayload {
+  return {
+    action: "closed",
+    pull_request: {
+      number: pr.number,
+      merged: true,
+      title: pr.title,
+      body: pr.body,
+      html_url: pr.html_url,
+      base: { ref: defaultBranch },
+    },
+    repository: {
+      full_name: repoFullName,
+      default_branch: defaultBranch,
+    },
+  };
+}
+
 /**
- * Run the retro-PR pipeline for a single repo. Idempotent via the same
- * milestoneKey the live webhook uses, so re-running is a no-op.
+ * Surface the latest merged PR for a repo (idempotent via sourceReference).
  */
 export async function runRetroPrMergeDraft(
   convex: ConvexHttpClient,
@@ -81,103 +101,59 @@ export async function runRetroPrMergeDraft(
   installationId: number,
   repoFullName: string,
 ): Promise<
-  | { ok: true; draftId?: string; mode: "drafted" | "skipped" | "no_pr" }
+  | { ok: true; mode: "surfaced" | "skipped" | "no_pr" | "exists" }
   | { ok: false; error: string }
 > {
   try {
     const result = await fetchLatestMergedPr(installationId, repoFullName);
     if (!result) return { ok: true, mode: "no_pr" };
-    const { pr } = result;
+    const { pr, defaultBranch } = result;
+    const payload = prToPayload(pr, repoFullName, defaultBranch);
+    const input = buildPrMergeDraftInput(payload, userId);
 
-    // Layer 1 safety: skip retro draft if PR title/body is sensitive.
     const filter = scanContent(pr.title, pr.body);
+    let summary: string;
+    let confidence: number;
+    let reason: string | undefined;
+
     if (filter.blocked) {
-      const categories = [...new Set(filter.matches.map((m) => m.category))];
-      const terms = filter.matches.map((m) => ({
-        category: m.category,
-        term: m.term,
-      }));
-      await convex
-        .action(api.triggerEvents.recordAction, {
-          userId,
-          sourceSystem: "github",
-          triggerType: "pr_merged_retro",
-          decision: "auto_skipped",
-          reason: "content_filter",
-          sourceReference: pr.html_url,
-          metadata: JSON.stringify({ categories, terms, retro: true }),
-        })
-        .catch(() => undefined);
-      return { ok: true, mode: "skipped" };
-    }
-
-    const milestoneKey = prMergedMilestoneKey(repoFullName, pr.number);
-    const idempotencyKey = buildIdempotencyKey(userId, "github", milestoneKey);
-
-    const [voicePreset, examples] = await Promise.all([
-      convex.query(api.userProfiles.getVoicePreset, { userId }),
-      convex.query(api.drafts.getRecentApprovedEdits, { userId }),
-    ]);
-    const preset = voicePreset as
-      | "casual_builder"
-      | "dry_technical"
-      | "earnest_milestone"
-      | "deadpan"
-      | null;
-
-    const [pick, primary] = await Promise.all([
-      pickTemplate({
-        milestoneKey,
-        prContext: { title: pr.title, body: pr.body ?? "" },
-      }),
-      composeCopy({
+      summary = fallbackSurfaceTrigger({
         type: "pr_merged",
         title: pr.title,
         body: pr.body ?? "",
         repoFullName,
-        voicePreset: preset,
-        examples,
-      }),
-    ]);
-    const suppressed = primary.confidence < SUPPRESS_THRESHOLD;
+      }).summary;
+      confidence = 0;
+      reason = "content_filter";
+    } else {
+      const surfaced = await surfaceTrigger({
+        type: "pr_merged",
+        title: pr.title,
+        body: pr.body ?? "",
+        repoFullName,
+      });
+      summary = surfaced.summary;
+      confidence = surfaced.confidence;
+    }
 
-    const draftConfig: DraftConfig = {
-      output: "image",
-      templateId: pick.templateId,
-      objectContent: {
-        title: { text: primary.title },
-        description: { text: primary.description },
-      },
-      notes: `Sous-Chef: retro PR #${pr.number} merged in ${repoFullName}`,
-    };
-
-    await convex.action(api.drafts.insertDraftIfNewAction, {
+    const record = await convex.action(api.triggerEvents.recordSurfacedAction, {
       userId,
-      idempotencyKey,
       sourceSystem: "github",
-      milestoneKey,
-      eventReference: pr.html_url,
-      name: primary.title,
-      config: JSON.stringify(draftConfig),
-      createdBy: "sous-chef-retro",
-      confidence: primary.confidence,
-      suppressed,
+      triggerType: "pr_merged_retro",
+      sourceReference: pr.html_url,
+      summary,
+      confidence,
+      reason: reason ?? "retro_signup",
+      metadata: JSON.stringify({
+        milestoneKey: input.milestoneKey,
+        repoFullName,
+        prNumber: pr.number,
+        retro: true,
+      }),
     });
 
-    await convex
-      .action(api.triggerEvents.recordAction, {
-        userId,
-        sourceSystem: "github",
-        triggerType: "pr_merged_retro",
-        decision: suppressed ? "auto_skipped" : "drafted",
-        reason: suppressed ? "low_confidence" : "retro_signup",
-        confidence: primary.confidence,
-        sourceReference: pr.html_url,
-        metadata: JSON.stringify({ milestoneKey, retro: true }),
-      })
-      .catch(() => undefined);
-
-    return { ok: true, mode: suppressed ? "skipped" : "drafted" };
+    if (!record.created) return { ok: true, mode: "exists" };
+    return { ok: true, mode: filter.blocked ? "skipped" : "surfaced" };
   } catch (err) {
     console.error("[sous-chef] runRetroPrMergeDraft failed:", err);
     return { ok: false, error: String(err) };

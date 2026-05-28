@@ -11,16 +11,26 @@ import { NEW_TIERS, FEATURES } from "@/lib/pricing-data";
 import { getLaunchMode } from "@/lib/launch-mode";
 
 export const metadata: Metadata = {
-  title: "brag.fast | Automate your build in public posts",
+  title: "brag.fast | Keep building, we'll market",
   description:
-    "brag.fast turns your wins into branded posts. Ship a feature, hit an MRR milestone, gain GitHub stars — your Sous-Chef agent drafts the post for you to approve and post.",
+    "Turn shipped wins into branded visuals and post copy in seconds. Install the GitHub App, surface merges in your feed, brag when you're ready. Web app, MCP, or API. You approve every post.",
   alternates: { canonical: "/" },
 };
+
+const GITHUB_ICON_PATH =
+  "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12";
+
+function githubAppInstallUrl(): string {
+  const slug = process.env.NEXT_PUBLIC_GITHUB_APP_SLUG;
+  return slug
+    ? `https://github.com/apps/${slug}/installations/new`
+    : "/signup";
+}
 
 const FAQ = [
   {
     q: "What kind of wins work?",
-    a: "Anything brag-worthy. New features for your app, MRR milestones, user-count screenshots, launch-day numbers, a before/after. If you'd post about it, brag.fast dresses it up.",
+    a: "Anything worth posting. A merged PR, an MRR milestone, a traffic screenshot, launch numbers, a before/after. If you'd tell someone about it, brag.fast can dress it up.",
   },
   {
     q: "Will it match my brand?",
@@ -31,21 +41,38 @@ const FAQ = [
     a: "5 credits per video per format. One video in all three formats = 15. Toast gives you 200 a month.",
   },
   {
-    q: "What if the AI picks the wrong thing to highlight?",
-    a: "Edit before you render. Or skip the AI and write the copy yourself. We are constantly optimizing the agent to produce the best results though.",
+    q: "Does Sous-Chef post for me?",
+    a: "No. Sous-Chef surfaces wins in your activity feed with a short summary and a brag-worthiness score. You hit Brag when you want a post, cook the visual in the Kitchen, edit copy, then approve. Nothing ships without you.",
   },
   {
-    q: "How does Sous-Chef (agent) know what to post?",
-    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue milestones, PostHog for analytics, and more. Sous-Chef both reacts in real time (a PR merges, a milestone hits) and sweeps on a schedule, drafting a post the moment it spots a win and leaving it for you to cook. You approve every post. Disconnect any integration any time.",
+    q: "How does Sous-Chef know what happened?",
+    a: "You connect the integrations you want: GitHub for merges and stars, Stripe for revenue, PostHog or GA4 for traffic, and more. When something happens, brag.fast writes a surfaced trigger with a one-line summary. Every merge to your default branch shows up. You pick what to brag about.",
+  },
+  {
+    q: "Can I use brag.fast from Claude Code?",
+    a: "Yes. Add the MCP server at mcp.brag.fast and authenticate with an API key from your account. Your agent can start a cook, list templates and brands, and poll render status. Same branded output as the web Kitchen.",
   },
 ];
 
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-6 h-[3px] bg-gold" />
+      <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
+        {children}
+      </span>
+    </div>
+  );
+}
+
 export default function Home() {
+  const githubInstallHref = githubAppInstallUrl();
+
   return (
     <div className="min-h-screen bg-surface text-brand" data-launch-mode={getLaunchMode()}>
       <LandingNav />
 
-      {/* S1: Hero */}
+      {/* Hero */}
       <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 bg-white border-b-2 border-brand overflow-hidden">
         <div
           aria-hidden
@@ -59,10 +86,11 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-16 items-center">
           <div>
             <h1 className="font-[family-name:var(--font-press-start)] text-2xl md:text-4xl leading-[1.4] mb-6">
-              Automate your build in public posts
+              Keep building.
+              <span className="block">We&apos;ll market.</span>
             </h1>
             <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 max-w-xl mb-8 leading-relaxed">
-              Let your sous-chef agent turn every commit, release, and milestone into share-ready images and videos, automatically, so you can focus on building.
+              brag.fast turns shipped wins into branded visuals and post-ready copy in seconds. You stay in the loop: surface, brag, cook, approve. From the web app, via MCP, or your own scripts.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <CtaLink
@@ -84,91 +112,142 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sous-Chef audience section */}
-      <section className="pt-16 md:pt-24 pb-0 bg-surface border-b-2 border-brand overflow-hidden">
+      {/* Before / After */}
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14">
-            <div className="flex flex-col gap-5 pb-16 md:pb-24">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  Sous-Chef
-                </span>
-              </div>
-              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
-                Your Sous-Chef (agent) spots your wins so you can focus on building.
-              </h2>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Sous-Chef watches your connected integrations. When a PR merges, a milestone hits, or stars jump, it drafts a post with your brand, waiting for you to approve and cook. You can even schedule your posts immediately with <strong>Buffer</strong> or <strong>Postiz</strong>.
-              </p>
-              <div className="flex flex-col gap-3 mt-2">
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-brand/60 uppercase tracking-wider">
-                  Plugs into
-                </span>
-                <div className="flex items-center gap-3">
-                  {[
-                    {
-                      name: "GitHub",
-                      path: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
-                    },
-                    {
-                      name: "Stripe",
-                      path: "M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z",
-                    },
-                    {
-                      name: "PostHog",
-                      path: "M9.197 5.564a1.06 1.06 0 0 0-1.81-.748L.31 11.892a1.06 1.06 0 0 0 0 1.498l7.077 7.076a1.06 1.06 0 0 0 1.81-.748v-3.297l3.13 3.13a1.06 1.06 0 0 0 1.81-.749v-3.55l3.13 3.13a1.06 1.06 0 0 0 1.81-.749V5.565a1.06 1.06 0 0 0-1.06-1.061h-8.82zM2.554 14.764a.53.53 0 0 1 0-.75l.84-.84a.53.53 0 0 1 .75 0l3.39 3.39a.53.53 0 0 1-.375.905H4.534a.53.53 0 0 1-.375-.156l-1.605-1.604zm5.643-5.643a.53.53 0 0 1 .905.375v6.625l-3.92-3.92a.53.53 0 0 1 0-.75l3.015-3.015zm5.81 0a.53.53 0 0 1 .905.375v6.625l-3.92-3.92a.53.53 0 0 1 0-.75L13.84 9.12h.166z",
-                    },
-                    {
-                      name: "Google Analytics",
-                      path: "M22.84 2.998v17.999a2.983 2.983 0 0 1-2.967 2.998 2.98 2.98 0 0 1-2.965-2.998V3.193C16.908 1.561 18.245.103 19.876.003a2.984 2.984 0 0 1 2.964 2.995zM4.133 18.03a2.97 2.97 0 1 0 0 5.94 2.97 2.97 0 0 0 0-5.94zm7.872-9.012a2.987 2.987 0 0 0-2.964 3.097v8.014c0 2.085.92 3.349 2.265 3.617 1.55.31 3.025-.87 3.661-2.21.217-.453.298-.905.298-1.42v-8.046c0-1.658-1.34-2.991-2.998-2.991z",
-                    },
-                  ].map((logo) => (
-                    <div
-                      key={logo.name}
-                      className="group relative w-12 h-12 flex items-center justify-center border-2 border-brand bg-cream shadow-[3px_3px_0_var(--color-brand)]"
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="w-6 h-6 fill-brand"
-                        aria-label={logo.name}
-                        role="img"
-                      >
-                        <path d={logo.path} />
-                      </svg>
-                      <span
-                        role="tooltip"
-                        className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap font-[family-name:var(--font-press-start)] text-[8px] uppercase tracking-wider px-2 py-1.5 border-2 border-brand bg-white text-brand shadow-[2px_2px_0_var(--color-brand)] opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        {logo.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                {/* <CtaLink
-                  signedOutHref="/signup"
-                  signedInHref="/admin/sous-chef"
-                  className="font-[family-name:var(--font-geist-sans)] text-sm text-brand underline underline-offset-4 self-start hover:text-gold transition-colors"
-                >
-                  Connect an integration &#9656;
-                </CtaLink> */}
-              </div>
-            </div>
-            <div className="relative self-stretch hidden md:block">
-              <Image
-                src="/cook/sous-chef.png"
-                alt="Sous-Chef"
-                width={418}
-                height={940}
-                className="absolute top-0 left-1/2 -translate-x-1/2 md:-translate-y-12 w-auto max-w-[240px] md:max-w-[300px] h-auto"
-              />
-            </div>
+          <div className="text-center mb-10">
+            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5] mb-3">
+              Which post would you stop for?
+            </h2>
+            <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/60 max-w-xl mx-auto">
+              Plain text scrolls past. A branded visual earns the pause.
+            </p>
           </div>
-
+          <BeforeAfter />
         </div>
       </section>
 
-      {/* Cook it yourself section */}
+      {/* Templates + Brand kits */}
+      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16">
+            <div className="flex flex-col gap-6">
+              <SectionLabel>Templates</SectionLabel>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
+                Design it once. Reuse forever.
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Drag objects. Set colors. Preview live. Every render follows the layout you built.
+              </p>
+              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
+                <LazyVideo
+                  src="/demo/template_editor_compressed.mp4"
+                  className="w-full border border-brand"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              <SectionLabel>Branding</SectionLabel>
+              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
+                On-brand. Every post.
+              </h3>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
+                Upload your logo. Lock your colors and fonts. Every image comes out looking like you made it on purpose.
+              </p>
+              <BrandKitMockup />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MCP / Claude Code */}
+      <section
+        id="mcp"
+        className="scroll-mt-16 py-16 md:py-24 bg-surface border-b-2 border-brand"
+      >
+        <div className="mx-auto max-w-6xl px-4 md:px-10">
+          <div className="grid md:grid-cols-[1fr_1.05fr] gap-10 md:gap-14 items-start">
+            <div className="flex flex-col gap-6">
+              <SectionLabel>MCP</SectionLabel>
+              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+                Your agent in the kitchen.
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
+                Wire brag.fast into Claude Code, Claude Desktop, Cursor, or any HTTP MCP client. Three steps, then your agent cooks branded images without you leaving the editor.
+              </p>
+
+              <ol className="flex flex-col gap-4 max-w-md">
+                {[
+                  {
+                    t: "Add the server",
+                    d: "One command, shown on the right. Works in any HTTP MCP client.",
+                  },
+                  {
+                    t: "Authenticate",
+                    d: "Create an account, then issue an API key under Admin → Keys.",
+                  },
+                  {
+                    t: "Ask for a cook",
+                    d: "Pick a template, get branded visuals back in your flow.",
+                  },
+                ].map((step, i) => (
+                  <li key={step.t} className="flex gap-3.5 items-start">
+                    <span className="shrink-0 w-7 h-7 flex items-center justify-center border-2 border-brand bg-gold font-[family-name:var(--font-press-start)] text-[10px] text-brand shadow-[2px_2px_0_var(--color-brand)]">
+                      {i + 1}
+                    </span>
+                    <div className="pt-0.5">
+                      <p className="font-[family-name:var(--font-press-start)] text-[10px] leading-relaxed">
+                        {step.t}
+                      </p>
+                      <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/65 leading-relaxed mt-1">
+                        {step.d}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="border-2 border-brand bg-[#24292e] shadow-[6px_6px_0_var(--color-brand)] overflow-hidden">
+              <div className="flex items-center justify-between border-b border-zinc-700 px-4 py-2.5">
+                <div className="flex items-center gap-1.5" aria-hidden>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                </div>
+                <span className="font-[family-name:var(--font-geist-mono)] text-[10px] text-zinc-500">
+                  bragfast &middot; mcp
+                </span>
+              </div>
+
+              <div className="p-5 md:p-6 space-y-5">
+                <div>
+                  <p className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">
+                    Server URL
+                  </p>
+                  <p className="font-[family-name:var(--font-geist-mono)] text-sm text-emerald-400 break-all">
+                    https://mcp.brag.fast/mcp
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-[family-name:var(--font-geist-mono)] text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
+                    Add to Claude Code
+                  </p>
+                  <pre className="font-[family-name:var(--font-geist-mono)] text-xs text-zinc-200 leading-relaxed overflow-x-auto whitespace-pre-wrap">
+                    {`claude mcp add bragfast \\
+  --transport http \\
+  https://mcp.brag.fast/mcp`}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Kitchen */}
       <section
         id="kitchen"
         className="scroll-mt-16 py-16 md:py-24 bg-white border-b-2 border-brand"
@@ -176,36 +255,19 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 items-center">
             <div className="md:order-2 flex flex-col gap-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  Web app
-                </span>
-              </div>
+              <SectionLabel>Web app</SectionLabel>
               <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
                 Cook it yourself.
               </h2>
               <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
-                Add content, upload a screenshot or screen recording, pick a template, and you&apos;ve got landscape, square, and portrait versions ready to post. Takes about a minute.
+                Drop a screenshot or recording, pick a template, season with your brand. Landscape, square, and portrait in about a minute. No agent required.
               </p>
-              {/* <div className="flex flex-wrap gap-2 pt-1">
-                {["16:9 Landscape", "1:1 Square", "4:5 Portrait", "MP4 Video"].map(
-                  (t) => (
-                    <span
-                      key={t}
-                      className="font-[family-name:var(--font-press-start)] text-[9px] px-2 py-1.5 border-2 border-brand bg-white"
-                    >
-                      {t}
-                    </span>
-                  ),
-                )}
-              </div> */}
               <CtaLink
                 signedOutHref="/signup"
                 signedInHref="/admin/kitchen"
                 className="inline-block self-start font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 mt-2 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                Make your first post
+                Open the Kitchen
               </CtaLink>
             </div>
             <div className="md:order-1 border-2 border-brand bg-white p-3 md:p-4 shadow-[6px_6px_0_var(--color-brand)]">
@@ -231,67 +293,61 @@ export default function Home() {
         </div>
       </section>
 
-      {/* S5: Before/After */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
+      {/* Sous-Chef: ship → surface → brag */}
+      <section className="pt-16 md:pt-24 pb-0 bg-surface border-b-2 border-brand overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="text-center mb-10">
-            <h2 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5] mb-3">
-              Which post would you stop for?
-            </h2>
-            <p className="font-[family-name:var(--font-geist-sans)] text-base text-brand/60 max-w-xl mx-auto">
-              Left: plain text. Right: a branded visual that cuts through the feed.
-            </p>
+          <div className="grid md:grid-cols-[1fr_1.1fr] gap-10 md:gap-14">
+            <div className="flex flex-col gap-5 pb-16 md:pb-24">
+              <SectionLabel>Sous-Chef</SectionLabel>
+              <h2 className="font-[family-name:var(--font-press-start)] text-base md:text-2xl leading-[1.4]">
+                Ship. Surface. Brag.
+              </h2>
+              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed max-w-md">
+                Install the GitHub App on the repos you ship from. Sous-Chef watches your default branch: every merge lands in your activity feed with a one-line summary and a brag-worthiness score. Hit <strong>Brag</strong> when you want a post. We open the Kitchen with context. You cook, edit, approve. Schedule with <strong>Buffer</strong> or <strong>Postiz</strong> when you&apos;re ready.
+              </p>
+              <ol className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/75 space-y-2 list-decimal list-inside max-w-md">
+                <li>Merge ships to main</li>
+                <li>Feed surfaces what happened (nothing hidden)</li>
+                <li>You brag, cook, and post on your terms</li>
+              </ol>
+              <div className="flex flex-col items-start gap-3 mt-4 max-w-sm">
+                <div
+                  className="w-12 h-12 flex items-center justify-center border-2 border-brand bg-cream shadow-[3px_3px_0_var(--color-brand)]"
+                  aria-hidden
+                >
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-brand">
+                    <path d={GITHUB_ICON_PATH} />
+                  </svg>
+                </div>
+                <a
+                  href={githubInstallHref}
+                  className="inline-flex items-center justify-center font-[family-name:var(--font-press-start)] text-[10px] px-4 py-3 text-brand border-2 border-brand bg-gold shadow-[3px_3px_0_var(--color-brand)] hover:shadow-[1px_1px_0_var(--color-brand)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                  {...(githubInstallHref.startsWith("http")
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
+                  Install GitHub App
+                </a>
+                <p className="font-[family-name:var(--font-geist-sans)] text-xs text-brand/55 leading-relaxed">
+                  On GitHub, choose which repos to watch. Merges to your default branch surface in your feed.
+                </p>
+              </div>
+            </div>
+            <div className="relative self-stretch hidden md:block">
+              <Image
+                src="/cook/sous-chef.png"
+                alt="Sous-Chef"
+                width={418}
+                height={940}
+                className="absolute top-0 left-1/2 -translate-x-1/2 md:-translate-y-12 w-auto max-w-[240px] md:max-w-[300px] h-auto"
+              />
+            </div>
           </div>
-          <BeforeAfter />
         </div>
       </section>
 
-      {/* S6: Templates + Brand Kits */}
+      {/* Pricing */}
       <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
-        <div className="mx-auto max-w-6xl px-4 md:px-10">
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  Templates
-                </span>
-              </div>
-              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
-                Design it once. Reuse forever.
-              </h3>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Drag objects. Set colors. Preview live. Every render follows the layout you built. No babysitting.
-              </p>
-              <div className="border-2 border-brand bg-white p-6 shadow-[4px_4px_0_var(--color-brand)]">
-                <LazyVideo
-                  src="/demo/template_editor_compressed.mp4"
-                  className="w-full border border-brand"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-[3px] bg-gold" />
-                <span className="font-[family-name:var(--font-press-start)] text-[8px] text-gold uppercase tracking-wider">
-                  Branding
-                </span>
-              </div>
-              <h3 className="font-[family-name:var(--font-press-start)] text-sm md:text-xl leading-[1.5]">
-                On-brand. Every post.
-              </h3>
-              <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed">
-                Upload your logo. Lock your colors and fonts. Every image comes out looking like you made it on purpose.
-              </p>
-              <BrandKitMockup />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* S7: Pricing */}
-      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="mb-12 md:mb-16 text-center">
             <div className="flex items-center justify-center gap-2.5 mb-5">
@@ -304,7 +360,7 @@ export default function Home() {
               What are you having?
             </h2>
             <p className="font-[family-name:var(--font-geist-sans)] text-sm text-brand/60">
-              One post = one approval. Tier bounds the rest.
+              Pay for cooks. You approve every post that goes out.
             </p>
           </div>
 
@@ -368,7 +424,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-24 bg-white border-b-2 border-brand">
+      <section className="py-16 md:py-24 bg-surface border-b-2 border-brand">
         <div className="mx-auto max-w-6xl px-4 md:px-10">
           <div className="text-center mb-12">
             <span className="font-[family-name:var(--font-press-start)] text-[10px] uppercase tracking-wider text-brand/50 block mb-3">
@@ -419,10 +475,10 @@ export default function Home() {
         />
         <div className="relative mx-auto max-w-6xl px-4 md:px-10 text-center">
           <h2 className="font-[family-name:var(--font-press-start)] text-xl md:text-3xl leading-[1.4] mb-5">
-            Start free. <span className="block md:inline">Upgrade when you&apos;re ready.</span>
+            Keep building. <span className="block md:inline">Brag when it counts.</span>
           </h2>
           <p className="font-[family-name:var(--font-geist-sans)] text-base md:text-lg text-brand/80 leading-relaxed mb-8 max-w-xl mx-auto">
-            30 free credits. No credit card. First render in under a minute.
+            30 free credits. No credit card. First cook in under a minute.
           </p>
           <CtaLink
             signedOutHref="/signup"
@@ -434,7 +490,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SoftwareApplication JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -453,7 +508,6 @@ export default function Home() {
         }}
       />
 
-      {/* Footer */}
       <footer className="py-8 border-t-2 border-brand bg-surface">
         <div className="mx-auto max-w-6xl px-4 md:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
