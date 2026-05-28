@@ -176,7 +176,10 @@ export const recordSurfacedAction = action({
     reason: v.optional(v.string()),
     metadata: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ created: boolean; externalId: string }> => {
     return await ctx.runMutation(internal.triggerEvents.recordSurfacedIfNew, args);
   },
 });
