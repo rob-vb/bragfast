@@ -1,10 +1,12 @@
 {
-  "name": "bragfast",
+  "name": "@bragfast/cli",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "bragfast": "dist/index.js",
-    "brag": "dist/index.js"
+    "bragfast": "dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": [
     "dist"
